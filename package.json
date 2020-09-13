@@ -30,7 +30,6 @@
         "nodes": {
             "chronos-config": "nodes/chronos-config.js",
             "chronos-scheduler": "nodes/chronos-scheduler.js",
-            "chronos-condition": "nodes/chronos-condition.js",
             "chronos-switch": "nodes/chronos-switch.js"
         }
     }
