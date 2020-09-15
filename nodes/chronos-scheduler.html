@@ -25,6 +25,20 @@ SOFTWARE.
 <script type="text/javascript">
     RED.nodes.registerType("chronos-scheduler",
     {
+        category:     "chronos",
+        color:        "#DEB887",
+        icon:         "timer.svg",
+        inputs:       1,
+        outputs:      1,
+        paletteLabel: "Scheduler",
+        label: function()
+        {
+            return (this.name || "Scheduler");
+        },
+        labelStyle: function()
+        {
+            return (this.name ? "node_label_italic" : "");
+        }
     });
 </script>
 

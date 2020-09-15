@@ -25,8 +25,94 @@ SOFTWARE.
 <script type="text/javascript">
     RED.nodes.registerType("chronos-config",
     {
+        category: "config",
+        icon:     "white-globe.svg",
+        label:    function()
+        {
+            return (this.name || (this.credentials.latitude + ", " + this.credentials.longitude));
+        },
+        defaults:
+        {
+            name:
+            {
+                value: ""
+            }
+        },
+        credentials:
+        {
+            latitude:
+            {
+                type: "text",
+                value: "",
+                required: true
+			},
+            longitude:
+            {
+                type: "text",
+                value: "",
+                required: true
+			}
+        },
+        oneditprepare: function()
+        {
+            const validateCoords = function(event, ui)
+            {
+                if (/^(\+|-)?\d+(\.\d+)?$/.test(this.value))
+                {
+                    let value = parseFloat(this.value);
+                    let min = $(this).spinner("option", "min");
+                    let max = $(this).spinner("option", "max");
+
+                    if (value < min)
+                    {
+                        $(this).spinner("value", min);
+                    }
+                    else if (value > max)
+                    {
+                        $(this).spinner("value", max);
+                    }
+                }
+                else
+                {
+                    $(this).spinner("value", 0);
+                }
+            };
+
+            const latitudeInput =
+            {
+                min: -90,
+                max: 90,
+                step: 1,
+                numberFormat: "n",
+                change: validateCoords
+            };
+
+            const longitudeInput =
+            {
+                min: -180,
+                max: 180,
+                step: 1,
+                numberFormat: "n",
+                change: validateCoords
+            };
+
+            $("#node-config-input-latitude").spinner(latitudeInput);
+            $("#node-config-input-longitude").spinner(longitudeInput);
+        }
     });
 </script>
 
 <script type="text/x-red" data-template-name="chronos-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="config.label.name"></span></label>
+        <input type="text" id="node-config-input-name" data-i18n="[placeholder]config.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-latitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.latitude"></span></label>
+        <input id="node-config-input-latitude" data-i18n="[placeholder]config.label.latitude">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
+        <input id="node-config-input-longitude" data-i18n="[placeholder]config.label.longitude">
+    </div>
 </script>

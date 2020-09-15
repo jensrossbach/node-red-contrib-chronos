@@ -26,6 +26,7 @@ module.exports = function(RED)
 {
     function ChronosSwitchNode(config)
     {
+        RED.nodes.createNode(this, config);
     }
 
     RED.nodes.registerType("chronos-switch", ChronosSwitchNode);

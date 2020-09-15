@@ -26,6 +26,7 @@ module.exports = function(RED)
 {
     function ChronosSchedulerNode(config)
     {
+        RED.nodes.createNode(this, config);
     }
 
     RED.nodes.registerType("chronos-scheduler", ChronosSchedulerNode);

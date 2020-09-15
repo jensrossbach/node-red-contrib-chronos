@@ -1,5 +1,11 @@
 {
     "config":
     {
+        "label":
+        {
+            "name":       "Name",
+            "latitude":   "Latitude",
+            "longitude":  "Longitude"
+        }
     }
 }

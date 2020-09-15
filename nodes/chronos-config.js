@@ -26,6 +26,11 @@ module.exports = function(RED)
 {
     function ChronosConfigNode(config)
     {
+        RED.nodes.createNode(this, config);
+
+        this.name = config.name;
+        this.latitude = parseFloat(this.credentials.latitude);
+        this.longitude = parseFloat(this.credentials.longitude);
     }
 
     RED.nodes.registerType("chronos-config", ChronosConfigNode,
