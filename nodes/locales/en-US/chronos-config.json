@@ -1,4 +1,47 @@
 {
+    "common":
+    {
+        "label":
+        {
+            "time":         "Time of Day",
+            "sunTime":      "Sun Position",
+            "moonTime":     "Moon Position",
+            "fullMessage":  "full message"
+        },
+        "list":
+        {
+            "sunTime":
+            {
+                "sunriseStart":     "Sunrise (start)",
+                "sunriseEnd":       "Sunrise (end)",
+                "sunsetStart":      "Sunset (start)",
+                "sunsetEnd":        "Sunset (end)",
+                "goldenHourStart":  "Golden Hour (start)",
+                "goldenHourEnd":    "Golden Hour (end)",
+                "nightStart":       "Night (start)",
+                "nightEnd":         "Night (end)",
+                "dawn":             "Dawn",
+                "nauticalDawn":     "Nautical Dawn",
+                "dusk":             "Dusk",
+                "nauticalDusk":     "Nautical Dusc",
+                "solarNoon":        "Solar Noon",
+                "nadir":            "Nadir"
+            },
+            "moonTime":
+            {
+                "rise":  "Rise",
+                "set":   "Set"
+            }
+        },
+        "status":
+        {
+            "noConfig":  "no configuration"
+        },
+        "error":
+        {
+            "noConfig":  "No configuration selected"
+        }
+    },
     "config":
     {
         "label":

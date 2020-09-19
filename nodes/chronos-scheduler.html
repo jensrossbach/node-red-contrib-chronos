@@ -38,9 +38,314 @@ SOFTWARE.
         labelStyle: function()
         {
             return (this.name ? "node_label_italic" : "");
+        },
+        inputLabels: function()
+        {
+            return this._("scheduler.label.inputPort");
+        },
+        outputLabels: function(index)
+        {
+            return this._("scheduler.label.outputPort");
+        },
+        defaults:
+        {
+            name:
+            {
+                value: ""
+            },
+            config:
+            {
+                value:    "",
+                type:     "chronos-config",
+                required: true
+            },
+            triggers:
+            {
+                value: [{trigger: {type: "time", value: "", offset: 0, random: false},
+                         output: {type: "msg", property: {name: "payload", type: "str", value: ""}}}]
+            }
+        },
+        oneditprepare: function()
+        {
+            let node = this;
+
+            let triggerList = $("#node-input-triggerList").css("min-width", "500px").css("min-height", "500px").editableList(
+            {
+                removable: true,
+                sortable: true,
+                addItem: function(item, index, data)
+                {
+                    const sunTimes =
+                    [
+                        {
+                            value: "sunrise",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunriseStart")
+                        },
+                        {
+                            value: "sunriseEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunriseEnd")
+                        },
+                        {
+                            value: "sunsetStart",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunsetStart")
+                        },
+                        {
+                            value: "sunset",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunsetEnd")
+                        },
+                        {
+                            value: "goldenHour",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.goldenHourStart")
+                        },
+                        {
+                            value: "goldenHourEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.goldenHourEnd")
+                        },
+                        {
+                            value: "night",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nightStart")
+                        },
+                        {
+                            value: "nightEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nightEnd")
+                        },
+                        {
+                            value: "dawn",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.dawn")
+                        },
+                        {
+                            value: "nauticalDawn",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nauticalDawn")
+                        },
+                        {
+                            value: "dusk",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.dusk")
+                        },
+                        {
+                            value: "nauticalDusk",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nauticalDusk")
+                        },
+                        {
+                            value: "solarNoon",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.solarNoon")
+                        },
+                        {
+                            value: "nadir",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nadir")
+                        }
+                    ];
+
+                    const moonTimes =
+                    [
+                        {
+                            value: "rise",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moonTime.rise")
+                        },
+                        {
+                            value: "set",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moonTime.set")
+                        }
+                    ];
+
+                    const timeInput =
+                    {
+                        value: "time",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                        icon: "fa fa-clock-o",
+                        hasValue: true,
+                        validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(am|AM|pm|PM)?$/
+                    };
+
+                    const sunTimeInput =
+                    {
+                        value: "sun",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.sunTime"),
+                        icon: "icons/node-red-contrib-chronos/sun.svg",
+                        options: sunTimes
+                    };
+
+                    const moonTimeInput =
+                    {
+                        value: "moon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.moonTime"),
+                        icon: "icons/node-red-contrib-chronos/moon.svg",
+                        options: moonTimes
+                    };
+
+                    const fullMessageInput =
+                    {
+                        value: "fullMsg",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
+                        hasValue: false
+                    };
+
+                    const offsetInput =
+                    {
+                        min: -300,
+                        max: 300,
+                        step: 5,
+                        change: function(event, ui)
+                        {
+                            var value = parseInt(this.value, 10);
+                            var min = $(this).spinner("option", "min");
+                            var max = $(this).spinner("option", "max");
+                            if (isNaN(value) ||
+                                (value < min))
+                            {
+                                $(this).spinner("value", min);
+                            }
+                            else if (value > max)
+                            {
+                                $(this).spinner("value", max);
+                            }
+                        }
+                    };
+
+                    let fragment = document.createDocumentFragment();
+                    let rowTrigger = $("<div/>").appendTo(fragment);
+                    let rowOutType = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+                    let rowPropVal = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+                    let rowMsgVal = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+
+                    let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
+                                        .appendTo(rowTrigger)
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
+                    triggerType.typedInput("width", "280px");
+                    $("<div/>", {style: "display: inline-block; width: auto; padding-left: 6px; padding-right: 6px;"})
+                                        .html("&#8597;")
+                                        .appendTo(rowTrigger);
+                    let triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px;"})
+                                        .appendTo(rowTrigger)
+                                        .spinner(offsetInput);
+                    $("<div/>", {style: "display: inline-block; width: auto; padding-left: 10px; padding-right: 6px;"})
+                                        .html("<i class='fa fa-random' aria-hidden='true'></i>")
+                                        .appendTo(rowTrigger);
+                    let triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "vertical-align: text-bottom; width: auto; padding-left: 8px;"})
+                                        .appendTo(rowTrigger);
+
+                    $("<div/>", {style: "display: inline-block; text-align: right; width: 60px; padding-right: 6px;"})
+                                        .text(node._("scheduler.label.output"))
+                                        .appendTo(rowOutType);
+                    let outType = $("<input/>", {type: "text", class: "node-input-outType", style: "padding-right: 6px;"})
+                                        .appendTo(rowOutType)
+                                        .typedInput({types: ["global", "flow", "msg", fullMessageInput]});
+                    outType.typedInput("width", "280px");
+
+                    $("<div/>", {style: "display: inline-block; text-align: right; width: 60px; padding-right: 6px;"})
+                                        .html("&#8658;")
+                                        .appendTo(rowPropVal);
+                    let propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
+                                        .appendTo(rowPropVal)
+                                        .typedInput({types: ["str", "num", "bool", "json", "bin", "date"]});
+                    propValue.typedInput("width", "280px");
+
+                    $("<div/>", {style: "display: inline-block; text-align: right; width: 60px; padding-right: 6px;"})
+                                        .html("&#8658;")
+                                        .appendTo(rowMsgVal);
+                    let msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
+                                        .appendTo(rowMsgVal)
+                                        .typedInput({types: ["json"]});
+                    msgValue.typedInput("width", "280px");
+
+                    outType.on("change", function(type, value)
+                    {
+                        if (value === "fullMsg")
+                        {
+                            rowPropVal.hide();
+                            rowMsgVal.show();
+                        }
+                        else
+                        {
+                            rowMsgVal.hide();
+                            rowPropVal.show();
+                        }
+                    });
+
+                    if (!("trigger" in data))
+                    {
+                        data = {trigger: {type: "time", value: "", offset: 0, random: false},
+                                output: {type: "msg", property: {name: "payload", type: "str", value: ""}}};
+                    }
+
+                    triggerType.typedInput("type", data.trigger.type);
+                    triggerType.typedInput("value", data.trigger.value);
+                    triggerOffset.spinner("value", data.trigger.offset);
+                    triggerRandom.prop("checked", data.trigger.random);
+
+                    outType.typedInput("type", data.output.type);
+                    if (data.output.type == "fullMsg")
+                    {
+                        msgValue.typedInput("value", data.output.value);
+                    }
+                    else
+                    {
+                        outType.typedInput("value", data.output.property.name);
+                        propValue.typedInput("type", data.output.property.type);
+                        propValue.typedInput("value", data.output.property.value);
+                    }
+
+                    item[0].appendChild(fragment);
+                }
+            });
+
+            node.triggers.forEach(data =>
+            {
+                triggerList.editableList("addItem", data);
+            });
+        },
+        oneditsave: function()
+        {
+            let node = this;
+            let triggerList = $("#node-input-triggerList").editableList("items");
+
+            node.triggers = [];
+            triggerList.each(function(index)
+            {
+                let data = {trigger: {}, output: {}};
+
+                let triggerType = $(this).find(".node-input-triggerType");
+                let triggerOffset = $(this).find(".node-input-triggerOffset");
+                let triggerRandom = $(this).find(".node-input-triggerRandom");
+                let outType = $(this).find(".node-input-outType");
+                let propValue = $(this).find(".node-input-propValue");
+                let msgValue = $(this).find(".node-input-msgValue");
+
+                data.trigger.type = triggerType.typedInput("type");
+                data.trigger.value = triggerType.typedInput("value");
+                data.trigger.offset = triggerOffset.spinner("value");
+                data.trigger.random = triggerRandom.prop("checked");
+
+                data.output.type = outType.typedInput("type");
+                if (data.output.type == "fullMsg")
+                {
+                    data.output.value = msgValue.typedInput("value");
+                }
+                else
+                {
+                    data.output.property = {name: outType.typedInput("value"),
+                                            type: propValue.typedInput("type"),
+                                            value: propValue.typedInput("value")};
+                }
+
+                node.triggers.push(data);
+            });
         }
     });
 </script>
 
 <script type="text/x-red" data-template-name="chronos-scheduler">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="scheduler.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]scheduler.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="scheduler.label.config"></span></label>
+        <input type="text" id="node-input-config" data-i18n="[placeholder]scheduler.label.config">
+    </div>
+    <div class="form-row" style="padding-top: 10px">
+        <label for="node-input-triggerList"><i class="fa fa-clock-o"></i> <span data-i18n="scheduler.label.triggers"></span></label>
+        <div class="form-row">
+            <ol id="node-input-triggerList"></ol>
+        </div>
+    </div>
 </script>

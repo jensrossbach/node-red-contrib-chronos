@@ -1,5 +1,25 @@
 {
     "scheduler":
     {
+        "label":
+        {
+            "inputPort":   "enable/disable",
+            "outputPort":  "trigger",
+            "name":        "Name",
+            "config":      "Configuration",
+            "triggers":    "Triggers",
+            "output":      "Output"
+        },
+        "status":
+        {
+            "noTriggers":  "no triggers"
+        },
+        "error":
+        {
+            "noTriggers":       "No triggers configured",
+            "invalidTime":      "Invalid time specified",
+            "unavailableTime":  "No time available for event",
+            "invalidInput":     "Invalid input message"
+        }
     }
 }
