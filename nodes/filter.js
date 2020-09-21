@@ -24,7 +24,7 @@
 
 module.exports = function(RED)
 {
-    function ChronosSwitchNode(settings)
+    function ChronosFilterNode(settings)
     {
         const moment = require("moment");
         const time = require("./common/time.js");
@@ -52,7 +52,7 @@ module.exports = function(RED)
             time.init(RED, node.config.latitude, node.config.longitude);
 
             node.conditions = settings.conditions;
-            node.stopOnFirstMatch = settings.stopOnFirstMatch;
+            node.allMustMatch = settings.allMustMatch;
 
             node.on("input", (msg, send, done) =>
             {
@@ -77,12 +77,7 @@ module.exports = function(RED)
                     }
 
                     let now = moment();
-                    let ports = [];
-
-                    for (let i=0; i<node.conditions.length; ++i)
-                    {
-                        ports.push(null);
-                    }
+                    let result = false;
 
                     for (let i=0; i<node.conditions.length; ++i)
                     {
@@ -95,11 +90,8 @@ module.exports = function(RED)
                                 let targetTime = getTime(now.clone(), cond.operands);
 
                                 node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
-                                if (((cond.operator == "before") && now.isBefore(targetTime)) ||
-                                    ((cond.operator == "after") && now.isAfter(targetTime)))
-                                {
-                                    ports[i] = prepareMessage(msg);
-                                }
+                                result = (((cond.operator == "before") && now.isBefore(targetTime)) ||
+                                          ((cond.operator == "after") && now.isAfter(targetTime)));
                             }
                             else if ((cond.operator == "between") || (cond.operator == "outside"))
                             {
@@ -119,30 +111,16 @@ module.exports = function(RED)
                                 }
 
                                 node.debug("Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss") + " and " + time2.format("YYYY-MM-DD HH:mm:ss"));
-                                if (((cond.operator == "between") && (now.isSameOrAfter(time1) && now.isSameOrBefore(time2))) ||
-                                    ((cond.operator == "outside") && (now.isBefore(time1) || now.isAfter(time2))))
-                                {
-                                    ports[i] = prepareMessage(msg);
-                                }
+                                result = (((cond.operator == "between") && (now.isSameOrAfter(time1) && now.isSameOrBefore(time2))) ||
+                                          ((cond.operator == "outside") && (now.isBefore(time1) || now.isAfter(time2))));
                             }
                             else if ((cond.operator == "weekdays"))
                             {
-                                if (cond.operands[now.day()])
-                                {
-                                    ports[i] = prepareMessage(msg);
-                                }
+                                result = cond.operands[now.day()];
                             }
                             else if ((cond.operator == "months"))
                             {
-                                if (cond.operands[now.month()])
-                                {
-                                    ports[i] = prepareMessage(msg);
-                                }
-                            }
-
-                            if (ports[i] && node.stopOnFirstMatch)
-                            {
-                                break;
+                                result = cond.operands[now.month()];
                             }
                         }
                         catch (e)
@@ -159,10 +137,22 @@ module.exports = function(RED)
                                 node.error(e.message);
                                 node.debug(e.stack);
                             }
+
+                            // if time cannot be calculated, the condition counts as not fulfilled
+                            result = false;
+                        }
+
+                        if ((node.allMustMatch && !result) ||
+                            (!node.allMustMatch && result))
+                        {
+                            break;
                         }
                     }
 
-                    node.send(ports);
+                    if (result)
+                    {
+                        node.send(msg);
+                    }
                 }
 
                 done();
@@ -184,12 +174,7 @@ module.exports = function(RED)
                 return time.getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), operands.value);
             }
         }
-
-        function prepareMessage(msg)
-        {
-            return (node.conditions.length > 1) ? RED.util.cloneMessage(msg) : msg;
-        }
     }
 
-    RED.nodes.registerType("chronos-switch", ChronosSwitchNode);
+    RED.nodes.registerType("chronos-filter", ChronosFilterNode);
 };

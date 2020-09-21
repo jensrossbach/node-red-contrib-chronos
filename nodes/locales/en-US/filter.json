@@ -1,0 +1,10 @@
+{
+    "filter":
+    {
+        "label":
+        {
+            "outputPort":    "conditional message",
+            "allMustMatch":  "All conditions must match"
+        }
+    }
+}

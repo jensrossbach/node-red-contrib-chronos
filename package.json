@@ -31,7 +31,8 @@
         "nodes": {
             "chronos-config": "nodes/config.js",
             "chronos-scheduler": "nodes/scheduler.js",
-            "chronos-switch": "nodes/switch.js"
+            "chronos-switch": "nodes/switch.js",
+            "chronos-filter": "nodes/filter.js"
         }
     }
 }

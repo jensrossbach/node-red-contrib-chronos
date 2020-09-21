@@ -4,9 +4,7 @@
         "label":
         {
             "inputPort":   "enable/disable",
-            "outputPort":  "trigger",
-            "name":        "Name",
-            "config":      "Configuration",
+            "outputPort":  "triggered message",
             "triggers":    "Triggers",
             "output":      "Output"
         },

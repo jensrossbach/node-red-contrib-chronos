@@ -3,6 +3,10 @@
     {
         "label":
         {
+            "inputPort":    "input message",
+            "name":         "Name",
+            "config":       "Configuration",
+            "conditions":   "Conditions",
             "time":         "Time of Day",
             "sunTime":      "Sun Position",
             "moonTime":     "Moon Position",
@@ -31,15 +35,51 @@
             {
                 "rise":  "Moonrise",
                 "set":   "Moonset"
+            },
+            "operator":
+            {
+                "before":    "before",
+                "after":     "after",
+                "between":   "between",
+                "outside":   "outside",
+                "weekdays":  "week days",
+                "months":    "months"
+            },
+            "weekday":
+            {
+                "monday":     "MO",
+                "tuesday":    "TU",
+                "wednesday":  "WE",
+                "thursday":   "TH",
+                "friday":     "FR",
+                "saturday":   "SA",
+                "sunday":     "SU"
+            },
+            "month":
+            {
+                "january":    "JAN",
+                "february":   "FEB",
+                "march":      "MAR",
+                "april":      "APR",
+                "may":        "MAY",
+                "june":       "JUN",
+                "july":       "JUL",
+                "august":     "AUG",
+                "september":  "SEP",
+                "october":    "OCT",
+                "november":   "NOV",
+                "december":   "DEC"
             }
         },
         "status":
         {
-            "noConfig":  "no configuration"
+            "noConfig":      "no configuration",
+            "noConditions":  "no conditions"
         },
         "error":
         {
             "noConfig":         "No configuration selected",
+            "noConditions":     "No conditions configured",
             "invalidTime":      "Invalid time specified",
             "unavailableTime":  "No time available for event"
         }
@@ -48,7 +88,6 @@
     {
         "label":
         {
-            "name":       "Name",
             "latitude":   "Latitude",
             "longitude":  "Longitude"
         }

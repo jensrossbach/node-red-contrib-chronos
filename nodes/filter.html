@@ -23,17 +23,17 @@ SOFTWARE.
 -->
 
 <script type="text/javascript">
-    RED.nodes.registerType("chronos-switch",
+    RED.nodes.registerType("chronos-filter",
     {
         category:     "chronos",
         color:        "#DEB887",
-        icon:         "switch.svg",
+        icon:         "filter.svg",
         inputs:       1,
         outputs:      1,
-        paletteLabel: "Time Switch",
+        paletteLabel: "Time Filter",
         label: function()
         {
-            return (this.name || "Time Switch");
+            return (this.name || "Time Filter");
         },
         labelStyle: function()
         {
@@ -45,7 +45,7 @@ SOFTWARE.
         },
         outputLabels: function(index)
         {
-            return this.conditions[index].label;
+            return this._("filter.label.outputPort");
         },
         defaults:
         {
@@ -61,15 +61,11 @@ SOFTWARE.
             },
             conditions:
             {
-                value: [{operator: "before", operands: {type: "time", value: ""}, label: ""}]
+                value: [{operator: "before", operands: {type: "time", value: ""}}]
             },
-            stopOnFirstMatch:
+            allMustMatch:
             {
                 value: false
-            },
-            outputs:
-            {
-                value: 1
             }
         },
         oneditprepare: function()
@@ -182,9 +178,6 @@ SOFTWARE.
                     let fragment = document.createDocumentFragment();
                     let operatorBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto;"}).appendTo(fragment);
                     let operandBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; padding-left: 2px;"}).appendTo(fragment);
-                    $("<div/>", {class: "node-input-index", style: "position: absolute; width: auto; top: 50%; right: 26px; margin-top: -9px;"})
-                                        .html("&#8594; " + (index + 1))
-                                        .appendTo(fragment);
 
                     let operator = $("<select/>", {class: "node-input-operator", style: "width: 110px;"})
                                         .append($("<option></option>").val("before").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.before")))
@@ -343,7 +336,7 @@ SOFTWARE.
 
                     if (!("operator" in data))
                     {
-                        data = {operator: "before", operands: {type: "time", value: ""}, label: ""};
+                        data = {operator: "before", operands: {type: "time", value: ""}};
                     }
 
                     operator.val(data.operator);
@@ -388,21 +381,6 @@ SOFTWARE.
 
                     operator.change();
                     item[0].appendChild(fragment);
-                },
-                removeItem: function(item)
-                {
-                    let conditionList = $("#node-input-conditionList").editableList("items");
-                    conditionList.each(function(index)
-                    {
-                        $(this).find(".node-input-index").html("&#8594; " + (index + 1));
-                    });
-                },
-                sortItems: function(items)
-                {
-                    items.each(function(index)
-                    {
-                        $(this).find(".node-input-index").html("&#8594; " + (index + 1));
-                    });
                 }
             });
 
@@ -415,36 +393,8 @@ SOFTWARE.
         {
             let node = this;
 
-            const WEEKDAYS =
-            [
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.sunday"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.monday"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.tuesday"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.wednesday"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.thursday"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.friday"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.weekday.saturday")
-            ];
-
-            const MONTHS =
-            [
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.january"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.february"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.march"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.april"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.may"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.june"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.july"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.august"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.september"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.october"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.november"),
-                node._("node-red-contrib-chronos/chronos-config:common.list.month.december")
-            ];
-
             let conditionList = $("#node-input-conditionList").editableList("items");
             node.conditions = [];
-            node.outputs = 0;
 
             conditionList.each(function(index)
             {
@@ -474,26 +424,12 @@ SOFTWARE.
                 let december = $(this).find(".node-input-december");
 
                 data.operator = operator.val();
-                data.label = node._("node-red-contrib-chronos/chronos-config:common.list.operator." + data.operator);
 
                 if ((data.operator == "before") || (data.operator == "after"))
                 {
                     data.operands = {};
                     data.operands.type = time1.typedInput("type");
                     data.operands.value = time1.typedInput("value");
-
-                    if (data.operands.type == "time")
-                    {
-                        data.label += " " + time1.typedInput("value");
-                    }
-                    else if (data.operands.type == "sun")
-                    {
-                        data.label += " " + node._("node-red-contrib-chronos/chronos-config:common.list.sunTime." + time1.typedInput("value"));
-                    }
-                    else if (data.operands.type == "sun")
-                    {
-                        data.label += " " + node._("node-red-contrib-chronos/chronos-config:common.list.moonTime." + time1.typedInput("value"));
-                    }
                 }
                 else if ((data.operator == "between") || (data.operator == "outside"))
                 {
@@ -502,33 +438,6 @@ SOFTWARE.
                     data.operands[0].value = time1.typedInput("value");
                     data.operands[1].type = time2.typedInput("type");
                     data.operands[1].value = time2.typedInput("value");
-
-                    data.label += " ";
-                    if (data.operands[0].type == "time")
-                    {
-                        data.label += time1.typedInput("value");
-                    }
-                    else if (data.operands[0].type == "sun")
-                    {
-                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.sunTime." + time1.typedInput("value"));
-                    }
-                    else if (data.operands[0].type == "moon")
-                    {
-                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.moonTime." + time1.typedInput("value"));
-                    }
-                    data.label += " " + node._("switch.label.and") + " ";
-                    if (data.operands[1].type == "time")
-                    {
-                        data.label += time2.typedInput("value");
-                    }
-                    else if (data.operands[1].type == "sun")
-                    {
-                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.sunTime." + time2.typedInput("value"));
-                    }
-                    else if (data.operands[1].type == "moon")
-                    {
-                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.moonTime." + time2.typedInput("value"));
-                    }
                 }
                 else if (data.operator == "weekdays")
                 {
@@ -540,14 +449,6 @@ SOFTWARE.
                     data.operands[4] = thursday.prop("checked");
                     data.operands[5] = friday.prop("checked");
                     data.operands[6] = saturday.prop("checked");
-
-                    for (let i=0; i<7; ++i)
-                    {
-                        if (data.operands[i])
-                        {
-                            data.label += " " + WEEKDAYS[i];
-                        }
-                    }
                 }
                 else if (data.operator == "months")
                 {
@@ -564,24 +465,15 @@ SOFTWARE.
                     data.operands[9] = october.prop("checked");
                     data.operands[10] = november.prop("checked");
                     data.operands[11] = december.prop("checked");
-
-                    for (let i=0; i<12; ++i)
-                    {
-                        if (data.operands[i])
-                        {
-                            data.label += " " + MONTHS[i];
-                        }
-                    }
                 }
 
                 node.conditions.push(data);
-                node.outputs++;
             });
         }
     });
 </script>
 
-<script type="text/x-red" data-template-name="chronos-switch">
+<script type="text/x-red" data-template-name="chronos-filter">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
         <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
@@ -597,7 +489,7 @@ SOFTWARE.
         </div>
     </div>
     <div class="form-row">
-        <input id="node-input-stopOnFirstMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-stopOnFirstMatch" style="margin-bottom: 0px; width: auto;" data-i18n="switch.label.stopOnFirstMatch"></label>
+        <input id="node-input-allMustMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-allMustMatch" style="margin-bottom: 0px; width: auto;" data-i18n="filter.label.allMustMatch"></label>
     </div>
 </script>
