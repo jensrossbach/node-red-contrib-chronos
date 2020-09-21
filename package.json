@@ -29,9 +29,9 @@
     "scripts": {},
     "node-red": {
         "nodes": {
-            "chronos-config": "nodes/chronos-config.js",
-            "chronos-scheduler": "nodes/chronos-scheduler.js",
-            "chronos-switch": "nodes/chronos-switch.js"
+            "chronos-config": "nodes/config.js",
+            "chronos-scheduler": "nodes/scheduler.js",
+            "chronos-switch": "nodes/switch.js"
         }
     }
 }
