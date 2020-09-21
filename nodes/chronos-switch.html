@@ -38,9 +38,566 @@ SOFTWARE.
         labelStyle: function()
         {
             return (this.name ? "node_label_italic" : "");
+        },
+        inputLabels: function()
+        {
+            return this._("switch.label.inputPort");
+        },
+        outputLabels: function(index)
+        {
+            return this.conditions[index].label;
+        },
+        defaults:
+        {
+            name:
+            {
+                value: ""
+            },
+            config:
+            {
+                value:    "",
+                type:     "chronos-config",
+                required: true
+            },
+            conditions:
+            {
+                value: [{operator: "before", operands: {type: "time", value: ""}, label: ""}]
+            },
+            stopOnFirstMatch:
+            {
+                value: false
+            },
+            outputs:
+            {
+                value: 1
+            }
+        },
+        oneditprepare: function()
+        {
+            let node = this;
+
+            let conditionList = $("#node-input-conditionList").css("min-width", "500px").css("min-height", "500px").editableList(
+            {
+                removable: true,
+                sortable: true,
+                addItem: function(item, index, data)
+                {
+                    const sunTimes =
+                    [
+                        {
+                            value: "sunrise",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunrise")
+                        },
+                        {
+                            value: "sunriseEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunriseEnd")
+                        },
+                        {
+                            value: "sunsetStart",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunsetStart")
+                        },
+                        {
+                            value: "sunset",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunset")
+                        },
+                        {
+                            value: "goldenHour",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.goldenHour")
+                        },
+                        {
+                            value: "goldenHourEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.goldenHourEnd")
+                        },
+                        {
+                            value: "night",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.night")
+                        },
+                        {
+                            value: "nightEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nightEnd")
+                        },
+                        {
+                            value: "dawn",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.dawn")
+                        },
+                        {
+                            value: "nauticalDawn",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nauticalDawn")
+                        },
+                        {
+                            value: "dusk",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.dusk")
+                        },
+                        {
+                            value: "nauticalDusk",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nauticalDusk")
+                        },
+                        {
+                            value: "solarNoon",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.solarNoon")
+                        },
+                        {
+                            value: "nadir",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nadir")
+                        }
+                    ];
+
+                    const moonTimes =
+                    [
+                        {
+                            value: "rise",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moonTime.rise")
+                        },
+                        {
+                            value: "set",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moonTime.set")
+                        }
+                    ];
+
+                    const timeInput =
+                    {
+                        value: "time",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                        icon: "fa fa-clock-o",
+                        hasValue: true,
+                        validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(am|AM|pm|PM)?$/
+                    };
+
+                    const sunTimeInput =
+                    {
+                        value: "sun",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.sunTime"),
+                        icon: "icons/node-red-contrib-chronos/sun.svg",
+                        options: sunTimes
+                    };
+
+                    const moonTimeInput =
+                    {
+                        value: "moon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.moonTime"),
+                        icon: "icons/node-red-contrib-chronos/moon.svg",
+                        options: moonTimes
+                    };
+
+                    let fragment = document.createDocumentFragment();
+                    let operatorBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto;"}).appendTo(fragment);
+                    let operandBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; padding-left: 2px;"}).appendTo(fragment);
+                    $("<div/>", {class: "node-input-index", style: "position: absolute; width: auto; top: 50%; right: 26px; margin-top: -9px;"})
+                                        .html("&#8594; " + (index + 1))
+                                        .appendTo(fragment);
+
+                    let operator = $("<select/>", {class: "node-input-operator", style: "width: 110px;"})
+                                        .append($("<option></option>").val("before").text(node._("switch.list.operator.before")))
+                                        .append($("<option></option>").val("after").text(node._("switch.list.operator.after")))
+                                        .append($("<option></option>").val("between").text(node._("switch.list.operator.between")))
+                                        .append($("<option></option>").val("outside").text(node._("switch.list.operator.outside")))
+                                        .append($("<option></option>").val("weekdays").text(node._("switch.list.operator.weekdays")))
+                                        .append($("<option></option>").val("months").text(node._("switch.list.operator.months")))
+                                        .appendTo(operatorBox);
+
+                    let subRow1 = $("<div/>").appendTo(operandBox);
+                    let subRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(operandBox);
+                    let subRow3 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(operandBox);
+
+                    let time1 = $("<input/>", {type: "text", class: "node-input-time1", style: "margin-left: 4px"})
+                                        .appendTo(subRow1)
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
+                    time1.typedInput("width", "280px");
+
+                    let time2 = $("<input/>", {type: "text", class: "node-input-time2", style: "margin-left: 4px;"})
+                                        .appendTo(subRow2)
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
+                    time2.typedInput("width", "280px");
+
+                    let weekdays = $("<div/>", {style: "display: inline-block; width: auto;"})
+                                        .appendTo(subRow1);
+                    let monday = $("<input/>", {type: "checkbox", class: "node-input-monday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.monday")).appendTo(weekdays);
+                    let tuesday = $("<input/>", {type: "checkbox", class: "node-input-tuesday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.tuesday")).appendTo(weekdays);
+                    let wednesday = $("<input/>", {type: "checkbox", class: "node-input-wednesday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.wednesday")).appendTo(weekdays);
+                    let thursday = $("<input/>", {type: "checkbox", class: "node-input-thursday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.thursday")).appendTo(weekdays);
+                    let friday = $("<input/>", {type: "checkbox", class: "node-input-friday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.friday")).appendTo(weekdays);
+                    let saturday = $("<input/>", {type: "checkbox", class: "node-input-saturday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.saturday")).appendTo(weekdays);
+                    let sunday = $("<input/>", {type: "checkbox", class: "node-input-sunday", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(weekdays);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: auto;"})
+                                        .text(node._("switch.list.weekday.sunday")).appendTo(weekdays);
+
+                    let months1 = $("<div/>", {style: "display: inline-block; width: auto;"})
+                                        .appendTo(subRow1);
+                    let january = $("<input/>", {type: "checkbox", class: "node-input-january", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months1);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.january")).appendTo(months1);
+                    let february = $("<input/>", {type: "checkbox", class: "node-input-february", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months1);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.february")).appendTo(months1);
+                    let march = $("<input/>", {type: "checkbox", class: "node-input-march", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months1);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.march")).appendTo(months1);
+                    let april = $("<input/>", {type: "checkbox", class: "node-input-april", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months1);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.april")).appendTo(months1);
+                    let months2 = $("<div/>", {style: "display: inline-block; width: auto;"})
+                                        .appendTo(subRow2);
+                    let may = $("<input/>", {type: "checkbox", class: "node-input-may", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months2);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.may")).appendTo(months2);
+                    let june = $("<input/>", {type: "checkbox", class: "node-input-june", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months2);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.june")).appendTo(months2);
+                    let july = $("<input/>", {type: "checkbox", class: "node-input-july", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months2);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.july")).appendTo(months2);
+                    let august = $("<input/>", {type: "checkbox", class: "node-input-august", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months2);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.august")).appendTo(months2);
+                    let months3 = $("<div/>", {style: "display: inline-block; width: auto;"})
+                                        .appendTo(subRow3);
+                    let september = $("<input/>", {type: "checkbox", class: "node-input-september", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months3);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.september")).appendTo(months3);
+                    let october = $("<input/>", {type: "checkbox", class: "node-input-october", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months3);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.october")).appendTo(months3);
+                    let november = $("<input/>", {type: "checkbox", class: "node-input-november", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months3);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.november")).appendTo(months3);
+                    let december = $("<input/>", {type: "checkbox", class: "node-input-december", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(months3);
+                    $("<label/>", {style: "padding-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                        .text(node._("switch.list.month.december")).appendTo(months3);
+
+                    operator.change(function()
+                    {
+                        time1.typedInput("hide");
+                        time2.typedInput("hide");
+                        weekdays.hide();
+                        months1.hide();
+                        months2.hide();
+                        months3.hide();
+
+                        subRow2.hide();
+                        subRow3.hide();
+
+                        var value = $(this).val();
+                        switch (value)
+                        {
+                            case "before":
+                            case "after":
+                            {
+                                time1.typedInput("show");
+                                break;
+                            }
+                            case "between":
+                            case "outside":
+                            {
+                                time1.typedInput("show");
+                                time2.typedInput("show");
+                                subRow2.show();
+                                break;
+                            }
+                            case "weekdays":
+                            {
+                                weekdays.show();
+                                break;
+                            }
+                            case "months":
+                            {
+                                months1.show();
+                                months2.show();
+                                months3.show();
+                                subRow2.show();
+                                subRow3.show();
+                                break;
+                            }
+                        }
+                    });
+
+                    if (!("operator" in data))
+                    {
+                        data = {operator: "before", operands: {type: "time", value: ""}, label: ""};
+                    }
+
+                    operator.val(data.operator);
+
+                    if ((data.operator == "before") || (data.operator == "after"))
+                    {
+                        time1.typedInput("type", data.operands.type);
+                        time1.typedInput("value", data.operands.value);
+                    }
+                    else if ((data.operator == "between") || (data.operator == "outside"))
+                    {
+                        time1.typedInput("type", data.operands[0].type);
+                        time1.typedInput("value", data.operands[0].value);
+                        time2.typedInput("type", data.operands[1].type);
+                        time2.typedInput("value", data.operands[1].value);
+                    }
+                    else if (data.operator == "weekdays")
+                    {
+                        sunday.prop("checked", data.operands[0]);
+                        monday.prop("checked", data.operands[1]);
+                        tuesday.prop("checked", data.operands[2]);
+                        wednesday.prop("checked", data.operands[3]);
+                        thursday.prop("checked", data.operands[4]);
+                        friday.prop("checked", data.operands[5]);
+                        saturday.prop("checked", data.operands[6]);
+                    }
+                    else if (data.operator == "months")
+                    {
+                        january.prop("checked", data.operands[0]);
+                        february.prop("checked", data.operands[1]);
+                        march.prop("checked", data.operands[2]);
+                        april.prop("checked", data.operands[3]);
+                        may.prop("checked", data.operands[4]);
+                        june.prop("checked", data.operands[5]);
+                        july.prop("checked", data.operands[6]);
+                        august.prop("checked", data.operands[7]);
+                        september.prop("checked", data.operands[8]);
+                        october.prop("checked", data.operands[9]);
+                        november.prop("checked", data.operands[10]);
+                        december.prop("checked", data.operands[11]);
+                    }
+
+                    operator.change();
+                    item[0].appendChild(fragment);
+                },
+                removeItem: function(item)
+                {
+                    let conditionList = $("#node-input-conditionList").editableList("items");
+                    conditionList.each(function(index)
+                    {
+                        $(this).find(".node-input-index").html("&#8594; " + (index + 1));
+                    });
+                },
+                sortItems: function(items)
+                {
+                    items.each(function(index)
+                    {
+                        $(this).find(".node-input-index").html("&#8594; " + (index + 1));
+                    });
+                }
+            });
+
+            node.conditions.forEach(data =>
+            {
+                conditionList.editableList("addItem", data);
+            });
+        },
+        oneditsave: function()
+        {
+            let node = this;
+
+            const WEEKDAYS =
+            [
+                node._("switch.list.weekday.sunday"),
+                node._("switch.list.weekday.monday"),
+                node._("switch.list.weekday.tuesday"),
+                node._("switch.list.weekday.wednesday"),
+                node._("switch.list.weekday.thursday"),
+                node._("switch.list.weekday.friday"),
+                node._("switch.list.weekday.saturday")
+            ];
+
+            const MONTHS =
+            [
+                node._("switch.list.month.january"),
+                node._("switch.list.month.february"),
+                node._("switch.list.month.march"),
+                node._("switch.list.month.april"),
+                node._("switch.list.month.may"),
+                node._("switch.list.month.june"),
+                node._("switch.list.month.july"),
+                node._("switch.list.month.august"),
+                node._("switch.list.month.september"),
+                node._("switch.list.month.october"),
+                node._("switch.list.month.november"),
+                node._("switch.list.month.december")
+            ];
+
+            let conditionList = $("#node-input-conditionList").editableList("items");
+            node.conditions = [];
+            node.outputs = 0;
+
+            conditionList.each(function(index)
+            {
+                let data = {};
+
+                let operator = $(this).find(".node-input-operator");
+                let time1 = $(this).find(".node-input-time1");
+                let time2 = $(this).find(".node-input-time2");
+                let monday = $(this).find(".node-input-monday");
+                let tuesday = $(this).find(".node-input-tuesday");
+                let wednesday = $(this).find(".node-input-wednesday");
+                let thursday = $(this).find(".node-input-thursday");
+                let friday = $(this).find(".node-input-friday");
+                let saturday = $(this).find(".node-input-saturday");
+                let sunday = $(this).find(".node-input-sunday");
+                let january = $(this).find(".node-input-january");
+                let february = $(this).find(".node-input-february");
+                let march = $(this).find(".node-input-march");
+                let april = $(this).find(".node-input-april");
+                let may = $(this).find(".node-input-may");
+                let june = $(this).find(".node-input-june");
+                let july = $(this).find(".node-input-july");
+                let august = $(this).find(".node-input-august");
+                let september = $(this).find(".node-input-september");
+                let october = $(this).find(".node-input-october");
+                let november = $(this).find(".node-input-november");
+                let december = $(this).find(".node-input-december");
+
+                data.operator = operator.val();
+                data.label = node._("switch.list.operator." + data.operator);
+
+                if ((data.operator == "before") || (data.operator == "after"))
+                {
+                    data.operands = {};
+                    data.operands.type = time1.typedInput("type");
+                    data.operands.value = time1.typedInput("value");
+
+                    if (data.operands.type == "time")
+                    {
+                        data.label += " " + time1.typedInput("value");
+                    }
+                    else if (data.operands.type == "sun")
+                    {
+                        data.label += " " + node._("node-red-contrib-chronos/chronos-config:common.list.sunTime." + time1.typedInput("value"));
+                    }
+                    else if (data.operands.type == "sun")
+                    {
+                        data.label += " " + node._("node-red-contrib-chronos/chronos-config:common.list.moonTime." + time1.typedInput("value"));
+                    }
+                }
+                else if ((data.operator == "between") || (data.operator == "outside"))
+                {
+                    data.operands = [{}, {}];
+                    data.operands[0].type = time1.typedInput("type");
+                    data.operands[0].value = time1.typedInput("value");
+                    data.operands[1].type = time2.typedInput("type");
+                    data.operands[1].value = time2.typedInput("value");
+
+                    data.label += " ";
+                    if (data.operands[0].type == "time")
+                    {
+                        data.label += time1.typedInput("value");
+                    }
+                    else if (data.operands[0].type == "sun")
+                    {
+                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.sunTime." + time1.typedInput("value"));
+                    }
+                    else if (data.operands[0].type == "moon")
+                    {
+                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.moonTime." + time1.typedInput("value"));
+                    }
+                    data.label += " " + node._("switch.label.and") + " ";
+                    if (data.operands[1].type == "time")
+                    {
+                        data.label += time2.typedInput("value");
+                    }
+                    else if (data.operands[1].type == "sun")
+                    {
+                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.sunTime." + time2.typedInput("value"));
+                    }
+                    else if (data.operands[1].type == "moon")
+                    {
+                        data.label += node._("node-red-contrib-chronos/chronos-config:common.list.moonTime." + time2.typedInput("value"));
+                    }
+                }
+                else if (data.operator == "weekdays")
+                {
+                    data.operands = [false, false, false, false, false, false, false];
+                    data.operands[0] = sunday.prop("checked");
+                    data.operands[1] = monday.prop("checked");
+                    data.operands[2] = tuesday.prop("checked");
+                    data.operands[3] = wednesday.prop("checked");
+                    data.operands[4] = thursday.prop("checked");
+                    data.operands[5] = friday.prop("checked");
+                    data.operands[6] = saturday.prop("checked");
+
+                    for (let i=0; i<7; ++i)
+                    {
+                        if (data.operands[i])
+                        {
+                            data.label += " " + WEEKDAYS[i];
+                        }
+                    }
+                }
+                else if (data.operator == "months")
+                {
+                    data.operands = [false, false, false, false, false, false, false, false, false, false, false, false];
+                    data.operands[0] = january.prop("checked");
+                    data.operands[1] = february.prop("checked");
+                    data.operands[2] = march.prop("checked");
+                    data.operands[3] = april.prop("checked");
+                    data.operands[4] = may.prop("checked");
+                    data.operands[5] = june.prop("checked");
+                    data.operands[6] = july.prop("checked");
+                    data.operands[7] = august.prop("checked");
+                    data.operands[8] = september.prop("checked");
+                    data.operands[9] = october.prop("checked");
+                    data.operands[10] = november.prop("checked");
+                    data.operands[11] = december.prop("checked");
+
+                    for (let i=0; i<12; ++i)
+                    {
+                        if (data.operands[i])
+                        {
+                            data.label += " " + MONTHS[i];
+                        }
+                    }
+                }
+
+                node.conditions.push(data);
+                node.outputs++;
+            });
         }
     });
 </script>
 
 <script type="text/x-red" data-template-name="chronos-switch">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="switch.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]switch.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="switch.label.config"></span></label>
+        <input type="text" id="node-input-config" data-i18n="[placeholder]switch.label.config">
+    </div>
+    <div class="form-row" style="padding-top: 10px">
+        <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="switch.label.conditions"></span></label>
+        <div class="form-row">
+            <ol id="node-input-conditionList"></ol>
+        </div>
+    </div>
+    <div class="form-row">
+        <input id="node-input-stopOnFirstMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-stopOnFirstMatch" style="margin-bottom: 0px; width: auto;" data-i18n="switch.label.stopOnFirstMatch"></label>
+    </div>
 </script>

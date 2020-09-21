@@ -27,7 +27,7 @@ module.exports = function(RED)
     function ChronosSchedulerNode(settings)
     {
         const moment = require("moment");
-        const sunCalc = require("suncalc");
+        const time = require("./common/time.js");
 
         let node = this;
         RED.nodes.createNode(node, settings);
@@ -37,6 +37,8 @@ module.exports = function(RED)
         if (node.config)
         {
             node.status({});
+            time.init(RED, node.config.latitude, node.config.longitude);
+
             node.triggers = settings.triggers;
 
             node.on("close", () =>
@@ -135,15 +137,15 @@ module.exports = function(RED)
 
                 if (data.trigger.type == "time")
                 {
-                    triggerTime = getUserTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.value);
+                    triggerTime = time.getUserTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.value);
                 }
                 else if (data.trigger.type == "sun")
                 {
-                    triggerTime = getSunTime(repeat ? now.clone().hour(12).add(1, "days") : now.clone().hour(12), data.trigger.value);
+                    triggerTime = time.getSunTime(repeat ? now.clone().hour(12).add(1, "days") : now.clone().hour(12), data.trigger.value);
                 }
                 else if (data.trigger.type == "moon")
                 {
-                    triggerTime = getMoonTime(repeat ? now.clone().hour(12).add(1, "days") : now.clone().hour(12), data.trigger.value);
+                    triggerTime = time.getMoonTime(repeat ? now.clone().hour(12).add(1, "days") : now.clone().hour(12), data.trigger.value);
                 }
 
                 if (data.trigger.offset != 0)
@@ -162,11 +164,11 @@ module.exports = function(RED)
                     }
                     else if (data.trigger.type == "sun")
                     {
-                        triggerTime = getSunTime(now.clone().hour(12).add(1, "days"), data.trigger.value);
+                        triggerTime = time.getSunTime(now.clone().hour(12).add(1, "days"), data.trigger.value);
                     }
                     else if (data.trigger.type == "moon")
                     {
-                        triggerTime = getMoonTime(now.clone().hour(12).add(1, "days"), data.trigger.value);
+                        triggerTime = time.getMoonTime(now.clone().hour(12).add(1, "days"), data.trigger.value);
                     }
                 }
 
@@ -175,7 +177,7 @@ module.exports = function(RED)
             }
             catch (e)
             {
-                if (e instanceof TimeError)
+                if (e instanceof time.TimeError)
                 {
                     node.error(e.message, e.details);
                 }
@@ -212,91 +214,6 @@ module.exports = function(RED)
             }
 
             setupTimer(data, true);
-        }
-
-        function getUserTime(day, value)
-        {
-            let ret = null;
-
-            let matches = value.match(/^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(am|AM|pm|PM)?$/);
-            if (matches)
-            {
-                let hour = matches[1];
-                let min = matches[2];
-                let sec = matches[3];
-                let ampm = matches[4];
-
-                if (ampm)
-                {
-                    switch (ampm.toUpperCase())
-                    {
-                        case "AM":
-                        {
-                            if (hour >= 12)
-                            {
-                                hour = 0;
-                            }
-
-                            break;
-                        }
-                        case "PM":
-                        {
-                            if (hour < 12)
-                            {
-                                hour += 12;
-                            }
-
-                            break;
-                        }
-                    }
-                }
-
-                ret = day.hour(hour).minute(min).second(sec ? sec : 0);
-            }
-
-            if (!ret)
-            {
-                throw new TimeError(RED._("scheduler.error.invalidTime"), {payload: {trigger: "time", value: value}});
-            }
-
-            return ret;
-        }
-
-        function getSunTime(day, type)
-        {
-            let sunTimes = sunCalc.getTimes(day.toDate(), node.config.latitude, node.config.longitude);
-
-            let ret = moment(sunTimes[type]);
-            if (!ret.isValid())
-            {
-                throw new TimeError(RED._("scheduler.error.unavailableTime"), {payload: {trigger: "sun", value: type}});
-            }
-
-            return ret;
-        }
-
-        function getMoonTime(day, type)
-        {
-            let moonTimes = sunCalc.getMoonTimes(day.toDate(), node.config.latitude, node.config.longitude);
-
-            let ret = moment(moonTimes[type]);
-            if (!ret.isValid())
-            {
-                throw new TimeError(RED._("scheduler.error.unavailableTime"), {payload: {trigger: "moon", value: type, alwaysUp: moonTimes.alwaysUp, alwaysDown: moonTimes.alwaysDown}});
-            }
-
-            return ret;
-        }
-    }
-
-    class TimeError extends Error
-    {
-        constructor(message, details)
-        {
-            super(message);
-
-            this.name = "TimeError";
-            this.details = details;
         }
     }
 

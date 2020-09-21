@@ -24,9 +24,171 @@
 
 module.exports = function(RED)
 {
-    function ChronosSwitchNode(config)
+    function ChronosSwitchNode(settings)
     {
-        RED.nodes.createNode(this, config);
+        const moment = require("moment");
+        const time = require("./common/time.js");
+
+        let node = this;
+        RED.nodes.createNode(this, settings);
+
+        node.config = RED.nodes.getNode(settings.config);
+
+        if (!node.config)
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+        }
+        else if (settings.conditions.length == 0)
+        {
+            node.status({fill: "red", shape: "dot", text: "switch.status.noConditions"});
+            node.error(RED._("switch.error.noConditions"));
+        }
+        else
+        {
+            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+
+            node.status({});
+            time.init(RED, node.config.latitude, node.config.longitude);
+
+            node.conditions = settings.conditions;
+            node.stopOnFirstMatch = settings.stopOnFirstMatch;
+
+            node.on("input", (msg, send, done) =>
+            {
+                if (msg)
+                {
+                    if (!send)  // Node-RED 0.x backward compatibility
+                    {
+                        send = () =>
+                        {
+                            node.send.apply(node, arguments);
+                        };
+                    }
+
+                    if (!done)  // Node-RED 0.x backward compatibility
+                    {
+                        done = () =>
+                        {
+                            var args = [...arguments];
+                            args.push(msg);
+                            node.error.apply(node, args);
+                        };
+                    }
+
+                    let now = moment();
+                    let ports = [];
+
+                    for (let i=0; i<node.conditions.length; ++i)
+                    {
+                        ports.push(null);
+                    }
+
+                    for (let i=0; i<node.conditions.length; ++i)
+                    {
+                        try
+                        {
+                            let cond = node.conditions[i];
+
+                            if ((cond.operator == "before") || (cond.operator == "after"))
+                            {
+                                let targetTime = getTime(now.clone(), cond.operands);
+
+                                node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
+                                if (((cond.operator == "before") && now.isBefore(targetTime)) ||
+                                    ((cond.operator == "after") && now.isAfter(targetTime)))
+                                {
+                                    ports[i] = prepareMessage(msg);
+                                }
+                            }
+                            else if ((cond.operator == "between") || (cond.operator == "outside"))
+                            {
+                                let time1 = getTime(now.clone(), cond.operands[0]);
+                                let time2 = getTime(now.clone(), cond.operands[1]);
+
+                                if (time2.isBefore(time1))
+                                {
+                                    if (cond.operands[1].type == "time")
+                                    {
+                                        time2.add(1, "days");
+                                    }
+                                    else
+                                    {
+                                        time2 = getTime(time2.add(1, "day"), cond.operands[1]);
+                                    }
+                                }
+
+                                node.debug("Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss") + " and " + time2.format("YYYY-MM-DD HH:mm:ss"));
+                                if (((cond.operator == "between") && (now.isSameOrAfter(time1) && now.isSameOrBefore(time2))) ||
+                                    ((cond.operator == "outside") && (now.isBefore(time1) || now.isAfter(time2))))
+                                {
+                                    ports[i] = prepareMessage(msg);
+                                }
+                            }
+                            else if ((cond.operator == "weekdays"))
+                            {
+                                if (cond.operands[now.day()])
+                                {
+                                    ports[i] = prepareMessage(msg);
+                                }
+                            }
+                            else if ((cond.operator == "months"))
+                            {
+                                if (cond.operands[now.month()])
+                                {
+                                    ports[i] = prepareMessage(msg);
+                                }
+                            }
+
+                            if (ports[i] && node.stopOnFirstMatch)
+                            {
+                                break;
+                            }
+                        }
+                        catch (e)
+                        {
+                            if (e instanceof time.TimeError)
+                            {
+                                let errMsg = RED.util.cloneMessage(msg);
+                                errMsg.errorDetails = e.details;
+
+                                node.error(e.message, errMsg);
+                            }
+                            else
+                            {
+                                node.error(e.message);
+                                node.debug(e.stack);
+                            }
+                        }
+                    }
+
+                    node.send(ports);
+                }
+
+                done();
+            });
+        }
+
+        function getTime(day, operands)
+        {
+            if (operands.type == "time")
+            {
+                return time.getUserTime(day, operands.value);
+            }
+            else if (operands.type == "sun")
+            {
+                return time.getSunTime(day.hour(12), operands.value);
+            }
+            else if (operands.type == "moon")
+            {
+                return time.getMoonTime(day.hour(12), operands.value);
+            }
+        }
+
+        function prepareMessage(msg)
+        {
+            return (node.conditions.length > 1) ? RED.util.cloneMessage(msg) : msg;
+        }
     }
 
     RED.nodes.registerType("chronos-switch", ChronosSwitchNode);

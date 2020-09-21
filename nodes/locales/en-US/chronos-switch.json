@@ -1,5 +1,60 @@
 {
     "switch":
     {
+        "label":
+        {
+            "inputPort":         "input message",
+            "outputPort":        "routed message",
+            "name":              "Name",
+            "config":            "Configuration",
+            "conditions":        "Conditions",
+            "stopOnFirstMatch":  "Stop on first match",
+            "and":               "and"
+        },
+        "list":
+        {
+            "operator":
+            {
+                "before":    "before",
+                "after":     "after",
+                "between":   "between",
+                "outside":   "outside",
+                "weekdays":  "week days",
+                "months":    "months"
+            },
+            "weekday":
+            {
+                "monday":     "MO",
+                "tuesday":    "TU",
+                "wednesday":  "WE",
+                "thursday":   "TH",
+                "friday":     "FR",
+                "saturday":   "SA",
+                "sunday":     "SU"
+            },
+            "month":
+            {
+                "january":    "JAN",
+                "february":   "FEB",
+                "march":      "MAR",
+                "april":      "APR",
+                "may":        "MAY",
+                "june":       "JUN",
+                "july":       "JUL",
+                "august":     "AUG",
+                "september":  "SEP",
+                "october":    "OCT",
+                "november":   "NOV",
+                "december":   "DEC"
+            }
+        },
+        "status":
+        {
+            "noConditions":  "no conditions"
+        },
+        "error":
+        {
+            "noConditions":  "No conditions configured"
+        }
     }
 }
