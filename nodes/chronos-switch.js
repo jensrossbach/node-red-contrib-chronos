@@ -177,11 +177,11 @@ module.exports = function(RED)
             }
             else if (operands.type == "sun")
             {
-                return time.getSunTime(day.hour(12), operands.value);
+                return time.getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), operands.value);
             }
             else if (operands.type == "moon")
             {
-                return time.getMoonTime(day.hour(12), operands.value);
+                return time.getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), operands.value);
             }
         }
 

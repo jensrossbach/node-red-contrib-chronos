@@ -34,8 +34,20 @@ module.exports = function(RED)
 
         node.config = RED.nodes.getNode(settings.config);
 
-        if (node.config)
+        if (!node.config)
         {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+        }
+        else if (settings.triggers.length == 0)
+        {
+            node.status({fill: "red", shape: "dot", text: "scheduler.status.noTriggers"});
+            node.error(RED._("scheduler.error.noTriggers"));
+        }
+        else
+        {
+            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+
             node.status({});
             time.init(RED, node.config.latitude, node.config.longitude);
 
@@ -83,21 +95,7 @@ module.exports = function(RED)
                 }
             });
 
-            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
-            if (node.triggers.length == 0)
-            {
-                node.status({fill: "red", shape: "dot", text: "scheduler.status.noTriggers"});
-                node.error(RED._("scheduler.error.noTriggers"));
-            }
-            else
-            {
-                startTimers();
-            }
-        }
-        else
-        {
-            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
-            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+            startTimers();
         }
 
         function startTimers()
@@ -130,23 +128,10 @@ module.exports = function(RED)
         {
             try
             {
-                const now = moment();
-                let triggerTime = null;
-
                 node.debug("Set up timer for trigger type '" + data.trigger.type + "', value '" + data.trigger.value + (repeat ? "' (repeating)" : "'"));
 
-                if (data.trigger.type == "time")
-                {
-                    triggerTime = time.getUserTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.value);
-                }
-                else if (data.trigger.type == "sun")
-                {
-                    triggerTime = time.getSunTime(repeat ? now.clone().hour(12).add(1, "days") : now.clone().hour(12), data.trigger.value);
-                }
-                else if (data.trigger.type == "moon")
-                {
-                    triggerTime = time.getMoonTime(repeat ? now.clone().hour(12).add(1, "days") : now.clone().hour(12), data.trigger.value);
-                }
+                const now = moment();
+                let triggerTime = getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger);
 
                 if (data.trigger.offset != 0)
                 {
@@ -162,13 +147,9 @@ module.exports = function(RED)
                     {
                         triggerTime.add(1, "days");
                     }
-                    else if (data.trigger.type == "sun")
+                    else
                     {
-                        triggerTime = time.getSunTime(now.clone().hour(12).add(1, "days"), data.trigger.value);
-                    }
-                    else if (data.trigger.type == "moon")
-                    {
-                        triggerTime = time.getMoonTime(now.clone().hour(12).add(1, "days"), data.trigger.value);
+                        triggerTime = getTime(triggerTime.add(1, "days"), data.trigger);
                     }
                 }
 
@@ -186,6 +167,22 @@ module.exports = function(RED)
                     node.error(e.message);
                     node.debug(e.stack);
                 }
+            }
+        }
+
+        function getTime(day, triggers)
+        {
+            if (triggers.type == "time")
+            {
+                return time.getUserTime(day, triggers.value);
+            }
+            else if (triggers.type == "sun")
+            {
+                return time.getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), triggers.value);
+            }
+            else if (triggers.type == "moon")
+            {
+                return time.getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), triggers.value);
             }
         }
 
