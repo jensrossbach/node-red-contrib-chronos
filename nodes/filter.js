@@ -26,7 +26,6 @@ module.exports = function(RED)
 {
     function ChronosFilterNode(settings)
     {
-        const moment = require("moment");
         const time = require("./common/time.js");
 
         let node = this;
@@ -76,7 +75,7 @@ module.exports = function(RED)
                         };
                     }
 
-                    let now = moment();
+                    let now = time.getCurrentTime();
                     let result = false;
 
                     for (let i=0; i<node.conditions.length; ++i)
@@ -87,7 +86,7 @@ module.exports = function(RED)
 
                             if ((cond.operator == "before") || (cond.operator == "after"))
                             {
-                                let targetTime = getTime(now.clone(), cond.operands);
+                                let targetTime = time.getTime(now.clone(), cond.operands.type, cond.operands.value);
 
                                 node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
                                 result = (((cond.operator == "before") && now.isBefore(targetTime)) ||
@@ -95,8 +94,8 @@ module.exports = function(RED)
                             }
                             else if ((cond.operator == "between") || (cond.operator == "outside"))
                             {
-                                let time1 = getTime(now.clone(), cond.operands[0]);
-                                let time2 = getTime(now.clone(), cond.operands[1]);
+                                let time1 = time.getTime(now.clone(), cond.operands[0].type, cond.operands[0].value);
+                                let time2 = time.getTime(now.clone(), cond.operands[1].type, cond.operands[1].value);
 
                                 if (time2.isBefore(time1))
                                 {
@@ -106,7 +105,7 @@ module.exports = function(RED)
                                     }
                                     else
                                     {
-                                        time2 = getTime(time2.add(1, "day"), cond.operands[1]);
+                                        time2 = time.getTime(time2.add(1, "day"), cond.operands[1].type, cond.operands[1].value);
                                     }
                                 }
 
@@ -157,22 +156,6 @@ module.exports = function(RED)
 
                 done();
             });
-        }
-
-        function getTime(day, operands)
-        {
-            if (operands.type == "time")
-            {
-                return time.getUserTime(day, operands.value);
-            }
-            else if (operands.type == "sun")
-            {
-                return time.getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), operands.value);
-            }
-            else if (operands.type == "moon")
-            {
-                return time.getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), operands.value);
-            }
         }
     }
 

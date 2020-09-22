@@ -26,7 +26,6 @@ module.exports = function(RED)
 {
     function ChronosSchedulerNode(settings)
     {
-        const moment = require("moment");
         const time = require("./common/time.js");
 
         let node = this;
@@ -130,8 +129,8 @@ module.exports = function(RED)
             {
                 node.debug("Set up timer for trigger type '" + data.trigger.type + "', value '" + data.trigger.value + (repeat ? "' (repeating)" : "'"));
 
-                const now = moment();
-                let triggerTime = getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger);
+                const now = time.getCurrentTime();
+                let triggerTime = time.getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.type, data.trigger.value);
 
                 if (data.trigger.offset != 0)
                 {
@@ -149,7 +148,7 @@ module.exports = function(RED)
                     }
                     else
                     {
-                        triggerTime = getTime(triggerTime.add(1, "days"), data.trigger);
+                        triggerTime = time.getTime(triggerTime.add(1, "days"), data.trigger.type, data.trigger.value);
                     }
                 }
 
@@ -167,22 +166,6 @@ module.exports = function(RED)
                     node.error(e.message);
                     node.debug(e.stack);
                 }
-            }
-        }
-
-        function getTime(day, triggers)
-        {
-            if (triggers.type == "time")
-            {
-                return time.getUserTime(day, triggers.value);
-            }
-            else if (triggers.type == "sun")
-            {
-                return time.getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), triggers.value);
-            }
-            else if (triggers.type == "moon")
-            {
-                return time.getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), triggers.value);
             }
         }
 

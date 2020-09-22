@@ -54,6 +54,11 @@ function init(_RED, _latitude, _longitude)
     sunCalc = require("suncalc");
 }
 
+function getCurrentTime()
+{
+    return moment();
+}
+
 function getUserTime(day, value)
 {
     let ret = null;
@@ -146,12 +151,30 @@ function getMoonTime(day, type)
     return ret;
 }
 
+function getTime(day, type, value)
+{
+    if (type == "time")
+    {
+        return getUserTime(day, value);
+    }
+    else if (type == "sun")
+    {
+        return getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
+    }
+    else if (type == "moon")
+    {
+        return getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
+    }
+}
+
 
 module.exports =
 {
     init: init,
+    getCurrentTime: getCurrentTime,
     getUserTime: getUserTime,
     getSunTime: getSunTime,
     getMoonTime: getMoonTime,
+    getTime: getTime,
     TimeError: TimeError
 };
