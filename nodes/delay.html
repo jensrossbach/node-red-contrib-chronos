@@ -22,6 +22,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
 
+<script type="text/x-red" data-template-name="chronos-delay">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
+        <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-when"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.when"></span></label>
+        <input type="text" id="node-input-when" style="width: 70%;">
+        <input id="node-input-whenType" type="hidden">
+        <input id="node-input-whenValue" type="hidden">
+    </div>
+    <div class="form-row">
+        <label for="node-input-offset"><i class="fa fa-arrows-h"></i> <span data-i18n="delay.label.offset"></span></label>
+        <input id="node-input-offset" style="width: 60px;">
+        <span style="padding-left: 10px;">
+            <input id="node-input-random" type="checkbox" style="width: auto; margin-top: 0px; margin-bottom: 1px;">
+            <label for="node-input-random" style="width: auto; margin-bottom: 0px;" data-i18n="delay.label.random"></label>
+        </span>
+    </div>
+</script>
+
 <script type="text/javascript">
     RED.nodes.registerType("chronos-delay",
     {
@@ -241,29 +266,4 @@ SOFTWARE.
             $("#node-input-whenValue").val($("#node-input-when").typedInput("value"));
         }
     });
-</script>
-
-<script type="text/x-red" data-template-name="chronos-delay">
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
-        <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
-    </div>
-    <div class="form-row">
-        <label for="node-input-when"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.when"></span></label>
-        <input type="text" id="node-input-when" style="width: 70%;">
-        <input id="node-input-whenType" type="hidden">
-        <input id="node-input-whenValue" type="hidden">
-    </div>
-    <div class="form-row">
-        <label for="node-input-offset"><i class="fa fa-arrows-h"></i> <span data-i18n="delay.label.offset"></span></label>
-        <input id="node-input-offset" style="width: 60px;">
-        <span style="padding-left: 10px;">
-            <input id="node-input-random" type="checkbox" style="width: auto; margin-top: 0px; margin-bottom: 1px;">
-            <label for="node-input-random" style="width: auto; margin-bottom: 0px;" data-i18n="delay.label.random"></label>
-        </span>
-    </div>
 </script>

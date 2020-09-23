@@ -22,6 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
 
+<script type="text/x-red" data-template-name="chronos-switch">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
+        <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
+    </div>
+    <div class="form-row" style="padding-top: 10px">
+        <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
+        <div class="form-row">
+            <ol id="node-input-conditionList"></ol>
+        </div>
+    </div>
+    <div class="form-row">
+        <input id="node-input-stopOnFirstMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-stopOnFirstMatch" style="margin-bottom: 0px; width: auto;" data-i18n="switch.label.stopOnFirstMatch"></label>
+    </div>
+</script>
+
 <script type="text/javascript">
     RED.nodes.registerType("chronos-switch",
     {
@@ -567,25 +588,4 @@ SOFTWARE.
             });
         }
     });
-</script>
-
-<script type="text/x-red" data-template-name="chronos-switch">
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
-        <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
-    </div>
-    <div class="form-row" style="padding-top: 10px">
-        <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
-        <div class="form-row">
-            <ol id="node-input-conditionList"></ol>
-        </div>
-    </div>
-    <div class="form-row">
-        <input id="node-input-stopOnFirstMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-stopOnFirstMatch" style="margin-bottom: 0px; width: auto;" data-i18n="switch.label.stopOnFirstMatch"></label>
-    </div>
 </script>

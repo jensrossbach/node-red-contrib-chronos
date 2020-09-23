@@ -22,6 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
 
+<script type="text/x-red" data-template-name="chronos-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
+        <input type="text" id="node-config-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-latitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.latitude"></span></label>
+        <input id="node-config-input-latitude" data-i18n="[placeholder]config.label.latitude">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
+        <input id="node-config-input-longitude" data-i18n="[placeholder]config.label.longitude">
+    </div>
+</script>
+
 <script type="text/javascript">
     RED.nodes.registerType("chronos-config",
     {
@@ -100,19 +115,4 @@ SOFTWARE.
             $("#node-config-input-longitude").spinner(longitudeInput);
         }
     });
-</script>
-
-<script type="text/x-red" data-template-name="chronos-config">
-    <div class="form-row">
-        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
-        <input type="text" id="node-config-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-latitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.latitude"></span></label>
-        <input id="node-config-input-latitude" data-i18n="[placeholder]config.label.latitude">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
-        <input id="node-config-input-longitude" data-i18n="[placeholder]config.label.longitude">
-    </div>
 </script>
