@@ -1,0 +1,17 @@
+{
+    "delay":
+    {
+        "label":
+        {
+            "outputPort":  "delayed message",
+            "min":         " min.",
+            "when":        "When",
+            "offset":      "Offset",
+            "random":      "Randomized"
+        },
+        "status":
+        {
+            "queued":  " queued"
+        }
+    }
+}

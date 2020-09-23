@@ -30,7 +30,7 @@ SOFTWARE.
         icon:         "timer.svg",
         inputs:       1,
         outputs:      1,
-        paletteLabel: "Scheduler",
+        paletteLabel: "scheduler",
         label: function()
         {
             return (this.name || "Scheduler");
@@ -79,59 +79,59 @@ SOFTWARE.
                     [
                         {
                             value: "sunrise",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunrise")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
                         },
                         {
                             value: "sunriseEnd",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunriseEnd")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
                         },
                         {
                             value: "sunsetStart",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunsetStart")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
                         },
                         {
                             value: "sunset",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.sunset")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
                         },
                         {
                             value: "goldenHour",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.goldenHour")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
                         },
                         {
                             value: "goldenHourEnd",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.goldenHourEnd")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
                         },
                         {
                             value: "night",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.night")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
                         },
                         {
                             value: "nightEnd",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nightEnd")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
                         },
                         {
                             value: "dawn",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.dawn")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
                         },
                         {
                             value: "nauticalDawn",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nauticalDawn")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
                         },
                         {
                             value: "dusk",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.dusk")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
                         },
                         {
                             value: "nauticalDusk",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nauticalDusk")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
                         },
                         {
                             value: "solarNoon",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.solarNoon")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
                         },
                         {
                             value: "nadir",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sunTime.nadir")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
                         }
                     ];
 
@@ -139,11 +139,11 @@ SOFTWARE.
                     [
                         {
                             value: "rise",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moonTime.rise")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
                         },
                         {
                             value: "set",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moonTime.set")
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
                         }
                     ];
 
@@ -159,7 +159,7 @@ SOFTWARE.
                     const sunTimeInput =
                     {
                         value: "sun",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.sunTime"),
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
                         icon: "icons/node-red-contrib-chronos/sun.svg",
                         options: sunTimes
                     };
@@ -167,7 +167,7 @@ SOFTWARE.
                     const moonTimeInput =
                     {
                         value: "moon",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.moonTime"),
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
                         icon: "icons/node-red-contrib-chronos/moon.svg",
                         options: moonTimes
                     };

@@ -24,7 +24,7 @@
 
 module.exports = function(RED)
 {
-    function ChronosSchedulerNode(settings)
+    function ChronosDelayNode(settings)
     {
         const time = require("./common/time.js");
 
@@ -38,11 +38,6 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
         }
-        else if (settings.triggers.length == 0)
-        {
-            node.status({fill: "red", shape: "dot", text: "scheduler.status.noTriggers"});
-            node.error(RED._("scheduler.error.noTriggers"));
-        }
         else
         {
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
@@ -50,11 +45,28 @@ module.exports = function(RED)
             node.status({});
             time.init(RED, node.config.latitude, node.config.longitude);
 
-            node.triggers = settings.triggers;
+            node.whenType = settings.whenType;
+            node.whenValue = settings.whenValue;
+            node.offset = settings.offset;
+            node.random = settings.random;
+
+            node.msgQueue = [];
 
             node.on("close", () =>
             {
-                stopTimers();
+                if (node.delayTimer)
+                {
+                    node.debug("Tear down timer for type '" + node.whenType + "'");
+
+                    clearTimeout(node.delayTimer);
+                    delete node.delayTimer;
+                }
+
+                if (node.updateTimer)
+                {
+                    clearTimeout(node.updateTimer);
+                    delete node.updateTimer;
+                }
             });
 
             node.on("input", (msg, send, done) =>
@@ -77,83 +89,115 @@ module.exports = function(RED)
                     };
                 }
 
-                if (typeof msg.payload == "boolean")
+                if ("drop" in msg)
                 {
-                    stopTimers();
+                    dropQueue();
 
-                    if (msg.payload)
+                    if ("enqueue" in msg)
                     {
-                        startTimers();
+                        enqueueMessage(msg, done);
                     }
+                }
+                else if ("flush" in msg)
+                {
+                    flushQueue();
 
-                    done();
+                    if ("enqueue" in msg)
+                    {
+                        enqueueMessage(msg, done);
+                    }
                 }
                 else
                 {
-                    done(RED._("scheduler.error.invalidInput"));
+                    enqueueMessage(msg, done);
                 }
-            });
 
-            startTimers();
-        }
-
-        function startTimers()
-        {
-            node.debug("Starting timers");
-
-            node.triggers.forEach(data =>
-            {
-                setupTimer(data, false);
+                done();
             });
         }
 
-        function stopTimers()
+        function enqueueMessage(msg, done)
         {
-            node.debug("Stopping timers");
+            node.msgQueue.push({msg: msg, done: done});
+            updateStatus();
 
-            node.triggers.forEach(data =>
+            if (!node.delayTimer)
             {
-                if ("timer" in data)
+                setupDelayTimer();
+            }
+        }
+
+        function dropQueue()
+        {
+            while (node.msgQueue.length > 0)
+            {
+                let item = node.msgQueue.shift();
+                item.done();
+            }
+
+            node.status({});
+        }
+
+        function flushQueue()
+        {
+            while (node.msgQueue.length > 0)
+            {
+                let item = node.msgQueue.shift();
+
+                node.send(item.msg);
+                item.done();
+            }
+
+            node.status({});
+        }
+
+        function updateStatus()
+        {
+            if (!node.updateTimer)
+            {
+                node.updateTimer = setTimeout(() =>
                 {
-                    node.debug("Tear down timer for type '" + data.trigger.type + "'");
-
-                    clearTimeout(data.timer);
-                    delete data.timer;
-                }
-            });
+                    node.status((node.msgQueue.length > 0) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + RED._("delay.status.queued")} : {});
+                    delete node.updateTimer;
+                }, 500);
+            }
         }
 
-        function setupTimer(data, repeat)
+        function setupDelayTimer()
         {
             try
             {
-                node.debug("Set up timer for type '" + data.trigger.type + "', value '" + data.trigger.value + (repeat ? "' (repeating)" : "'"));
+                node.debug("Set up timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
 
                 const now = time.getCurrentTime();
-                let triggerTime = time.getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.type, data.trigger.value);
+                let sendTime = time.getTime(now.clone(), node.whenType, node.whenValue);
 
-                if (data.trigger.offset != 0)
+                if (node.offset != 0)
                 {
-                    let offset = data.trigger.random ? Math.round(Math.random() * data.trigger.offset) : data.trigger.offset;
-                    triggerTime.add(offset, "minutes");
+                    let offset = node.random ? Math.round(Math.random() * node.offset) : node.offset;
+                    sendTime.add(offset, "minutes");
                 }
 
-                if (triggerTime.isBefore(now))
+                if (sendTime.isBefore(now))
                 {
-                    node.debug("Trigger time before current time, adding one day");
+                    node.debug("Send time before current time, adding one day");
 
-                    if (data.trigger.type == "time")
+                    if (node.whenType == "time")
                     {
-                        triggerTime.add(1, "days");
+                        sendTime.add(1, "days");
                     }
                     else
                     {
-                        triggerTime = time.getTime(triggerTime.add(1, "days"), data.trigger.type, data.trigger.value);
+                        sendTime = time.getTime(sendTime.add(1, "days"), node.whenType, node.whenValue);
                     }
                 }
 
-                node.debug("Starting timer for trigger at " + triggerTime.format("YYYY-MM-DD HH:mm:ss"));
-                data.timer = setTimeout(handleTimeout, triggerTime.diff(now), data);
+                node.debug("Starting timer for delayed message at " + sendTime.format("YYYY-MM-DD HH:mm:ss"));
+                node.delayTimer = setTimeout(() =>
+                {
+                    flushQueue();
+                    delete node.delayTimer;
+                }, sendTime.diff(now));
             }
             catch (e)
             {
@@ -168,34 +212,7 @@ module.exports = function(RED)
                 }
             }
         }
-
-        function handleTimeout(data)
-        {
-            delete data.timer;
-
-            if (data.output.type == "global")
-            {
-                node.context().global.set(data.output.property.name, data.output.property.value);
-            }
-            else if (data.output.type == "flow")
-            {
-                node.context().flow.set(data.output.property.name, data.output.property.value);
-            }
-            else if (data.output.type == "msg")
-            {
-                let msg = {};
-                msg[data.output.property.name] = data.output.property.value;
-
-                node.send(msg);
-            }
-            else if (data.output.type == "fullMsg")
-            {
-                node.send(JSON.parse(data.output.value));
-            }
-
-            setupTimer(data, true);
-        }
     }
 
-    RED.nodes.registerType("chronos-scheduler", ChronosSchedulerNode);
+    RED.nodes.registerType("chronos-delay", ChronosDelayNode);
 };

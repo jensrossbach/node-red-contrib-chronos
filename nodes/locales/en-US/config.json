@@ -8,13 +8,13 @@
             "config":       "Configuration",
             "conditions":   "Conditions",
             "time":         "Time of Day",
-            "sunTime":      "Sun Position",
-            "moonTime":     "Moon Position",
+            "sun":          "Sun Position",
+            "moon":         "Moon Position",
             "fullMessage":  "full message"
         },
         "list":
         {
-            "sunTime":
+            "sun":
             {
                 "sunrise":        "Sunrise (start)",
                 "sunriseEnd":     "Sunrise (end)",
@@ -31,7 +31,7 @@
                 "solarNoon":      "Solar Noon",
                 "nadir":          "Nadir"
             },
-            "moonTime":
+            "moon":
             {
                 "rise":  "Moonrise",
                 "set":   "Moonset"
