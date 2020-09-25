@@ -95,6 +95,9 @@ module.exports = function(RED)
 
                     if ("enqueue" in msg)
                     {
+                        delete msg.drop;
+                        delete msg.enqueue;
+
                         enqueueMessage(msg, done);
                     }
                 }
@@ -104,6 +107,9 @@ module.exports = function(RED)
 
                     if ("enqueue" in msg)
                     {
+                        delete msg.flush;
+                        delete msg.enqueue;
+
                         enqueueMessage(msg, done);
                     }
                 }

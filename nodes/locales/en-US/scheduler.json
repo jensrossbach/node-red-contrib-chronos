@@ -4,18 +4,18 @@
         "label":
         {
             "inputPort":   "enable/disable",
-            "outputPort":  "triggered message",
-            "triggers":    "Triggers",
+            "outputPort":  "scheduled message",
+            "schedule":    "Schedule",
             "output":      "Output"
         },
         "status":
         {
-            "noTriggers":  "no triggers"
+            "noSchedules":  "no schedule"
         },
         "error":
         {
-            "noTriggers":       "No triggers configured",
-            "invalidInput":     "Invalid input message"
+            "noSchedules":   "No schedule configured",
+            "invalidInput":  "Invalid input message"
         }
     }
 }

@@ -23,4 +23,48 @@ SOFTWARE.
 -->
 
 <script type="text/x-red" data-help-name="chronos-switch">
+    <p>
+        Routes messages based on their ingress time and date.
+    </p>
+    <h3>Inputs</h3>
+    <p>
+        Incoming messages are routed to none, one or multiple of the configured
+        output ports. If more than one condition is specified and <i>Stop on
+        first match</i> is not selected, messages are always cloned at the
+        output ports.
+    </p>
+    <h3>Outputs</h3>
+    <p>
+        Each output port is dedicated to a specific condition which is evaluated
+        against the message's ingress time and date.
+    </p>
+    <h3>Details</h3>
+    <p>
+        This node routes incoming messages to output ports based on the time
+        and date of arrival.
+    </p>
+    <h3>Configuration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>The name of the node (optional).</dd>
+        <dt>Configuration</dt>
+        <dd>
+            The configuration with the location to be used for sun/moon position
+            calculations.
+        </dd>
+        <dt>Conditions</dt>
+        <dd>
+            The list containing the conditions for routing messages to output
+            ports. New entries can be added using the button below the list.
+            Existing entries can be reordered or deleted. Depending on the
+            selected operator on the left side, there are fields for specifying
+            times or time ranges (either directly entered or as sun or moon
+            position based event), selection of week days or selection of months.
+        </dd>
+        <dt>Stop on first match</dt>
+        <dd>
+            If selected, evaluation of conditions is stopped on the first match,
+            i.e. message are never routed to more than one output port.
+        </dd>
+    </dl>
 </script>

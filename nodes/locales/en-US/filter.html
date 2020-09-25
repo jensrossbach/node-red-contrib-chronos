@@ -23,4 +23,47 @@ SOFTWARE.
 -->
 
 <script type="text/x-red" data-help-name="chronos-filter">
+    <p>
+        Filters messages based on their ingress time and date.
+    </p>
+    <h3>Inputs</h3>
+    <p>
+        Incoming messages are either handed over to the output or discarded.
+    </p>
+    <h3>Outputs</h3>
+    <p>
+        If one or multiple conditions match the message's ingress time and date,
+        it is sent out.
+    </p>
+    <h3>Details</h3>
+    <p>
+        This node is similar to the time switch node but instead of routing
+        messages to different output ports, it hands over or discards messages
+        depending on different conditions.
+    </p>
+    <h3>Configuration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>The name of the node (optional).</dd>
+        <dt>Configuration</dt>
+        <dd>
+            The configuration with the location to be used for sun/moon position
+            calculations.
+        </dd>
+        <dt>Conditions</dt>
+        <dd>
+            The list containing the conditions for filtering messages. New entries
+            can be added using the button below the list. Existing entries can be
+            reordered or deleted. Depending on the selected operator on the left
+            side, there are fields for specifying times or time ranges (either
+            directly entered or as sun or moon position based event), selection
+            of week days or selection of months.
+        </dd>
+        <dt>All conditions must match</dt>
+        <dd>
+            If selected, all conditions must match to hand over the message
+            (logical AND combination). Otherwise only a single condition must
+            match (logical OR combination).
+        </dd>
+    </dl>
 </script>

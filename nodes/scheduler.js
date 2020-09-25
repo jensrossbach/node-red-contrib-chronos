@@ -38,10 +38,10 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
         }
-        else if (settings.triggers.length == 0)
+        else if (settings.schedule.length == 0)
         {
-            node.status({fill: "red", shape: "dot", text: "scheduler.status.noTriggers"});
-            node.error(RED._("scheduler.error.noTriggers"));
+            node.status({fill: "red", shape: "dot", text: "scheduler.status.noSchedule"});
+            node.error(RED._("scheduler.error.noSchedule"));
         }
         else
         {
@@ -50,7 +50,7 @@ module.exports = function(RED)
             node.status({});
             time.init(RED, node.config.latitude, node.config.longitude);
 
-            node.triggers = settings.triggers;
+            node.schedule = settings.schedule;
 
             node.on("close", () =>
             {
@@ -101,7 +101,7 @@ module.exports = function(RED)
         {
             node.debug("Starting timers");
 
-            node.triggers.forEach(data =>
+            node.schedule.forEach(data =>
             {
                 setupTimer(data, false);
             });
@@ -111,7 +111,7 @@ module.exports = function(RED)
         {
             node.debug("Stopping timers");
 
-            node.triggers.forEach(data =>
+            node.schedule.forEach(data =>
             {
                 if ("timer" in data)
                 {

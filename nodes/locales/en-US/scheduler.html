@@ -23,4 +23,66 @@ SOFTWARE.
 -->
 
 <script type="text/x-red" data-help-name="chronos-scheduler">
+    <p>
+        Schedules the transmission of messages or setting of global/flow variables
+        at specific times.
+    </p>
+    <h3>Inputs</h3>
+    <p>
+        The input message can be used to either disable or re-enable the schedule.
+    </p>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">boolean</span></dt>
+        <dd>true to enable schedule, false otherwise</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <p>
+        Scheduled messages are sent to the output of this node. The structure and
+        content of the message can be defined through the configuration.
+    </p>
+    <h3>Details</h3>
+    <p>
+        This node can send messages or set global or flow variables at specific
+        times which are either manually entered or based on sun or moon position.
+        Multiple events can be planned and each can have a different trigger
+        time and produce a different kind of output.
+    </p>
+    <h3>Configuration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>The name of the node (optional).</dd>
+        <dt>Configuration</dt>
+        <dd>
+            The configuration with the location to be used for sun/moon position
+            calculations.
+        </dd>
+        <dt>Schedule</dt>
+        <dd>
+            The list containing the scheduled events. New entries can be added
+            using the button below the list. Existing entries can be reordered
+            or deleted. For each entry, a schedule time and an output can be
+            configured:
+            <ul>
+                <li>
+                    Depending on the selection on the left side, the time can
+                    be entered directly or a sun or moon position based event
+                    can be selected.
+                </li>
+                <li>
+                    An offset between -5h and +5h can be specified in minutes.
+                    The offset will be added to or substracted from the event
+                    time.
+                </li>
+                <li>
+                    If the checkbox on the right side is selected, the offset
+                    will be randomized between 0 and the specified value.
+                </li>
+                <li>
+                    The output can either be a full message, expressed in JSON
+                    form, a single message property of different types, a flow
+                    variable or a global variable.
+                </li>
+            </ul>
+        </dd>
+    </dl>
 </script>

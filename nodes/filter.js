@@ -90,14 +90,14 @@ module.exports = function(RED)
 
                                 node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
                                 result = (((cond.operator == "before") && now.isBefore(targetTime)) ||
-                                          ((cond.operator == "after") && now.isAfter(targetTime)));
+                                          ((cond.operator == "after") && now.isSameOrAfter(targetTime)));
                             }
                             else if ((cond.operator == "between") || (cond.operator == "outside"))
                             {
                                 let time1 = time.getTime(now.clone(), cond.operands[0].type, cond.operands[0].value);
                                 let time2 = time.getTime(now.clone(), cond.operands[1].type, cond.operands[1].value);
 
-                                if (time2.isBefore(time1))
+                                if (time2.isSameOrBefore(time1))
                                 {
                                     if (cond.operands[1].type == "time")
                                     {

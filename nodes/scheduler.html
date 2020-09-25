@@ -32,9 +32,9 @@ SOFTWARE.
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
     <div class="form-row" style="padding-top: 10px">
-        <label for="node-input-triggerList"><i class="fa fa-clock-o"></i> <span data-i18n="scheduler.label.triggers"></span></label>
+        <label for="node-input-schedulesList"><i class="fa fa-calendar-o"></i> <span data-i18n="scheduler.label.schedule"></span></label>
         <div class="form-row">
-            <ol id="node-input-triggerList"></ol>
+            <ol id="node-input-schedulesList"></ol>
         </div>
     </div>
 </script>
@@ -76,7 +76,7 @@ SOFTWARE.
                 type:     "chronos-config",
                 required: true
             },
-            triggers:
+            schedule:
             {
                 value: [{trigger: {type: "time", value: "", offset: 0, random: false},
                          output: {type: "msg", property: {name: "payload", type: "str", value: ""}}}]
@@ -86,7 +86,7 @@ SOFTWARE.
         {
             let node = this;
 
-            let triggerList = $("#node-input-triggerList").css("min-width", "500px").css("min-height", "500px").editableList(
+            let schedulesList = $("#node-input-schedulesList").css("min-width", "500px").css("min-height", "500px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -177,7 +177,7 @@ SOFTWARE.
                     {
                         value: "sun",
                         label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
-                        icon: "icons/node-red-contrib-chronos/sun.svg",
+                        icon: "fa fa-sun-o",
                         options: sunTimes
                     };
 
@@ -185,7 +185,7 @@ SOFTWARE.
                     {
                         value: "moon",
                         label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
-                        icon: "icons/node-red-contrib-chronos/moon.svg",
+                        icon: "fa fa-moon-o",
                         options: moonTimes
                     };
 
@@ -305,18 +305,18 @@ SOFTWARE.
                 }
             });
 
-            node.triggers.forEach(data =>
+            node.schedule.forEach(data =>
             {
-                triggerList.editableList("addItem", data);
+                schedulesList.editableList("addItem", data);
             });
         },
         oneditsave: function()
         {
             let node = this;
-            let triggerList = $("#node-input-triggerList").editableList("items");
+            let schedulesList = $("#node-input-schedulesList").editableList("items");
 
-            node.triggers = [];
-            triggerList.each(function(index)
+            node.schedule = [];
+            schedulesList.each(function(index)
             {
                 let data = {trigger: {}, output: {}};
 
@@ -344,7 +344,7 @@ SOFTWARE.
                                             value: propValue.typedInput("value")};
                 }
 
-                node.triggers.push(data);
+                node.schedule.push(data);
             });
         }
     });

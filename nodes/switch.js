@@ -95,7 +95,7 @@ module.exports = function(RED)
 
                                 node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
                                 if (((cond.operator == "before") && now.isBefore(targetTime)) ||
-                                    ((cond.operator == "after") && now.isAfter(targetTime)))
+                                    ((cond.operator == "after") && now.isSameOrAfter(targetTime)))
                                 {
                                     ports[i] = prepareMessage(msg);
                                 }
@@ -105,7 +105,7 @@ module.exports = function(RED)
                                 let time1 = time.getTime(now.clone(), cond.operands[0].type, cond.operands[0].value);
                                 let time2 = time.getTime(now.clone(), cond.operands[1].type, cond.operands[1].value);
 
-                                if (time2.isBefore(time1))
+                                if (time2.isSameOrBefore(time1))
                                 {
                                     if (cond.operands[1].type == "time")
                                     {
@@ -170,7 +170,7 @@ module.exports = function(RED)
 
         function prepareMessage(msg)
         {
-            return (node.conditions.length > 1) ? RED.util.cloneMessage(msg) : msg;
+            return ((node.conditions.length > 1) && (!node.stopOnFirstMatch)) ? RED.util.cloneMessage(msg) : msg;
         }
     }
 
