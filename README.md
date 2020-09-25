@@ -2,6 +2,8 @@
 
 A collection of Node-RED nodes for dealing with fixed and sun or moon position based times.
 
+If you would like to propose a new feature or any kind of improvement or if you want to report a bug, don't hesitate to create an issue in the [issue tracker](https://github.com/jensrossbach/node-red-contrib-chronos/issues) of the repository on GitHub. You can also have a look at the [roadmap for the 4th quarter of 2020](https://github.com/jensrossbach/node-red-contrib-chronos/milestone/1) to see what is already planned so far.
+
 Each node supports the input of fixed times in the form of `hh:mm:ss` (seconds optional, 12h and 24h format possible) as well as the selection of sun (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset).
 
 #### Scheduler
@@ -53,7 +55,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Attribution
-The following icons have been used from Flaticon:
+The following icons have been taken from Node-RED provided nodes:
+* Timer icon (delay node)
+* Switch icon (switch node)
+
+The following icons have been taken from Flaticon:
 * Hour glass icon made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
 * Funnel icon made by <a href="https://www.flaticon.com/free-icon/funnel_843709?term=filter&page=1&position=13" title="Kiranshastry">Kiranshastry</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
 
