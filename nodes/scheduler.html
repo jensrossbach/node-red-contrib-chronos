@@ -219,48 +219,43 @@ SOFTWARE.
                     };
 
                     let fragment = document.createDocumentFragment();
-                    let rowTrigger = $("<div/>").appendTo(fragment);
-                    let rowOutType = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
-                    let rowPropVal = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
-                    let rowMsgVal = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+                    let triggerRow = $("<div/>").appendTo(fragment);
+                    let outputRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
 
                     let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
-                                        .appendTo(rowTrigger)
+                                        .appendTo(triggerRow)
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
                     triggerType.typedInput("width", "280px");
-                    $("<div/>", {style: "display: inline-block; width: auto; padding-left: 6px; padding-right: 6px;"})
-                                        .html("&#8597;")
-                                        .appendTo(rowTrigger);
+                    let offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.offset"), style: "display: inline-block; width: auto;"})
+                                        .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
+                                        .appendTo(triggerRow);
                     let triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px;"})
-                                        .appendTo(rowTrigger)
+                                        .appendTo(offsetLabel)
                                         .spinner(offsetInput);
-                    $("<div/>", {style: "display: inline-block; width: auto; padding-left: 10px; padding-right: 6px;"})
+                    let randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
                                         .html("<i class='fa fa-random' aria-hidden='true'></i>")
-                                        .appendTo(rowTrigger);
-                    let triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "vertical-align: text-bottom; width: auto; padding-left: 8px;"})
-                                        .appendTo(rowTrigger);
+                                        .appendTo(triggerRow);
+                    let triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                                        .appendTo(randomLabel);
 
-                    $("<div/>", {style: "display: inline-block; text-align: right; width: 60px; padding-right: 6px;"})
+                    $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px; padding-top: 7px;"})
                                         .text(node._("scheduler.label.output"))
-                                        .appendTo(rowOutType);
-                    let outType = $("<input/>", {type: "text", class: "node-input-outType", style: "padding-right: 6px;"})
-                                        .appendTo(rowOutType)
+                                        .appendTo(outputRow);
+
+                    let outputBox = $("<div/>", {style: "display: inline-block; vertical-align: top; width: auto; margin-left: 6px;"}).appendTo(outputRow);
+                    let outTypeRow = $("<div/>").appendTo(outputBox);
+                    let outValueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(outputBox);
+
+                    let outType = $("<input/>", {type: "text", class: "node-input-outType"})
+                                        .appendTo(outTypeRow)
                                         .typedInput({types: ["global", "flow", "msg", fullMessageInput]});
                     outType.typedInput("width", "280px");
-
-                    $("<div/>", {style: "display: inline-block; text-align: right; width: 60px; padding-right: 6px;"})
-                                        .html("&#8658;")
-                                        .appendTo(rowPropVal);
                     let propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
-                                        .appendTo(rowPropVal)
+                                        .appendTo(outValueRow)
                                         .typedInput({types: ["str", "num", "bool", "json", "bin", "date"]});
                     propValue.typedInput("width", "280px");
-
-                    $("<div/>", {style: "display: inline-block; text-align: right; width: 60px; padding-right: 6px;"})
-                                        .html("&#8658;")
-                                        .appendTo(rowMsgVal);
                     let msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
-                                        .appendTo(rowMsgVal)
+                                        .appendTo(outValueRow)
                                         .typedInput({types: ["json"]});
                     msgValue.typedInput("width", "280px");
 
@@ -268,13 +263,13 @@ SOFTWARE.
                     {
                         if (value === "fullMsg")
                         {
-                            rowPropVal.hide();
-                            rowMsgVal.show();
+                            propValue.typedInput("hide");
+                            msgValue.typedInput("show");
                         }
                         else
                         {
-                            rowMsgVal.hide();
-                            rowPropVal.show();
+                            propValue.typedInput("show");
+                            msgValue.typedInput("hide");
                         }
                     });
 
