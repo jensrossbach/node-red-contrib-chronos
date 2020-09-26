@@ -88,6 +88,12 @@ module.exports = function(RED)
                             {
                                 let targetTime = time.getTime(now.clone(), cond.operands.type, cond.operands.value);
 
+                                if (cond.operands.offset != 0)
+                                {
+                                    let offset = cond.operands.random ? Math.round(Math.random() * cond.operands.offset) : cond.operands.offset;
+                                    targetTime.add(offset, "minutes");
+                                }
+
                                 node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
                                 result = (((cond.operator == "before") && now.isBefore(targetTime)) ||
                                           ((cond.operator == "after") && now.isSameOrAfter(targetTime)));
@@ -96,6 +102,17 @@ module.exports = function(RED)
                             {
                                 let time1 = time.getTime(now.clone(), cond.operands[0].type, cond.operands[0].value);
                                 let time2 = time.getTime(now.clone(), cond.operands[1].type, cond.operands[1].value);
+
+                                if (cond.operands[0].offset != 0)
+                                {
+                                    let offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
+                                    time1.add(offset, "minutes");
+                                }
+                                if (cond.operands[1].offset != 0)
+                                {
+                                    let offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
+                                    time2.add(offset, "minutes");
+                                }
 
                                 if (time2.isSameOrBefore(time1))
                                 {

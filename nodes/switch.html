@@ -472,7 +472,8 @@ SOFTWARE.
                     {
                         time1.typedInput("type", data.operands.type);
                         time1.typedInput("value", data.operands.value);
-                        if (data.operands.offset != 0)
+                        if (data.operands.offset &&  // backwards compatibility to v1.0.2
+                            (data.operands.offset != 0))
                         {
                             offset1.spinner("value", data.operands.offset);
                             random1.prop("checked", data.operands.random);
@@ -485,13 +486,15 @@ SOFTWARE.
                         time1.typedInput("value", data.operands[0].value);
                         time2.typedInput("type", data.operands[1].type);
                         time2.typedInput("value", data.operands[1].value);
-                        if (data.operands[0].offset != 0)
+                        if (data.operands[0].offset &&  // backwards compatibility to v1.0.2
+                            (data.operands[0].offset != 0))
                         {
                             offset1.spinner("value", data.operands[0].offset);
                             random1.prop("checked", data.operands[0].random);
                             showExtensionRow1();
                         }
-                        if (data.operands[1].offset != 0)
+                        if (data.operands[1].offset &&  // backwards compatibility to v1.0.2
+                            (data.operands[1].offset != 0))
                         {
                             offset2.spinner("value", data.operands[1].offset);
                             random2.prop("checked", data.operands[1].random);
