@@ -10,7 +10,9 @@
             "time":         "Time of Day",
             "sun":          "Sun Position",
             "moon":         "Moon Position",
-            "fullMessage":  "full message"
+            "fullMessage":  "full message",
+            "offset":       "Offset",
+            "random":       "Randomized"
         },
         "list":
         {

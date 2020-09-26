@@ -5,9 +5,7 @@
         {
             "outputPort":  "delayed message",
             "min":         " min.",
-            "when":        "When",
-            "offset":      "Offset",
-            "random":      "Randomized"
+            "when":        "When"
         },
         "status":
         {

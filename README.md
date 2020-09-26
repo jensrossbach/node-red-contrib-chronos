@@ -56,8 +56,8 @@ SOFTWARE.
 
 ## Attribution
 The following icons have been taken from Node-RED provided nodes:
-* Timer icon (delay node)
-* Switch icon (switch node)
+* Timer icon (Node-RED delay node)
+* Switch icon (Node-RED switch node)
 
 The following icons have been taken from Flaticon:
 * Hour glass icon made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
