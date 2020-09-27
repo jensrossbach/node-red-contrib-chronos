@@ -189,6 +189,15 @@ SOFTWARE.
                         options: moonTimes
                     };
 
+                    const customInput =
+                    {
+                        value: "custom",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                        icon: "fa fa-wrench",
+                        hasValue: true,
+                        validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
+                    };
+
                     const fullMessageInput =
                     {
                         value: "fullMsg",
@@ -224,7 +233,7 @@ SOFTWARE.
 
                     let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
                                         .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
                     triggerType.typedInput("width", "280px");
                     let offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.offset"), style: "display: inline-block; width: auto;"})
                                         .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")

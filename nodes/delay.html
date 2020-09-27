@@ -66,7 +66,7 @@ SOFTWARE.
             }
             else if (this.whenType && this.whenValue)
             {
-                if (this.whenType == "time")
+                if ((this.whenType == "time") || (this.whenType == "custom"))
                 {
                     label = this.whenValue;
                 }
@@ -84,7 +84,7 @@ SOFTWARE.
                         label += "~";
                     }
 
-                    label += Math.abs(this.offset) + this._("delay.label.min");
+                    label += Math.abs(this.offset) + " " + this._("delay.label.min");
                 }
             }
 
@@ -232,6 +232,15 @@ SOFTWARE.
                 options: moonTimes
             };
 
+            const customInput =
+            {
+                value: "custom",
+                label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                icon: "fa fa-wrench",
+                hasValue: true,
+                validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
+            };
+
             const offsetInput =
             {
                 min: -300,
@@ -255,7 +264,7 @@ SOFTWARE.
             };
 
             let when = $("#node-input-when")
-                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput], typeField: $("#node-input-whenType")});
+                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput], typeField: $("#node-input-whenType")});
             let offset = $("#node-input-offset")
                             .spinner(offsetInput);
 

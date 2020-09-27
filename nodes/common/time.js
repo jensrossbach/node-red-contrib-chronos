@@ -43,7 +43,7 @@ var moment;
 var sunCalc;
 
 
-function init(_RED, _latitude, _longitude)
+function init(_RED, _latitude, _longitude, additionalTimes)
 {
     RED = _RED;
 
@@ -52,6 +52,14 @@ function init(_RED, _latitude, _longitude)
 
     moment = require("moment");
     sunCalc = require("suncalc");
+
+    if (additionalTimes)
+    {
+        additionalTimes.forEach(time =>
+        {
+            sunCalc.addTime(time.angle, time.riseName, time.setName);
+        });
+    }
 }
 
 function getCurrentTime()
@@ -111,6 +119,11 @@ function getSunTime(day, type)
 {
     let sunTimes = sunCalc.getTimes(day.toDate(), latitude, longitude);
 
+    if (!(type in sunTimes))
+    {
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {payload: {trigger: "sun", value: type}});
+    }
+
     let ret = null;
     if (sunTimes[type])
     {
@@ -157,7 +170,7 @@ function getTime(day, type, value)
     {
         return getUserTime(day, value);
     }
-    else if (type == "sun")
+    else if ((type == "sun") || (type == "custom"))
     {
         return getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
     }
