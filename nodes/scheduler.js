@@ -88,6 +88,22 @@ module.exports = function(RED)
 
                     done();
                 }
+                else if (Array.isArray(msg.payload))
+                {
+                    for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
+                    {
+                        if (msg.payload[i] && !node.schedule[i].timer)
+                        {
+                            setUpTimer(node.schedule[i], false);
+                        }
+                        else if (!msg.payload[i] && node.schedule[i].timer)
+                        {
+                            tearDownTimer(node.schedule[i]);
+                        }
+                    }
+
+                    done();
+                }
                 else
                 {
                     done(RED._("scheduler.error.invalidInput"));
@@ -103,7 +119,7 @@ module.exports = function(RED)
 
             node.schedule.forEach(data =>
             {
-                setupTimer(data, false);
+                setUpTimer(data, false);
             });
         }
 
@@ -115,15 +131,12 @@ module.exports = function(RED)
             {
                 if ("timer" in data)
                 {
-                    node.debug("Tear down timer for type '" + data.trigger.type + "'");
-
-                    clearTimeout(data.timer);
-                    delete data.timer;
+                    tearDownTimer(data);
                 }
             });
         }
 
-        function setupTimer(data, repeat)
+        function setUpTimer(data, repeat)
         {
             try
             {
@@ -169,6 +182,14 @@ module.exports = function(RED)
             }
         }
 
+        function tearDownTimer(data)
+        {
+            node.debug("Tear down timer for type '" + data.trigger.type + "', value '" + data.trigger.value + "'");
+
+            clearTimeout(data.timer);
+            delete data.timer;
+        }
+
         function handleTimeout(data)
         {
             delete data.timer;
@@ -193,7 +214,7 @@ module.exports = function(RED)
                 node.send(JSON.parse(data.output.value));
             }
 
-            setupTimer(data, true);
+            setUpTimer(data, true);
         }
     }
 

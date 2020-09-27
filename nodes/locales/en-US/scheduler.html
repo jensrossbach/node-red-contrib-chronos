@@ -32,9 +32,16 @@ SOFTWARE.
         The input message can be used to either disable or re-enable the schedule.
     </p>
     <dl class="message-properties">
-        <dt>payload<span class="property-type">boolean</span></dt>
-        <dd>true to enable schedule, false otherwise</dd>
+        <dt>payload<span class="property-type">boolean | array</span></dt>
+        <dd>Switch(es) for enabling or disabling schedule events</dd>
     </dl>
+    <p>
+        If <code>msg.payload</code> is a boolean value, whole schedule is enabled
+        if true and disabled otherwise. If <code>msg.payload</code> is an array,
+        each element must be a boolean value and corresponds to the event in the
+        schedule at the same index. If the value is true, the matching event is
+        enabled, otherwise it is disabled.
+    </p>
     <h3>Outputs</h3>
     <p>
         Scheduled messages are sent to the output of this node. The structure and
