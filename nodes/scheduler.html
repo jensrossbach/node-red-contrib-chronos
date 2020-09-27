@@ -32,9 +32,9 @@ SOFTWARE.
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
     <div class="form-row" style="padding-top: 10px">
-        <label for="node-input-schedulesList"><i class="fa fa-calendar-o"></i> <span data-i18n="scheduler.label.schedule"></span></label>
+        <label for="node-input-scheduleList"><i class="fa fa-calendar-o"></i> <span data-i18n="scheduler.label.schedule"></span></label>
         <div class="form-row">
-            <ol id="node-input-schedulesList"></ol>
+            <ol id="node-input-scheduleList"></ol>
         </div>
     </div>
 </script>
@@ -86,7 +86,7 @@ SOFTWARE.
         {
             let node = this;
 
-            let schedulesList = $("#node-input-schedulesList").css("min-width", "500px").css("min-height", "500px").editableList(
+            let scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "500px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -311,16 +311,16 @@ SOFTWARE.
 
             node.schedule.forEach(data =>
             {
-                schedulesList.editableList("addItem", data);
+                scheduleList.editableList("addItem", data);
             });
         },
         oneditsave: function()
         {
             let node = this;
-            let schedulesList = $("#node-input-schedulesList").editableList("items");
+            let scheduleList = $("#node-input-scheduleList").editableList("items");
 
             node.schedule = [];
-            schedulesList.each(function(index)
+            scheduleList.each(function(index)
             {
                 let data = {trigger: {}, output: {}};
 
