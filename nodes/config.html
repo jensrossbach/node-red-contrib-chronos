@@ -35,6 +35,12 @@ SOFTWARE.
         <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
         <input id="node-config-input-longitude" data-i18n="[placeholder]config.label.longitude">
     </div>
+    <div class="form-row" style="padding-top: 10px">
+        <label for="node-input-sunPositionList" style="width: auto;"><i class="fa fa-calendar-o"></i> <span data-i18n="config.label.sunPositions"></span></label>
+        <div class="form-row">
+            <ol id="node-input-sunPositionList"></ol>
+        </div>
+    </div>
 </script>
 
 <script type="text/javascript">
@@ -51,6 +57,51 @@ SOFTWARE.
             name:
             {
                 value: ""
+            },
+            sunPositions:
+            {
+                value: [],
+                validate: function(v)
+                {
+                    if (v && (v.length > 0))
+                    {
+                        const EXP = /^[a-zA-Z][0-9a-zA-Z_]*$/;
+                        let valid = true;
+                        let names = []
+
+                        // check for invalid names
+                        for (let i=0; i<v.length; ++i)
+                        {
+                            if (!EXP.test(v[i].riseName) || !EXP.test(v[i].setName))
+                            {
+                                valid = false;
+                                break;
+                            }
+
+                            names.push(v[i].riseName);
+                            names.push(v[i].setName);
+                            if (hasDuplicates(names))
+                            {
+                                valid = false;
+                                break;
+                            }
+                        }
+
+                        return valid;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+
+                    function hasDuplicates(arr)
+                    {
+                        return arr.some(item =>
+                        {
+                            return arr.indexOf(item) !== arr.lastIndexOf(item);
+                        });
+                    }
+                }
             }
         },
         credentials:
@@ -70,6 +121,8 @@ SOFTWARE.
         },
         oneditprepare: function()
         {
+            let node = this;
+
             const validateCoords = function(event, ui)
             {
                 if (/^(\+|-)?\d+(\.\d+)?$/.test(this.value))
@@ -111,8 +164,87 @@ SOFTWARE.
                 change: validateCoords
             };
 
+            const sunAngleInput =
+            {
+                min: -90,
+                max: 90,
+                step: 1,
+                numberFormat: "n",
+                change: validateCoords
+            };
+
             $("#node-config-input-latitude").spinner(latitudeInput);
             $("#node-config-input-longitude").spinner(longitudeInput);
+
+            let sunPositionList = $("#node-input-sunPositionList").css("min-width", "500px").css("min-height", "300px").editableList(
+            {
+                removable: true,
+                sortable: true,
+                addItem: function(item, index, data)
+                {
+                    let fragment = document.createDocumentFragment();
+
+                    let angleLabel = $("<label/>", {style: "width: auto; margin-left: 5px; margin-bottom: 0px;"})
+                                        //.html("<i class='fa fa-sun-o' aria-hidden='true'></i> " + node._("config.label.angle") + " ")
+                                        .text(node._("config.label.angle") + " ")
+                                        .appendTo(fragment);
+                    let angle = $("<input/>", {class: "node-input-angle", style: "width: 60px; margin-left: 4px;"})
+                                        .appendTo(angleLabel)
+                                        .spinner(sunAngleInput);
+                    let riseLabel = $("<label/>", {title: node._("config.label.riseName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
+                                        .html("<i class='fa fa-arrow-up' aria-hidden='true'></i>")
+                                        .appendTo(fragment);
+                    let riseName = $("<input/>", {type: "text", class: "node-input-riseName", placeholder: node._("config.label.riseName"), style: "width: 110px; margin-left: 4px;"})
+                                        .appendTo(riseLabel);
+                    let setLabel = $("<label/>", {title: node._("config.label.setName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
+                                        .html("<i class='fa fa-arrow-down' aria-hidden='true'></i>")
+                                        .appendTo(fragment);
+                    let setName = $("<input/>", {type: "text", class: "node-input-setName", placeholder: node._("config.label.setName"), style: "width: 110px; margin-left: 4px;"})
+                                        .appendTo(setLabel);
+
+                    if (!("angle" in data))
+                    {
+                        data = {angle: 0, riseName: "", setName: ""};
+                    }
+
+                    angle.spinner("value", data.angle);
+                    riseName.val(data.riseName);
+                    setName.val(data.setName);
+
+                    item[0].appendChild(fragment);
+                }
+            });
+
+            if (!node.sunPositions)  // backward compatibility to v1.1.0
+            {
+                node.sunPositions = [];
+            }
+
+            node.sunPositions.forEach(data =>
+            {
+                sunPositionList.editableList("addItem", data);
+            });
+        },
+        oneditsave: function()
+        {
+            let node = this;
+            let sunPositionList = $("#node-input-sunPositionList").editableList("items");
+
+            node.sunPositions = [];
+            sunPositionList.each(function(index)
+            {
+                let data = {};
+
+                let angle = $(this).find(".node-input-angle");
+                let riseName = $(this).find(".node-input-riseName");
+                let setName = $(this).find(".node-input-setName");
+
+                data.angle = angle.spinner("value");
+                data.riseName = riseName.val();
+                data.setName = setName.val();
+
+                node.sunPositions.push(data);
+            });
         }
     });
 </script>

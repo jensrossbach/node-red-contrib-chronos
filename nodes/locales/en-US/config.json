@@ -10,6 +10,7 @@
             "time":         "Time of Day",
             "sun":          "Sun Position",
             "moon":         "Moon Position",
+            "custom":       "Custom",
             "fullMessage":  "full message",
             "offset":       "Offset",
             "random":       "Randomized"
@@ -90,8 +91,12 @@
     {
         "label":
         {
-            "latitude":   "Latitude",
-            "longitude":  "Longitude"
+            "latitude":      "Latitude",
+            "longitude":     "Longitude",
+            "sunPositions":  "Custom Sun Positions",
+            "angle":         "Angle",
+            "riseName":      "Rise Name",
+            "setName":       "Set Name"
         }
     }
 }

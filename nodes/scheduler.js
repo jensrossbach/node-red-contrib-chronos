@@ -48,7 +48,7 @@ module.exports = function(RED)
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
 
             node.status({});
-            time.init(RED, node.config.latitude, node.config.longitude);
+            time.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.schedule = settings.schedule;
 

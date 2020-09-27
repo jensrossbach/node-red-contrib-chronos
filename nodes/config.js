@@ -29,6 +29,8 @@ module.exports = function(RED)
         RED.nodes.createNode(this, config);
 
         this.name = config.name;
+        this.sunPositions = config.sunPositions;
+
         this.latitude = parseFloat(this.credentials.latitude);
         this.longitude = parseFloat(this.credentials.longitude);
     }

@@ -200,6 +200,15 @@ SOFTWARE.
                         options: moonTimes
                     };
 
+                    const customInput =
+                    {
+                        value: "custom",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                        icon: "fa fa-wrench",
+                        hasValue: true,
+                        validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
+                    };
+
                     const offsetInput =
                     {
                         min: -300,
@@ -252,7 +261,7 @@ SOFTWARE.
 
                     let time1 = $("<input/>", {type: "text", class: "node-input-time1"})
                                         .appendTo(time1Row1)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
                     time1.typedInput("width", "280px");
                     let extend1 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
                                         .html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>")
@@ -260,7 +269,7 @@ SOFTWARE.
 
                     let time2 = $("<input/>", {type: "text", class: "node-input-time2"})
                                         .appendTo(time2Row1)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
                     time2.typedInput("width", "280px");
                     let extend2 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
                                         .html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>")
@@ -629,7 +638,7 @@ SOFTWARE.
                     data.operands.offset = offset1.spinner("value");
                     data.operands.random = random1.prop("checked");
 
-                    if (data.operands.type == "time")
+                    if ((data.operands.type == "time") || (data.operands.type == "custom"))
                     {
                         data.label += " " + data.operands.value;
                     }
@@ -651,7 +660,7 @@ SOFTWARE.
                     data.operands[1].random = random2.prop("checked");
 
                     data.label += " ";
-                    if (data.operands[0].type == "time")
+                    if ((data.operands[0].type == "time") || (data.operands[0].type == "custom"))
                     {
                         data.label += data.operands[0].value;
                     }
@@ -660,7 +669,7 @@ SOFTWARE.
                         data.label += node._("node-red-contrib-chronos/chronos-config:common.list." + data.operands[0].type + "." + data.operands[0].value);
                     }
                     data.label += " " + node._("switch.label.and") + " ";
-                    if (data.operands[1].type == "time")
+                    if ((data.operands[1].type == "time") || (data.operands[1].type == "custom"))
                     {
                         data.label += data.operands[1].value;
                     }
