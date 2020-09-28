@@ -30,7 +30,7 @@
                 "dawn":           "Dawn",
                 "nauticalDawn":   "Nautical Dawn",
                 "dusk":           "Dusk",
-                "nauticalDusk":   "Nautical Dusc",
+                "nauticalDusk":   "Nautical Dusk",
                 "solarNoon":      "Solar Noon",
                 "nadir":          "Nadir"
             },
@@ -84,6 +84,7 @@
             "noConfig":         "No configuration selected",
             "noConditions":     "No conditions configured",
             "invalidTime":      "Invalid time specified",
+            "invalidName":      "Invalid custom sun position specified",
             "unavailableTime":  "No time available for event"
         }
     },

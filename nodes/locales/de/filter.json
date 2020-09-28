@@ -1,0 +1,10 @@
+{
+    "filter":
+    {
+        "label":
+        {
+            "outputPort":    "Bedingte Nachricht",
+            "allMustMatch":  "Alle Bedingungen müssen zutreffen"
+        }
+    }
+}

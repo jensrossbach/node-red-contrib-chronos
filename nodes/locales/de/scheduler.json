@@ -1,0 +1,21 @@
+{
+    "scheduler":
+    {
+        "label":
+        {
+            "inputPort":   "Ein-/Ausschalten",
+            "outputPort":  "Geplante Nachricht",
+            "schedule":    "Zeitplan",
+            "output":      "Ausgabe"
+        },
+        "status":
+        {
+            "noSchedules":  "Kein Zeitplan"
+        },
+        "error":
+        {
+            "noSchedules":   "Kein Zeitplan konfiguriert",
+            "invalidInput":  "Ungültige Eingangsnachricht"
+        }
+    }
+}

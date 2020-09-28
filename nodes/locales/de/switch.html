@@ -1,0 +1,72 @@
+<!--
+Copyright (c) 2020 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-help-name="chronos-switch">
+    <p>
+        Leitet Nachrichten anhand ihres Eingangszeitpunkts und -datums an
+        unterschiedliche Ausgabe-Ports.
+    </p>
+    <h3>Eingaben</h3>
+    <p>
+        Eingehende Nachrichten werden an keine, einen oder mehrere der
+        konfigurierten Ausgabe-Ports umgeleitet. Falls mehr als eine Bedingung
+        konfiguriert und <i>Bei erster Übereinstimmung aufhören</i> nicht
+        aktiviert ist, werden Nachrichten an den Ausgabe-Ports immer geklont.
+    </p>
+    <h3>Ausgaben</h3>
+    <p>
+        Jeder Ausgabe-Port gehört zu einer konfigurierten Bedingung, welche auf
+        den Eingangszeitpunkt oder das -datum angewendet wird.
+    </p>
+    <h3>Details</h3>
+    <p>
+        Diese Node leitet eingehende Nachrichten anhand des Zeitpunkts und
+        Datums beim Eintreffen an davon abhängige Ausgabe-Ports um.
+    </p>
+    <h3>Konfiguration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>Der Name der Node (optional).</dd>
+        <dt>Konfiguration</dt>
+        <dd>
+            Ein Verweis auf die zu verwendende Konfigurations-Node.
+        </dd>
+        <dt>Bedingungen</dt>
+        <dd>
+            Liste der Bedingungen zum Umleiten der Nachrichten. Neue Einträge
+            können über den Button unterhalb der Liste hinzugefügt werden.
+            Vorhandene Einträge können neu angeordnet oder gelöscht werden.
+            Abhängig vom gewählten Operator auf der linken Seiten, gibt es Felder
+            zum Angeben von Zeitpunkten oder Zeiträumen (entweder direkte
+            Eingaben, vorgegebene Sonnen-/Mondstände oder benutzerdefinierte
+            Sonnenstände), Auswahl von Wochentagen oder Auswahl von Monaten.
+        </dd>
+        <dt>Bei erster Übereinstimmung aufhören</dt>
+        <dd>
+            Wenn aktiviert, wird die Auswertung von Bedingungen beendet, sobald
+            es eine Übereinstimmung gibt. Das bedeutet, Nachrichten werden zu
+            höchstens einem Ausgabe-Port geleitet.
+        </dd>
+    </dl>
+</script>

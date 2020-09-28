@@ -1,0 +1,10 @@
+{
+    "switch":
+    {
+        "label":
+        {
+            "stopOnFirstMatch":  "Bei erster Übereinstimmung aufhören",
+            "and":               "und"
+        }
+    }
+}
