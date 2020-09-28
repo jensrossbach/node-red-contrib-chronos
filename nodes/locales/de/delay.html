@@ -1,0 +1,94 @@
+<!--
+Copyright (c) 2020 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-help-name="chronos-delay">
+    <p>
+        Verzögert eintreffende Nachrichten beim Durchlaufen der Node bis eine
+        bestimmte Uhrzeit erreicht ist.
+    </p>
+    <h3>Eingaben</h3>
+    <p>
+        Die Eingangsnachricht wird unverändert weitergereicht, kann jedoch auch
+        das Pufferverhalten der Node beeinflussen, wenn folgende Eigenschaften
+        (jeglichen Typs) vorhanden sind.
+    </p>
+    <dl class="message-properties">
+        <dt>drop<span class="property-type">any</span></dt>
+        <dd>
+            Wenn vorhanden, werden alle gepufferten Nachrichten verworfen, ohne
+            weitergeleitet zu werden.
+        </dd>
+        <dt>flush<span class="property-type">any</span></dt>
+        <dd>
+            Wenn vorhanden, werden alle gepufferten Nachrichten sofort
+            weitergeleitet.
+        </dd>
+        <dt>enqueue<span class="property-type">any</span></dt>
+        <dd>
+            Kann mit obigen beiden Eigenschaften kombiniert werden. Wenn
+            vorhanden, wird diese Nachricht gepuffert, nachdem alle vorherigen
+            Nachrichten verworfen/weitergeleitet wurden.
+        </dd>
+    </dl>
+    <h3>Ausgaben</h3>
+    <p>
+        Verzögerte Nachrichten werden zum Ausgabe-Port gesendet, sobald die
+        konfigurierte Zeit erreicht wurde.
+    </p>
+    <h3>Details</h3>
+    <p>
+        Diese Node puffert alle eintreffenden Nachrichten, bis eine bestimmte
+        Uhrzeit erreicht worden ist. Der Zeitpunkt kann entweder direkt
+        eingegeben oder anhand von Sonnen- oder Mondständen berechnet werden.
+        Sobald der Zielzeitpunkt erreicht wurde, werden alle gepufferten
+        Nachrichten an den Ausgabe-Port der Node geleitet.
+    </p>
+    <h3>Konfiguration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>Der Name der Node (optional).</dd>
+        <dt>Konfiguration</dt>
+        <dd>
+            Ein Verweis auf die zu verwendende Konfigurations-Node.
+        </dd>
+        <dt>Wann</dt>
+        <dd>
+            Der Zielzeitpunkt, zu dem gepufferte Nachrichten weitergeleitet
+            werden sollen. Abhängig von der Auswahl auf der linken Seite kann
+            die Zeit direkt eingegeben, vorgegebene Sonnen- oder Mondstände
+            ausgewählt oder benutzerdefinierte Sonnenstände angegeben werden.
+        </dd>
+        <dt>Versatz</dt>
+        <dd>
+            Ein zeitlicher Versatz in Minuten zwischen -5h und +5h kann angegeben
+            werden. Der Versatz wird zur Zielzeit hinzuaddiert oder davon
+            abgezogen.
+        </dd>
+        <dt>Zufällig</dt>
+        <dd>
+            Wenn aktiviert, wird der Versatz im Bereich zwischen 0 und dem
+            angegeben Wert zufällig ausgewählt.
+        </dd>
+    </dl>
+</script>

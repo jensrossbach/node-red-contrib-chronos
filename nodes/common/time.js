@@ -121,7 +121,7 @@ function getSunTime(day, type)
 
     if (!(type in sunTimes))
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {payload: {trigger: "sun", value: type}});
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidName"), {payload: {trigger: "sun", value: type}});
     }
 
     let ret = null;

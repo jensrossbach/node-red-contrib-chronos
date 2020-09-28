@@ -163,7 +163,7 @@ module.exports = function(RED)
             {
                 node.updateTimer = setTimeout(() =>
                 {
-                    node.status((node.msgQueue.length > 0) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + RED._("delay.status.queued")} : {});
+                    node.status((node.msgQueue.length > 0) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued")} : {});
                     delete node.updateTimer;
                 }, 500);
             }

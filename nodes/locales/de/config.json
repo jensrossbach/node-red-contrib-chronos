@@ -1,0 +1,103 @@
+{
+    "common":
+    {
+        "label":
+        {
+            "inputPort":    "Eingehende Nachricht",
+            "name":         "Name",
+            "config":       "Konfiguration",
+            "conditions":   "Bedingungen",
+            "time":         "Uhrzeit",
+            "sun":          "Sonnenstand",
+            "moon":         "Mondstand",
+            "custom":       "Benutzerdefiniert",
+            "fullMessage":  "Komplette Nachricht",
+            "offset":       "Versatz",
+            "random":       "Zufällig"
+        },
+        "list":
+        {
+            "sun":
+            {
+                "sunrise":        "Sonnenaufgang (Beginn)",
+                "sunriseEnd":     "Sonnenaufgang (Ende)",
+                "sunsetStart":    "Sonnenuntergang (Beginn)",
+                "sunset":         "Sonnenuntergang (Ende)",
+                "goldenHour":     "Goldene Stunde (Beginn)",
+                "goldenHourEnd":  "Goldene Stunde (Ende)",
+                "night":          "Nacht (Beginn)",
+                "nightEnd":       "Nacht (Ende)",
+                "dawn":           "Morgendämmerung",
+                "nauticalDawn":   "Nautische Morgendämmerung",
+                "dusk":           "Abenddämmerung",
+                "nauticalDusk":   "Nautische Abenddämmerung",
+                "solarNoon":      "Mittag",
+                "nadir":          "Mitternacht"
+            },
+            "moon":
+            {
+                "rise":  "Mondaufgang",
+                "set":   "Monduntergang"
+            },
+            "operator":
+            {
+                "before":    "Vor",
+                "after":     "Nach",
+                "between":   "Zwischen",
+                "outside":   "Außerhalb",
+                "weekdays":  "Wochentage",
+                "months":    "Monate"
+            },
+            "weekday":
+            {
+                "monday":     "MO",
+                "tuesday":    "DI",
+                "wednesday":  "MI",
+                "thursday":   "DO",
+                "friday":     "FR",
+                "saturday":   "SA",
+                "sunday":     "SO"
+            },
+            "month":
+            {
+                "january":    "JAN",
+                "february":   "FEB",
+                "march":      "MÄR",
+                "april":      "APR",
+                "may":        "MAI",
+                "june":       "JUN",
+                "july":       "JUL",
+                "august":     "AUG",
+                "september":  "SEP",
+                "october":    "OKT",
+                "november":   "NOV",
+                "december":   "DEZ"
+            }
+        },
+        "status":
+        {
+            "noConfig":      "Keine Konfiguration",
+            "noConditions":  "Keine Bedingungen"
+        },
+        "error":
+        {
+            "noConfig":         "Keine Konfiguration ausgewählt",
+            "noConditions":     "Keine Bedingungen kongiguriert",
+            "invalidTime":      "Ungültige Uhrzeit angegeben",
+            "invalidName":      "Ungültiger benutzerdefinierter Sonnenstand angegeben",
+            "unavailableTime":  "Kein Zeitpunkt für Ereignis verfügbar"
+        }
+    },
+    "config":
+    {
+        "label":
+        {
+            "latitude":      "Breitengrad",
+            "longitude":     "Längengrad",
+            "sunPositions":  "Benutzerdefinierte Sonnenstände",
+            "angle":         "Winkel",
+            "riseName":      "Name (aufgehend)",
+            "setName":       "Name (untergehend)"
+        }
+    }
+}

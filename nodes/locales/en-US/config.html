@@ -24,7 +24,7 @@ SOFTWARE.
 
 <script type="text/x-red" data-help-name="chronos-config">
     <p>
-        Configuration for the geographical location.
+        Configuration of the geographical location and custom sun positions.
     </p>
     <h3>Details</h3>
     <p>
@@ -32,6 +32,9 @@ SOFTWARE.
         and longitude. That is required for the calculation of times based on
         sun and moon position. For privacy protection reasons, the coordinates
         are stored as credentials and therefore are not exported with the flows.
+        Additionally custom sun positions can be defined in this node. They can
+        be used in the other nodes in a similar way as the predefined sun
+        positions.
     </p>
     <dt>Name</dt>
     <dd>
@@ -52,8 +55,8 @@ SOFTWARE.
         Each entry in the list can be configured as follows:
         <ul>
             <li>
-                The angle of the sun position above (positive value) or below
-                (negative value) the horizon in degrees.
+                The solar zenith angle above (positive value) or below (negative
+                value) the horizon in degrees.
             </li>
             <li>
                 The name of the position for rising sun.

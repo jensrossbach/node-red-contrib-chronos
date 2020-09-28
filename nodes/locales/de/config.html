@@ -1,0 +1,73 @@
+<!--
+Copyright (c) 2020 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-help-name="chronos-config">
+    <p>
+        Konfiguration der geografischen Lage und benutzerdefinierter Sonnenstände.
+    </p>
+    <h3>Details</h3>
+    <p>
+        Diese Konfiguration speichert die geografische Lage in Form von Breiten-
+        und Längengrad. Das wird zur Berechnung der von Sonnen- und Mondstand
+        abhängigen Zeitpunkte benötigt. Aus Datenschutzgründen werden die
+        Koordinaten als geschützte Zugangsdaten gespeichert und damit nicht
+        zusammen mit Flows exportiert.
+        Zusätzlich bietet die Node die Möglichkeit, benutzerdefinierte
+        Sonnenständig anzulegen, die ähnlich wie die vorgegebenen Sonnenstände
+        in den anderen Nodes verwendet werden können.
+    </p>
+    <dt>Name</dt>
+    <dd>
+        Der Name der Konfiguration (optional).
+    </dd>
+    <dt>Breitengrad</dt>
+    <dd>
+        Der Breitengrad als Dezimalzahl zwischen -90° und 90°.
+    </dd>
+    <dt>Längengrad</dt>
+    <dd>
+        Der Längengrad als Dezimalzahl zwischen -180° und 180°.
+    </dd>
+    <dt>Benutzerdefinierte Sonnenstände</dt>
+    <dd>
+        Liste der benutzerdefinierten Sonnenstände. Neue Einträge können über
+        den Button unterhalb der Liste hinzugefügt werden. Vorhandene Einträge
+        können neu angeordnet oder gelöscht werden.
+        Jeder Eintrag in der Liste kann wie folgt konfiguriert werden:
+        <ul>
+            <li>
+                Der Sonnenstandswinkel oberhalb (positive Werte) oder unterhalb
+                (negative Werte) des Horizonts in Grad.
+            </li>
+            <li>
+                Der Name des Sonnenstands für die aufgehende Sonne.
+            </li>
+            <li>
+                Der Name des Sonnenstands für die untergehende Sonne.
+            </li>
+        </ul>
+        Namen dürfen aus Buchstaben, Zahlen und Unterstrich bestehen, müssen mit
+        einem Buchstaben beginnen und müssen eindeutig sein.
+    </dd>
+</script>

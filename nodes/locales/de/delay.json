@@ -3,13 +3,13 @@
     {
         "label":
         {
-            "outputPort":  "delayed message",
+            "outputPort":  "Verzögerte Nachricht",
             "min":         "min.",
-            "when":        "When"
+            "when":        "Wann"
         },
         "status":
         {
-            "queued":  "queued"
+            "queued":  "wartend"
         }
     }
 }
