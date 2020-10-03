@@ -109,7 +109,7 @@ function getUserTime(day, value)
 
     if (!ret)
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {payload: {type: "time", value: value}});
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
     }
 
     return ret;
@@ -121,7 +121,7 @@ function getSunTime(day, type)
 
     if (!(type in sunTimes))
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidName"), {payload: {type: "sun", value: type}});
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidName"), {type: "sun", value: type});
     }
 
     let ret = null;
@@ -136,7 +136,7 @@ function getSunTime(day, type)
 
     if (!ret)
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {payload: {type: "sun", value: type}});
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {type: "sun", value: type});
     }
 
     return ret;
@@ -158,7 +158,7 @@ function getMoonTime(day, type)
 
     if (!ret)
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {payload: {type: "moon", value: type, alwaysUp: moonTimes.alwaysUp, alwaysDown: moonTimes.alwaysDown}});
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {type: "moon", value: type, alwaysUp: moonTimes.alwaysUp, alwaysDown: moonTimes.alwaysDown});
     }
 
     return ret;

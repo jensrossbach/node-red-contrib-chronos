@@ -144,6 +144,11 @@ module.exports = function(RED)
                             if (e instanceof time.TimeError)
                             {
                                 let errMsg = RED.util.cloneMessage(msg);
+
+                                if ("errorDetails" in errMsg)
+                                {
+                                    errMsg._errorDetails = errMsg.errorDetails;
+                                }
                                 errMsg.errorDetails = e.details;
 
                                 node.error(e.message, errMsg);
