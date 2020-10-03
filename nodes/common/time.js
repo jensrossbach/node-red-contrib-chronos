@@ -57,7 +57,7 @@ function init(_RED, _latitude, _longitude, additionalTimes)
     {
         additionalTimes.forEach(time =>
         {
-            sunCalc.addTime(time.angle, time.riseName, time.setName);
+            sunCalc.addTime(time.angle, "__cust_" + time.riseName, "__cust_" + time.setName);
         });
     }
 }
@@ -172,7 +172,7 @@ function getTime(day, type, value)
     }
     else if ((type == "sun") || (type == "custom"))
     {
-        return getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
+        return getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
     }
     else if (type == "moon")
     {
