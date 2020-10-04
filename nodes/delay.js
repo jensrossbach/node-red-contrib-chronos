@@ -54,19 +54,7 @@ module.exports = function(RED)
 
             node.on("close", () =>
             {
-                if (node.delayTimer)
-                {
-                    node.debug("Tear down timer for type '" + node.whenType + "'");
-
-                    clearTimeout(node.delayTimer);
-                    delete node.delayTimer;
-                }
-
-                if (node.updateTimer)
-                {
-                    clearTimeout(node.updateTimer);
-                    delete node.updateTimer;
-                }
+                tearDownDelayTimer();
             });
 
             node.on("input", (msg, send, done) =>
@@ -91,6 +79,7 @@ module.exports = function(RED)
 
                 if ("drop" in msg)
                 {
+                    tearDownDelayTimer();
                     dropQueue();
 
                     if ("enqueue" in msg)
@@ -100,9 +89,15 @@ module.exports = function(RED)
 
                         enqueueMessage(msg, done);
                     }
+                    else
+                    {
+                        // we're done with the message as it gets discarded
+                        done();
+                    }
                 }
                 else if ("flush" in msg)
                 {
+                    tearDownDelayTimer();
                     flushQueue();
 
                     if ("enqueue" in msg)
@@ -112,24 +107,46 @@ module.exports = function(RED)
 
                         enqueueMessage(msg, done);
                     }
+                    else
+                    {
+                        // we're done with the message as it gets discarded
+                        done();
+                    }
                 }
                 else
                 {
                     enqueueMessage(msg, done);
                 }
-
-                done();
             });
         }
 
         function enqueueMessage(msg, done)
         {
-            node.msgQueue.push({msg: msg, done: done});
-            updateStatus();
-
-            if (!node.delayTimer)
+            try
             {
-                setupDelayTimer();
+                if (!node.delayTimer)
+                {
+                    setupDelayTimer();
+                }
+
+                node.msgQueue.push({msg: msg, done: done});
+                node.status((node.msgQueue.length > 0) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued")} : {});
+            }
+            catch (e)
+            {
+                if (e instanceof time.TimeError)
+                {
+                    node.error(e.message, {errorDetails: e.details});
+                    node.status({fill: "red", shape: "dot", text: "delay.status.error"});
+                }
+                else
+                {
+                    node.error(e.message);
+                    node.debug(e.stack);
+                }
+
+                // we're done with the message as we do not enqueue it
+                done();
             }
         }
 
@@ -157,65 +174,49 @@ module.exports = function(RED)
             node.status({});
         }
 
-        function updateStatus()
-        {
-            if (!node.updateTimer)
-            {
-                node.updateTimer = setTimeout(() =>
-                {
-                    node.status((node.msgQueue.length > 0) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued")} : {});
-                    delete node.updateTimer;
-                }, 500);
-            }
-        }
-
         function setupDelayTimer()
         {
-            try
+            node.debug("Set up timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
+
+            const now = time.getCurrentTime();
+            let sendTime = time.getTime(now.clone(), node.whenType, node.whenValue);
+
+            if (node.offset != 0)
             {
-                node.debug("Set up timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
-
-                const now = time.getCurrentTime();
-                let sendTime = time.getTime(now.clone(), node.whenType, node.whenValue);
-
-                if (node.offset != 0)
-                {
-                    let offset = node.random ? Math.round(Math.random() * node.offset) : node.offset;
-                    sendTime.add(offset, "minutes");
-                }
-
-                if (sendTime.isBefore(now))
-                {
-                    node.debug("Send time before current time, adding one day");
-
-                    if (node.whenType == "time")
-                    {
-                        sendTime.add(1, "days");
-                    }
-                    else
-                    {
-                        sendTime = time.getTime(sendTime.add(1, "days"), node.whenType, node.whenValue);
-                    }
-                }
-
-                node.debug("Starting timer for delayed message at " + sendTime.format("YYYY-MM-DD HH:mm:ss"));
-                node.delayTimer = setTimeout(() =>
-                {
-                    flushQueue();
-                    delete node.delayTimer;
-                }, sendTime.diff(now));
+                let offset = node.random ? Math.round(Math.random() * node.offset) : node.offset;
+                sendTime.add(offset, "minutes");
             }
-            catch (e)
+
+            if (sendTime.isBefore(now))
             {
-                if (e instanceof time.TimeError)
+                node.debug("Send time before current time, adding one day");
+
+                if (node.whenType == "time")
                 {
-                    node.error(e.message, {errorDetails: e.details});
+                    sendTime.add(1, "days");
                 }
                 else
                 {
-                    node.error(e.message);
-                    node.debug(e.stack);
+                    sendTime = time.getTime(sendTime.add(1, "days"), node.whenType, node.whenValue);
                 }
+            }
+
+            node.debug("Starting timer for delayed message at " + sendTime.format("YYYY-MM-DD HH:mm:ss"));
+            node.delayTimer = setTimeout(() =>
+            {
+                delete node.delayTimer;
+                flushQueue();
+            }, sendTime.diff(now));
+        }
+
+        function tearDownDelayTimer()
+        {
+            if (node.delayTimer)
+            {
+                node.debug("Tear down timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
+
+                clearTimeout(node.delayTimer);
+                delete node.delayTimer;
             }
         }
     }

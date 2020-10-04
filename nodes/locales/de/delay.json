@@ -9,7 +9,8 @@
         },
         "status":
         {
-            "queued":  "wartend"
+            "queued":  "wartend",
+            "error":   "Fehler"
         }
     }
 }

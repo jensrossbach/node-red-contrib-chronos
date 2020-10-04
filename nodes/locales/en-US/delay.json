@@ -9,7 +9,8 @@
         },
         "status":
         {
-            "queued":  "queued"
+            "queued":  "queued",
+            "error":   "error"
         }
     }
 }
