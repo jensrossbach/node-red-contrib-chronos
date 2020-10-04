@@ -172,7 +172,7 @@ module.exports = function(RED)
             {
                 if (e instanceof time.TimeError)
                 {
-                    node.error(e.message, e.details);
+                    node.error(e.message, {errorDetails: e.details});
                 }
                 else
                 {
