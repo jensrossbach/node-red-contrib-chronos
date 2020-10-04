@@ -4,7 +4,7 @@ A collection of Node-RED nodes for dealing with fixed and sun or moon position b
 
 If you would like to propose a new feature or any kind of improvement or if you want to report a bug, don't hesitate to create an issue in the [issue tracker](https://github.com/jensrossbach/node-red-contrib-chronos/issues) of the repository on GitHub. You can also have a look at the [roadmap for the 4th quarter of 2020](https://github.com/jensrossbach/node-red-contrib-chronos/milestone/1) to see what is already planned so far.
 
-Each node supports the input of fixed times in the form of `hh:mm:ss` (seconds optional, 12h and 24h format possible) as well as the selection of sun (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset).
+Each node supports the input of fixed times in the form of `hh:mm:ss` (seconds optional, 12h and 24h format possible) as well as the selection of sun (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset). User-defined sun events can be added as well.
 
 #### Scheduler
 Schedules the transmission of messages or setting of global/flow variables at specific times.
@@ -27,7 +27,7 @@ Filters messages based on their ingress time and date.
 ![Timer Filter](images/filter.png)
 
 ## Documentation
-The detailed documentation of each node will soon be available in the wiki of the GitHub repository.
+The detailed documentation of each node is available in the wiki of the GitHub repository.
 
 **&rarr; [Documentation](https://github.com/jensrossbach/node-red-contrib-chronos/wiki)**
 
