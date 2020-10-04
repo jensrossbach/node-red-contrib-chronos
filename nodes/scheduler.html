@@ -79,7 +79,11 @@ SOFTWARE.
             schedule:
             {
                 value: [{trigger: {type: "time", value: "", offset: 0, random: false},
-                         output: {type: "msg", property: {name: "payload", type: "str", value: ""}}}]
+                         output: {type: "msg", property: {name: "payload", type: "str", value: ""}}}],
+                validate: function(v)
+                {
+                    // just a simple check if there are any events, no detailed check of the content
+                    return v.length > 0;
             }
         },
         oneditprepare: function()

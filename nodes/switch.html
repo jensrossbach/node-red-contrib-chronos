@@ -82,7 +82,12 @@ SOFTWARE.
             },
             conditions:
             {
-                value: [{operator: "before", operands: {type: "time", value: "", offset: 0, random: false}, label: ""}]
+                value: [{operator: "before", operands: {type: "time", value: "", offset: 0, random: false}, label: ""}],
+                validate: function(v)
+                {
+                    // just a simple check if there are any conditions, no detailed check of the content
+                    return v.length > 0;
+                }
             },
             stopOnFirstMatch:
             {
