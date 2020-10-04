@@ -10,11 +10,11 @@
         },
         "status":
         {
-            "noSchedules":  "no schedule"
+            "noSchedule":  "no schedule"
         },
         "error":
         {
-            "noSchedules":   "No schedule configured",
+            "noSchedule":    "No schedule configured",
             "invalidInput":  "Invalid input message"
         }
     }

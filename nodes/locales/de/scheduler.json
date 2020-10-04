@@ -10,11 +10,11 @@
         },
         "status":
         {
-            "noSchedules":  "Kein Zeitplan"
+            "noSchedule":  "Kein Zeitplan"
         },
         "error":
         {
-            "noSchedules":   "Kein Zeitplan konfiguriert",
+            "noSchedule":    "Kein Zeitplan konfiguriert",
             "invalidInput":  "Ungültige Eingangsnachricht"
         }
     }
