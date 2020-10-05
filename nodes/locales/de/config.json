@@ -76,13 +76,15 @@
         },
         "status":
         {
-            "noConfig":      "Keine Konfiguration",
-            "noConditions":  "Keine Bedingungen"
+            "noConfig":       "Keine Konfiguration",
+            "noConditions":   "Keine Bedingungen",
+            "invalidConfig":  "Ungültige Konfiguration"
         },
         "error":
         {
             "noConfig":         "Keine Konfiguration ausgewählt",
             "noConditions":     "Keine Bedingungen kongiguriert",
+            "invalidConfig":    "Konfiguration enthält ungültige Werte",
             "invalidTime":      "Ungültige Uhrzeit angegeben",
             "invalidName":      "Ungültiger benutzerdefinierter Sonnenstand angegeben",
             "unavailableTime":  "Kein Zeitpunkt für Ereignis verfügbar"

@@ -23,6 +23,8 @@
  */
 
 
+const TIME_REGEX = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(am|AM|pm|PM)?$/;
+
 class TimeError extends Error
 {
     constructor(message, details)
@@ -71,7 +73,7 @@ function getUserTime(day, value)
 {
     let ret = null;
 
-    let matches = value.match(/^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(am|AM|pm|PM)?$/);
+    let matches = value.match(TIME_REGEX);
     if (matches)
     {
         let hour = matches[1];
@@ -113,6 +115,11 @@ function getUserTime(day, value)
     }
 
     return ret;
+}
+
+function isValidUserTime(value)
+{
+    return TIME_REGEX.test(value);
 }
 
 function getSunTime(day, type)
@@ -189,5 +196,6 @@ module.exports =
     getSunTime: getSunTime,
     getMoonTime: getMoonTime,
     getTime: getTime,
+    isValidUserTime: isValidUserTime,
     TimeError: TimeError
 };

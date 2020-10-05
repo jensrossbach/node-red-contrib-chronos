@@ -52,65 +52,148 @@ module.exports = function(RED)
 
             node.schedule = settings.schedule;
 
-            node.on("close", () =>
+            let valid = true;
+            for (let i=0; i<node.schedule.length; ++i)
             {
-                stopTimers();
-            });
+                let data = node.schedule[i];
 
-            node.on("input", (msg, send, done) =>
-            {
-                if (!send)  // Node-RED 0.x backward compatibility
+                // check for valid user time
+                if ((data.trigger.type == "time") && !time.isValidUserTime(data.trigger.value))
                 {
-                    send = () =>
-                    {
-                        node.send.apply(node, arguments);
-                    };
+                    valid = false;
+                    break;
                 }
 
-                if (!done)  // Node-RED 0.x backward compatibility
+                // check for valid output and convert according to type
+                if (data.output.type == "fullMsg")
                 {
-                    done = () =>
+                    try
                     {
-                        var args = [...arguments];
-                        args.push(msg);
-                        node.error.apply(node, args);
-                    };
+                        data.output.value = JSON.parse(data.output.value);
+                    }
+                    catch (e)
+                    {
+                        valid = false;
+                        break;
+                    }
                 }
+                else if (data.output.property.type == "num")
+                {
+                    if (+data.output.property.value === +data.output.property.value)
+                    {
+                        data.output.property.value = +data.output.property.value;
+                    }
+                    else
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                else if (data.output.property.type == "bool")
+                {
+                    if (/^(true|false)$/.test(data.output.property.value))
+                    {
+                        data.output.property.value = (data.output.property.value == "true");
+                    }
+                    else
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                else if (data.output.property.type == "json")
+                {
+                    try
+                    {
+                        data.output.property.value = JSON.parse(data.output.property.value);
+                    }
+                    catch (e)
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                else if (data.output.property.type == "bin")
+                {
+                    try
+                    {
+                        data.output.property.value = Buffer.from(JSON.parse(data.output.property.value));
+                    }
+                    catch (e)
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
 
-                if (typeof msg.payload == "boolean")
+            if (!valid)
+            {
+                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+            }
+            else
+            {
+                node.on("close", () =>
                 {
                     stopTimers();
+                });
 
-                    if (msg.payload)
+                node.on("input", (msg, send, done) =>
+                {
+                    if (!send)  // Node-RED 0.x backward compatibility
                     {
-                        startTimers();
+                        send = () =>
+                        {
+                            node.send.apply(node, arguments);
+                        };
                     }
 
-                    done();
-                }
-                else if (Array.isArray(msg.payload))
-                {
-                    for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
+                    if (!done)  // Node-RED 0.x backward compatibility
                     {
-                        if (msg.payload[i] && !node.schedule[i].timer)
+                        done = () =>
                         {
-                            setUpTimer(node.schedule[i], false);
-                        }
-                        else if (!msg.payload[i] && node.schedule[i].timer)
-                        {
-                            tearDownTimer(node.schedule[i]);
-                        }
+                            var args = [...arguments];
+                            args.push(msg);
+                            node.error.apply(node, args);
+                        };
                     }
 
-                    done();
-                }
-                else
-                {
-                    done(RED._("scheduler.error.invalidInput"));
-                }
-            });
+                    if (typeof msg.payload == "boolean")
+                    {
+                        stopTimers();
 
-            startTimers();
+                        if (msg.payload)
+                        {
+                            startTimers();
+                        }
+
+                        done();
+                    }
+                    else if (Array.isArray(msg.payload))
+                    {
+                        for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
+                        {
+                            if (msg.payload[i] && !node.schedule[i].timer)
+                            {
+                                setUpTimer(node.schedule[i], false);
+                            }
+                            else if (!msg.payload[i] && node.schedule[i].timer)
+                            {
+                                tearDownTimer(node.schedule[i]);
+                            }
+                        }
+
+                        done();
+                    }
+                    else
+                    {
+                        done(RED._("scheduler.error.invalidInput"));
+                    }
+                });
+
+                startTimers();
+            }
         }
 
         function startTimers()
@@ -205,13 +288,20 @@ module.exports = function(RED)
             else if (data.output.type == "msg")
             {
                 let msg = {};
-                msg[data.output.property.name] = data.output.property.value;
+                if (data.output.property.type == "date")
+                {
+                    msg[data.output.property.name] = Date.now();
+                }
+                else
+                {
+                    msg[data.output.property.name] = data.output.property.value;
+                }
 
                 node.send(msg);
             }
             else if (data.output.type == "fullMsg")
             {
-                node.send(JSON.parse(data.output.value));
+                node.send(data.output.value);
             }
 
             setUpTimer(data, true);

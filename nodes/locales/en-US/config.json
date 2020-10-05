@@ -76,13 +76,15 @@
         },
         "status":
         {
-            "noConfig":      "no configuration",
-            "noConditions":  "no conditions"
+            "noConfig":       "no configuration",
+            "noConditions":   "no conditions",
+            "invalidConfig":  "invalid configuration"
         },
         "error":
         {
             "noConfig":         "No configuration selected",
             "noConditions":     "No conditions configured",
+            "invalidConfig":    "Configuration contains invalid values",
             "invalidTime":      "Invalid time specified",
             "invalidName":      "Invalid custom sun position specified",
             "unavailableTime":  "No time available for event"
