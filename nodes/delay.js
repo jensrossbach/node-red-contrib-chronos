@@ -50,74 +50,82 @@ module.exports = function(RED)
             node.offset = settings.offset;
             node.random = settings.random;
 
-            node.msgQueue = [];
-
-            node.on("close", () =>
+            if ((node.whenType == "time") && !time.isValidUserTime(node.whenValue))
             {
-                tearDownDelayTimer();
-            });
-
-            node.on("input", (msg, send, done) =>
+                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+            }
+            else
             {
-                if (!send)  // Node-RED 0.x backward compatibility
-                {
-                    send = () =>
-                    {
-                        node.send.apply(node, arguments);
-                    };
-                }
+                node.msgQueue = [];
 
-                if (!done)  // Node-RED 0.x backward compatibility
-                {
-                    done = () =>
-                    {
-                        var args = [...arguments];
-                        args.push(msg);
-                        node.error.apply(node, args);
-                    };
-                }
-
-                if ("drop" in msg)
+                node.on("close", () =>
                 {
                     tearDownDelayTimer();
-                    dropQueue();
+                });
 
-                    if ("enqueue" in msg)
+                node.on("input", (msg, send, done) =>
+                {
+                    if (!send)  // Node-RED 0.x backward compatibility
                     {
-                        delete msg.drop;
-                        delete msg.enqueue;
+                        send = () =>
+                        {
+                            node.send.apply(node, arguments);
+                        };
+                    }
 
-                        enqueueMessage(msg, done);
+                    if (!done)  // Node-RED 0.x backward compatibility
+                    {
+                        done = () =>
+                        {
+                            var args = [...arguments];
+                            args.push(msg);
+                            node.error.apply(node, args);
+                        };
+                    }
+
+                    if ("drop" in msg)
+                    {
+                        tearDownDelayTimer();
+                        dropQueue();
+
+                        if ("enqueue" in msg)
+                        {
+                            delete msg.drop;
+                            delete msg.enqueue;
+
+                            enqueueMessage(msg, done);
+                        }
+                        else
+                        {
+                            // we're done with the message as it gets discarded
+                            done();
+                        }
+                    }
+                    else if ("flush" in msg)
+                    {
+                        tearDownDelayTimer();
+                        flushQueue();
+
+                        if ("enqueue" in msg)
+                        {
+                            delete msg.flush;
+                            delete msg.enqueue;
+
+                            enqueueMessage(msg, done);
+                        }
+                        else
+                        {
+                            // we're done with the message as it gets discarded
+                            done();
+                        }
                     }
                     else
                     {
-                        // we're done with the message as it gets discarded
-                        done();
-                    }
-                }
-                else if ("flush" in msg)
-                {
-                    tearDownDelayTimer();
-                    flushQueue();
-
-                    if ("enqueue" in msg)
-                    {
-                        delete msg.flush;
-                        delete msg.enqueue;
-
                         enqueueMessage(msg, done);
                     }
-                    else
-                    {
-                        // we're done with the message as it gets discarded
-                        done();
-                    }
-                }
-                else
-                {
-                    enqueueMessage(msg, done);
-                }
-            });
+                });
+            }
         }
 
         function enqueueMessage(msg, done)
