@@ -6,7 +6,8 @@
             "inputPort":   "Ein-/Ausschalten",
             "outputPort":  "Geplante Nachricht",
             "schedule":    "Zeitplan",
-            "output":      "Ausgabe"
+            "output":      "Ausgabe",
+            "multiPort":   "Separate Ausgabe-Ports für Zeitereignisse"
         },
         "status":
         {

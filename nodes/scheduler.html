@@ -37,6 +37,10 @@ SOFTWARE.
             <ol id="node-input-scheduleList"></ol>
         </div>
     </div>
+    <div class="form-row">
+        <input id="node-input-multiPort" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-multiPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.multiPort"></label>
+    </div>
 </script>
 
 <script type="text/javascript">
@@ -62,7 +66,7 @@ SOFTWARE.
         },
         outputLabels: function(index)
         {
-            return this._("scheduler.label.outputPort");
+            return (this.schedule[index] ? this.schedule[index].label : this._("scheduler.status.noSchedule")) || this._("scheduler.label.outputPort");
         },
         defaults:
         {
@@ -85,6 +89,14 @@ SOFTWARE.
                     // just a simple check if there are any events, no detailed check of the content
                     return v.length > 0;
                 }
+            },
+            multiPort:
+            {
+                value: false
+            },
+            outputs:
+            {
+                value: 1
             }
         },
         oneditprepare: function()
@@ -323,8 +335,11 @@ SOFTWARE.
         {
             let node = this;
             let scheduleList = $("#node-input-scheduleList").editableList("items");
+            let multiPort = $("#node-input-multiPort").prop("checked");
 
             node.schedule = [];
+            node.outputs = 0;
+
             scheduleList.each(function(index)
             {
                 let data = {trigger: {}, output: {}};
@@ -351,6 +366,39 @@ SOFTWARE.
                     data.output.property = {name: outType.typedInput("value"),
                                             type: propValue.typedInput("type"),
                                             value: propValue.typedInput("value")};
+                }
+
+                if ((data.output.type == "msg") || (data.output.type == "fullMsg"))
+                {
+                    if (multiPort)
+                    {
+                        data.output.port = node.outputs++;
+
+                        if ((data.trigger.type == "time") || (data.trigger.type == "custom"))
+                        {
+                            data.label = data.trigger.value;
+                        }
+                        else
+                        {
+                            data.label = node._("node-red-contrib-chronos/chronos-config:common.list." + data.trigger.type + "." + data.trigger.value);
+                        }
+
+                        if (data.trigger.offset != 0)
+                        {
+                            data.label += ((data.trigger.offset > 0) ? " + " : " - ");
+
+                            if (data.trigger.random)
+                            {
+                                data.label += "~";
+                            }
+
+                            data.label += Math.abs(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                        }
+                    }
+                    else
+                    {
+                        node.outputs = 1;
+                    }
                 }
 
                 node.schedule.push(data);

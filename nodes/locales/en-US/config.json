@@ -13,7 +13,8 @@
             "custom":       "Custom",
             "fullMessage":  "full message",
             "offset":       "Offset",
-            "random":       "Randomized"
+            "random":       "Randomized",
+            "min":          "min."
         },
         "list":
         {

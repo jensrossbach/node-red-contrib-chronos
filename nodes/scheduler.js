@@ -51,6 +51,16 @@ module.exports = function(RED)
             time.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.schedule = settings.schedule;
+            node.multiPort = settings.multiPort;
+
+            node.ports = [];
+            if (node.multiPort)
+            {
+                for (let i=0; i<settings.outputs; ++i)
+                {
+                    node.ports.push(null);
+                }
+            }
 
             let valid = true;
             for (let i=0; i<node.schedule.length; ++i)
@@ -297,14 +307,28 @@ module.exports = function(RED)
                     msg[data.output.property.name] = data.output.property.value;
                 }
 
-                node.send(msg);
+                sendMessage(data, msg);
             }
             else if (data.output.type == "fullMsg")
             {
-                node.send(data.output.value);
+                sendMessage(data, data.output.value);
             }
 
             setUpTimer(data, true);
+        }
+
+        function sendMessage(data, msg)
+        {
+            if (node.multiPort)
+            {
+                node.ports[data.output.port] = msg;
+                node.send(node.ports);
+                node.ports[data.output.port] = null;
+            }
+            else
+            {
+                node.send(msg);
+            }
         }
     }
 
