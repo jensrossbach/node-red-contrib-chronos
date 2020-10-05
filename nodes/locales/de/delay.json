@@ -4,7 +4,6 @@
         "label":
         {
             "outputPort":  "Verzögerte Nachricht",
-            "min":         "min.",
             "when":        "Wann"
         },
         "status":

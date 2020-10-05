@@ -4,7 +4,6 @@
         "label":
         {
             "outputPort":  "delayed message",
-            "min":         "min.",
             "when":        "When"
         },
         "status":

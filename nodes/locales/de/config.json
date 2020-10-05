@@ -13,7 +13,8 @@
             "custom":       "Benutzerdefiniert",
             "fullMessage":  "Komplette Nachricht",
             "offset":       "Versatz",
-            "random":       "Zufällig"
+            "random":       "Zufällig",
+            "min":          "min."
         },
         "list":
         {

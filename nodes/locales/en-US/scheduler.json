@@ -6,7 +6,8 @@
             "inputPort":   "enable/disable",
             "outputPort":  "scheduled message",
             "schedule":    "Schedule",
-            "output":      "Output"
+            "output":      "Output",
+            "multiPort":   "Dedicated output ports for schedule events"
         },
         "status":
         {
