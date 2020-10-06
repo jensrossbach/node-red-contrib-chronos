@@ -31,7 +31,7 @@ SOFTWARE.
         <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
-    <div class="form-row" style="padding-top: 10px">
+    <div class="form-row node-input-conditionList-row" style="padding-top: 10px">
         <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
         <div class="form-row">
             <ol id="node-input-conditionList"></ol>
@@ -98,7 +98,7 @@ SOFTWARE.
         {
             let node = this;
 
-            let conditionList = $("#node-input-conditionList").css("min-width", "500px").css("min-height", "500px").editableList(
+            let conditionList = $("#node-input-conditionList").css("min-width", "500px").css("min-height", "150px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -634,6 +634,21 @@ SOFTWARE.
 
                 node.conditions.push(data);
             });
+        },
+        oneditresize: function(size)
+        {
+            let height = size.height;
+            let conditionListRow = $("#dialog-form>div.node-input-conditionList-row");
+            let otherRows = $("#dialog-form>div:not(.node-input-conditionList-row)");
+
+            for (let i=0; i<otherRows.length; ++i)
+            {
+                height -= $(otherRows[i]).outerHeight(true);
+            }
+
+            height -= (parseInt(conditionListRow.css("marginTop")) + parseInt(conditionListRow.css("marginBottom")));
+
+            $("#node-input-conditionList").editableList("height", height - 16);
         }
     });
 </script>

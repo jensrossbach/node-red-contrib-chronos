@@ -35,7 +35,7 @@ SOFTWARE.
         <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
         <input id="node-config-input-longitude" data-i18n="[placeholder]config.label.longitude">
     </div>
-    <div class="form-row" style="padding-top: 10px">
+    <div class="form-row node-input-sunPositionList-row" style="padding-top: 10px">
         <label for="node-input-sunPositionList" style="width: auto;"><i class="fa fa-calendar-o"></i> <span data-i18n="config.label.sunPositions"></span></label>
         <div class="form-row">
             <ol id="node-input-sunPositionList"></ol>
@@ -176,7 +176,7 @@ SOFTWARE.
             $("#node-config-input-latitude").spinner(latitudeInput);
             $("#node-config-input-longitude").spinner(longitudeInput);
 
-            let sunPositionList = $("#node-input-sunPositionList").css("min-width", "500px").css("min-height", "300px").editableList(
+            let sunPositionList = $("#node-input-sunPositionList").css("min-width", "500px").css("min-height", "150px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -245,6 +245,21 @@ SOFTWARE.
 
                 node.sunPositions.push(data);
             });
+        },
+        oneditresize: function(size)
+        {
+            let height = size.height;
+            let sunPositionListRow = $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row");
+            let otherRows = $("#node-config-dialog-edit-form>div:not(.node-input-sunPositionList-row)");
+
+            for (let i=0; i<otherRows.length; ++i)
+            {
+                height -= $(otherRows[i]).outerHeight(true);
+            }
+
+            height -= (parseInt(sunPositionListRow.css("marginTop")) + parseInt(sunPositionListRow.css("marginBottom")));
+
+            $("#node-input-sunPositionList").editableList("height", height - 16);
         }
     });
 </script>

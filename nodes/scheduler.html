@@ -31,7 +31,7 @@ SOFTWARE.
         <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
-    <div class="form-row" style="padding-top: 10px">
+    <div class="form-row node-input-scheduleList-row" style="padding-top: 10px">
         <label for="node-input-scheduleList"><i class="fa fa-calendar-o"></i> <span data-i18n="scheduler.label.schedule"></span></label>
         <div class="form-row">
             <ol id="node-input-scheduleList"></ol>
@@ -103,7 +103,7 @@ SOFTWARE.
         {
             let node = this;
 
-            let scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "500px").editableList(
+            let scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "150px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -403,6 +403,21 @@ SOFTWARE.
 
                 node.schedule.push(data);
             });
+        },
+        oneditresize: function(size)
+        {
+            let height = size.height;
+            let scheduleListRow = $("#dialog-form>div.node-input-scheduleList-row");
+            let otherRows = $("#dialog-form>div:not(.node-input-scheduleList-row)");
+
+            for (let i=0; i<otherRows.length; ++i)
+            {
+                height -= $(otherRows[i]).outerHeight(true);
+            }
+
+            height -= (parseInt(scheduleListRow.css("marginTop")) + parseInt(scheduleListRow.css("marginBottom")));
+
+            $("#node-input-scheduleList").editableList("height", height - 16);
         }
     });
 </script>
