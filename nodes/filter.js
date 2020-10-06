@@ -52,6 +52,7 @@ module.exports = function(RED)
 
             node.conditions = settings.conditions;
             node.allMustMatch = settings.allMustMatch;
+            node.annotateOnly = settings.annotateOnly;
 
             let valid = true;
             for (let i=0; i<node.conditions.length; ++i)
@@ -113,6 +114,7 @@ module.exports = function(RED)
 
                         let now = time.getCurrentTime();
                         let result = false;
+                        let evaluation = [];
 
                         for (let i=0; i<node.conditions.length; ++i)
                         {
@@ -174,6 +176,10 @@ module.exports = function(RED)
                                 {
                                     result = cond.operands[now.month()];
                                 }
+                                else
+                                {
+                                    result = false;
+                                }
                             }
                             catch (e)
                             {
@@ -199,14 +205,28 @@ module.exports = function(RED)
                                 result = false;
                             }
 
-                            if ((node.allMustMatch && !result) ||
-                                (!node.allMustMatch && result))
+                            if (node.annotateOnly)
+                            {
+                                evaluation.push(result);
+                            }
+                            else if ((node.allMustMatch && !result) ||
+                                     (!node.allMustMatch && result))
                             {
                                 break;
                             }
                         }
 
-                        if (result)
+                        if (node.annotateOnly)
+                        {
+                            if ("evaluation" in msg)
+                            {
+                                msg._evaluation = msg.evaluation;
+                            }
+                            msg.evaluation = evaluation;
+
+                            node.send(msg);
+                        }
+                        else if (result)
                         {
                             node.send(msg);
                         }

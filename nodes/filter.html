@@ -41,6 +41,10 @@ SOFTWARE.
         <input id="node-input-allMustMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-allMustMatch" style="margin-bottom: 0px; width: auto;" data-i18n="filter.label.allMustMatch"></label>
     </div>
+    <div class="form-row">
+        <input id="node-input-annotateOnly" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-annotateOnly" style="margin-bottom: 0px; width: auto;" data-i18n="filter.label.annotateOnly"></label>
+    </div>
 </script>
 
 <script type="text/javascript">
@@ -90,6 +94,10 @@ SOFTWARE.
                 }
             },
             allMustMatch:
+            {
+                value: false
+            },
+            annotateOnly:
             {
                 value: false
             }
@@ -536,6 +544,20 @@ SOFTWARE.
 
                     operator.change();
                     item[0].appendChild(fragment);
+                }
+            });
+
+            $("#node-input-annotateOnly").change(function()
+            {
+                if ($(this).prop("checked"))
+                {
+                    $("#node-input-allMustMatch").attr("disabled", true);
+                    $("label[for='node-input-allMustMatch']").addClass("disabled");
+                }
+                else
+                {
+                    $("#node-input-allMustMatch").attr("disabled", false);
+                    $("label[for='node-input-allMustMatch']").removeClass("disabled");
                 }
             });
 

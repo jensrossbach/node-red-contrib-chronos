@@ -4,7 +4,8 @@
         "label":
         {
             "outputPort":    "conditional message",
-            "allMustMatch":  "All conditions must match"
+            "allMustMatch":  "All conditions must match",
+            "annotateOnly":  "Annotate only, do not filter"
         }
     }
 }

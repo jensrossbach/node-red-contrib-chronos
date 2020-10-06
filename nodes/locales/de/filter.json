@@ -4,7 +4,8 @@
         "label":
         {
             "outputPort":    "Bedingte Nachricht",
-            "allMustMatch":  "Alle Bedingungen müssen zutreffen"
+            "allMustMatch":  "Alle Bedingungen müssen zutreffen",
+            "annotateOnly":  "Nur annotieren, nicht filtern"
         }
     }
 }
