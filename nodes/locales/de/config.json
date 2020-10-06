@@ -42,12 +42,13 @@
             },
             "operator":
             {
-                "before":    "Vor",
-                "after":     "Nach",
-                "between":   "Zwischen",
-                "outside":   "Außerhalb",
-                "weekdays":  "Wochentage",
-                "months":    "Monate"
+                "before":     "Vor",
+                "after":      "Nach",
+                "between":    "Zwischen",
+                "outside":    "Außerhalb",
+                "weekdays":   "Wochentage",
+                "months":     "Monate",
+                "otherwise":  "Sonst"
             },
             "weekday":
             {
