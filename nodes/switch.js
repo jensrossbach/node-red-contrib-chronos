@@ -54,6 +54,7 @@ module.exports = function(RED)
             node.stopOnFirstMatch = settings.stopOnFirstMatch;
 
             let valid = true;
+            let otherwise = false;
             for (let i=0; i<node.conditions.length; ++i)
             {
                 let cond = node.conditions[i];
@@ -80,6 +81,23 @@ module.exports = function(RED)
                         break;
                     }
                 }
+                else if (cond.operator == "otherwise")
+                {
+                    // only one otherwise condition is allowed
+                    if (otherwise)
+                    {
+                        valid = false;
+                        break;
+                    }
+
+                    otherwise = true;
+                }
+            }
+
+            // otherwise condition must not be the only one
+            if ((node.conditions.length == 1) && otherwise)
+            {
+                valid = false;
             }
 
             if (!valid)
@@ -119,6 +137,8 @@ module.exports = function(RED)
                             ports.push(null);
                         }
 
+                        let numMatches = 0;
+                        let otherwiseIndex = -1;
                         for (let i=0; i<node.conditions.length; ++i)
                         {
                             try
@@ -140,6 +160,7 @@ module.exports = function(RED)
                                         ((cond.operator == "after") && now.isSameOrAfter(targetTime)))
                                     {
                                         ports[i] = prepareMessage(msg);
+                                        numMatches++;
                                     }
                                 }
                                 else if ((cond.operator == "between") || (cond.operator == "outside"))
@@ -175,6 +196,7 @@ module.exports = function(RED)
                                         ((cond.operator == "outside") && (now.isBefore(time1) || now.isAfter(time2))))
                                     {
                                         ports[i] = prepareMessage(msg);
+                                        numMatches++;
                                     }
                                 }
                                 else if ((cond.operator == "weekdays"))
@@ -182,6 +204,7 @@ module.exports = function(RED)
                                     if (cond.operands[now.day()])
                                     {
                                         ports[i] = prepareMessage(msg);
+                                        numMatches++;
                                     }
                                 }
                                 else if ((cond.operator == "months"))
@@ -189,7 +212,12 @@ module.exports = function(RED)
                                     if (cond.operands[now.month()])
                                     {
                                         ports[i] = prepareMessage(msg);
+                                        numMatches++;
                                     }
+                                }
+                                else if (cond.operator == "otherwise")
+                                {
+                                    otherwiseIndex = i;
                                 }
 
                                 if (ports[i] && node.stopOnFirstMatch)
@@ -217,6 +245,11 @@ module.exports = function(RED)
                                     node.debug(e.stack);
                                 }
                             }
+                        }
+
+                        if ((numMatches == 0) && (otherwiseIndex >= 0))
+                        {
+                            ports[otherwiseIndex] = msg;
                         }
 
                         node.send(ports);
