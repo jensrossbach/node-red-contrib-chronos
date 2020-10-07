@@ -258,8 +258,9 @@ SOFTWARE.
             }
 
             height -= (parseInt(sunPositionListRow.css("marginTop")) + parseInt(sunPositionListRow.css("marginBottom")));
+            height -= $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row>label").outerHeight(true);
 
-            $("#node-input-sunPositionList").editableList("height", height - 16);
+            $("#node-input-sunPositionList").editableList("height", height);
         }
     });
 </script>

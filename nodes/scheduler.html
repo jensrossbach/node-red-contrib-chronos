@@ -416,8 +416,9 @@ SOFTWARE.
             }
 
             height -= (parseInt(scheduleListRow.css("marginTop")) + parseInt(scheduleListRow.css("marginBottom")));
+            height -= $("#dialog-form>div.node-input-scheduleList-row>label").outerHeight(true);
 
-            $("#node-input-scheduleList").editableList("height", height - 16);
+            $("#node-input-scheduleList").editableList("height", height);
         }
     });
 </script>
