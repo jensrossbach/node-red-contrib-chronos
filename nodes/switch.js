@@ -159,7 +159,7 @@ module.exports = function(RED)
                                     if (((cond.operator == "before") && now.isBefore(targetTime)) ||
                                         ((cond.operator == "after") && now.isSameOrAfter(targetTime)))
                                     {
-                                        ports[i] = prepareMessage(msg);
+                                        ports[i] = true;
                                         numMatches++;
                                     }
                                 }
@@ -195,7 +195,7 @@ module.exports = function(RED)
                                     if (((cond.operator == "between") && (now.isSameOrAfter(time1) && now.isSameOrBefore(time2))) ||
                                         ((cond.operator == "outside") && (now.isBefore(time1) || now.isAfter(time2))))
                                     {
-                                        ports[i] = prepareMessage(msg);
+                                        ports[i] = true;
                                         numMatches++;
                                     }
                                 }
@@ -203,7 +203,7 @@ module.exports = function(RED)
                                 {
                                     if (cond.operands[now.day()])
                                     {
-                                        ports[i] = prepareMessage(msg);
+                                        ports[i] = true;
                                         numMatches++;
                                     }
                                 }
@@ -211,7 +211,7 @@ module.exports = function(RED)
                                 {
                                     if (cond.operands[now.month()])
                                     {
-                                        ports[i] = prepareMessage(msg);
+                                        ports[i] = true;
                                         numMatches++;
                                     }
                                 }
@@ -251,6 +251,18 @@ module.exports = function(RED)
                         {
                             ports[otherwiseIndex] = msg;
                         }
+                        else if (numMatches > 0)
+                        {
+                            let firstPort = true;
+                            for (let i=0; i<node.conditions.length; ++i)
+                            {
+                                if (ports[i])
+                                {
+                                    ports[i] = firstPort ? msg : RED.util.cloneMessage(msg);
+                                    firstPort = false;
+                                }
+                            }
+                        }
 
                         node.send(ports);
                     }
@@ -258,11 +270,6 @@ module.exports = function(RED)
                     done();
                 });
             }
-        }
-
-        function prepareMessage(msg)
-        {
-            return ((node.conditions.length > 1) && (!node.stopOnFirstMatch)) ? RED.util.cloneMessage(msg) : msg;
         }
     }
 
