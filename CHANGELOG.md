@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2020-10-07
+### Added
+- New operator "otherwise" in time switch node which is considered if all other conditions do not match.
+- New "Annotation only" mode in time filter node which forwards messages in any case and annotates them with the results of each condition evaluation.
+
+### Changed
+- Height of list views is now scaling with height of configuration dialogs.
+- Optimized message cloning behavior for switch node.
+
 ## [1.3.0] - 2020-10-05
 ### Added
 - New option in scheduler node which creates dedicated output ports for events producing output messages.
