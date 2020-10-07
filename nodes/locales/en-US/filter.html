@@ -26,16 +26,7 @@ SOFTWARE.
     <p>
         Filters messages based on their ingress time and date.
     </p>
-    <h3>Inputs</h3>
-    <p>
-        Incoming messages are either handed over to the output or discarded.
-    </p>
-    <h3>Outputs</h3>
-    <p>
-        If one or multiple conditions match the message's ingress time and date,
-        it is sent out.
-    </p>
-    <h3>Details</h3>
+   <h3>Details</h3>
     <p>
         This node is similar to the time switch node but instead of routing
         messages to different output ports, it hands over or discards messages
@@ -64,5 +55,27 @@ SOFTWARE.
             (logical AND combination). Otherwise only a single condition must
             match (logical OR combination).
         </dd>
+        <dt>Annotate only, do not filter</dt>
+        <dd>
+            If selected, incoming messages are forwarded in any case and the
+            evaluation results of each condition are stored in property
+            <code>msg.evaluation</code>.
+        </dd>
+    </dl>
+    <h3>Input</h3>
+    <p>
+        Incoming messages are either handed over to the output or discarded.
+    </p>
+    <h3>Outputs</h3>
+    <p>
+        If one or multiple conditions match the message's ingress time and date,
+        it is sent out.
+    </p>
+    <p>
+        Only if <i>Annotate only, do not filter</i> is activated:
+    </p>
+    <dl class="message-properties">
+        <dt>evaluation<span class="property-type">array</span></dt>
+        <dd>Contains evaluation results of every condition</dd>
     </dl>
 </script>

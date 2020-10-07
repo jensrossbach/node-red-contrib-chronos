@@ -26,17 +26,6 @@ SOFTWARE.
     <p>
         Routes messages based on their ingress time and date.
     </p>
-    <h3>Inputs</h3>
-    <p>
-        Incoming messages are routed to none, one or multiple of the configured
-        output ports. If the message is delivered to more than one port, it will
-        be cloned at each but the first port.
-    </p>
-    <h3>Outputs</h3>
-    <p>
-        Each output port is dedicated to a specific condition which is evaluated
-        against the message's ingress time and date.
-    </p>
     <h3>Details</h3>
     <p>
         This node routes incoming messages to output ports based on the time
@@ -67,4 +56,15 @@ SOFTWARE.
             i.e. message are never routed to more than one output port.
         </dd>
     </dl>
+    <h3>Input</h3>
+    <p>
+        Incoming messages are routed to none, one or multiple of the configured
+        output ports. If the message is delivered to more than one port, it will
+        be cloned at each but the first port.
+    </p>
+    <h3>Outputs</h3>
+    <p>
+        Each output port is dedicated to a specific condition which is evaluated
+        against the message's ingress time and date.
+    </p>
 </script>

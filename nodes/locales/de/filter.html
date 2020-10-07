@@ -26,16 +26,6 @@ SOFTWARE.
     <p>
         Filtert Nachrichten anhand ihres Eingangszeitpunkts und -datums.
     </p>
-    <h3>Eingaben</h3>
-    <p>
-        Eintreffende Nachrichten werden entweder weitergeleitet oder verworfen.
-    </p>
-    <h3>Ausgaben</h3>
-    <p>
-        Wenn eine oder mehrere Bedingungen auf den Zeitpunkt oder das Datum des
-        Nachrichteneingangs zutreffen, wird die Nachricht zum Ausgabe-Port
-        gesendet.
-    </p>
     <h3>Details</h3>
     <p>
         Diese Node is ähnlich der Time Switch Node, aber anstatt Nachrichten an
@@ -66,5 +56,28 @@ SOFTWARE.
             weiterzuleiten (logische UND-Verknüpfung). Ansonsten reicht es aus,
             dass eine einzige Bedingung erfüllt ist (logische ODER-Verknüpfung).
         </dd>
+        <dt>Nur annotieren, nicht filtern</dt>
+        <dd>
+            Wenn aktiviert, werden eingehende Nachrichten in jedem Fall
+            weitergeleitet und die Ergebnisse der Auswertung aller Bedingungen
+            werden in der Eigenschaft <code>msg.evaluation</code> gespeichert.
+        </dd>
+    </dl>
+    <h3>Eingabe</h3>
+    <p>
+        Eintreffende Nachrichten werden entweder weitergeleitet oder verworfen.
+    </p>
+    <h3>Ausgaben</h3>
+    <p>
+        Wenn eine oder mehrere Bedingungen auf den Zeitpunkt oder das Datum des
+        Nachrichteneingangs zutreffen, wird die Nachricht zum Ausgabe-Port
+        gesendet.
+    </p>
+    <p>
+        Nur wenn <i>Nur annotieren, nicht filtern</i> aktiviert ist:
+    </p>
+    <dl class="message-properties">
+        <dt>evaluation<span class="property-type">array</span></dt>
+        <dd>Enthält die Ergebnisse der Auswertung aller Bedingungen</dd>
     </dl>
 </script>

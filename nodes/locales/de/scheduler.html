@@ -27,29 +27,6 @@ SOFTWARE.
         Plant das Versenden von Nachrichten oder Setzen von globalen /
         Flow-spezifischen Variablen zu bestimmten Uhrzeiten.
     </p>
-    <h3>Eingaben</h3>
-    <p>
-        Eine Eingangsnachricht kann dazu verwendet werden, um den Zeitplan
-        oder einzelne Zeitereignisse zu aktivieren oder zu deaktivieren.
-    </p>
-    <dl class="message-properties">
-        <dt>payload<span class="property-type">boolean | array</span></dt>
-        <dd>Schalter zum Aktivieren oder Deaktivieren von Zeitereignissen</dd>
-    </dl>
-    <p>
-        Wenn <code>msg.payload</code> ein boolescher Wert ist, wird der komplette
-        Zeitplan aktiviert, wenn der Wert wahr ist, ansonsten deaktiviert. Wenn
-        <code>msg.payload</code> ein Array ist, muss jedes Element ein boolescher
-        Wert sein und ist dem Zeitereignis mit dem selben Index zugeordnet. Wenn
-        der Wert wahr ist, wird das zugehörige Zeitereignis aktiviert, ansonsten
-        deaktiviert.
-    </p>
-    <h3>Ausgaben</h3>
-    <p>
-        Geplante Nachrichten werden an den Ausgabe-Port der Nachricht gesendet.
-        Der Aufbau und Inhalt der Nachricht kann über die Konfiguration festgelegt
-        werden.
-    </p>
     <h3>Details</h3>
     <p>
         Diese Node kann Nachrichten schicken oder globale / Flow-spezifische
@@ -106,4 +83,27 @@ SOFTWARE.
             des Zeitereignisses wird an den zugehörigen Ausgabe-Port geschickt.
         </dd>
     </dl>
+    <h3>Eingabe</h3>
+    <p>
+        Eine Eingangsnachricht kann dazu verwendet werden, um den Zeitplan
+        oder einzelne Zeitereignisse zu aktivieren oder zu deaktivieren.
+    </p>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">boolean | array</span></dt>
+        <dd>Schalter zum Aktivieren oder Deaktivieren von Zeitereignissen</dd>
+    </dl>
+    <p>
+        Wenn <code>msg.payload</code> ein boolescher Wert ist, wird der komplette
+        Zeitplan aktiviert, wenn der Wert wahr ist, ansonsten deaktiviert. Wenn
+        <code>msg.payload</code> ein Array ist, muss jedes Element ein boolescher
+        Wert sein und ist dem Zeitereignis mit dem selben Index zugeordnet. Wenn
+        der Wert wahr ist, wird das zugehörige Zeitereignis aktiviert, ansonsten
+        deaktiviert.
+    </p>
+    <h3>Ausgaben</h3>
+    <p>
+        Geplante Nachrichten werden an den Ausgabe-Port der Nachricht gesendet.
+        Der Aufbau und Inhalt der Nachricht kann über die Konfiguration festgelegt
+        werden.
+    </p>
 </script>

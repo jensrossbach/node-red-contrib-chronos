@@ -27,27 +27,6 @@ SOFTWARE.
         Schedules the transmission of messages or setting of global/flow variables
         at specific times.
     </p>
-    <h3>Inputs</h3>
-    <p>
-        The input message can be used to either disable or re-enable the schedule
-        or parts of it.
-    </p>
-    <dl class="message-properties">
-        <dt>payload<span class="property-type">boolean | array</span></dt>
-        <dd>Switch(es) for enabling or disabling schedule events</dd>
-    </dl>
-    <p>
-        If <code>msg.payload</code> is a boolean value, whole schedule is enabled
-        if true and disabled otherwise. If <code>msg.payload</code> is an array,
-        each element must be a boolean value and corresponds to the event in the
-        schedule at the same index. If the value is true, the matching event is
-        enabled, otherwise it is disabled.
-    </p>
-    <h3>Outputs</h3>
-    <p>
-        Scheduled messages are sent to the output of this node. The structure and
-        content of the message can be defined through the configuration.
-    </p>
     <h3>Details</h3>
     <p>
         This node can send messages or set global or flow variables at specific
@@ -99,4 +78,25 @@ SOFTWARE.
             event will be sent to the assigned output port.
         </dd>
     </dl>
+    <h3>Input</h3>
+    <p>
+        The input message can be used to either disable or re-enable the schedule
+        or parts of it.
+    </p>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">boolean | array</span></dt>
+        <dd>Switch(es) for enabling or disabling schedule events</dd>
+    </dl>
+    <p>
+        If <code>msg.payload</code> is a boolean value, whole schedule is enabled
+        if true and disabled otherwise. If <code>msg.payload</code> is an array,
+        each element must be a boolean value and corresponds to the event in the
+        schedule at the same index. If the value is true, the matching event is
+        enabled, otherwise it is disabled.
+    </p>
+    <h3>Outputs</h3>
+    <p>
+        Scheduled messages are sent to the output of this node. The structure and
+        content of the message can be defined through the configuration.
+    </p>
 </script>
