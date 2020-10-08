@@ -49,9 +49,56 @@ SOFTWARE.
             The list containing the conditions for filtering messages. New entries
             can be added using the button below the list. Existing entries can be
             reordered or deleted. Depending on the selected operator on the left
-            side, there are fields for specifying times or time ranges (either
-            directly entered, as sun or moon position based event or as user-defined
-            sun position), selection of week days or selection of months.
+            side, the following possibilities are available:
+            <ul>
+                <li>
+                    <i>before</i>: Checks if the message ingress time is before
+                    the specified time.
+                </li>
+                <li>
+                    <i>after</i>: Checks if the message ingress time is at or
+                    after the specified time.
+                </li>
+                <li>
+                    <i>between</i>: Checks if the message ingress time is at or
+                    between the two specified times.
+                </li>
+                <li>
+                    <i>outside</i>: Checks if the message ingress time is before
+                    the first or after the second specified time.
+                </li>
+                <li>
+                    <i>week days</i>: Checks if the message ingress date is at
+                    one of the selected week days.
+                </li>
+                <li>
+                    <i>months</i>: Checks if the message ingress date is at one
+                    of the selected months.
+                </li>
+            </ul>
+            For the time input, depending on the selection on the left side, the
+            following possibilities are available:
+            <ul>
+                <li>
+                    <i>Time of Day</i>: A specific time can be entered directly
+                    in the form <code>hh:mm[:ss] [am|pm]</code>.
+                </li>
+                <li>
+                    <i>Sun Position</i>: The sun position can be selected from
+                    a list of predefined values.
+                </li>
+                <li>
+                    <i>Moon Position</i>: The moon position can be selected from
+                    a list of predefined values.
+                </li>
+                <li>
+                    <i>Custom</i>: One of the user-defined sun position names
+                    can be entered.
+                </li>
+            </ul>
+            The specified times can additionally be shifted by an (optionally
+            randomized) offset, accessible through the double down arrow on the
+            right side.
         </dd>
         <dt>All conditions must match</dt>
         <dd>
@@ -72,8 +119,9 @@ SOFTWARE.
     </p>
     <h3>Outputs</h3>
     <p>
-        If one or multiple conditions match the message's ingress time and date,
-        it is sent out.
+        If one or multiple conditions match the message's ingress time and date
+        or if <i>Annotate only, do not filter</i> is activated, the message
+        is sent out.
     </p>
     <p>
         Only if <i>Annotate only, do not filter</i> is activated:

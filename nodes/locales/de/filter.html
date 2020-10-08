@@ -50,10 +50,57 @@ SOFTWARE.
             Liste der Bedingungen zum Filtern der Nachrichten. Neue Einträge
             können über den Button unterhalb der Liste hinzugefügt werden.
             Vorhandene Einträge können neu angeordnet oder gelöscht werden.
-            Abhängig vom gewählten Operator auf der linken Seiten, gibt es Felder
-            zum Angeben von Zeitpunkten oder Zeiträumen (entweder direkte
-            Eingaben, vorgegebene Sonnen-/Mondstände oder benutzerdefinierte
-            Sonnenstände), Auswahl von Wochentagen oder Auswahl von Monaten.
+            Abhängig vom gewählten Operator auf der linken Seite gibt es die
+            folgenden Möglichkeiten:
+            <ul>
+                <li>
+                    <i>Vor</i>: Prüft ob der Eingangszeitpunkt der Nachricht vor
+                    der spezifizierten Zeit ist.
+                </li>
+                <li>
+                    <i>Nach</i>: Prüft ob der Eingangszeitpunkt der Nachricht zur
+                    oder nach der spezifizierten Zeit ist.
+                </li>
+                <li>
+                    <i>Zwischen</i>: Prüft ob der Eingangszeitpunkt der Nachricht
+                    zu oder zwischen den zwei spezifizierten Zeiten liegt.
+                </li>
+                <li>
+                    <i>Außerhalb</i>: Prüft ob der Eingangszeitpunkt der Nachricht
+                    vor der ersten oder nach der zweiten spezifizierten Zeit ist.
+                </li>
+                <li>
+                    <i>Wochentage</i>: Prüft ob das Eingangsdatum der Nachricht
+                    an einem der ausgewählten Wochentage ist.
+                </li>
+                <li>
+                    <i>Monate</i>: Prüft ob das Eingangsdatum der Nachricht
+                    in einem der ausgewählten Monate ist.
+                </li>
+            </ul>
+            Für die Zeiteingabe, abhängig von der Auswahl auf der linken Seite,
+            gibt es folgende Möglichkeiten:
+            <ul>
+                <li>
+                    <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt in der
+                    Form <code>hh:mm[:ss] [am|pm]</code> eingegeben werden.
+                </li>
+                <li>
+                    <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste
+                    vorgegebener Werte ausgewählt werden.
+                </li>
+                <li>
+                    <i>Mondstand</i>: Der Mondstand kann aus einer Liste
+                    vorgegebener Werte ausgewählt werden.
+                </li>
+                <li>
+                    <i>Benutzerdefiniert</i>: Einer der Namen für benutzerdefinierte
+                    Sonnenstände kann eingegeben werden.
+                </li>
+            </ul>
+            Die spezifizierten Zeitpunkte können zusätzlich mittels eines
+            (wahlweise zufälligen) Versatzes verschoben werden. Das ist über
+            den Doppelpfeil auf der rechten Seite erreichbar.
         </dd>
         <dt>Alle Bedingungen müssen zutreffen</dt>
         <dd>
@@ -75,8 +122,8 @@ SOFTWARE.
     <h3>Ausgaben</h3>
     <p>
         Wenn eine oder mehrere Bedingungen auf den Zeitpunkt oder das Datum des
-        Nachrichteneingangs zutreffen, wird die Nachricht zum Ausgabe-Port
-        gesendet.
+        Nachrichteneingangs zutreffen oder wenn <i>Nur annotieren, nicht filtern</i>
+        aktiviert ist, wird die Nachricht zum Ausgabe-Port gesendet.
     </p>
     <p>
         Nur wenn <i>Nur annotieren, nicht filtern</i> aktiviert ist:
