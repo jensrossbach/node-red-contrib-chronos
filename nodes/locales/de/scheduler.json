@@ -3,6 +3,7 @@
     {
         "label":
         {
+            "node":        "Zeitplaner",
             "inputPort":   "Ein-/Ausschalten",
             "outputPort":  "Geplante Nachricht",
             "schedule":    "Zeitplan",

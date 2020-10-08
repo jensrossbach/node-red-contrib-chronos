@@ -3,6 +3,7 @@
     {
         "label":
         {
+            "node":              "time switch",
             "stopOnFirstMatch":  "Stop on first match",
             "and":               "and"
         }

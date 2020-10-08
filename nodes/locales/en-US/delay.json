@@ -3,6 +3,7 @@
     {
         "label":
         {
+            "node":        "delay until",
             "outputPort":  "delayed message",
             "when":        "When"
         },

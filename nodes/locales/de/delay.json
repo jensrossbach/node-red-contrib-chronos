@@ -3,6 +3,7 @@
     {
         "label":
         {
+            "node":        "Verzögerung",
             "outputPort":  "Verzögerte Nachricht",
             "when":        "Wann"
         },

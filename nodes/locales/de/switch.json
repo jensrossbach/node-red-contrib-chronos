@@ -3,6 +3,7 @@
     {
         "label":
         {
+            "node":              "Zeitweiche",
             "stopOnFirstMatch":  "Bei erster Übereinstimmung aufhören",
             "and":               "und"
         }

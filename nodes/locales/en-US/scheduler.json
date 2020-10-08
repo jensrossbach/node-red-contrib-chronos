@@ -3,6 +3,7 @@
     {
         "label":
         {
+            "node":        "scheduler",
             "inputPort":   "enable/disable",
             "outputPort":  "scheduled message",
             "schedule":    "Schedule",

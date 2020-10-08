@@ -96,6 +96,7 @@
     {
         "label":
         {
+            "node":          "configuration",
             "latitude":      "Latitude",
             "longitude":     "Longitude",
             "sunPositions":  "Custom Sun Positions",

@@ -96,6 +96,7 @@
     {
         "label":
         {
+            "node":          "Konfiguration",
             "latitude":      "Breitengrad",
             "longitude":     "Längengrad",
             "sunPositions":  "Benutzerdefinierte Sonnenstände",

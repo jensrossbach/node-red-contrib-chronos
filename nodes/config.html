@@ -50,7 +50,7 @@ SOFTWARE.
         icon:     "chronos_config.svg",
         label:    function()
         {
-            return (this.name || (this.credentials.latitude + ", " + this.credentials.longitude));
+            return (this.name || ((this.credentials.latitude && this.credentials.longitude) ? (this.credentials.latitude + ", " + this.credentials.longitude) : this._("config.label.node")));
         },
         defaults:
         {
