@@ -24,16 +24,16 @@ SOFTWARE.
 
 <script type="text/x-red" data-help-name="chronos-delay">
     <p>
-        Verzögert eintreffende Nachrichten beim Durchlaufen der Node bis eine
+        Verzögert eintreffende Nachrichten beim Durchlaufen des Knotens bis eine
         bestimmte Uhrzeit erreicht ist.
     </p>
     <h3>Details</h3>
     <p>
-        Diese Node puffert alle eintreffenden Nachrichten, bis eine bestimmte
+        Dieser Knoten puffert alle eintreffenden Nachrichten, bis eine bestimmte
         Uhrzeit erreicht worden ist. Der Zeitpunkt kann entweder direkt
         eingegeben oder anhand von Sonnen- oder Mondständen berechnet werden.
         Sobald der Zielzeitpunkt erreicht wurde, werden alle gepufferten
-        Nachrichten an den Ausgabe-Port der Node geleitet.
+        Nachrichten an den Ausgabe-Port des Knotens geleitet.
     </p>
     <p>
         Für weitere Informationen bitte die ausführliche Dokumentation im
@@ -43,10 +43,10 @@ SOFTWARE.
     <h3>Konfiguration</h3>
     <dl>
         <dt>Name</dt>
-        <dd>Der Name der Node (optional).</dd>
+        <dd>Der Name des Knotens (optional).</dd>
         <dt>Konfiguration</dt>
         <dd>
-            Ein Verweis auf die zu verwendende Konfigurations-Node.
+            Ein Verweis auf den zu verwendenden Konfigurationsknoten.
         </dd>
         <dt>Wann</dt>
         <dd>
@@ -87,7 +87,7 @@ SOFTWARE.
     <h3>Eingabe</h3>
     <p>
         Die Eingangsnachricht wird unverändert weitergereicht, kann jedoch auch
-        das Pufferverhalten der Node beeinflussen, wenn folgende Eigenschaften
+        das Pufferverhalten des Knotens beeinflussen, wenn folgende Eigenschaften
         (jeglichen Typs) vorhanden sind.
     </p>
     <dl class="message-properties">
