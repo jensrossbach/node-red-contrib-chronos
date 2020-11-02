@@ -87,52 +87,61 @@ module.exports = function(RED)
                         break;
                     }
                 }
-                else if (data.output.property.type == "num")
+                else
                 {
-                    if (+data.output.property.value === +data.output.property.value)
-                    {
-                        data.output.property.value = +data.output.property.value;
-                    }
-                    else
+                    if (!data.output.property.name)
                     {
                         valid = false;
                         break;
                     }
-                }
-                else if (data.output.property.type == "bool")
-                {
-                    if (/^(true|false)$/.test(data.output.property.value))
+
+                    if (data.output.property.type == "num")
                     {
-                        data.output.property.value = (data.output.property.value == "true");
+                        if (+data.output.property.value === +data.output.property.value)
+                        {
+                            data.output.property.value = +data.output.property.value;
+                        }
+                        else
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
-                    else
+                    else if (data.output.property.type == "bool")
                     {
-                        valid = false;
-                        break;
+                        if (/^(true|false)$/.test(data.output.property.value))
+                        {
+                            data.output.property.value = (data.output.property.value == "true");
+                        }
+                        else
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
-                }
-                else if (data.output.property.type == "json")
-                {
-                    try
+                    else if (data.output.property.type == "json")
                     {
-                        data.output.property.value = JSON.parse(data.output.property.value);
+                        try
+                        {
+                            data.output.property.value = JSON.parse(data.output.property.value);
+                        }
+                        catch (e)
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
-                    catch (e)
+                    else if (data.output.property.type == "bin")
                     {
-                        valid = false;
-                        break;
-                    }
-                }
-                else if (data.output.property.type == "bin")
-                {
-                    try
-                    {
-                        data.output.property.value = Buffer.from(JSON.parse(data.output.property.value));
-                    }
-                    catch (e)
-                    {
-                        valid = false;
-                        break;
+                        try
+                        {
+                            data.output.property.value = Buffer.from(JSON.parse(data.output.property.value));
+                        }
+                        catch (e)
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
                 }
             }
