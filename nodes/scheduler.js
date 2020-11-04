@@ -296,13 +296,10 @@ module.exports = function(RED)
         {
             delete data.timer;
 
-            if (data.output.type == "global")
+            if ((data.output.type == "global") || (data.output.type == "flow"))
             {
-                node.context().global.set(data.output.property.name, data.output.property.value);
-            }
-            else if (data.output.type == "flow")
-            {
-                node.context().flow.set(data.output.property.name, data.output.property.value);
+                let ctx = RED.util.parseContextStore(data.output.property.name);
+                node.context()[data.output.type].set(ctx.key, data.output.property.value, ctx.store);
             }
             else if (data.output.type == "msg")
             {

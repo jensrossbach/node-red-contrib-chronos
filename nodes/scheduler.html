@@ -310,7 +310,6 @@ SOFTWARE.
                     triggerOffset.spinner("value", data.trigger.offset);
                     triggerRandom.prop("checked", data.trigger.random);
 
-                    outType.typedInput("type", data.output.type);
                     if (data.output.type == "fullMsg")
                     {
                         msgValue.typedInput("value", data.output.value);
@@ -321,6 +320,7 @@ SOFTWARE.
                         propValue.typedInput("type", data.output.property.type);
                         propValue.typedInput("value", data.output.property.value);
                     }
+                    outType.typedInput("type", data.output.type);
 
                     item[0].appendChild(fragment);
                 }
