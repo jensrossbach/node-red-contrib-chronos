@@ -69,6 +69,11 @@ function getCurrentTime()
     return moment();
 }
 
+function getTimeFrom(source)
+{
+    return moment(source);
+}
+
 function getUserTime(day, value)
 {
     let ret = null;
@@ -192,6 +197,7 @@ module.exports =
 {
     init: init,
     getCurrentTime: getCurrentTime,
+    getTimeFrom: getTimeFrom,
     getUserTime: getUserTime,
     getSunTime: getSunTime,
     getMoonTime: getMoonTime,

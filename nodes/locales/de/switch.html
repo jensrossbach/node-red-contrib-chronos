@@ -24,13 +24,15 @@ SOFTWARE.
 
 <script type="text/x-red" data-help-name="chronos-switch">
     <p>
-        Leitet Nachrichten anhand ihres Eingangszeitpunkts und -datums an
-        unterschiedliche Ausgabe-Ports.
+        Leitet Nachrichten anhand eines bestimmten Zeitpunkts an unterschiedliche
+        Ausgabe-Ports.
     </p>
     <h3>Details</h3>
     <p>
-        Dieser Knoten leitet eingehende Nachrichten anhand des Zeitpunkts und
-        Datums beim Eintreffen an davon abhängige Ausgabe-Ports um.
+        Dieser Knoten leitet eingehende Nachrichten anhand des Zeitpunkts beim
+        Eintreffen oder eines Zeitstempels aus einer Nachrichteneigenschaft,
+        einer globalen Variable oder einer Flow-Variable an davon abhängige
+        Ausgabe-Ports um.
     </p>
     <p>
         Für weitere Informationen bitte die ausführliche Dokumentation im
@@ -45,6 +47,29 @@ SOFTWARE.
         <dd>
             Ein Verweis auf den zu verwendenden Konfigurationsknoten.
         </dd>
+        <dt>Basiszeit</dt>
+        <dd>
+            Die Basiszeit wird für den Vergleich mit den Operanden der Bedingungen
+            verwendet. Folgende Möglichkeiten gibt es:
+            <ul>
+                <li>
+                    <i>Nachrichteneingang</i>: Zeitpunkt des Eintreffens der
+                    Nachricht.
+                </li>
+                <li>
+                    <i>global.</i>: Zeitstempel aus einer globalen Variable als
+                    Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung.
+                </li>
+                <li>
+                    <i>flow.</i>: Zeitstempel aus einer Flow-Variable als
+                    Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung.
+                </li>
+                <li>
+                    <i>msg.</i>: Zeitstempel aus einer Nachrichteneigenschaft
+                    als Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung.
+                </li>
+            </ul>
+        </dd>
         <dt>Bedingungen</dt>
         <dd>
             Liste der Bedingungen zum Umleiten der Nachrichten. Neue Einträge
@@ -54,28 +79,29 @@ SOFTWARE.
             folgenden Möglichkeiten:
             <ul>
                 <li>
-                    <i>Vor</i>: Prüft ob der Eingangszeitpunkt der Nachricht vor
-                    der spezifizierten Zeit ist.
+                    <i>Vor</i>: Prüft ob die Basiszeit früher als die
+                    spezifizierte Zeit ist.
                 </li>
                 <li>
-                    <i>Nach</i>: Prüft ob der Eingangszeitpunkt der Nachricht zur
-                    oder nach der spezifizierten Zeit ist.
+                    <i>Nach</i>: Prüft ob die Basiszeit gleich oder später als
+                    die spezifizierte Zeit ist.
                 </li>
                 <li>
-                    <i>Zwischen</i>: Prüft ob der Eingangszeitpunkt der Nachricht
-                    zu oder zwischen den zwei spezifizierten Zeiten liegt.
+                    <i>Zwischen</i>: Prüft ob die Basiszeit gleich oder später
+                    als die erste und früher als die zweite spezifizierte Zeit
+                    ist.
                 </li>
                 <li>
-                    <i>Außerhalb</i>: Prüft ob der Eingangszeitpunkt der Nachricht
-                    vor der ersten oder nach der zweiten spezifizierten Zeit ist.
+                    <i>Außerhalb</i>: Prüft ob die Basiszeit früher als die
+                    erste oder später als die zweite spezifizierte Zeit ist.
                 </li>
                 <li>
-                    <i>Wochentage</i>: Prüft ob das Eingangsdatum der Nachricht
-                    an einem der ausgewählten Wochentage ist.
+                    <i>Wochentage</i>: Prüft ob die Basiszeit auf den ausgewählten
+                    Wochentag zutrifft.
                 </li>
                 <li>
-                    <i>Monate</i>: Prüft ob das Eingangsdatum der Nachricht
-                    in einem der ausgewählten Monate ist.
+                    <i>Monate</i>: Prüft ob die Basiszeit auf einen der
+                    ausgewählten Monate zutrifft.
                 </li>
                 <li>
                     <i>Sonst</i>: Wird angewendet wenn alle anderen Bedingungen
@@ -122,7 +148,7 @@ SOFTWARE.
     </p>
     <h3>Ausgaben</h3>
     <p>
-        Jeder Ausgabe-Port gehört zu einer konfigurierten Bedingung, welche auf
-        den Eingangszeitpunkt oder das -datum angewendet wird.
+        Jeder Ausgabe-Port gehört zu einer konfigurierten Bedingung, welche mit
+        der Basiszeit verglichen wird.
     </p>
 </script>

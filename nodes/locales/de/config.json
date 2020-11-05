@@ -6,6 +6,8 @@
             "inputPort":    "Eingehende Nachricht",
             "name":         "Name",
             "config":       "Konfiguration",
+            "baseTime":     "Basiszeit",
+            "msgIngress":   "Nachrichteneingang",
             "conditions":   "Bedingungen",
             "time":         "Uhrzeit",
             "sun":          "Sonnenstand",
@@ -88,6 +90,7 @@
             "noConditions":     "Keine Bedingungen kongiguriert",
             "invalidConfig":    "Konfiguration enthält ungültige Werte",
             "invalidTime":      "Ungültige Uhrzeit angegeben",
+            "invalidBaseTime":  "Ungültige Basiszeit angegeben: __baseTime__",
             "invalidName":      "Ungültiger benutzerdefinierter Sonnenstand angegeben",
             "unavailableTime":  "Kein Zeitpunkt für Ereignis verfügbar"
         }
