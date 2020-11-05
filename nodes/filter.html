@@ -31,6 +31,11 @@ SOFTWARE.
         <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
+    <div class="form-row">
+        <label for="node-input-baseTime"><i class="fa fa-clock-o"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.baseTime"></span></label>
+        <input type="text" id="node-input-baseTime" style="width: 70%;">
+        <input id="node-input-baseTimeType" type="hidden">
+    </div>
     <div class="form-row node-input-conditionList-row" style="padding-top: 10px">
         <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
         <div class="form-row">
@@ -84,6 +89,15 @@ SOFTWARE.
                 type:     "chronos-config",
                 required: true
             },
+            baseTime:
+            {
+                value:    "",
+                validate: RED.validators.typedInput("baseTimeType")
+            },
+            baseTimeType:
+            {
+                value: "msgIngress"
+            },
             conditions:
             {
                 value: [{operator: "before", operands: {type: "time", value: ""}}],
@@ -105,6 +119,16 @@ SOFTWARE.
         oneditprepare: function()
         {
             let node = this;
+
+            const msgIngressInput =
+            {
+                value: "msgIngress",
+                label: node._("node-red-contrib-chronos/chronos-config:common.label.msgIngress"),
+                hasValue: false
+            };
+
+            let baseTime = $("#node-input-baseTime")
+                            .typedInput({types: [msgIngressInput, "global", "flow", "msg"], typeField: "#node-input-baseTimeType"});
 
             let conditionList = $("#node-input-conditionList").css("min-width", "500px").css("min-height", "150px").editableList(
             {

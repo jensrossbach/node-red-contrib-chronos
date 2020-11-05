@@ -50,35 +50,50 @@ module.exports = function(RED)
             node.status({});
             time.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
+            node.baseTime = settings.baseTime;
+            node.baseTimeType = settings.baseTimeType;
             node.conditions = settings.conditions;
             node.allMustMatch = settings.allMustMatch;
             node.annotateOnly = settings.annotateOnly;
 
-            let valid = true;
-            for (let i=0; i<node.conditions.length; ++i)
+            // backward compatibility to v1.5.0
+            if (!node.baseTimeType)
             {
-                let cond = node.conditions[i];
+                node.baseTimeType = "msgIngress";
+            }
 
-                // check for valid user time
-                if ((cond.operator == "before") || (cond.operator == "after"))
+            let valid = true;
+            if ((node.baseTimeType != "msgIngress") && !node.baseTime)
+            {
+                valid = false;
+            }
+            else
+            {
+                for (let i=0; i<node.conditions.length; ++i)
                 {
-                    if ((cond.operands.type == "time") && !time.isValidUserTime(cond.operands.value))
+                    let cond = node.conditions[i];
+
+                    // check for valid user time
+                    if ((cond.operator == "before") || (cond.operator == "after"))
                     {
-                        valid = false;
-                        break;
+                        if ((cond.operands.type == "time") && !time.isValidUserTime(cond.operands.value))
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
-                }
-                else if ((cond.operator == "between") || (cond.operator == "outside"))
-                {
-                    if ((cond.operands[0].type == "time") && !time.isValidUserTime(cond.operands[0].value))
+                    else if ((cond.operator == "between") || (cond.operator == "outside"))
                     {
-                        valid = false;
-                        break;
-                    }
-                    if ((cond.operands[1].type == "time") && !time.isValidUserTime(cond.operands[1].value))
-                    {
-                        valid = false;
-                        break;
+                        if ((cond.operands[0].type == "time") && !time.isValidUserTime(cond.operands[0].value))
+                        {
+                            valid = false;
+                            break;
+                        }
+                        if ((cond.operands[1].type == "time") && !time.isValidUserTime(cond.operands[1].value))
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
                 }
             }
@@ -112,129 +127,181 @@ module.exports = function(RED)
                             };
                         }
 
-                        let now = time.getCurrentTime();
-                        let result = false;
-                        let evaluation = [];
-
-                        for (let i=0; i<node.conditions.length; ++i)
+                        let baseTime = getBaseTime(msg);
+                        if (baseTime)
                         {
-                            try
+                            node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss"));
+
+                            let result = false;
+                            let evaluation = [];
+
+                            for (let i=0; i<node.conditions.length; ++i)
                             {
-                                let cond = node.conditions[i];
-
-                                if ((cond.operator == "before") || (cond.operator == "after"))
+                                try
                                 {
-                                    let targetTime = time.getTime(now.clone(), cond.operands.type, cond.operands.value);
+                                    let cond = node.conditions[i];
 
-                                    if (cond.operands.offset != 0)
+                                    if ((cond.operator == "before") || (cond.operator == "after"))
                                     {
-                                        let offset = cond.operands.random ? Math.round(Math.random() * cond.operands.offset) : cond.operands.offset;
-                                        targetTime.add(offset, "minutes");
-                                    }
+                                        let targetTime = time.getTime(baseTime.clone(), cond.operands.type, cond.operands.value);
 
-                                    node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
-                                    result = (((cond.operator == "before") && now.isBefore(targetTime)) ||
-                                            ((cond.operator == "after") && now.isSameOrAfter(targetTime)));
-                                }
-                                else if ((cond.operator == "between") || (cond.operator == "outside"))
-                                {
-                                    let time1 = time.getTime(now.clone(), cond.operands[0].type, cond.operands[0].value);
-                                    let time2 = time.getTime(now.clone(), cond.operands[1].type, cond.operands[1].value);
-
-                                    if (cond.operands[0].offset != 0)
-                                    {
-                                        let offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
-                                        time1.add(offset, "minutes");
-                                    }
-                                    if (cond.operands[1].offset != 0)
-                                    {
-                                        let offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
-                                        time2.add(offset, "minutes");
-                                    }
-
-                                    if (time2.isSameOrBefore(time1))
-                                    {
-                                        if (cond.operands[1].type == "time")
+                                        if (cond.operands.offset != 0)
                                         {
-                                            time2.add(1, "days");
+                                            let offset = cond.operands.random ? Math.round(Math.random() * cond.operands.offset) : cond.operands.offset;
+                                            targetTime.add(offset, "minutes");
                                         }
-                                        else
+
+                                        node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
+                                        result = (((cond.operator == "before") && baseTime.isBefore(targetTime)) ||
+                                                ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)));
+                                    }
+                                    else if ((cond.operator == "between") || (cond.operator == "outside"))
+                                    {
+                                        let time1 = time.getTime(baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+                                        let time2 = time.getTime(baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+
+                                        if (cond.operands[0].offset != 0)
                                         {
-                                            time2 = time.getTime(time2.add(1, "day"), cond.operands[1].type, cond.operands[1].value);
+                                            let offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
+                                            time1.add(offset, "minutes");
                                         }
+                                        if (cond.operands[1].offset != 0)
+                                        {
+                                            let offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
+                                            time2.add(offset, "minutes");
+                                        }
+
+                                        if (time2.isSameOrBefore(time1))
+                                        {
+                                            if (cond.operands[1].type == "time")
+                                            {
+                                                time2.add(1, "days");
+                                            }
+                                            else
+                                            {
+                                                time2 = time.getTime(time2.add(1, "day"), cond.operands[1].type, cond.operands[1].value);
+                                            }
+                                        }
+
+                                        node.debug("Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss") + " and " + time2.format("YYYY-MM-DD HH:mm:ss"));
+                                        result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2))) ||
+                                                ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+                                    }
+                                    else if ((cond.operator == "weekdays"))
+                                    {
+                                        result = cond.operands[baseTime.day()];
+                                    }
+                                    else if ((cond.operator == "months"))
+                                    {
+                                        result = cond.operands[baseTime.month()];
+                                    }
+                                    else
+                                    {
+                                        result = false;
+                                    }
+                                }
+                                catch (e)
+                                {
+                                    if (e instanceof time.TimeError)
+                                    {
+                                        let errMsg = RED.util.cloneMessage(msg);
+
+                                        if ("errorDetails" in errMsg)
+                                        {
+                                            errMsg._errorDetails = errMsg.errorDetails;
+                                        }
+                                        errMsg.errorDetails = e.details;
+
+                                        node.error(e.message, errMsg);
+                                    }
+                                    else
+                                    {
+                                        node.error(e.message);
+                                        node.debug(e.stack);
                                     }
 
-                                    node.debug("Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss") + " and " + time2.format("YYYY-MM-DD HH:mm:ss"));
-                                    result = (((cond.operator == "between") && (now.isSameOrAfter(time1) && now.isSameOrBefore(time2))) ||
-                                            ((cond.operator == "outside") && (now.isBefore(time1) || now.isAfter(time2))));
-                                }
-                                else if ((cond.operator == "weekdays"))
-                                {
-                                    result = cond.operands[now.day()];
-                                }
-                                else if ((cond.operator == "months"))
-                                {
-                                    result = cond.operands[now.month()];
-                                }
-                                else
-                                {
+                                    // if time cannot be calculated, the condition counts as not fulfilled
                                     result = false;
                                 }
-                            }
-                            catch (e)
-                            {
-                                if (e instanceof time.TimeError)
+
+                                if (node.annotateOnly)
                                 {
-                                    let errMsg = RED.util.cloneMessage(msg);
-
-                                    if ("errorDetails" in errMsg)
-                                    {
-                                        errMsg._errorDetails = errMsg.errorDetails;
-                                    }
-                                    errMsg.errorDetails = e.details;
-
-                                    node.error(e.message, errMsg);
+                                    evaluation.push(result);
                                 }
-                                else
+                                else if ((node.allMustMatch && !result) ||
+                                        (!node.allMustMatch && result))
                                 {
-                                    node.error(e.message);
-                                    node.debug(e.stack);
+                                    break;
                                 }
-
-                                // if time cannot be calculated, the condition counts as not fulfilled
-                                result = false;
                             }
 
                             if (node.annotateOnly)
                             {
-                                evaluation.push(result);
+                                if ("evaluation" in msg)
+                                {
+                                    msg._evaluation = msg.evaluation;
+                                }
+                                msg.evaluation = evaluation;
+
+                                node.send(msg);
                             }
-                            else if ((node.allMustMatch && !result) ||
-                                     (!node.allMustMatch && result))
+                            else if (result)
                             {
-                                break;
+                                node.send(msg);
                             }
                         }
-
-                        if (node.annotateOnly)
+                        else
                         {
-                            if ("evaluation" in msg)
+                            let variable = node.baseTime;
+                            if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
                             {
-                                msg._evaluation = msg.evaluation;
+                                let ctx = RED.util.parseContextStore(node.baseTime);
+                                variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                             }
-                            msg.evaluation = evaluation;
 
-                            node.send(msg);
-                        }
-                        else if (result)
-                        {
-                            node.send(msg);
+                            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}), msg);
                         }
                     }
 
                     done();
                 });
             }
+        }
+
+        function getBaseTime(msg)
+        {
+            let ret = null;
+
+            if (node.baseTimeType == "msgIngress")
+            {
+                ret = time.getCurrentTime();
+            }
+            else
+            {
+                let value = null;
+                switch (node.baseTimeType)
+                {
+                    case "global":
+                    case "flow":
+                    {
+                        let ctx = RED.util.parseContextStore(node.baseTime);
+                        value = node.context()[node.baseTimeType].get(ctx.key, ctx.store);
+                        break;
+                    }
+                    case "msg":
+                    {
+                        value = msg[node.baseTime];
+                        break;
+                    }
+                }
+
+                if (typeof value == "number")
+                {
+                    ret = time.getTimeFrom(value);
+                }
+            }
+
+            return ret ? (ret.isValid() ? ret : null) : null;
         }
     }
 
