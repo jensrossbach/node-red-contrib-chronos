@@ -24,7 +24,7 @@ SOFTWARE.
 
 <script type="text/x-red" data-help-name="chronos-filter">
     <p>
-        Filters messages based on their ingress time and date.
+        Filters messages based on specific times.
     </p>
    <h3>Details</h3>
     <p>
@@ -44,6 +44,28 @@ SOFTWARE.
         <dd>
             A reference to the configuration node to be used.
         </dd>
+        <dt>Base Time</dt>
+        <dd>
+            The base time is used for comparison with the operands of the
+            conditions. This can be one of:
+            <ul>
+                <li>
+                    <i>message ingress</i>: Ingress time of the input message.
+                </li>
+                <li>
+                    <i>global.</i>: Timestamp from a global variable as number
+                    of milliseconds elapsed since the UNIX epoch.
+                </li>
+                <li>
+                    <i>flow.</i>: Timestamp from a flow variable as number of
+                    milliseconds elapsed since the UNIX epoch.
+                </li>
+                <li>
+                    <i>msg.</i>: Timestamp from a message property as number of
+                    milliseconds elapsed since the UNIX epoch.
+                </li>
+            </ul>
+        </dd>
         <dt>Conditions</dt>
         <dd>
             The list containing the conditions for filtering messages. New entries
@@ -52,28 +74,28 @@ SOFTWARE.
             side, the following possibilities are available:
             <ul>
                 <li>
-                    <i>before</i>: Checks if the message ingress time is before
-                    the specified time.
+                    <i>before</i>: Checks if the base time is earlier than the
+                    specified time.
                 </li>
                 <li>
-                    <i>after</i>: Checks if the message ingress time is at or
-                    after the specified time.
+                    <i>after</i>: Checks if the base time is equal to or later
+                    than the specified time.
                 </li>
                 <li>
-                    <i>between</i>: Checks if the message ingress time is at or
-                    between the two specified times.
+                    <i>between</i>: Checks if the base time is equal to or later
+                    than the first and earlier than the second specified time.
                 </li>
                 <li>
-                    <i>outside</i>: Checks if the message ingress time is before
-                    the first or after the second specified time.
+                    <i>outside</i>: Checks if the base time is earlier than the
+                    first or later than the second specified time.
                 </li>
                 <li>
-                    <i>week days</i>: Checks if the message ingress date is at
-                    one of the selected week days.
+                    <i>week days</i>: Checks if the base time matches one of
+                    the selected week days.
                 </li>
                 <li>
-                    <i>months</i>: Checks if the message ingress date is at one
-                    of the selected months.
+                    <i>months</i>: Checks if the base time matches one of the
+                    selected months.
                 </li>
             </ul>
             For the time input, depending on the selection on the left side, the
@@ -119,9 +141,9 @@ SOFTWARE.
     </p>
     <h3>Outputs</h3>
     <p>
-        If one or multiple conditions match the message's ingress time and date
-        or if <i>Annotate only, do not filter</i> is activated, the message
-        is sent out.
+        If one or multiple conditions match the configured base time or if
+        <i>Annotate only, do not filter</i> is activated, the message is sent
+        out.
     </p>
     <p>
         Only if <i>Annotate only, do not filter</i> is activated:
