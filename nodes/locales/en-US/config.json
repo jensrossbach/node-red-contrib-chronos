@@ -6,6 +6,8 @@
             "inputPort":    "input message",
             "name":         "Name",
             "config":       "Configuration",
+            "baseTime":     "Base Time",
+            "msgIngress":   "message ingress",
             "conditions":   "Conditions",
             "time":         "Time of Day",
             "sun":          "Sun Position",
@@ -88,6 +90,7 @@
             "noConditions":     "No conditions configured",
             "invalidConfig":    "Configuration contains invalid values",
             "invalidTime":      "Invalid time specified",
+            "invalidBaseTime":  "Invalid base time specified: __baseTime__",
             "invalidName":      "Invalid custom sun position specified",
             "unavailableTime":  "No time available for event"
         }
