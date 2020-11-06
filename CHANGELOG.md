@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2020-11-06
+### Added
+- Added support for specifying custom time bases from message properties, global variables and flow variables in switch and filter nodes.
+
+### Fixed
+- Scheduler node now checks if output property and variable names are not empty.
+- Fixed handling of global/flow variables for multiple context stores in scheduler node.
+
 ## [1.5.0] - 2020-10-11
 ### Added
 - Map based on [OpenStreetMap](https://www.openstreetmap.org) showing the entered geographic location in configuration node.
