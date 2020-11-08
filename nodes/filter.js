@@ -26,7 +26,7 @@ module.exports = function(RED)
 {
     function ChronosFilterNode(settings)
     {
-        const time = require("./common/time.js");
+        const chronos = require("./common/chronos.js");
 
         let node = this;
         RED.nodes.createNode(this, settings);
@@ -48,7 +48,7 @@ module.exports = function(RED)
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
 
             node.status({});
-            time.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
+            chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.baseTime = settings.baseTime;
             node.baseTimeType = settings.baseTimeType;
@@ -76,7 +76,7 @@ module.exports = function(RED)
                     // check for valid user time
                     if ((cond.operator == "before") || (cond.operator == "after"))
                     {
-                        if ((cond.operands.type == "time") && !time.isValidUserTime(cond.operands.value))
+                        if ((cond.operands.type == "time") && !chronos.isValidUserTime(cond.operands.value))
                         {
                             valid = false;
                             break;
@@ -84,12 +84,12 @@ module.exports = function(RED)
                     }
                     else if ((cond.operator == "between") || (cond.operator == "outside"))
                     {
-                        if ((cond.operands[0].type == "time") && !time.isValidUserTime(cond.operands[0].value))
+                        if ((cond.operands[0].type == "time") && !chronos.isValidUserTime(cond.operands[0].value))
                         {
                             valid = false;
                             break;
                         }
-                        if ((cond.operands[1].type == "time") && !time.isValidUserTime(cond.operands[1].value))
+                        if ((cond.operands[1].type == "time") && !chronos.isValidUserTime(cond.operands[1].value))
                         {
                             valid = false;
                             break;
@@ -143,7 +143,7 @@ module.exports = function(RED)
 
                                     if ((cond.operator == "before") || (cond.operator == "after"))
                                     {
-                                        let targetTime = time.getTime(baseTime.clone(), cond.operands.type, cond.operands.value);
+                                        let targetTime = chronos.getTime(baseTime.clone(), cond.operands.type, cond.operands.value);
 
                                         if (cond.operands.offset != 0)
                                         {
@@ -157,8 +157,8 @@ module.exports = function(RED)
                                     }
                                     else if ((cond.operator == "between") || (cond.operator == "outside"))
                                     {
-                                        let time1 = time.getTime(baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-                                        let time2 = time.getTime(baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+                                        let time1 = chronos.getTime(baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+                                        let time2 = chronos.getTime(baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
                                         if (cond.operands[0].offset != 0)
                                         {
@@ -179,7 +179,7 @@ module.exports = function(RED)
                                             }
                                             else
                                             {
-                                                time2 = time.getTime(time2.add(1, "day"), cond.operands[1].type, cond.operands[1].value);
+                                                time2 = chronos.getTime(time2.add(1, "day"), cond.operands[1].type, cond.operands[1].value);
                                             }
                                         }
 
@@ -202,7 +202,7 @@ module.exports = function(RED)
                                 }
                                 catch (e)
                                 {
-                                    if (e instanceof time.TimeError)
+                                    if (e instanceof chronos.TimeError)
                                     {
                                         let errMsg = RED.util.cloneMessage(msg);
 
@@ -274,7 +274,7 @@ module.exports = function(RED)
 
             if (node.baseTimeType == "msgIngress")
             {
-                ret = time.getCurrentTime();
+                ret = chronos.getCurrentTime();
             }
             else
             {
@@ -297,7 +297,7 @@ module.exports = function(RED)
 
                 if (typeof value == "number")
                 {
-                    ret = time.getTimeFrom(value);
+                    ret = chronos.getTimeFrom(value);
                 }
             }
 

@@ -26,7 +26,7 @@ module.exports = function(RED)
 {
     function ChronosDelayNode(settings)
     {
-        const time = require("./common/time.js");
+        const chronos = require("./common/chronos.js");
 
         let node = this;
         RED.nodes.createNode(node, settings);
@@ -43,14 +43,14 @@ module.exports = function(RED)
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
 
             node.status({});
-            time.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
+            chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.whenType = settings.whenType;
             node.whenValue = settings.whenValue;
             node.offset = settings.offset;
             node.random = settings.random;
 
-            if ((node.whenType == "time") && !time.isValidUserTime(node.whenValue))
+            if ((node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
             {
                 node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
                 node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -142,7 +142,7 @@ module.exports = function(RED)
             }
             catch (e)
             {
-                if (e instanceof time.TimeError)
+                if (e instanceof chronos.TimeError)
                 {
                     node.error(e.message, {errorDetails: e.details});
                     node.status({fill: "red", shape: "dot", text: "delay.status.error"});
@@ -186,8 +186,8 @@ module.exports = function(RED)
         {
             node.debug("Set up timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
 
-            const now = time.getCurrentTime();
-            let sendTime = time.getTime(now.clone(), node.whenType, node.whenValue);
+            const now = chronos.getCurrentTime();
+            let sendTime = chronos.getTime(now.clone(), node.whenType, node.whenValue);
 
             if (node.offset != 0)
             {
@@ -205,7 +205,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    sendTime = time.getTime(sendTime.add(1, "days"), node.whenType, node.whenValue);
+                    sendTime = chronos.getTime(sendTime.add(1, "days"), node.whenType, node.whenValue);
                 }
             }
 

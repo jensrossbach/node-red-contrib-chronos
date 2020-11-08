@@ -26,7 +26,7 @@ module.exports = function(RED)
 {
     function ChronosSchedulerNode(settings)
     {
-        const time = require("./common/time.js");
+        const chronos = require("./common/chronos.js");
 
         let node = this;
         RED.nodes.createNode(node, settings);
@@ -48,7 +48,7 @@ module.exports = function(RED)
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
 
             node.status({});
-            time.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
+            chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.schedule = settings.schedule;
             node.multiPort = settings.multiPort;
@@ -68,7 +68,7 @@ module.exports = function(RED)
                 let data = node.schedule[i];
 
                 // check for valid user time
-                if ((data.trigger.type == "time") && !time.isValidUserTime(data.trigger.value))
+                if ((data.trigger.type == "time") && !chronos.isValidUserTime(data.trigger.value))
                 {
                     valid = false;
                     break;
@@ -244,8 +244,8 @@ module.exports = function(RED)
             {
                 node.debug("Set up timer for type '" + data.trigger.type + "', value '" + data.trigger.value + (repeat ? "' (repeating)" : "'"));
 
-                const now = time.getCurrentTime();
-                let triggerTime = time.getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.type, data.trigger.value);
+                const now = chronos.getCurrentTime();
+                let triggerTime = chronos.getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.trigger.type, data.trigger.value);
 
                 if (data.trigger.offset != 0)
                 {
@@ -263,7 +263,7 @@ module.exports = function(RED)
                     }
                     else
                     {
-                        triggerTime = time.getTime(triggerTime.add(1, "days"), data.trigger.type, data.trigger.value);
+                        triggerTime = chronos.getTime(triggerTime.add(1, "days"), data.trigger.type, data.trigger.value);
                     }
                 }
 
@@ -272,7 +272,7 @@ module.exports = function(RED)
             }
             catch (e)
             {
-                if (e instanceof time.TimeError)
+                if (e instanceof chronos.TimeError)
                 {
                     node.error(e.message, {errorDetails: e.details});
                 }

@@ -17,12 +17,12 @@ Delays each message passing through the node until a specific time is reached.
 ![Delay Until](images/delay.png)
 
 #### Time Switch
-Routes messages based on their ingress time and date.
+Routes messages based on a specific time.
 
 ![Time Switch](images/switch.png)
 
 #### Time Filter
-Filters messages based on their ingress time and date.
+Filters messages based on a specific time.
 
 ![Timer Filter](images/filter.png)
 
