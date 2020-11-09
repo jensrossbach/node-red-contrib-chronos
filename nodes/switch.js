@@ -26,11 +26,12 @@ module.exports = function(RED)
 {
     function ChronosSwitchNode(settings)
     {
-        const chronos = require("./common/chronos.js");
+        const sfUtils = require("./common/sfutils.js");
 
         let node = this;
         RED.nodes.createNode(this, settings);
 
+        node.chronos = require("./common/chronos.js");
         node.config = RED.nodes.getNode(settings.config);
 
         if (!node.config)
@@ -48,7 +49,7 @@ module.exports = function(RED)
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
 
             node.status({});
-            chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
+            node.chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.baseTime = settings.baseTime;
             node.baseTimeType = settings.baseTimeType;
@@ -73,29 +74,7 @@ module.exports = function(RED)
                 {
                     let cond = node.conditions[i];
 
-                    // check for valid user time
-                    if ((cond.operator == "before") || (cond.operator == "after"))
-                    {
-                        if ((cond.operands.type == "time") && !chronos.isValidUserTime(cond.operands.value))
-                        {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    else if ((cond.operator == "between") || (cond.operator == "outside"))
-                    {
-                        if ((cond.operands[0].type == "time") && !chronos.isValidUserTime(cond.operands[0].value))
-                        {
-                            valid = false;
-                            break;
-                        }
-                        if ((cond.operands[1].type == "time") && !chronos.isValidUserTime(cond.operands[1].value))
-                        {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    else if (cond.operator == "otherwise")
+                    if (cond.operator == "otherwise")
                     {
                         // only one otherwise condition is allowed
                         if (otherwise)
@@ -105,6 +84,11 @@ module.exports = function(RED)
                         }
 
                         otherwise = true;
+                    }
+                    else if (!sfUtils.validateConditions(node, cond))
+                    {
+                        valid = false;
+                        break;
                     }
                 }
 
@@ -144,7 +128,7 @@ module.exports = function(RED)
                             };
                         }
 
-                        let baseTime = getBaseTime(msg);
+                        let baseTime = sfUtils.getBaseTime(RED, node, msg);
                         if (baseTime)
                         {
                             node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss"));
@@ -164,79 +148,14 @@ module.exports = function(RED)
                                 {
                                     let cond = node.conditions[i];
 
-                                    if ((cond.operator == "before") || (cond.operator == "after"))
-                                    {
-                                        let targetTime = chronos.getTime(baseTime.clone(), cond.operands.type, cond.operands.value);
-
-                                        if (cond.operands.offset != 0)
-                                        {
-                                            let offset = cond.operands.random ? Math.round(Math.random() * cond.operands.offset) : cond.operands.offset;
-                                            targetTime.add(offset, "minutes");
-                                        }
-
-                                        node.debug("Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss"));
-                                        if (((cond.operator == "before") && baseTime.isBefore(targetTime)) ||
-                                            ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)))
-                                        {
-                                            ports[i] = true;
-                                            numMatches++;
-                                        }
-                                    }
-                                    else if ((cond.operator == "between") || (cond.operator == "outside"))
-                                    {
-                                        let time1 = chronos.getTime(baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-                                        let time2 = chronos.getTime(baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
-
-                                        if (cond.operands[0].offset != 0)
-                                        {
-                                            let offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
-                                            time1.add(offset, "minutes");
-                                        }
-                                        if (cond.operands[1].offset != 0)
-                                        {
-                                            let offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
-                                            time2.add(offset, "minutes");
-                                        }
-
-                                        if (time2.isSameOrBefore(time1))
-                                        {
-                                            if (cond.operands[1].type == "time")
-                                            {
-                                                time2.add(1, "days");
-                                            }
-                                            else
-                                            {
-                                                time2 = chronos.getTime(time2.add(1, "day"), cond.operands[1].type, cond.operands[1].value);
-                                            }
-                                        }
-
-                                        node.debug("Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss") + " and " + time2.format("YYYY-MM-DD HH:mm:ss"));
-                                        if (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2))) ||
-                                            ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))))
-                                        {
-                                            ports[i] = true;
-                                            numMatches++;
-                                        }
-                                    }
-                                    else if ((cond.operator == "weekdays"))
-                                    {
-                                        if (cond.operands[baseTime.day()])
-                                        {
-                                            ports[i] = true;
-                                            numMatches++;
-                                        }
-                                    }
-                                    else if ((cond.operator == "months"))
-                                    {
-                                        if (cond.operands[baseTime.month()])
-                                        {
-                                            ports[i] = true;
-                                            numMatches++;
-                                        }
-                                    }
-                                    else if (cond.operator == "otherwise")
+                                    if (cond.operator == "otherwise")
                                     {
                                         otherwiseIndex = i;
+                                    }
+                                    else if (sfUtils.evaluateConditions(node, baseTime, cond))
+                                    {
+                                        ports[i] = true;
+                                        numMatches++;
                                     }
 
                                     if (ports[i] && node.stopOnFirstMatch)
@@ -246,7 +165,7 @@ module.exports = function(RED)
                                 }
                                 catch (e)
                                 {
-                                    if (e instanceof chronos.TimeError)
+                                    if (e instanceof node.chronos.TimeError)
                                     {
                                         let errMsg = RED.util.cloneMessage(msg);
 
@@ -301,42 +220,6 @@ module.exports = function(RED)
                     done();
                 });
             }
-        }
-
-        function getBaseTime(msg)
-        {
-            let ret = null;
-
-            if (node.baseTimeType == "msgIngress")
-            {
-                ret = chronos.getCurrentTime();
-            }
-            else
-            {
-                let value = null;
-                switch (node.baseTimeType)
-                {
-                    case "global":
-                    case "flow":
-                    {
-                        let ctx = RED.util.parseContextStore(node.baseTime);
-                        value = node.context()[node.baseTimeType].get(ctx.key, ctx.store);
-                        break;
-                    }
-                    case "msg":
-                    {
-                        value = msg[node.baseTime];
-                        break;
-                    }
-                }
-
-                if (typeof value == "number")
-                {
-                    ret = chronos.getTimeFrom(value);
-                }
-            }
-
-            return ret ? (ret.isValid() ? ret : null) : null;
         }
     }
 
