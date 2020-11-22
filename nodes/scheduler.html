@@ -229,7 +229,7 @@ SOFTWARE.
                         step: 5,
                         change: function(event, ui)
                         {
-                            var value = parseInt(this.value, 10);
+                            var value = parseInt($(this).spinner("value"), 10);
                             var min = $(this).spinner("option", "min");
                             var max = $(this).spinner("option", "max");
                             if (isNaN(value) ||

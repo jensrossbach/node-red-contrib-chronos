@@ -146,9 +146,9 @@ SOFTWARE.
 
             const validateCoords = function(event, ui)
             {
-                if (/^(\+|-)?\d+(\.\d+)?$/.test(this.value))
+                if (/^(\+|-)?\d+(\.\d+)?$/.test($(this).spinner("value")))
                 {
-                    let value = parseFloat(this.value);
+                    let value = parseFloat($(this).spinner("value"));
                     let min = $(this).spinner("option", "min");
                     let max = $(this).spinner("option", "max");
 
