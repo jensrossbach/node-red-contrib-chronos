@@ -1,0 +1,148 @@
+<!--
+Copyright (c) 2020 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-help-name="chronos-change">
+    <p>
+        Sets or changes time values from message properties, flow variables or
+        global variables.
+    </p>
+    <h3>Details</h3>
+    <p>
+        This node sets message properties, flow variables or global variables
+        to specific times or manipulates and converts timestamps from these
+        input fields. Multiple actions can be configured per node which will be
+        executed in the specified order. It is also possible to chain different
+        actions for the same property or variable.
+    </p>
+    <p>
+        For more information, please refer to the detailed documentation in the
+        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node">repository wiki</a>.
+    </p>
+    <h3>Configuration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>The name of the node (optional).</dd>
+        <dt>Configuration</dt>
+        <dd>
+            A reference to the configuration node to be used.
+        </dd>
+        <dt>Change Rules</dt>
+        <dd>
+            <p>
+                The list containing the rules for setting or changing target
+                values. New entries can be added using the button below the
+                list. Existing entries can be reordered or deleted. The following
+                actions can be selected:
+                <ul>
+                    <li>
+                        <i>Set</i>: Sets the selected target to a specific date
+                        and time.
+                    </li>
+                    <li>
+                        <i>Change</i>: Modifies the timestamp value of the
+                        selected target according to the configured manipulation
+                        and conversion rules. The original target value can be
+                        either a number containing the milliseconds elapsed since
+                        the UNIX epoch or a string containing a date and time
+                        which must be parsable according to
+                        <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                To the right of the rule action, the target to set or change
+                can be selected. This can be either a message property, a flow
+                variable or a global variable.
+            </p>
+            <p>
+                For the set action, either the current date and time can be used
+                or a manually entered date and time can be specified. The date
+                has to be entered in the form <code>YYYY-MM-DD</code>, the time
+                can be provided in the following ways:
+                <ul>
+                    <li>
+                        <i>Time of Day</i>: A specific time can be entered
+                        directly in the form <code>hh:mm[:ss] [am|pm]</code>.
+                    </li>
+                    <li>
+                        <i>Sun Position</i>: The sun position can be selected
+                        from a list of predefined values.
+                    </li>
+                    <li>
+                        <i>Moon Position</i>: The moon position can be selected
+                        from a list of predefined values.
+                    </li>
+                    <li>
+                        <i>Custom</i>: One of the user-defined sun position
+                        names can be entered.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                For the change action, different types of manipulation and
+                conversion can be selected:
+                <ul>
+                    <li>
+                        <i>Set</i>: Modifies a part of the target timestamp.
+                        The part to be changed can be selected in the dropdown
+                        box.
+                    </li>
+                    <li>
+                        <i>Add</i>: Adds time to the target timestamp. The amount
+                        of time has to entered as number and the unit of time
+                        to be added can be selected in the dropdown box.
+                    </li>
+                    <li>
+                        <i>Subtract</i>: Similar to <i>Add</i>, but subtracts
+                        time from the target timestamp.
+                    </li>
+                    <li>
+                        <i>Start of</i>: Sets the target timestamp to the start
+                        of a unit of time. The latter can be selected in the
+                        dropdown box.
+                    </li>
+                    <li>
+                        <i>End of</i>: Similar to <i>Start of</i>, but sets the
+                        target timestamp to the end of a unit of time.
+                    </li>
+                    <li>
+                        <i>To String</i>: Converts the target timestamp to a
+                        string representation. The format of the string is
+                        specified via the text box and must follow the rules
+                        from the <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js documentation</a>.
+                    </li>
+                </ul>
+            </p>
+        </dd>
+    </dl>
+    <h3>Input</h3>
+    <p>
+        Incoming messages are modified if there are change rules containing
+        message property based targets.
+    </p>
+    <h3>Outputs</h3>
+    <p>
+        The output port forwards any incoming message.
+    </p>
+</script>

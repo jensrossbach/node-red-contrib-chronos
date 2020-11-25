@@ -1,0 +1,154 @@
+<!--
+Copyright (c) 2020 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-help-name="chronos-change">
+    <p>
+        Setzt oder ändert Zeitwerte aus Nachrichteneigenschaften, Flow-Variablen
+        oder globalen Variablen.
+    </p>
+    <h3>Details</h3>
+    <p>
+        Dieser knoten setzt Nachrichteneigenschaften, Flow-Variablen oder globale
+        Variablen auf spezifische Zeiten oder ändert bzw. konvertiert Zeitstempel
+        aus diesen Eingabefeldern. Mehrere Aktionen, die in der angegebenen
+        Reihenfolge ausgeführt werden, können pro Knoten konfiguriert werden.
+        Es ist auch möglich, verschiedene Aktionen zu verketten, die dann auf
+        die gleiche Eigenschaft oder Variable angewendet werden.
+    </p>
+    <p>
+        Für weitere Informationen bitte die ausführliche Dokumentation im
+        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node">Repository-Wiki</a>
+        öffnen (nur in Englisch verfügbar).
+    </p>
+    <h3>Konfiguration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>Der Name des Knotens (optional).</dd>
+        <dt>Konfiguration</dt>
+        <dd>
+            Ein Verweis auf den zu verwendenden Konfigurationsknoten.
+        </dd>
+        <dt>Änderungsregeln</dt>
+        <dd>
+            <p>
+                Liste der Regeln zum Setzen oder Ändern von Zielwerten. Neue
+                Einträge können über den Button unterhalb der Liste hinzugefügt
+                werden. Vorhandene Einträge können neu angeordnet oder gelöscht
+                werden. Die folgenden Aktionen können gewählt werden:
+                <ul>
+                    <li>
+                        <i>Festlegen</i>: Setzt das gewählte Ziel auf ein
+                        bestimmtes Datum und eine bestimmte Zeit.
+                    </li>
+                    <li>
+                        <i>Ändern</i>: Ändert den Zeitstempel des gewählten Ziels
+                        anhand der gewählten Änderungs- bzw. Konvertierungsregeln.
+                        Der zu ändernde Zielwert kann eine Zahl mit den Millisekunden
+                        seit Beginn der UNIX-Zeitzählung oder eine Zeichenkette
+                        sein, die ein Datum und eine Zeit enthält, die nach den
+                        Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
+                        geparst werden kann.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                Rechts neben der Aktion für die Regel kann das zu setzende oder zu
+                ändernde Ziel ausgewählt werden. Das Ziel kann entweder eine
+                Nachrichteneigenschaft, eine Flow-Variable oder eine globale
+                Variable sein.
+            </p>
+            <p>
+                Für die Aktion <i>Festlegen</i> kann entweder die aktuelle Zeit
+                verwendet oder ein Datum und eine Zeit eingegeben werden. Das
+                Datum muss in der Form <code>JJJJ-MM-TT</code> angegeben werden,
+                für die Zeit gilt:
+                <ul>
+                    <li>
+                        <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt in der
+                        Form <code>hh:mm[:ss] [am|pm]</code> eingegeben werden.
+                    </li>
+                    <li>
+                        <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste
+                        vorgegebener Werte ausgewählt werden.
+                    </li>
+                    <li>
+                        <i>Mondstand</i>: Der Mondstand kann aus einer Liste
+                        vorgegebener Werte ausgewählt werden.
+                    </li>
+                    <li>
+                        <i>Benutzerdefiniert</i>: Einer der Namen für benutzerdefinierte
+                        Sonnenstände kann eingegeben werden.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                Für die Aktion <i>Ändern</i> können verschiedene Änderungs- und
+                Konvertierungsregeln ausgewählt werden:
+                <ul>
+                    <li>
+                        <i>Festlegen</i>: Ändert einen Teil des Zeitstempels
+                        von dem Ziel und setzt ihn auf den angegebenen Wert.
+                        Der zu ändernde Teil kann über die Dropdown-Box
+                        ausgewählt werden.
+                    </li>
+                    <li>
+                        <i>Hinzufügen</i>: Fügt Zeit zum Zeitstempel des Ziels
+                        in der angegeben Höhe hinzu. Die Einheit kann über die
+                        Dropdown-Box ausgewählt werden.
+                    </li>
+                    <li>
+                        <i>Abziehen</i>: Wie <i>Hinzufügen</i>, aber zieht
+                        Zeit vom Zielzeitstempel ab.
+                    </li>
+                    <li>
+                        <i>Anfang von</i>: Setzt den Zeitstempel des Ziels auf
+                        den Anfang einer Zeiteinheit, die über die Dropdown-Box
+                        ausgewählt werden kann.
+                    </li>
+                    <li>
+                        <i>Ende von</i>: Wie <i>Anfang von</i>, aber setzt den
+                        Zielzeitstempel auf das Ende einer Zeiteinheit.
+                    </li>
+                    <li>
+                        <i>Zeichenkette</i>: Konvertiert den Zeitstempel des
+                        Ziels in eine Zeichenkettenrepräsentation. Das Format
+                        der Zeichnkette kann über das Texteingabefeld
+                        angegeben werden und muss den Regeln von
+                        <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js</a>
+                        entsprechen.
+                    </li>
+                </ul>
+            </p>
+        </dd>
+    </dl>
+    <h3>Eingabe</h3>
+    <p>
+        Eingehende Nachrichten werden geändert, wenn es Regeln gibt, die sich
+        auf Nachrichteneigenschaften beziehen.
+    </p>
+    <h3>Ausgaben</h3>
+    <p>
+        Der Ausgabe-Port leitet alle eingehenden Nachrichten weiter.
+    </p>
+</script>

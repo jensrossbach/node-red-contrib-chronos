@@ -1,0 +1,645 @@
+<!--
+Copyright (c) 2020 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-template-name="chronos-change">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
+        <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
+    </div>
+    <div class="form-row node-input-taskList-row" style="padding-top: 10px">
+        <label for="node-input-taskList" style="width: auto;"><i class="fa fa-random"></i> <span data-i18n="change.label.rules"></span></label>
+        <div class="form-row">
+            <ol id="node-input-taskList"></ol>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType("chronos-change",
+    {
+        category:     "chronos",
+        color:        "#DEB887",
+        icon:         "chronos_change.svg",
+        inputs:       1,
+        outputs:      1,
+        paletteLabel: "time change",
+        label: function()
+        {
+            return (this.name || this._("change.label.node"));
+        },
+        labelStyle: function()
+        {
+            return (this.name ? "node_label_italic" : "");
+        },
+        inputLabels: function()
+        {
+            return this._("node-red-contrib-chronos/chronos-config:common.label.inputPort");
+        },
+        outputLabels: function(index)
+        {
+            return this.conditions[index].label;
+        },
+        defaults:
+        {
+            name:
+            {
+                value: ""
+            },
+            config:
+            {
+                value:    "",
+                type:     "chronos-config",
+                required: true
+            },
+            rules:
+            {
+                value: [{action: "set", target: {type: "msg", name: "payload"}, type: "now"}],
+                validate: function(v)
+                {
+                    // just a simple check if there are any conditions, no detailed check of the content
+                    return v.length > 0;
+                }
+            }
+        },
+        oneditprepare: function()
+        {
+            let node = this;
+
+            let taskList = $("#node-input-taskList").css("min-width", "510px").css("min-height", "150px").editableList(
+            {
+                removable: true,
+                sortable: true,
+                addItem: function(item, index, data)
+                {
+                    const sunTimes =
+                    [
+                        {
+                            value: "sunrise",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                        },
+                        {
+                            value: "sunriseEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                        },
+                        {
+                            value: "sunsetStart",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                        },
+                        {
+                            value: "sunset",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                        },
+                        {
+                            value: "goldenHour",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                        },
+                        {
+                            value: "goldenHourEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                        },
+                        {
+                            value: "night",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                        },
+                        {
+                            value: "nightEnd",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                        },
+                        {
+                            value: "dawn",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                        },
+                        {
+                            value: "nauticalDawn",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                        },
+                        {
+                            value: "dusk",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                        },
+                        {
+                            value: "nauticalDusk",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                        },
+                        {
+                            value: "solarNoon",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                        },
+                        {
+                            value: "nadir",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                        }
+                    ];
+
+                    const moonTimes =
+                    [
+                        {
+                            value: "rise",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                        },
+                        {
+                            value: "set",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                        }
+                    ];
+
+                    const numericValidator = function(event, ui)
+                    {
+                        var value = parseInt($(this).spinner("value"), 10);
+                        var min = $(this).spinner("option", "min");
+                        var max = $(this).spinner("option", "max");
+                        if (isNaN(value) ||
+                            (value < min))
+                        {
+                            $(this).spinner("value", min);
+                        }
+                        else if (value > max)
+                        {
+                            $(this).spinner("value", max);
+                        }
+                    };
+
+                    const nowInput =
+                    {
+                        value: "now",
+                        label: node._("change.label.now"),
+                        icon: "fa fa-clock-o",
+                        hasValue: false
+                    };
+
+                    const dateInput =
+                    {
+                        value: "date",
+                        label: node._("change.label.date"),
+                        icon: "fa fa-calendar",
+                        hasValue: true,
+                        validate: /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/
+                    };
+
+                    const timeInput =
+                    {
+                        value: "time",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                        icon: "fa fa-clock-o",
+                        hasValue: true,
+                        validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(am|AM|pm|PM)?$/
+                    };
+
+                    const sunTimeInput =
+                    {
+                        value: "sun",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                        icon: "fa fa-sun-o",
+                        options: sunTimes
+                    };
+
+                    const moonTimeInput =
+                    {
+                        value: "moon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                        icon: "fa fa-moon-o",
+                        options: moonTimes
+                    };
+
+                    const customInput =
+                    {
+                        value: "custom",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                        icon: "fa fa-wrench",
+                        hasValue: true,
+                        validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
+                    };
+
+                    const formatInput =
+                    {
+                        value: "format",
+                        label: node._("change.label.format"),
+                        icon: "fa fa-gears",
+                        hasValue: true,
+                        validate: /^.+$/
+                    };
+
+                    const partInput =
+                    {
+                        min: -270000,
+                        max: 270000,
+                        step: 1,
+                        change: numericValidator
+                    };
+
+                    const addsubInput =
+                    {
+                        min: 1,
+                        max: 1000000,
+                        step: 1,
+                        change: numericValidator
+                    };
+
+                    let fragment = document.createDocumentFragment();
+                    let actionBox = $("<div/>").appendTo(fragment);
+                    let setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                    let changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+
+                    let action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
+                                        .append($("<option></option>").val("set").text(node._("change.list.action.set")))
+                                        .append($("<option></option>").val("change").text(node._("change.list.action.change")))
+                                        .appendTo(actionBox);
+
+                    $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
+                                        .text(node._("change.label.to"))
+                                        .appendTo(setBox);
+                    let setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
+                    let setRow1 = $("<div/>").appendTo(setToBox);
+                    let setRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
+
+                    let property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
+                                        .appendTo(actionBox)
+                                        .typedInput({types: ["global", "flow", "msg"]});
+                    property.typedInput("width", "280px");
+
+                    let date = $("<input/>", {type: "text", class: "node-input-date"})
+                                        .appendTo(setRow1)
+                                        .typedInput({types: [nowInput, dateInput]});
+                    date.typedInput("width", "280px");
+                    let time = $("<input/>", {type: "text", class: "node-input-time"})
+                                        .appendTo(setRow2)
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
+                    time.typedInput("width", "280px");
+
+                    let changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
+                                        .append($("<option></option>").val("set").text(node._("change.list.changeType.set")))
+                                        .append($("<option></option>").val("add").text(node._("change.list.changeType.add")))
+                                        .append($("<option></option>").val("subtract").text(node._("change.list.changeType.subtract")))
+                                        .append($("<option></option>").val("startOf").text(node._("change.list.changeType.startOf")))
+                                        .append($("<option></option>").val("endOf").text(node._("change.list.changeType.endOf")))
+                                        .append($("<option></option>").val("toString").text(node._("change.list.changeType.toString")))
+                                        .appendTo(changeBox);
+
+                    let setPartBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    let addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    let startEndOfBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    let toStringBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+
+                    let setPartType = $("<select/>", {class: "node-input-setPartType", style: "width: auto;"})
+                                        .append($("<option></option>").val("year").text(node._("change.list.unit.year")))
+                                        .append($("<option></option>").val("quarter").text(node._("change.list.unit.quarter")))
+                                        .append($("<option></option>").val("month").text(node._("change.list.unit.month")))
+                                        .append($("<option></option>").val("week").text(node._("change.list.unit.week")))
+                                        .append($("<option></option>").val("weekday").text(node._("change.list.unit.weekday")))
+                                        .append($("<option></option>").val("day").text(node._("change.list.unit.day")))
+                                        .append($("<option></option>").val("hour").text(node._("change.list.unit.hour")))
+                                        .append($("<option></option>").val("minute").text(node._("change.list.unit.minute")))
+                                        .append($("<option></option>").val("second").text(node._("change.list.unit.second")))
+                                        .append($("<option></option>").val("millisecond").text(node._("change.list.unit.millisecond")))
+                                        .appendTo(setPartBox);
+                    $("<label/>", {style: "margin-bottom: 0px; width: auto; text-align: right; margin-left: 4px; margin-right: 4px;"})
+                                        .text(node._("change.label.to"))
+                                        .appendTo(setPartBox);
+                    let setPartValue = $("<input/>", {class: "node-input-setPartValue", style: "width: 100px;"})
+                                        .appendTo(setPartBox)
+                                        .spinner(partInput);
+
+                    let addsub = $("<input/>", {class: "node-input-addsub", style: "width: 100px;"})
+                                        .appendTo(addsubBox)
+                                        .spinner(addsubInput);
+                    let addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: auto; margin-left: 4px"})
+                                        .append($("<option></option>").val("years").text(node._("change.list.unit.years")))
+                                        .append($("<option></option>").val("quarters").text(node._("change.list.unit.quarters")))
+                                        .append($("<option></option>").val("months").text(node._("change.list.unit.months")))
+                                        .append($("<option></option>").val("weeks").text(node._("change.list.unit.weeks")))
+                                        .append($("<option></option>").val("days").text(node._("change.list.unit.days")))
+                                        .append($("<option></option>").val("hours").text(node._("change.list.unit.hours")))
+                                        .append($("<option></option>").val("minutes").text(node._("change.list.unit.minutes")))
+                                        .append($("<option></option>").val("seconds").text(node._("change.list.unit.seconds")))
+                                        .append($("<option></option>").val("milliseconds").text(node._("change.list.unit.milliseconds")))
+                                        .appendTo(addsubBox);
+
+                    let startEndOfArg = $("<select/>", {class: "node-input-startEndOfArg", style: "width: auto;"})
+                                        .append($("<option></option>").val("year").text(node._("change.list.unit.year")))
+                                        .append($("<option></option>").val("quarter").text(node._("change.list.unit.quarter")))
+                                        .append($("<option></option>").val("month").text(node._("change.list.unit.month")))
+                                        .append($("<option></option>").val("week").text(node._("change.list.unit.week")))
+                                        .append($("<option></option>").val("day").text(node._("change.list.unit.day")))
+                                        .append($("<option></option>").val("hour").text(node._("change.list.unit.hour")))
+                                        .append($("<option></option>").val("minute").text(node._("change.list.unit.minute")))
+                                        .append($("<option></option>").val("second").text(node._("change.list.unit.second")))
+                                        .appendTo(startEndOfBox);
+
+                    let stringFormat = $("<input/>", {type: "text", class: "node-input-stringFormat", title: node._("change.label.format"), placeholder: "YYYY-MM-DD HH:mm:ss"})
+                                        .appendTo(toStringBox)
+                                        .typedInput({types: [formatInput]});
+                    stringFormat.typedInput("width", "280px");
+
+                    action.change(function()
+                    {
+                        setBox.hide();
+                        changeBox.hide();
+
+                        var value = $(this).val();
+                        switch (value)
+                        {
+                            case "set":
+                            {
+                                setBox.show();
+                                break;
+                            }
+                            case "change":
+                            {
+                                changeBox.show();
+                                break;
+                            }
+                        }
+                    });
+
+                    changeType.change(function()
+                    {
+                        setPartBox.hide();
+                        addsubBox.hide();
+                        startEndOfBox.hide();
+                        toStringBox.hide();
+
+                        var value = $(this).val();
+                        switch (value)
+                        {
+                            case "set":
+                            {
+                                setPartBox.show();
+                                break;
+                            }
+                            case "add":
+                            case "subtract":
+                            {
+                                addsubBox.show();
+                                break;
+                            }
+                            case "startOf":
+                            case "endOf":
+                            {
+                                startEndOfBox.show();
+                                break;
+                            }
+                            case "toString":
+                            {
+                                toStringBox.show();
+                                break;
+                            }
+                        }
+                    });
+
+                    setPartType.change(function()
+                    {
+                        var value = $(this).val();
+                        switch (value)
+                        {
+                            case "year":
+                            {
+                                setPartValue.spinner("option", "min", -270000);
+                                setPartValue.spinner("option", "max", 270000);
+                                break;
+                            }
+                            case "quarter":
+                            {
+                                setPartValue.spinner("option", "min", 1);
+                                setPartValue.spinner("option", "max", 4);
+                                break;
+                            }
+                            case "month":
+                            {
+                                setPartValue.spinner("option", "min", 1);
+                                setPartValue.spinner("option", "max", 12);
+                                break;
+                            }
+                            case "week":
+                            {
+                                setPartValue.spinner("option", "min", 1);
+                                setPartValue.spinner("option", "max", 52);
+                                break;
+                            }
+                            case "weekday":
+                            {
+                                setPartValue.spinner("option", "min", 1);
+                                setPartValue.spinner("option", "max", 7);
+                                break;
+                            }
+                            case "day":
+                            {
+                                setPartValue.spinner("option", "min", 1);
+                                setPartValue.spinner("option", "max", 31);
+                                break;
+                            }
+                            case "hour":
+                            {
+                                setPartValue.spinner("option", "min", 0);
+                                setPartValue.spinner("option", "max", 23);
+                                break;
+                            }
+                            case "minute":
+                            {
+                                setPartValue.spinner("option", "min", 0);
+                                setPartValue.spinner("option", "max", 59);
+                                break;
+                            }
+                            case "second":
+                            {
+                                setPartValue.spinner("option", "min", 0);
+                                setPartValue.spinner("option", "max", 59);
+                                break;
+                            }
+                            case "millisecond":
+                            {
+                                setPartValue.spinner("option", "min", 0);
+                                setPartValue.spinner("option", "max", 999);
+                                break;
+                            }
+                        }
+
+                        numericValidator.call(setPartValue);
+                    });
+
+                    date.on("change", function()
+                    {
+                        let type = date.typedInput("type");
+                        if (type === "now")
+                        {
+                            setRow2.hide();
+                        }
+                        else if (type === "date")
+                        {
+                            setRow2.show();
+                        }
+                    });
+
+                    let now = new Date();
+                    if (!("action" in data))
+                    {
+                        data = {action: "set", target: {type: "msg", name: "payload"}, type: "now"};
+                    }
+
+                    setRow2.hide();
+
+                    // initialize to default
+                    changeType.val("add");
+                    addsubUnit.val("years");
+                    startEndOfArg.val("year");
+                    setPartType.val("year");
+                    setPartValue.spinner("value", now.getFullYear().toString());
+                    addsub.spinner("value", 1);
+
+                    action.val(data.action);
+                    property.typedInput("value", data.target.name);
+                    property.typedInput("type", data.target.type);
+
+                    if (data.action == "set")
+                    {
+                        date.typedInput("type", data.type);
+                        if (data.type == "date")
+                        {
+                            date.typedInput("value", data.date);
+                            time.typedInput("type", data.time.type);
+                            time.typedInput("value", data.time.value);
+                        }
+                    }
+                    else if (data.action == "change")
+                    {
+                        if (data.type == "set")
+                        {
+                            setPartType.val(data.part);
+                            setPartValue.spinner("value", data.value);
+                        }
+                        else if ((data.type == "add") || (data.type == "subtract"))
+                        {
+                            addsub.spinner("value", data.value);
+                            addsubUnit.val(data.unit);
+                        }
+                        else if ((data.type == "startOf") || (data.type == "endOf"))
+                        {
+                            startEndOfArg.val(data.arg);
+                        }
+                        else if (data.type == "toString")
+                        {
+                            stringFormat.typedInput("value", data.format);
+                        }
+                        changeType.val(data.type);
+                    }
+
+                    action.change();
+                    changeType.change();
+                    setPartType.change();
+
+                    item[0].appendChild(fragment);
+                }
+            });
+
+            node.rules.forEach(data =>
+            {
+                taskList.editableList("addItem", data);
+            });
+        },
+        oneditsave: function()
+        {
+            let node = this;
+
+            let taskList = $("#node-input-taskList").editableList("items");
+            node.rules = [];
+
+            taskList.each(function(index)
+            {
+                let data = {};
+
+                let action = $(this).find(".node-input-action");
+                let property = $(this).find(".node-input-property");
+                let date = $(this).find(".node-input-date");
+                let time = $(this).find(".node-input-time");
+                let changeType = $(this).find(".node-input-changeType");
+                let setPartType = $(this).find(".node-input-setPartType");
+                let setPartValue = $(this).find(".node-input-setPartValue");
+                let addsub = $(this).find(".node-input-addsub");
+                let addsubUnit = $(this).find(".node-input-addsubUnit");
+                let startEndOfArg = $(this).find(".node-input-startEndOfArg");
+                let stringFormat = $(this).find(".node-input-stringFormat");
+
+                data.action = action.val();
+                data.target = {};
+                data.target.type = property.typedInput("type");
+                data.target.name = property.typedInput("value");
+
+                if (data.action == "set")
+                {
+                    data.type = date.typedInput("type");
+                    if (data.type == "date")
+                    {
+                        data.date = date.typedInput("value");
+                        data.time = {};
+                        data.time.type = time.typedInput("type");
+                        data.time.value = time.typedInput("value");
+                    }
+                }
+                else if (data.action == "change")
+                {
+                    data.type = changeType.val();
+                    if (data.type == "set")
+                    {
+                        data.part = setPartType.val();
+                        data.value = setPartValue.spinner("value");
+                    }
+                    else if ((data.type == "add") || (data.type == "subtract"))
+                    {
+                        data.value = addsub.spinner("value");
+                        data.unit = addsubUnit.val();
+                    }
+                    else if ((data.type == "startOf") || (data.type == "endOf"))
+                    {
+                        data.arg = startEndOfArg.val();
+                    }
+                    else if (data.type == "toString")
+                    {
+                        data.format = stringFormat.typedInput("value");
+                    }
+                }
+
+                node.rules.push(data);
+            });
+        },
+        oneditresize: function(size)
+        {
+            let height = size.height;
+            let conditionListRow = $("#dialog-form>div.node-input-taskList-row");
+            let otherRows = $("#dialog-form>div:not(.node-input-taskList-row)");
+
+            for (let i=0; i<otherRows.length; ++i)
+            {
+                height -= $(otherRows[i]).outerHeight(true);
+            }
+
+            height -= (parseInt(conditionListRow.css("marginTop")) + parseInt(conditionListRow.css("marginBottom")));
+            height -= $("#dialog-form>div.node-input-taskList-row>label").outerHeight(true);
+
+            $("#node-input-taskList").editableList("height", height);
+        }
+    });
+</script>

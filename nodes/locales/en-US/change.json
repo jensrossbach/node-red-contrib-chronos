@@ -1,0 +1,62 @@
+{
+    "change":
+    {
+        "label":
+        {
+            "node":    "time change",
+            "rules":   "Change Rules",
+            "to":      "to",
+            "now":     "Current Time",
+            "date":    "Date & Time",
+            "format":  "Format"
+        },
+        "list":
+        {
+            "action":
+            {
+                "set":     "Set",
+                "change":  "Change"
+            },
+            "changeType":
+            {
+                "set":       "Set",
+                "add":       "Add",
+                "subtract":  "Subtract",
+                "startOf":   "Start of",
+                "endOf":     "End of",
+                "toString":  "To String"
+            },
+            "unit":
+            {
+                "year":          "Year",
+                "years":         "Year(s)",
+                "quarter":       "Quarter",
+                "quarters":      "Quarter(s)",
+                "month":         "Month",
+                "months":        "Month(s)",
+                "week":          "Week",
+                "weeks":         "Week(s)",
+                "weekday":       "Day of Week",
+                "day":           "Day",
+                "days":          "Day(s)",
+                "hour":          "Hour",
+                "hours":         "Hour(s)",
+                "minute":        "Minute",
+                "minutes":       "Minute(s)",
+                "second":        "Second",
+                "seconds":       "Second(s)",
+                "millisecond":   "Millisecond",
+                "milliseconds":  "Millisecond(s)"
+            }
+        },
+        "status":
+        {
+            "noTasks":  "no rules"
+        },
+        "error":
+        {
+            "noTasks":          "No rules configured",
+            "invalidProperty":  "Invalid property specified: __property__"
+        }
+    }
+}
