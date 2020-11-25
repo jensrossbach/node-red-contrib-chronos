@@ -1,10 +1,11 @@
 # node-red-contrib-chronos
 
-A collection of Node-RED nodes for dealing with fixed and sun or moon position based times.
+<a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm version" src="https://badgen.net/npm/v/node-red-contrib-chronos"></a>
+<a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm downloads" src="https://badgen.net/npm/dt/node-red-contrib-chronos"></a>
+
+A collection of Node-RED nodes for date and time based scheduling, queueing, routing, filtering and manipulating. Automatically calculated times from sun events (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset) are supported as well.
 
 If you would like to propose a new feature or any kind of improvement or if you want to report a bug, don't hesitate to create an issue in the [issue tracker](https://github.com/jensrossbach/node-red-contrib-chronos/issues) of the repository on GitHub. You can also have a look at the [roadmap](https://github.com/jensrossbach/node-red-contrib-chronos/milestones) to see what is already planned for future updates.
-
-Each node supports the input of fixed times in the form of `hh:mm:ss` (seconds optional, 12h and 24h format possible) as well as the selection of sun (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset). User-defined sun events can be added as well.
 
 #### Scheduler
 Schedules the transmission of messages or setting of global/flow variables at specific times.
@@ -25,6 +26,11 @@ Routes messages based on a specific time.
 Filters messages based on a specific time.
 
 ![Timer Filter](images/filter.png)
+
+#### Time Change
+Modifies time values in messages or context stores.
+
+![Timer Change](images/change.png)
 
 ## Documentation
 The detailed documentation of each node is available in the wiki of the GitHub repository.
@@ -58,11 +64,12 @@ SOFTWARE.
 The following icons have been taken from Node-RED provided nodes:
 * Timer icon (Node-RED delay node)
 * Switch icon (Node-RED switch node)
+* Flip icon (Node-RED change node)
 
 The following icons have been taken from Flaticon:
 * Hour glass icon made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
 * Funnel icon made by <a href="https://www.flaticon.com/free-icon/funnel_843709?term=filter&page=1&position=13" title="Kiranshastry">Kiranshastry</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
 
-For the calculation of sun and moon position based times, the nodes make use of the great Node.js library [SunCalc](https://www.npmjs.com/package/suncalc) from [Vladimir Agafonkin](https://www.npmjs.com/~mourner).
+For the calculation of sun and moon position based times, the nodes make use of the great Node.js library [SunCalc](https://www.npmjs.com/package/suncalc) from [Vladimir Agafonkin](https://www.npmjs.com/~mourner). Date and time algorithms are provided by the Node.js library [Moment.js](https://www.npmjs.com/package/moment).
 
 The map for showing the location coordinates in the configuration node is provided by [OpenStreetMap](https://www.openstreetmap.org).

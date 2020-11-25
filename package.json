@@ -33,7 +33,8 @@
             "chronos-scheduler": "nodes/scheduler.js",
             "chronos-delay": "nodes/delay.js",
             "chronos-switch": "nodes/switch.js",
-            "chronos-filter": "nodes/filter.js"
+            "chronos-filter": "nodes/filter.js",
+            "chronos-change": "nodes/change.js"
         }
     }
 }

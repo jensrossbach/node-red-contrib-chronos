@@ -24,6 +24,7 @@
 
 
 const TIME_REGEX = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(am|AM|pm|PM)?$/;
+const DATE_REGEX = /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/;
 
 class TimeError extends Error
 {
@@ -122,9 +123,31 @@ function getUserTime(day, value)
     return ret;
 }
 
+function getUserDate(value)
+{
+    let ret = null;
+
+    if (DATE_REGEX.test(value))
+    {
+        ret = moment(value, "YYYY-MM-DD");
+    }
+
+    if (!ret || !ret.isValid())
+    {
+        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidDate"), {type: "date", value: value});
+    }
+
+    return ret;
+}
+
 function isValidUserTime(value)
 {
     return TIME_REGEX.test(value);
+}
+
+function isValidUserDate(value)
+{
+    return DATE_REGEX.test(value);
 }
 
 function getSunTime(day, type)
@@ -202,6 +225,8 @@ module.exports =
     getSunTime: getSunTime,
     getMoonTime: getMoonTime,
     getTime: getTime,
+    getUserDate: getUserDate,
     isValidUserTime: isValidUserTime,
+    isValidUserDate: isValidUserDate,
     TimeError: TimeError
 };
