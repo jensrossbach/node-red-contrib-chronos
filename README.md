@@ -5,7 +5,7 @@
 
 A collection of Node-RED nodes for date and time based scheduling, queueing, routing, filtering and manipulating. Automatically calculated times from sun events (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset) are supported as well.
 
-If you would like to propose a new feature or any kind of improvement or if you want to report a bug, don't hesitate to create an issue in the [issue tracker](https://github.com/jensrossbach/node-red-contrib-chronos/issues) of the repository on GitHub. You can also have a look at the [roadmap](https://github.com/jensrossbach/node-red-contrib-chronos/milestones) to see what is already planned for future updates.
+If you would like to propose a new feature or any kind of improvement, please start a thread under the _Ideas_ category of the [discussion forum](https://github.com/jensrossbach/node-red-contrib-chronos/discussions/categories/ideas) on GitHub. If you encountered a bug or other misbehavior, don't hesitate to create a problem report using the [issue tracker](https://github.com/jensrossbach/node-red-contrib-chronos/issues) of the repository.
 
 #### Scheduler
 Schedules the transmission of messages or setting of global/flow variables at specific times.
