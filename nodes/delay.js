@@ -79,8 +79,11 @@ module.exports = function(RED)
                         done = () =>
                         {
                             var args = [...arguments];
-                            args.push(msg);
-                            node.error.apply(node, args);
+                            if (args.length > 0)
+                            {
+                                args.push(msg);
+                                node.error.apply(node, args);
+                            }
                         };
                     }
 
