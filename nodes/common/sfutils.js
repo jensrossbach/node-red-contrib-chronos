@@ -131,7 +131,7 @@ function getBaseTime(RED, node, msg)
             }
             case "msg":
             {
-                value = msg[node.baseTime];
+                value = RED.util.getMessageProperty(msg, node.baseTime);
                 break;
             }
         }

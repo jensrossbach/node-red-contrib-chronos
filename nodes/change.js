@@ -323,7 +323,7 @@ module.exports = function(RED)
                 }
                 case "msg":
                 {
-                    value = msg[target.name];
+                    value = RED.util.getMessageProperty(msg, target.name);
                     break;
                 }
             }
@@ -344,7 +344,7 @@ module.exports = function(RED)
                 }
                 case "msg":
                 {
-                    msg[target.name] = value;
+                    RED.util.setMessageProperty(msg, target.name, value, true);
                     break;
                 }
             }

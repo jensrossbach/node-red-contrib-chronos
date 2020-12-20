@@ -309,11 +309,11 @@ module.exports = function(RED)
                 let msg = {};
                 if (data.output.property.type == "date")
                 {
-                    msg[data.output.property.name] = Date.now();
+                    RED.util.setMessageProperty(msg, data.output.property.name, Date.now(), true);
                 }
                 else
                 {
-                    msg[data.output.property.name] = data.output.property.value;
+                    RED.util.setMessageProperty(msg, data.output.property.name, data.output.property.value, true);
                 }
 
                 sendMessage(data, msg);
