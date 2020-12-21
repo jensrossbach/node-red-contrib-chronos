@@ -12,7 +12,9 @@
         },
         "status":
         {
-            "noSchedule":  "Kein Zeitplan"
+            "noSchedule":        "Kein Zeitplan",
+            "enabledSchedule":   "Zeitplan aktiv",
+            "disabledSchedule":  "Zeitplan inaktiv"
         },
         "error":
         {

@@ -12,7 +12,9 @@
         },
         "status":
         {
-            "noSchedule":  "no schedule"
+            "noSchedule":        "no schedule",
+            "enabledSchedule":   "enabled",
+            "disabledSchedule":  "disabled"
         },
         "error":
         {

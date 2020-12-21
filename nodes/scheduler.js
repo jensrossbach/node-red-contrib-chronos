@@ -53,6 +53,8 @@ module.exports = function(RED)
             node.schedule = settings.schedule;
             node.multiPort = settings.multiPort;
 
+            node.disabledSchedule = false;
+
             node.ports = [];
             if (node.multiPort)
             {
@@ -153,6 +155,8 @@ module.exports = function(RED)
             }
             else
             {
+                updateStatus();
+
                 node.on("close", () =>
                 {
                     stopTimers();
@@ -188,12 +192,18 @@ module.exports = function(RED)
                         if (msg.payload)
                         {
                             startTimers();
+                            node.disabledSchedule = false;
+                        }
+                        else
+                        {
+                            node.disabledSchedule = true;
                         }
 
                         done();
                     }
                     else if (Array.isArray(msg.payload))
                     {
+                        let numDisabled = 0;
                         for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
                         {
                             if (msg.payload[i] && !node.schedule[i].timer)
@@ -204,14 +214,22 @@ module.exports = function(RED)
                             {
                                 tearDownTimer(node.schedule[i]);
                             }
+
+                            if (!msg.payload[i])
+                            {
+                                numDisabled++;
+                            }
                         }
 
+                        node.disabledSchedule = (numDisabled == node.schedule.length);
                         done();
                     }
                     else
                     {
                         done(RED._("scheduler.error.invalidInput"));
                     }
+
+                    updateStatus();
                 });
 
                 startTimers();
@@ -337,6 +355,18 @@ module.exports = function(RED)
             else
             {
                 node.send(msg);
+            }
+        }
+
+        function updateStatus()
+        {
+            if (node.disabledSchedule)
+            {
+                node.status({fill: "grey", shape: "dot", text: "scheduler.status.disabledSchedule"});
+            }
+            else
+            {
+                node.status({fill: "green", shape: "dot", text: "scheduler.status.enabledSchedule"});
             }
         }
     }
