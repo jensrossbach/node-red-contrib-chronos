@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2020-12-22
+### Added
+- Scheduler node shows status of schedule (enabled/disabled) in editor.
+
+### Fixed
+- Fixed wrong handling of user-specified nested message properties.
+- Fixed Node-RED 0.x backward compatible done function.
+
 ## [1.7.0] - 2020-11-25
 ### Added
 - New time change node providing capabilities to set or modify date and time values from message properties, flow variables or global variables.
