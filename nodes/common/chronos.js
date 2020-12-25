@@ -82,9 +82,9 @@ function getUserTime(day, value)
     let matches = value.match(TIME_REGEX);
     if (matches)
     {
-        let hour = matches[1];
-        let min = matches[2];
-        let sec = matches[3];
+        let hour = Number.parseInt(matches[1]);
+        let min = Number.parseInt(matches[2]);
+        let sec = Number.parseInt(matches[3]);
         let ampm = matches[4];
 
         if (ampm)
