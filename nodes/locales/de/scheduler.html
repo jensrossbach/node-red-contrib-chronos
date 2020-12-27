@@ -97,6 +97,13 @@ SOFTWARE.
                     der Nachricht unterschiedlichen Typs oder eine globale oder
                     Flow-spezifische Variable.
                 </li>
+                <li>
+                    Wenn in der ersten Zeile <i>global.</i> oder <i>flow.</i>
+                    ausgewählt wird, wird das Zeitereignis aus der angegebenen
+                    Kontextvariable geladen. Siehe Kapitel <i>Eingabe</i> weiter
+                    unten für eine Beschreibung der benötigten Struktur der
+                    globalen oder Flow-Variable.
+                </li>
             </ul>
         </dd>
         <dt>Separate Ausgabe-Ports für Zeitereignisse</dt>
@@ -104,29 +111,62 @@ SOFTWARE.
             Wenn aktiviert, wird für jedes Zeitereignis, das eine Nachricht als
             Ausgabe erzeugt, ein eigener Ausgabe-Port erstellt und die Nachricht
             des Zeitereignisses wird an den zugehörigen Ausgabe-Port geschickt.
+            Für dynamisch programmierte Zeitereignisse wird immer ein Ausgabe-Port
+            angelegt, da zur Konfigurationszeit nicht feststeht, ob das Zeitereignis
+            eine Nachricht als Ausgabe erzeugt oder nicht.
         </dd>
     </dl>
     <h3>Eingabe</h3>
-    <p>
+    <dt>Zeitplan aktivieren/deaktivieren</dt>
+    <dd>
         Eine Eingangsnachricht kann dazu verwendet werden, um den Zeitplan
         oder einzelne Zeitereignisse zu aktivieren oder zu deaktivieren.
-    </p>
+        Das Aktivieren des Zeitplans führt auch dazu, dass programmierte
+        Zeitereignisse aus Kontextvariablen neu eingelesen werden.
+    </dd>
     <dl class="message-properties">
         <dt>payload<span class="property-type">boolean | array</span></dt>
         <dd>Schalter zum Aktivieren oder Deaktivieren von Zeitereignissen</dd>
     </dl>
-    <p>
+    <dd>
         Wenn <code>msg.payload</code> ein boolescher Wert ist, wird der komplette
-        Zeitplan aktiviert, wenn der Wert wahr ist, ansonsten deaktiviert. Wenn
-        <code>msg.payload</code> ein Array ist, muss jedes Element ein boolescher
-        Wert sein und ist dem Zeitereignis mit dem selben Index zugeordnet. Wenn
-        der Wert wahr ist, wird das zugehörige Zeitereignis aktiviert, ansonsten
-        deaktiviert.
-    </p>
+        Zeitplan aktiviert, wenn der Wert wahr ist, ansonsten deaktiviert. Ist
+        <code>msg.payload</code> dagegen ein Array, muss jedes Element ein
+        boolescher Wert sein und ist dem Zeitereignis mit dem selben Index
+        zugeordnet. Wenn der Wert wahr ist, wird das zugehörige Zeitereignis
+        aktiviert, ansonsten deaktiviert.
+    </dd>
+    <dt>Zeitplan dynamisch programmieren</dt>
+    <dd>
+        Zeitereignisse können dynamisch programmiert werden, indem diese so
+        konfiguriert werden, dass die entsprechenden Daten aus einer Kontextvariablen
+        gelesen werden (siehe Kapitel <i>Konfiguration</i> oben). Die Variablen
+        müssen Objekte sein und die folgenden Eigenschaften enthalten:
+    </dd>
+    <dl class="message-properties">
+        <dt>trigger.type<span class="property-type">string</span></dt>
+        <dd>Auslöseart; entweder "time", "sun", "moon" oder "custom"</dd>
+        <dt>trigger.value<span class="property-type">string</span></dt>
+        <dd>Auslösezeitpunkt; der Inhalt ist abhängig von der Auslöseart</dd>
+        <dt>trigger.offset<span class="property-type">number</span></dt>
+        <dd>Zeitlicher Versatz zum Auslösezeitpunkt</dd>
+        <dt>trigger.random<span class="property-type">boolean</span></dt>
+        <dd>Zufälliger Zeitversatz</dd>
+        <dt>output.type<span class="property-type">string</span></dt>
+        <dd>Ausgabeart; entweder "global", "flow", "msg" oder "fullMsg"</dd>
+        <dt class="optional">output.value<span class="property-type">object</span></dt>
+        <dd>Nur wenn Ausgabeart "fullMsg" ist; Inhalt der Ausgabenachricht</dd>
+        <dt class="optional">output.property.name<span class="property-type">string</span></dt>
+        <dd>Nur wenn Ausgabeart nicht "fullMsg" ist; Name der Ausgabe-Eigenschaft/-Variablen</dd>
+        <dt class="optional">output.property.type<span class="property-type">string</span></dt>
+        <dd>Kann optional auf "date" gesetzt und <code>output.property.value</code> ausgelassen werden, um das gleiche Verhalten zu bekommen, als wäre <i>timestamp</i> als Typ in der Benutzeroberfläche ausgewählt worden</dd>
+        <dt class="optional">output.property.value<span class="property-type">any</span></dt>
+        <dd>Nur wenn Ausgabeart nicht "fullMsg" ist; Wert der Ausgabe-Eigenschaft/-Variablen</dd>
+    </dl>
     <h3>Ausgaben</h3>
     <p>
         Geplante Nachrichten werden an den Ausgabe-Port der Nachricht gesendet.
-        Der Aufbau und Inhalt der Nachricht kann über die Konfiguration festgelegt
-        werden.
+        Der Aufbau und Inhalt der Nachricht kann statisch über die Konfiguration
+        oder dynamisch über Kontextvariablen festgelegt werden.
     </p>
 </script>

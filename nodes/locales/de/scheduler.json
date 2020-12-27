@@ -19,7 +19,8 @@
         "error":
         {
             "noSchedule":    "Kein Zeitplan konfiguriert",
-            "invalidInput":  "Ungültige Eingangsnachricht"
+            "invalidInput":  "Ungültige Eingangsnachricht",
+            "invalidEvent":  "Ungültiges Zeitereignis von Kontextvariable: __event__"
         }
     }
 }

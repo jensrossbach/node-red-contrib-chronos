@@ -19,7 +19,8 @@
         "error":
         {
             "noSchedule":    "No schedule configured",
-            "invalidInput":  "Invalid input message"
+            "invalidInput":  "Invalid input message",
+            "invalidEvent":  "Invalid schedule event from context variable: __event__"
         }
     }
 }

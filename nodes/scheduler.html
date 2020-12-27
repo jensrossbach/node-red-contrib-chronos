@@ -250,25 +250,28 @@ SOFTWARE.
 
                     let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
                                         .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "global", "flow"]});
                     triggerType.typedInput("width", "280px");
-                    let offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.offset"), style: "display: inline-block; width: auto;"})
+                    triggerType._prevType = "time";
+
+                    let offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
+                    let offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
                                         .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
-                                        .appendTo(triggerRow);
+                                        .appendTo(offsetBox);
                     let triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px;"})
                                         .appendTo(offsetLabel)
                                         .spinner(offsetInput);
                     let randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
                                         .html("<i class='fa fa-random' aria-hidden='true'></i>")
-                                        .appendTo(triggerRow);
+                                        .appendTo(offsetBox);
                     let triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
                                         .appendTo(randomLabel);
 
-                    $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px; padding-top: 7px;"})
+                    $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px;"})
                                         .text(node._("scheduler.label.output"))
                                         .appendTo(outputRow);
 
-                    let outputBox = $("<div/>", {style: "display: inline-block; vertical-align: top; width: auto; margin-left: 6px;"}).appendTo(outputRow);
+                    let outputBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(outputRow);
                     let outTypeRow = $("<div/>").appendTo(outputBox);
                     let outValueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(outputBox);
 
@@ -276,6 +279,7 @@ SOFTWARE.
                                         .appendTo(outTypeRow)
                                         .typedInput({types: ["global", "flow", "msg", fullMessageInput]});
                     outType.typedInput("width", "280px");
+                    outType._prevType = "global";
                     let propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
                                         .appendTo(outValueRow)
                                         .typedInput({types: ["str", "num", "bool", "json", "bin", "date"]});
@@ -285,9 +289,31 @@ SOFTWARE.
                                         .typedInput({types: ["json"]});
                     msgValue.typedInput("width", "280px");
 
-                    outType.on("change", function(type, value)
+                    triggerType.on("change", function()
                     {
-                        if (value === "fullMsg")
+                        let type = triggerType.typedInput("type");
+                        if ((type === "global") || (type === "flow"))
+                        {
+                            offsetBox.hide();
+                            outputRow.hide();
+                        }
+                        else
+                        {
+                            offsetBox.show();
+                            outputRow.show();
+                        }
+
+                        if (type != triggerType._prevType)
+                        {
+                            triggerType._prevType = type;
+                            triggerType.typedInput("value", "");
+                        }
+                    });
+
+                    outType.on("change", function()
+                    {
+                        let type = outType.typedInput("type");
+                        if (type === "fullMsg")
                         {
                             propValue.typedInput("hide");
                             msgValue.typedInput("show");
@@ -297,6 +323,12 @@ SOFTWARE.
                             propValue.typedInput("show");
                             msgValue.typedInput("hide");
                         }
+
+                        if (type != outType._prevType)
+                        {
+                            outType._prevType = type;
+                            outType.typedInput("value", "");
+                        }
                     });
 
                     if (!("trigger" in data))
@@ -305,22 +337,28 @@ SOFTWARE.
                                 output: {type: "msg", property: {name: "payload", type: "str", value: ""}}};
                     }
 
-                    triggerType.typedInput("type", data.trigger.type);
                     triggerType.typedInput("value", data.trigger.value);
-                    triggerOffset.spinner("value", data.trigger.offset);
-                    triggerRandom.prop("checked", data.trigger.random);
+                    triggerType._prevType = data.trigger.type;
+                    triggerType.typedInput("type", data.trigger.type);
 
-                    if (data.output.type == "fullMsg")
+                    if ((data.trigger.type != "global") && (data.trigger.type != "flow"))
                     {
-                        msgValue.typedInput("value", data.output.value);
+                        triggerOffset.spinner("value", data.trigger.offset);
+                        triggerRandom.prop("checked", data.trigger.random);
+
+                        if (data.output.type == "fullMsg")
+                        {
+                            msgValue.typedInput("value", data.output.value);
+                        }
+                        else
+                        {
+                            outType.typedInput("value", data.output.property.name);
+                            propValue.typedInput("type", data.output.property.type);
+                            propValue.typedInput("value", data.output.property.value);
+                        }
+                        outType._prevType = data.output.type;
+                        outType.typedInput("type", data.output.type);
                     }
-                    else
-                    {
-                        outType.typedInput("value", data.output.property.name);
-                        propValue.typedInput("type", data.output.property.type);
-                        propValue.typedInput("value", data.output.property.value);
-                    }
-                    outType.typedInput("type", data.output.type);
 
                     item[0].appendChild(fragment);
                 }
@@ -353,52 +391,67 @@ SOFTWARE.
 
                 data.trigger.type = triggerType.typedInput("type");
                 data.trigger.value = triggerType.typedInput("value");
-                data.trigger.offset = triggerOffset.spinner("value");
-                data.trigger.random = triggerRandom.prop("checked");
 
-                data.output.type = outType.typedInput("type");
-                if (data.output.type == "fullMsg")
+                if ((data.trigger.type != "global") && (data.trigger.type != "flow"))
                 {
-                    data.output.value = msgValue.typedInput("value");
-                }
-                else
-                {
-                    data.output.property = {name: outType.typedInput("value"),
-                                            type: propValue.typedInput("type"),
-                                            value: propValue.typedInput("value")};
-                }
+                    data.trigger.offset = triggerOffset.spinner("value");
+                    data.trigger.random = triggerRandom.prop("checked");
 
-                if ((data.output.type == "msg") || (data.output.type == "fullMsg"))
-                {
-                    if (multiPort)
+                    data.output.type = outType.typedInput("type");
+                    if (data.output.type == "fullMsg")
                     {
-                        data.output.port = node.outputs++;
-
-                        if ((data.trigger.type == "time") || (data.trigger.type == "custom"))
-                        {
-                            data.label = data.trigger.value;
-                        }
-                        else
-                        {
-                            data.label = node._("node-red-contrib-chronos/chronos-config:common.list." + data.trigger.type + "." + data.trigger.value);
-                        }
-
-                        if (data.trigger.offset != 0)
-                        {
-                            data.label += ((data.trigger.offset > 0) ? " + " : " - ");
-
-                            if (data.trigger.random)
-                            {
-                                data.label += "~";
-                            }
-
-                            data.label += Math.abs(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
-                        }
+                        data.output.value = msgValue.typedInput("value");
                     }
                     else
                     {
-                        node.outputs = 1;
+                        data.output.property = {name: outType.typedInput("value"),
+                                                type: propValue.typedInput("type"),
+                                                value: propValue.typedInput("value")};
                     }
+
+                    if ((data.output.type == "msg") || (data.output.type == "fullMsg"))
+                    {
+                        if (multiPort)
+                        {
+                            data.output.port = node.outputs++;
+
+                            if ((data.trigger.type == "time") || (data.trigger.type == "custom"))
+                            {
+                                data.label = data.trigger.value;
+                            }
+                            else
+                            {
+                                data.label = node._("node-red-contrib-chronos/chronos-config:common.list." + data.trigger.type + "." + data.trigger.value);
+                            }
+
+                            if (data.trigger.offset != 0)
+                            {
+                                data.label += ((data.trigger.offset > 0) ? " + " : " - ");
+
+                                if (data.trigger.random)
+                                {
+                                    data.label += "~";
+                                }
+
+                                data.label += Math.abs(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                            }
+                        }
+                        else
+                        {
+                            node.outputs = 1;
+                        }
+                    }
+                }
+                else if (multiPort)
+                {
+                    data.output.port = node.outputs++;
+
+                    let ctx = RED.utils.parseContextKey(data.trigger.value);
+                    data.label = data.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                }
+                else
+                {
+                    node.outputs = 1;
                 }
 
                 node.schedule.push(data);
