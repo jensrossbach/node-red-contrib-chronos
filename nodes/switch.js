@@ -85,7 +85,7 @@ module.exports = function(RED)
 
                         otherwise = true;
                     }
-                    else if (!sfUtils.validateConditions(node, cond))
+                    else if (!sfUtils.validateCondition(node, cond))
                     {
                         valid = false;
                         break;
@@ -153,9 +153,10 @@ module.exports = function(RED)
 
                                     if (cond.operator == "otherwise")
                                     {
+                                        node.debug("[Condition:" + (i+1) + "] Otherwise");
                                         otherwiseIndex = i;
                                     }
-                                    else if (sfUtils.evaluateConditions(node, baseTime, cond))
+                                    else if (sfUtils.evaluateCondition(RED, node, baseTime, cond, i+1))
                                     {
                                         ports[i] = true;
                                         numMatches++;
@@ -172,11 +173,14 @@ module.exports = function(RED)
                                     {
                                         let errMsg = RED.util.cloneMessage(msg);
 
-                                        if ("errorDetails" in errMsg)
+                                        if (e.details)
                                         {
-                                            errMsg._errorDetails = errMsg.errorDetails;
+                                            if ("errorDetails" in errMsg)
+                                            {
+                                                errMsg._errorDetails = errMsg.errorDetails;
+                                            }
+                                            errMsg.errorDetails = e.details;
                                         }
-                                        errMsg.errorDetails = e.details;
 
                                         node.error(e.message, errMsg);
                                     }

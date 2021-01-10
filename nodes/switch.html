@@ -265,19 +265,25 @@ SOFTWARE.
                     let timeBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
                     let weekdaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
                     let monthsBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
+                    let contextBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(fragment);
                     $("<div/>", {class: "node-input-index", style: "position: absolute; width: auto; top: 50%; right: 26px; margin-top: -9px;"})
                                         .html("&#8594; " + (index + 1))
                                         .appendTo(fragment);
 
                     let operator = $("<select/>", {class: "node-input-operator", style: "width: 120px;"})
-                                        .append($("<option></option>").val("before").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.before")))
-                                        .append($("<option></option>").val("after").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.after")))
-                                        .append($("<option></option>").val("between").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.between")))
-                                        .append($("<option></option>").val("outside").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.outside")))
-                                        .append($("<option></option>").val("weekdays").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.weekdays")))
-                                        .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.months")))
-                                        .append($("<option></option>").val("otherwise").text(node._("node-red-contrib-chronos/chronos-config:common.list.operator.otherwise")))
                                         .appendTo(operatorBox);
+                    let operGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.operators"))
+                                        .append($("<option></option>").val("before").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.before")))
+                                        .append($("<option></option>").val("after").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.after")))
+                                        .append($("<option></option>").val("between").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.between")))
+                                        .append($("<option></option>").val("outside").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.outside")))
+                                        .append($("<option></option>").val("weekdays").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.weekdays")))
+                                        .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.months")))
+                                        .append($("<option></option>").val("otherwise").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.otherwise")))
+                                        .appendTo(operator);
+                    let fromGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.sources"))
+                                        .append($("<option></option>").val("context").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.context")))
+                                        .appendTo(operator);
 
                     let time1Box = $("<div/>", {style: "margin-left: 4px;"}).appendTo(timeBox);
                     let time2Box = $("<div/>", {style: "margin-left: 4px; margin-top: 5px;"}).appendTo(timeBox);
@@ -293,6 +299,7 @@ SOFTWARE.
                                         .appendTo(time1Row1)
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
                     time1.typedInput("width", "280px");
+                    time1._prevType = "time";
                     let extend1 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
                                         .html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>")
                                         .appendTo(time1Row1);
@@ -301,6 +308,7 @@ SOFTWARE.
                                         .appendTo(time2Row1)
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
                     time2.typedInput("width", "280px");
+                    time2._prevType = "time";
                     let extend2 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
                                         .html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>")
                                         .appendTo(time2Row1);
@@ -407,12 +415,18 @@ SOFTWARE.
                     $("<label/>", {style: "margin-left: 4px; margin-bottom: 0px; width: 40px;"})
                                         .text(node._("node-red-contrib-chronos/chronos-config:common.list.month.december")).appendTo(monthsRow3);
 
+                    let context = $("<input/>", {type: "text", class: "node-input-context"})
+                                        .appendTo(contextBox)
+                                        .typedInput({types: ["global", "flow"]});
+                    context.typedInput("width", "280px");
+
                     operator.change(function()
                     {
                         timeBox.hide();
                         time2Box.hide();
                         weekdaysBox.hide();
                         monthsBox.hide();
+                        contextBox.hide();
 
                         var value = $(this).val();
                         switch (value)
@@ -440,6 +454,33 @@ SOFTWARE.
                                 monthsBox.show();
                                 break;
                             }
+                            case "context":
+                            {
+                                contextBox.show();
+                                break;
+                            }
+                        }
+                    });
+
+                    time1.on("change", function()
+                    {
+                        let type = time1.typedInput("type");
+
+                        if (type != time1._prevType)
+                        {
+                            time1._prevType = type;
+                            time1.typedInput("value", "");
+                        }
+                    });
+
+                    time2.on("change", function()
+                    {
+                        let type = time2.typedInput("type");
+
+                        if (type != time2._prevType)
+                        {
+                            time2._prevType = type;
+                            time2.typedInput("value", "");
                         }
                     });
 
@@ -509,6 +550,7 @@ SOFTWARE.
 
                     if ((data.operator == "before") || (data.operator == "after"))
                     {
+                        time1._prevType = data.operands.type;
                         time1.typedInput("type", data.operands.type);
                         time1.typedInput("value", data.operands.value);
                         if (data.operands.offset &&  // backwards compatibility to v1.0.2
@@ -521,8 +563,10 @@ SOFTWARE.
                     }
                     else if ((data.operator == "between") || (data.operator == "outside"))
                     {
+                        time1._prevType = data.operands[0].type;
                         time1.typedInput("type", data.operands[0].type);
                         time1.typedInput("value", data.operands[0].value);
+                        time2._prevType = data.operands[1].type;
                         time2.typedInput("type", data.operands[1].type);
                         time2.typedInput("value", data.operands[1].value);
                         if (data.operands[0].offset &&  // backwards compatibility to v1.0.2
@@ -564,6 +608,11 @@ SOFTWARE.
                         october.prop("checked", data.operands[9]);
                         november.prop("checked", data.operands[10]);
                         december.prop("checked", data.operands[11]);
+                    }
+                    else if (data.operator == "context")
+                    {
+                        context.typedInput("value", data.context.value);
+                        context.typedInput("type", data.context.type);
                     }
 
                     operator.change();
@@ -656,9 +705,10 @@ SOFTWARE.
                 let october = $(this).find(".node-input-october");
                 let november = $(this).find(".node-input-november");
                 let december = $(this).find(".node-input-december");
+                let context = $(this).find(".node-input-context");
 
                 data.operator = operator.val();
-                data.label = node._("node-red-contrib-chronos/chronos-config:common.list.operator." + data.operator);
+                data.label = node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator." + data.operator);
 
                 if ((data.operator == "before") || (data.operator == "after"))
                 {
@@ -750,6 +800,15 @@ SOFTWARE.
                             data.label += " " + MONTHS[i];
                         }
                     }
+                }
+                else if (data.operator == "context")
+                {
+                    data.context = {};
+                    data.context.value = context.typedInput("value");
+                    data.context.type = context.typedInput("type");
+
+                    let ctx = RED.utils.parseContextKey(data.context.value);
+                    data.label = data.context.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                 }
 
                 node.conditions.push(data);

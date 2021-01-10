@@ -72,7 +72,7 @@ module.exports = function(RED)
             {
                 for (let i=0; i<node.conditions.length; ++i)
                 {
-                    if (!sfUtils.validateConditions(node, node.conditions[i]))
+                    if (!sfUtils.validateCondition(node, node.conditions[i]))
                     {
                         valid = false;
                         break;
@@ -124,7 +124,7 @@ module.exports = function(RED)
                             {
                                 try
                                 {
-                                    result = sfUtils.evaluateConditions(node, baseTime, node.conditions[i]);
+                                    result = sfUtils.evaluateCondition(RED, node, baseTime, node.conditions[i], i+1);
                                 }
                                 catch (e)
                                 {
@@ -132,11 +132,14 @@ module.exports = function(RED)
                                     {
                                         let errMsg = RED.util.cloneMessage(msg);
 
-                                        if ("errorDetails" in errMsg)
+                                        if (e.details)
                                         {
-                                            errMsg._errorDetails = errMsg.errorDetails;
+                                            if ("errorDetails" in errMsg)
+                                            {
+                                                errMsg._errorDetails = errMsg.errorDetails;
+                                            }
+                                            errMsg.errorDetails = e.details;
                                         }
-                                        errMsg.errorDetails = e.details;
 
                                         node.error(e.message, errMsg);
                                     }

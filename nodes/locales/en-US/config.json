@@ -42,15 +42,24 @@
                 "rise":  "Moonrise",
                 "set":   "Moonset"
             },
-            "operator":
+            "condition":
             {
-                "before":     "before",
-                "after":      "after",
-                "between":    "between",
-                "outside":    "outside",
-                "weekdays":   "week days",
-                "months":     "months",
-                "otherwise":  "otherwise"
+                "operators":  "Operator",
+                "sources":    "Source",
+                "operator":
+                {
+                    "before":     "before",
+                    "after":      "after",
+                    "between":    "between",
+                    "outside":    "outside",
+                    "weekdays":   "week days",
+                    "months":     "months",
+                    "otherwise":  "otherwise"
+                },
+                "source":
+                {
+                    "context":  "context"
+                }
             },
             "weekday":
             {
@@ -86,13 +95,14 @@
         },
         "error":
         {
-            "noConfig":         "No configuration selected",
-            "noConditions":     "No conditions configured",
-            "invalidConfig":    "Configuration contains invalid values",
-            "invalidTime":      "Invalid time specified",
-            "invalidBaseTime":  "Invalid base time specified: __baseTime__",
-            "invalidName":      "Invalid custom sun position specified",
-            "unavailableTime":  "No time available for event"
+            "noConfig":          "No configuration selected",
+            "noConditions":      "No conditions configured",
+            "invalidConfig":     "Configuration contains invalid values",
+            "invalidTime":       "Invalid time specified",
+            "invalidBaseTime":   "Invalid base time specified: __baseTime__",
+            "invalidCondition":  "Invalid condition from context variable: __condition__",
+            "invalidName":       "Invalid custom sun position specified",
+            "unavailableTime":   "No time available for event"
         }
     },
     "config":

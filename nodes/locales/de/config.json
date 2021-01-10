@@ -44,13 +44,22 @@
             },
             "operator":
             {
-                "before":     "Vor",
-                "after":      "Nach",
-                "between":    "Zwischen",
-                "outside":    "Außerhalb",
-                "weekdays":   "Wochentage",
-                "months":     "Monate",
-                "otherwise":  "Sonst"
+                "operators":  "Operator",
+                "sources":    "Quelle",
+                "operator":
+                {
+                    "before":     "Vor",
+                    "after":      "Nach",
+                    "between":    "Zwischen",
+                    "outside":    "Außerhalb",
+                    "weekdays":   "Wochentage",
+                    "months":     "Monate",
+                    "otherwise":  "Sonst"
+                },
+                "source":
+                {
+                    "context":  "Kontext"
+                }
             },
             "weekday":
             {
@@ -86,13 +95,14 @@
         },
         "error":
         {
-            "noConfig":         "Keine Konfiguration ausgewählt",
-            "noConditions":     "Keine Bedingungen kongiguriert",
-            "invalidConfig":    "Konfiguration enthält ungültige Werte",
-            "invalidTime":      "Ungültige Uhrzeit angegeben",
-            "invalidBaseTime":  "Ungültige Basiszeit angegeben: __baseTime__",
-            "invalidName":      "Ungültiger benutzerdefinierter Sonnenstand angegeben",
-            "unavailableTime":  "Kein Zeitpunkt für Ereignis verfügbar"
+            "noConfig":          "Keine Konfiguration ausgewählt",
+            "noConditions":      "Keine Bedingungen kongiguriert",
+            "invalidConfig":     "Konfiguration enthält ungültige Werte",
+            "invalidTime":       "Ungültige Uhrzeit angegeben",
+            "invalidBaseTime":   "Ungültige Basiszeit angegeben: __baseTime__",
+            "invalidCondition":  "Ungültige Bedingung aus Kontextvariable: __condition__",
+            "invalidName":       "Ungültiger benutzerdefinierter Sonnenstand angegeben",
+            "unavailableTime":   "Kein Zeitpunkt für Ereignis verfügbar"
         }
     },
     "config":
