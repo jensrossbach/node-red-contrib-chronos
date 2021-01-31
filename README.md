@@ -7,6 +7,8 @@ A collection of Node-RED nodes for date and time based scheduling, queueing, rou
 
 If you encountered a bug, would like to propose a new feature or simply want to share your opinion about the software, please have a look at the [contribution guide](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/CONTRIBUTING.md) on the GitHub repository to learn more about how to contribute to this project. If you need help or have questions, please check out the [instructions for getting support](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/SUPPORT.md).
 
+To see what has changed in recent versions of the software, please have a look at the project's [change log](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/CHANGELOG.md).
+
 #### Scheduler
 Schedules the transmission of messages or setting of global/flow variables at specific times.
 
