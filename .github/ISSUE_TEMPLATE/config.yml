@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussion Forum
+    url: https://github.com/jensrossbach/node-red-contrib-chronos/discussions
+    about: Please use the forum for asking questions and getting help, providing feedback and discussing new ideas and enhancements.
