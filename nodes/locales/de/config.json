@@ -42,7 +42,7 @@
                 "rise":  "Mondaufgang",
                 "set":   "Monduntergang"
             },
-            "operator":
+            "condition":
             {
                 "operators":  "Operator",
                 "sources":    "Quelle",
