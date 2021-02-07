@@ -73,6 +73,16 @@ SOFTWARE.
                             <i>Custom</i>: One of the user-defined sun position
                             names can be entered.
                         </li>
+                        <li>
+                            <i>global</i>: Trigger configuration will be loaded
+                            from the specified global context variable, see
+                            chapter <i>Input</i> below for details.
+                        </li>
+                        <li>
+                            <i>flow</i>: Trigger configuration will be loaded
+                            from the specified flow context variable, see chapter
+                            <i>Input</i> below for details.
+                        </li>
                     </ul>
                 </li>
                 <li>
@@ -88,13 +98,6 @@ SOFTWARE.
                     The output can either be a full message, expressed in JSON
                     form, a single message property of different types, a flow
                     variable or a global variable.
-                </li>
-                <li>
-                    When selecting <i>global.</i> or <i>flow.</i> in the first
-                    row, the schedule event will be loaded from the specified
-                    context variable. See chapter <i>Input</i> below for a
-                    description of the required structure for the global or
-                    flow variable.
                 </li>
             </ul>
         </dd>
@@ -128,20 +131,26 @@ SOFTWARE.
     </dd>
     <dt>Dynamically program schedule</dt>
     <dd>
-        The schedule (or parts of it) can be dynamically programmed by setting
-        the corresponding event configuration to be loaded from a context variable
-        (see chapter <i>Configuration</i> above). The appropriate variables must
-        be objects containing the following properties:
+        The trigger configuration can be dynamically loaded from a context
+        variable. The variables must be objects containing the following properties:
     </dd>
     <dl class="message-properties">
-        <dt>trigger.type<span class="property-type">string</span></dt>
+        <dt>type<span class="property-type">string</span></dt>
         <dd>Trigger type; one of "time", "sun", "moon" or "custom"</dd>
-        <dt>trigger.value<span class="property-type">string</span></dt>
+        <dt>value<span class="property-type">string</span></dt>
         <dd>Trigger value; content is depending on trigger type</dd>
-        <dt>trigger.offset<span class="property-type">number</span></dt>
+        <dt>offset<span class="property-type">number</span></dt>
         <dd>Offset to the trigger time</dd>
-        <dt>trigger.random<span class="property-type">boolean</span></dt>
+        <dt>random<span class="property-type">boolean</span></dt>
         <dd>Randomized offset</dd>
+    </dl>
+    <dd>
+        Additionally it is possible to override the output of the schedule. In
+        this case, an extended format must be used for the context variables where
+        the trigger configuration (see above) is encapsulated by an object property
+        called <code>trigger</code> and the following properties are present:
+    </dd>
+    <dl class="message-properties">
         <dt>output.type<span class="property-type">string</span></dt>
         <dd>Output type; one of "global", "flow", "msg" or "fullMsg"</dd>
         <dt class="optional">output.value<span class="property-type">object</span></dt>

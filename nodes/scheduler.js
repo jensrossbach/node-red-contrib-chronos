@@ -56,7 +56,16 @@ module.exports = function(RED)
             node.schedule = [];
             for (let i=0; i<settings.schedule.length; ++i)
             {
-                node.schedule.push({id: i+1, config: settings.schedule[i]});
+                node.schedule.push({id: i+1, config: {trigger: settings.schedule[i].trigger, output: settings.schedule[i].output}});
+
+                if ("port" in settings.schedule[i])
+                {
+                    node.schedule[i].port = settings.schedule[i].port;
+                }
+                else if ("port" in settings.schedule[i].output)  // backward compatibility to v1.8.1 and below
+                {
+                    node.schedule[i].port = settings.schedule[i].output.port;
+                }
             }
 
             if (node.multiPort)
@@ -74,23 +83,22 @@ module.exports = function(RED)
             {
                 let event = node.schedule[i].config;
 
-                if ((event.trigger.type == "global") || (event.trigger.type == "flow"))
+                // check for presence of variable name
+                if (((event.trigger.type == "global") || (event.trigger.type == "flow")) && !event.trigger.value)
                 {
-                    if (!event.trigger.value)
-                    {
-                        valid = false;
-                        break;
-                    }
+                    valid = false;
+                    break;
                 }
-                else
-                {
-                    // check for valid user time
-                    if ((event.trigger.type == "time") && !chronos.isValidUserTime(event.trigger.value))
-                    {
-                        valid = false;
-                        break;
-                    }
 
+                // check for valid user time
+                if ((event.trigger.type == "time") && !chronos.isValidUserTime(event.trigger.value))
+                {
+                    valid = false;
+                    break;
+                }
+
+                if ("type" in event.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
+                {
                     // check for valid output and convert according to type
                     if (event.output.type == "fullMsg")
                     {
@@ -278,16 +286,29 @@ module.exports = function(RED)
             if ((data.config.trigger.type == "global") || (data.config.trigger.type == "flow"))
             {
                 let ctx = RED.util.parseContextStore(data.config.trigger.value);
-                node.debug("[Timer:" + data.id + "] Load from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
+                node.debug("[Timer:" + data.id + "] Load trigger from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
 
                 let ctxData = node.context()[data.config.trigger.type].get(ctx.key, ctx.store);
-                if(!validateContextData(ctxData))
+
+                if (validateExtendedContextData(ctxData))
+                {
+                    node.debug("[Timer:" + data.id + "] Detected extended context variable format, overriding configured output");
+
+                    data.orig = {trigger: data.config.trigger, output: data.config.output};
+                    data.config.trigger = ctxData.trigger;
+                    data.config.output = ctxData.output;
+                }
+                else if (("type" in data.config.output) &&  // backward compatibility, v1.8.x configurations have empty output or only port property under output
+                         validateContextData(ctxData))
+                {
+                    data.orig = {trigger: data.config.trigger};
+                    data.config.trigger = ctxData;
+                }
+                else
                 {
                     node.error(RED._("scheduler.error.invalidEvent", {event: data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "")}), {});
                     return;
                 }
-
-                data.context = ctxData;
             }
 
             setUpTimer(data, false);
@@ -295,14 +316,24 @@ module.exports = function(RED)
 
         function stopTimer(data)
         {
+            if ("orig" in data)
+            {
+                if ("trigger" in data.orig)
+                {
+                    data.config.trigger = data.orig.trigger;
+                }
+
+                if ("output" in data.orig)
+                {
+                    data.config.output = data.orig.output;
+                }
+
+                delete data.orig;
+            }
+
             if ("timer" in data)
             {
                 tearDownTimer(data);
-
-                if ("context" in data)
-                {
-                    delete data.context;
-                }
             }
         }
 
@@ -311,16 +342,14 @@ module.exports = function(RED)
             try
             {
                 node.debug("[Timer:" + data.id + "] Set up timer" + (repeat ? " (repeating)" : ""));
-
-                let event = ("context" in data) ? data.context : data.config;
-                node.trace("[Timer:" + data.id + "] Timer specification: " + JSON.stringify(event));
+                node.trace("[Timer:" + data.id + "] Timer specification: " + JSON.stringify(data.config));
 
                 const now = chronos.getCurrentTime();
-                let triggerTime = chronos.getTime(repeat ? now.clone().add(1, "days") : now.clone(), event.trigger.type, event.trigger.value);
+                let triggerTime = chronos.getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
-                if (event.trigger.offset != 0)
+                if (data.config.trigger.offset != 0)
                 {
-                    let offset = event.trigger.random ? Math.round(Math.random() * event.trigger.offset) : event.trigger.offset;
+                    let offset = data.config.trigger.random ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
                     triggerTime.add(offset, "minutes");
                 }
 
@@ -328,13 +357,13 @@ module.exports = function(RED)
                 {
                     node.debug("[Timer:" + data.id + "] Trigger time before current time, adding one day");
 
-                    if (event.trigger.type == "time")
+                    if (data.config.trigger.type == "time")
                     {
                         triggerTime.add(1, "days");
                     }
                     else
                     {
-                        triggerTime = chronos.getTime(triggerTime.add(1, "days"), event.trigger.type, event.trigger.value);
+                        triggerTime = chronos.getTime(triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
                     }
                 }
 
@@ -367,29 +396,28 @@ module.exports = function(RED)
         {
             delete data.timer;
 
-            let event = ("context" in data) ? data.context : data.config;
-            if ((event.output.type == "global") || (event.output.type == "flow"))
+            if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
             {
-                let ctx = RED.util.parseContextStore(event.output.property.name);
-                node.context()[event.output.type].set(ctx.key, event.output.property.value, ctx.store);
+                let ctx = RED.util.parseContextStore(data.config.output.property.name);
+                node.context()[data.config.output.type].set(ctx.key, data.config.output.property.value, ctx.store);
             }
-            else if (event.output.type == "msg")
+            else if (data.config.output.type == "msg")
             {
                 let msg = {};
-                if (event.output.property.type === "date")
+                if (data.config.output.property.type === "date")
                 {
-                    RED.util.setMessageProperty(msg, event.output.property.name, Date.now(), true);
+                    RED.util.setMessageProperty(msg, data.config.output.property.name, Date.now(), true);
                 }
                 else
                 {
-                    RED.util.setMessageProperty(msg, event.output.property.name, event.output.property.value, true);
+                    RED.util.setMessageProperty(msg, data.config.output.property.name, data.config.output.property.value, true);
                 }
 
                 sendMessage(data, msg);
             }
-            else if (event.output.type == "fullMsg")
+            else if (data.config.output.type == "fullMsg")
             {
-                sendMessage(data, event.output.value);
+                sendMessage(data, data.config.output.value);
             }
 
             setUpTimer(data, true);
@@ -399,9 +427,9 @@ module.exports = function(RED)
         {
             if (node.multiPort)
             {
-                node.ports[data.config.output.port] = msg;
+                node.ports[data.port] = msg;
                 node.send(node.ports);
-                node.ports[data.config.output.port] = null;
+                node.ports[data.port] = null;
             }
             else
             {
@@ -416,30 +444,40 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.trigger != "object") || !data.trigger)
+            if ((typeof data.type != "string") || !/^(time|sun|moon|custom)$/.test(data.type))
             {
                 return false;
             }
 
-            if ((typeof data.trigger.type != "string") || !/^(time|sun|moon|custom)$/.test(data.trigger.type))
+            if ((typeof data.value != "string") ||
+                ((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
+                ((data.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(data.value)) ||
+                ((data.type == "moon") && !/^(rise|set)$/.test(data.value)))
             {
                 return false;
             }
 
-            if ((typeof data.trigger.value != "string") ||
-                ((data.trigger.type == "time") && !chronos.isValidUserTime(data.trigger.value)) ||
-                ((data.trigger.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(data.trigger.value)) ||
-                ((data.trigger.type == "moon") && !/^(rise|set)$/.test(data.trigger.value)))
+            if ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300))
             {
                 return false;
             }
 
-            if ((typeof data.trigger.offset != "number") || (data.trigger.offset < -300) || (data.trigger.offset > 300))
+            if (typeof data.random != "boolean")
             {
                 return false;
             }
 
-            if (typeof data.trigger.random != "boolean")
+            return true;
+        }
+
+        function validateExtendedContextData(data)
+        {
+            if ((typeof data != "object") || !data)
+            {
+                return false;
+            }
+
+            if (!validateContextData(data.trigger))
             {
                 return false;
             }

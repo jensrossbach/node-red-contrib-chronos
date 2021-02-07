@@ -79,6 +79,16 @@ SOFTWARE.
                             benutzerdefinierte Sonnenstände kann eingegeben
                             werden.
                         </li>
+                        <li>
+                            <i>global</i>: Der Zielzeitpunkt wird aus der
+                            angegebenen globalen Kontextvariablen geladen,
+                            siehe Kapitel <i>Eingabe</i> für weitere Informationen.
+                        </li>
+                        <li>
+                            <i>flow</i>: Der Zielzeitpunkt wird aus der
+                            angegebenen Flow-Kontextvariablen geladen,
+                            siehe Kapitel <i>Eingabe</i> für weitere Informationen.
+                        </li>
                     </ul>
                 </li>
                 <li>
@@ -96,13 +106,6 @@ SOFTWARE.
                     spezifiziert als JSON-Ausdruck, eine einzelne Eigenschaft
                     der Nachricht unterschiedlichen Typs oder eine globale oder
                     Flow-spezifische Variable.
-                </li>
-                <li>
-                    Wenn in der ersten Zeile <i>global.</i> oder <i>flow.</i>
-                    ausgewählt wird, wird das Zeitereignis aus der angegebenen
-                    Kontextvariable geladen. Siehe Kapitel <i>Eingabe</i> weiter
-                    unten für eine Beschreibung der benötigten Struktur der
-                    globalen oder Flow-Variable.
                 </li>
             </ul>
         </dd>
@@ -138,20 +141,28 @@ SOFTWARE.
     </dd>
     <dt>Zeitplan dynamisch programmieren</dt>
     <dd>
-        Zeitereignisse können dynamisch programmiert werden, indem diese so
-        konfiguriert werden, dass die entsprechenden Daten aus einer Kontextvariablen
-        gelesen werden (siehe Kapitel <i>Konfiguration</i> oben). Die Variablen
-        müssen Objekte sein und die folgenden Eigenschaften enthalten:
+        Die Konfiguration des Zielzeitpunkts kann dynamisch aus einer
+        Kontextvariablen geladen werden. Die Variablen müssen Objekte sein und
+        die folgenden Eigenschaften enthalten:
     </dd>
     <dl class="message-properties">
-        <dt>trigger.type<span class="property-type">string</span></dt>
+        <dt>type<span class="property-type">string</span></dt>
         <dd>Auslöseart; entweder "time", "sun", "moon" oder "custom"</dd>
-        <dt>trigger.value<span class="property-type">string</span></dt>
+        <dt>value<span class="property-type">string</span></dt>
         <dd>Auslösezeitpunkt; der Inhalt ist abhängig von der Auslöseart</dd>
-        <dt>trigger.offset<span class="property-type">number</span></dt>
+        <dt>offset<span class="property-type">number</span></dt>
         <dd>Zeitlicher Versatz zum Auslösezeitpunkt</dd>
-        <dt>trigger.random<span class="property-type">boolean</span></dt>
+        <dt>random<span class="property-type">boolean</span></dt>
         <dd>Zufälliger Zeitversatz</dd>
+    </dl>
+    <dd>
+        Außerdem ist es möglich, die Ausgaben der Zeitereignisse zu überschreiben.
+        In diesem Fall muss ein erweitertes Format für die Kontextvariablen
+        verwendet werden, bei dem die Daten für den Zielzeitpunkt (siehe oben)
+        in eine Objekteigenschaft mit dem Namen <code>trigger</code> eingebettet
+        werden und folgende weitere Eigenschaften vorhanden sind:
+    </dd>
+    <dl class="message-properties">
         <dt>output.type<span class="property-type">string</span></dt>
         <dd>Ausgabeart; entweder "global", "flow", "msg" oder "fullMsg"</dd>
         <dt class="optional">output.value<span class="property-type">object</span></dt>
