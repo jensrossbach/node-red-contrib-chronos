@@ -31,7 +31,7 @@ SOFTWARE.
         <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
-    <div class="form-row">
+    <div class="form-row" style="padding-top: 4px;">
         <label for="node-input-when"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.when"></span></label>
         <input type="text" id="node-input-when" style="width: 70%;">
         <input id="node-input-whenType" type="hidden">
@@ -44,6 +44,10 @@ SOFTWARE.
             <input id="node-input-random" type="checkbox" style="width: auto; margin-top: 0px; margin-bottom: 1px;">
             <label for="node-input-random" style="width: auto; margin-bottom: 0px;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.random"></label>
         </span>
+    </div>
+    <div class="form-row" style="padding-top: 10px">
+        <input id="node-input-preserveCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-preserveCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="delay.label.preserveCtrlProps"></label>
     </div>
 </script>
 
@@ -127,6 +131,10 @@ SOFTWARE.
                 value: 0
             },
             random:
+            {
+                value: false
+            },
+            preserveCtrlProps:
             {
                 value: false
             }

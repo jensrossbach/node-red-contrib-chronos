@@ -3,13 +3,14 @@
     {
         "label":
         {
-            "node":        "delay until",
-            "outputPort":  "delayed message",
-            "when":        "When"
+            "node":               "delay until",
+            "outputPort":         "delayed message",
+            "when":               "When",
+            "preserveCtrlProps":  "Preserve control properties in messages"
         },
         "status":
         {
-            "queued":  "queued",
+            "queued":  "queued until",
             "error":   "error"
         }
     }

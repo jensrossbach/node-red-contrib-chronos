@@ -49,6 +49,9 @@ module.exports = function(RED)
             node.whenValue = settings.whenValue;
             node.offset = settings.offset;
             node.random = settings.random;
+            node.preserveCtrlProps = settings.preserveCtrlProps;
+
+            node.sendTime = null;
 
             if ((node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
             {
@@ -94,8 +97,11 @@ module.exports = function(RED)
 
                         if ("enqueue" in msg)
                         {
-                            delete msg.drop;
-                            delete msg.enqueue;
+                            if (!node.preserveCtrlProps)
+                            {
+                                delete msg.drop;
+                                delete msg.enqueue;
+                            }
 
                             enqueueMessage(msg, done);
                         }
@@ -112,8 +118,11 @@ module.exports = function(RED)
 
                         if ("enqueue" in msg)
                         {
-                            delete msg.flush;
-                            delete msg.enqueue;
+                            if (!node.preserveCtrlProps)
+                            {
+                                delete msg.flush;
+                                delete msg.enqueue;
+                            }
 
                             enqueueMessage(msg, done);
                         }
@@ -135,13 +144,25 @@ module.exports = function(RED)
         {
             try
             {
-                if (!node.delayTimer)
+                if (hasOverride(msg.when))
+                {
+                    node.debug("Input message has override property");
+
+                    tearDownDelayTimer();
+                    setupDelayTimer(msg.when.type, msg.when.value, msg.when.offset, msg.when.random);
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.when;
+                    }
+                }
+                else if (!node.delayTimer)
                 {
                     setupDelayTimer();
                 }
 
                 node.msgQueue.push({msg: msg, done: done});
-                node.status((node.msgQueue.length > 0) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued")} : {});
+                updateStatus();
             }
             catch (e)
             {
@@ -163,17 +184,21 @@ module.exports = function(RED)
 
         function dropQueue()
         {
+            node.debug("Drop all enqueued messages");
+
             while (node.msgQueue.length > 0)
             {
                 let item = node.msgQueue.shift();
                 item.done();
             }
 
-            node.status({});
+            updateStatus();
         }
 
         function flushQueue()
         {
+            node.debug("Flush all enqueued messages");
+
             while (node.msgQueue.length > 0)
             {
                 let item = node.msgQueue.shift();
@@ -182,53 +207,92 @@ module.exports = function(RED)
                 item.done();
             }
 
-            node.status({});
+            updateStatus();
         }
 
-        function setupDelayTimer()
+        function setupDelayTimer(type = node.whenType, value = node.whenValue, offset = node.offset, random = node.random)
         {
-            node.debug("Set up timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
+            node.debug("Set up timer for type '" + type + "', value '" + value + "'");
 
             const now = chronos.getCurrentTime();
-            let sendTime = chronos.getTime(now.clone(), node.whenType, node.whenValue);
+            node.sendTime = chronos.getTime(now.clone(), type, value);
 
-            if (node.offset != 0)
+            if (offset != 0)
             {
-                let offset = node.random ? Math.round(Math.random() * node.offset) : node.offset;
-                sendTime.add(offset, "minutes");
+                node.sendTime.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
             }
 
-            if (sendTime.isBefore(now))
+            if (node.sendTime.isBefore(now))
             {
                 node.debug("Send time before current time, adding one day");
 
-                if (node.whenType == "time")
+                if (type == "time")
                 {
-                    sendTime.add(1, "days");
+                    node.sendTime.add(1, "days");
                 }
                 else
                 {
-                    sendTime = chronos.getTime(sendTime.add(1, "days"), node.whenType, node.whenValue);
+                    node.sendTime = chronos.getTime(node.sendTime.add(1, "days"), type, value);
                 }
             }
 
-            node.debug("Starting timer for delayed message at " + sendTime.format("YYYY-MM-DD HH:mm:ss"));
+            node.debug("Starting timer for delayed message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss"));
             node.delayTimer = setTimeout(() =>
             {
                 delete node.delayTimer;
                 flushQueue();
-            }, sendTime.diff(now));
+            }, node.sendTime.diff(now));
         }
 
         function tearDownDelayTimer()
         {
             if (node.delayTimer)
             {
-                node.debug("Tear down timer for type '" + node.whenType + "', value '" + node.whenValue + "'");
+                node.debug("Tear down timer");
 
                 clearTimeout(node.delayTimer);
                 delete node.delayTimer;
+
+                node.sendTime = null;
             }
+        }
+
+        function hasOverride(data)
+        {
+            if ((typeof data != "object") || !data)
+            {
+                return false;
+            }
+
+            if ((typeof data.type != "string") || !/^(time|sun|moon|custom)$/.test(data.type))
+            {
+                return false;
+            }
+
+            if ((typeof data.value != "string") ||
+                ((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
+                ((data.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(data.value)) ||
+                ((data.type == "moon") && !/^(rise|set)$/.test(data.value)))
+            {
+                return false;
+            }
+
+            if ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300))
+            {
+                return false;
+            }
+
+            if (typeof data.random != "boolean")
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function updateStatus()
+        {
+            node.status(((node.msgQueue.length > 0) && node.sendTime) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued") + " " + node.sendTime.format("YYYY-MM-DD HH:mm:ss")} : {});
         }
     }
 
