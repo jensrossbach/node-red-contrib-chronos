@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2021-02-08
+### Added
+- Simplified context variable format for configuring only the trigger time of a schedule event dynamically. The "extended" format (including the output) from v1.8.x is still supported though.
+- Delay until node now displays the actual target time in the status.
+- The configured target time of delay until nodes can now be overridden by input messages.
+
+### Fixed
+- Fixed minor layout flaws in configuration pages.
+
 ## [1.8.1] - 2021-01-31
 ### Fixed
 - Fixed missing German translation for operator/source list in time switch and filter nodes.
