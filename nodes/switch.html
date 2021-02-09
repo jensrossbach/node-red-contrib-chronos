@@ -469,7 +469,10 @@ SOFTWARE.
                         if (type != time1._prevType)
                         {
                             time1._prevType = type;
-                            time1.typedInput("value", "");
+                            if ((type != "sun") && (type != "moon"))
+                            {
+                                time1.typedInput("value", "");
+                            }
                         }
                     });
 
@@ -480,7 +483,10 @@ SOFTWARE.
                         if (type != time2._prevType)
                         {
                             time2._prevType = type;
-                            time2.typedInput("value", "");
+                            if ((type != "sun") && (type != "moon"))
+                            {
+                                time2.typedInput("value", "");
+                            }
                         }
                     });
 
