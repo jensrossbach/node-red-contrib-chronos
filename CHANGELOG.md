@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2021-02-09
+### Fixed
+- Fixed empty values when changing to sun or moon position input without changing position selection (affected scheduler, time switch and time filter node).
+
 ## [1.9.0] - 2021-02-08
 ### Added
 - Simplified context variable format for configuring only the trigger time of a schedule event dynamically. The "extended" format (including the output) from v1.8.x is still supported though.
