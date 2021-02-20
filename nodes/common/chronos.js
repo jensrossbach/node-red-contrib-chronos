@@ -48,7 +48,6 @@ function initCustomTimes(times)
     {
         times.forEach(time =>
         {
-            console.log("Adding custom time " + time.riseName + "/" + time.setName + "@" + time.angle);
             sunCalc.addTime(time.angle, "__cust_" + time.riseName, "__cust_" + time.setName);
         });
     }
@@ -148,7 +147,6 @@ function isValidUserDate(value)
 
 function getSunTime(RED, node, day, type)
 {
-    node.debug("Calculating sun time for " + type + " at location " + node.config.latitude + ", " + node.config.longitude);
     let sunTimes = sunCalc.getTimes(day.toDate(), node.config.latitude, node.config.longitude);
 
     if (!(type in sunTimes))
@@ -180,7 +178,6 @@ function getSunTime(RED, node, day, type)
 
 function getMoonTime(RED, node, day, type)
 {
-    node.debug("Calculating moon time for " + type + " at location " + node.config.latitude + ", " + node.config.longitude);
     let moonTimes = sunCalc.getMoonTimes(day.toDate(), node.config.latitude, node.config.longitude);
 
     let ret = null;

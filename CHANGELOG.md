@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.9.2] - 2021-02-20
 ### Changed
-- Time calculation and conversion is now location aware. This mostly affects time change node for day of week interpretation and string based time input/output.
+- Time calculation and conversion is now locale aware. This mostly affects time change node for day of week interpretation and string based time input/output.
 
 ### Fixed
 - Fixed custom sun positions being registered multiple times.
