@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.2] - 2021-02-20
+### Changed
+- Time calculation and conversion is now location aware. This mostly affects time change node for day of week interpretation and string based time input/output.
+
+### Fixed
+- Fixed custom sun positions being registered multiple times.
+- Fixed overwriting of geographical locations when having multiple configuration nodes.
+
 ## [1.9.1] - 2021-02-09
 ### Fixed
 - Fixed empty values when changing to sun or moon position input without changing position selection (affected scheduler, time switch and time filter node).
