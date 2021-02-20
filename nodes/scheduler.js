@@ -32,6 +32,7 @@ module.exports = function(RED)
         RED.nodes.createNode(node, settings);
 
         node.config = RED.nodes.getNode(settings.config);
+        node.locale = require("os-locale").sync();
 
         if (!node.config)
         {
@@ -46,9 +47,7 @@ module.exports = function(RED)
         else
         {
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
-
             node.status({});
-            chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.multiPort = settings.multiPort;
             node.disabledSchedule = false;
@@ -344,8 +343,8 @@ module.exports = function(RED)
                 node.debug("[Timer:" + data.id + "] Set up timer" + (repeat ? " (repeating)" : ""));
                 node.trace("[Timer:" + data.id + "] Timer specification: " + JSON.stringify(data.config));
 
-                const now = chronos.getCurrentTime();
-                let triggerTime = chronos.getTime(repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
+                const now = chronos.getCurrentTime(node);
+                let triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
                 if (data.config.trigger.offset != 0)
                 {
@@ -363,7 +362,7 @@ module.exports = function(RED)
                     }
                     else
                     {
-                        triggerTime = chronos.getTime(triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
+                        triggerTime = chronos.getTime(RED, node, triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
                     }
                 }
 

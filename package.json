@@ -23,7 +23,8 @@
     "bugs": "https://github.com/jensrossbach/node-red-contrib-chronos/issues",
     "dependencies": {
         "moment": "^2.28.0",
-        "suncalc": "^1.8.0"
+        "suncalc": "^1.8.0",
+        "os-locale": "^5.0.0"
     },
     "main": "none",
     "scripts": {},

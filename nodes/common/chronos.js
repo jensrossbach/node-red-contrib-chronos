@@ -37,45 +37,40 @@ class TimeError extends Error
     }
 }
 
-var RED;
 
-var latitude = 0;
-var longitude = 0;
-
-var moment;
-var sunCalc;
+const moment = require("moment");
+const sunCalc = require("suncalc");
 
 
-function init(_RED, _latitude, _longitude, additionalTimes)
+function initCustomTimes(times)
 {
-    RED = _RED;
-
-    latitude = _latitude;
-    longitude = _longitude;
-
-    moment = require("moment");
-    sunCalc = require("suncalc");
-
-    if (additionalTimes)
+    if (times)
     {
-        additionalTimes.forEach(time =>
+        times.forEach(time =>
         {
+            console.log("Adding custom time " + time.riseName + "/" + time.setName + "@" + time.angle);
             sunCalc.addTime(time.angle, "__cust_" + time.riseName, "__cust_" + time.setName);
         });
     }
 }
 
-function getCurrentTime()
+function getCurrentTime(node)
 {
-    return moment();
+    let ret = moment();
+    ret.locale(node.locale);
+
+    return ret;
 }
 
-function getTimeFrom(source)
+function getTimeFrom(node, source)
 {
-    return moment(source);
+    let ret = moment(source);
+    ret.locale(node.locale);
+
+    return ret;
 }
 
-function getUserTime(day, value)
+function getUserTime(RED, day, value)
 {
     let ret = null;
 
@@ -123,13 +118,14 @@ function getUserTime(day, value)
     return ret;
 }
 
-function getUserDate(value)
+function getUserDate(RED, node, value)
 {
     let ret = null;
 
     if (DATE_REGEX.test(value))
     {
         ret = moment(value, "YYYY-MM-DD");
+        ret.locale(node.locale);
     }
 
     if (!ret || !ret.isValid())
@@ -150,9 +146,10 @@ function isValidUserDate(value)
     return DATE_REGEX.test(value);
 }
 
-function getSunTime(day, type)
+function getSunTime(RED, node, day, type)
 {
-    let sunTimes = sunCalc.getTimes(day.toDate(), latitude, longitude);
+    node.debug("Calculating sun time for " + type + " at location " + node.config.latitude + ", " + node.config.longitude);
+    let sunTimes = sunCalc.getTimes(day.toDate(), node.config.latitude, node.config.longitude);
 
     if (!(type in sunTimes))
     {
@@ -167,6 +164,10 @@ function getSunTime(day, type)
         {
             ret = null;
         }
+        else
+        {
+            ret.locale(node.locale);
+        }
     }
 
     if (!ret)
@@ -177,9 +178,10 @@ function getSunTime(day, type)
     return ret;
 }
 
-function getMoonTime(day, type)
+function getMoonTime(RED, node, day, type)
 {
-    let moonTimes = sunCalc.getMoonTimes(day.toDate(), latitude, longitude);
+    node.debug("Calculating moon time for " + type + " at location " + node.config.latitude + ", " + node.config.longitude);
+    let moonTimes = sunCalc.getMoonTimes(day.toDate(), node.config.latitude, node.config.longitude);
 
     let ret = null;
     if (moonTimes[type])
@@ -188,6 +190,10 @@ function getMoonTime(day, type)
         if (!ret.isValid())
         {
             ret = null;
+        }
+        else
+        {
+            ret.locale(node.locale);
         }
     }
 
@@ -199,26 +205,26 @@ function getMoonTime(day, type)
     return ret;
 }
 
-function getTime(day, type, value)
+function getTime(RED, node, day, type, value)
 {
     if (type == "time")
     {
-        return getUserTime(day, value);
+        return getUserTime(RED, day, value);
     }
     else if ((type == "sun") || (type == "custom"))
     {
-        return getSunTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
+        return getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
     }
     else if (type == "moon")
     {
-        return getMoonTime(day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
+        return getMoonTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
     }
 }
 
 
 module.exports =
 {
-    init: init,
+    initCustomTimes: initCustomTimes,
     getCurrentTime: getCurrentTime,
     getTimeFrom: getTimeFrom,
     getUserTime: getUserTime,

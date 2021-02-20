@@ -32,6 +32,7 @@ module.exports = function(RED)
         RED.nodes.createNode(node, settings);
 
         node.config = RED.nodes.getNode(settings.config);
+        node.locale = require("os-locale").sync();
 
         if (!node.config)
         {
@@ -41,9 +42,7 @@ module.exports = function(RED)
         else
         {
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
-
             node.status({});
-            chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.whenType = settings.whenType;
             node.whenValue = settings.whenValue;
@@ -214,8 +213,8 @@ module.exports = function(RED)
         {
             node.debug("Set up timer for type '" + type + "', value '" + value + "'");
 
-            const now = chronos.getCurrentTime();
-            node.sendTime = chronos.getTime(now.clone(), type, value);
+            const now = chronos.getCurrentTime(node);
+            node.sendTime = chronos.getTime(RED, node, now.clone(), type, value);
 
             if (offset != 0)
             {
@@ -232,7 +231,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    node.sendTime = chronos.getTime(node.sendTime.add(1, "days"), type, value);
+                    node.sendTime = chronos.getTime(RED, node, node.sendTime.add(1, "days"), type, value);
                 }
             }
 
@@ -292,7 +291,26 @@ module.exports = function(RED)
 
         function updateStatus()
         {
-            node.status(((node.msgQueue.length > 0) && node.sendTime) ? {fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued") + " " + node.sendTime.format("YYYY-MM-DD HH:mm:ss")} : {});
+            if ((node.msgQueue.length > 0) && node.sendTime)
+            {
+                let when = node.sendTime.calendar(
+                {
+                    sameDay: function()
+                    {
+                        return "LT" + ((this.second() > 0) ? "S" : "");
+                    },
+                    nextDay: function()
+                    {
+                        return "l LT" + ((this.second() > 0) ? "S" : "");
+                    }
+                });
+
+                node.status({fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued") + " " + when});
+            }
+            else
+            {
+                node.status({});
+            }
         }
     }
 

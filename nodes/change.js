@@ -31,6 +31,7 @@ module.exports = function(RED)
 
         node.chronos = require("./common/chronos.js");
         node.config = RED.nodes.getNode(settings.config);
+        node.locale = require("os-locale").sync();
 
         if (!node.config)
         {
@@ -45,9 +46,7 @@ module.exports = function(RED)
         else
         {
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
-
             node.status({});
-            node.chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.rules = settings.rules;
 
@@ -125,7 +124,7 @@ module.exports = function(RED)
                                         }
                                         case "date":
                                         {
-                                            setTarget(msg, rule.target, node.chronos.getTime(node.chronos.getUserDate(rule.date), rule.time.type, rule.time.value).valueOf());
+                                            setTarget(msg, rule.target, node.chronos.getTime(RED, node, node.chronos.getUserDate(RED, node, rule.date), rule.time.type, rule.time.value).valueOf());
                                             break;
                                         }
                                     }
@@ -137,7 +136,7 @@ module.exports = function(RED)
 
                                     if (property && ((typeof property == "number") || (typeof property == "string")))
                                     {
-                                        input = node.chronos.getTimeFrom(property);
+                                        input = node.chronos.getTimeFrom(node, property);
                                         if (!input.isValid())
                                         {
                                             input = null;
@@ -176,21 +175,7 @@ module.exports = function(RED)
                                                     }
                                                     case "weekday":
                                                     {
-                                                        // we use MO..SU == 1..7, but moment uses SU..SA == 0..6
-                                                        if (rule.value < 7)
-                                                        {
-                                                            input.day(rule.value);
-                                                        }
-                                                        else
-                                                        {
-                                                            if (input.day() > 0)
-                                                            {
-                                                                input.add(1, "week");  // add one week to have the next Sunday
-                                                            }
-
-                                                            input.day(0);
-                                                        }
-
+                                                        input.weekday(rule.value - 1);
                                                         break;
                                                     }
                                                     case "day":
@@ -238,22 +223,12 @@ module.exports = function(RED)
                                             case "startOf":
                                             {
                                                 input.startOf(rule.arg);
-                                                if (rule.arg == "week")  // start of week = MO <-> SU
-                                                {
-                                                    input.add(1, "day");
-                                                }
-
                                                 output = input.valueOf();
                                                 break;
                                             }
                                             case "endOf":
                                             {
                                                 input.endOf(rule.arg);
-                                                if (rule.arg == "week")  // end of week = SU <-> SA
-                                                {
-                                                    input.add(1, "day");
-                                                }
-
                                                 output = input.valueOf();
                                                 break;
                                             }

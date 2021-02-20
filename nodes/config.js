@@ -26,13 +26,15 @@ module.exports = function(RED)
 {
     function ChronosConfigNode(config)
     {
+        const chronos = require("./common/chronos.js");
+
         RED.nodes.createNode(this, config);
 
         this.name = config.name;
-        this.sunPositions = config.sunPositions;
-
         this.latitude = parseFloat(this.credentials.latitude);
         this.longitude = parseFloat(this.credentials.longitude);
+
+        chronos.initCustomTimes(config.sunPositions);
     }
 
     RED.nodes.registerType("chronos-config", ChronosConfigNode,

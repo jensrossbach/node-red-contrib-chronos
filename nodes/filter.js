@@ -33,6 +33,7 @@ module.exports = function(RED)
 
         node.chronos = require("./common/chronos.js");
         node.config = RED.nodes.getNode(settings.config);
+        node.locale = require("os-locale").sync();
 
         if (!node.config)
         {
@@ -47,9 +48,7 @@ module.exports = function(RED)
         else
         {
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
-
             node.status({});
-            node.chronos.init(RED, node.config.latitude, node.config.longitude, node.config.sunPositions);
 
             node.baseTime = settings.baseTime;
             node.baseTimeType = settings.baseTimeType;

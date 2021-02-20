@@ -227,7 +227,7 @@ function evaluateCondition(RED, node, baseTime, cond, id)
     }
     else if ((cond.operator == "before") || (cond.operator == "after"))
     {
-        let targetTime = node.chronos.getTime(baseTime.clone(), cond.operands.type, cond.operands.value);
+        let targetTime = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands.type, cond.operands.value);
 
         if (cond.operands.offset != 0)
         {
@@ -241,8 +241,8 @@ function evaluateCondition(RED, node, baseTime, cond, id)
     }
     else if ((cond.operator == "between") || (cond.operator == "outside"))
     {
-        let time1 = node.chronos.getTime(baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-        let time2 = node.chronos.getTime(baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+        let time1 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+        let time2 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
         if (cond.operands[0].offset != 0)
         {
@@ -309,7 +309,7 @@ function getBaseTime(RED, node, msg)
 
     if (node.baseTimeType == "msgIngress")
     {
-        ret = node.chronos.getCurrentTime();
+        ret = node.chronos.getCurrentTime(node);
     }
     else
     {
@@ -332,7 +332,7 @@ function getBaseTime(RED, node, msg)
 
         if (typeof value == "number")
         {
-            ret = node.chronos.getTimeFrom(value);
+            ret = node.chronos.getTimeFrom(node, value);
         }
     }
 
