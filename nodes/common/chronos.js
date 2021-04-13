@@ -73,40 +73,48 @@ function getUserTime(RED, day, value)
 {
     let ret = null;
 
-    let matches = value.match(TIME_REGEX);
-    if (matches)
+    if (typeof value == "string")
     {
-        let hour = Number.parseInt(matches[1]);
-        let min = Number.parseInt(matches[2]);
-        let sec = Number.parseInt(matches[3]);
-        let ampm = matches[4];
-
-        if (ampm)
+        let matches = value.match(TIME_REGEX);
+        if (matches)
         {
-            switch (ampm.toUpperCase())
+            let hour = Number.parseInt(matches[1]);
+            let min = Number.parseInt(matches[2]);
+            let sec = Number.parseInt(matches[3]);
+            let ampm = matches[4];
+
+            if (ampm)
             {
-                case "AM":
+                switch (ampm.toUpperCase())
                 {
-                    if (hour >= 12)
+                    case "AM":
                     {
-                        hour = 0;
-                    }
+                        if (hour >= 12)
+                        {
+                            hour = 0;
+                        }
 
-                    break;
-                }
-                case "PM":
-                {
-                    if (hour < 12)
+                        break;
+                    }
+                    case "PM":
                     {
-                        hour += 12;
-                    }
+                        if (hour < 12)
+                        {
+                            hour += 12;
+                        }
 
-                    break;
+                        break;
+                    }
                 }
             }
-        }
 
-        ret = day.hour(hour).minute(min).second(sec ? sec : 0);
+            ret = day.hour(hour).minute(min).second(sec ? sec : 0);
+        }
+    }
+    else if (typeof value == "number")
+    {
+        let time = moment.utc(value);
+        ret = day.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(time.millisecond());
     }
 
     if (!ret)
@@ -137,7 +145,8 @@ function getUserDate(RED, node, value)
 
 function isValidUserTime(value)
 {
-    return TIME_REGEX.test(value);
+    return ((typeof value == "string") && TIME_REGEX.test(value)) ||
+           ((typeof value == "number") && (value >= 0) && (value < (24 * 60 * 60 * 1000)));
 }
 
 function isValidUserDate(value)
