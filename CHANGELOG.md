@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2021-04-13
+### Added
+- Added option to start scheduler node with disabled schedule.
+- For dynamic time input via context variable (scheduler node) or input message (delay until node), it is now possible to specify the time as a number of milliseconds from midnight.
+
+### Fixed
+- Improved robustness against wrong user input for configuration node and scheduler node.
+
 ## [1.9.2] - 2021-02-20
 ### Changed
 - Time calculation and conversion is now locale aware. This mostly affects time change node for day of week interpretation and string based time input/output.
