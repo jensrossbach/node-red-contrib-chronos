@@ -8,7 +8,8 @@
             "outputPort":  "scheduled message",
             "schedule":    "Schedule",
             "output":      "Output",
-            "multiPort":   "Dedicated output ports for schedule events"
+            "multiPort":   "Dedicated output ports for schedule events",
+            "disabled":    "Start with disabled schedule"
         },
         "status":
         {

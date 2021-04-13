@@ -8,7 +8,8 @@
             "outputPort":  "Geplante Nachricht",
             "schedule":    "Zeitplan",
             "output":      "Ausgabe",
-            "multiPort":   "Separate Ausgabe-Ports für Zeitereignisse"
+            "multiPort":   "Separate Ausgabe-Ports für Zeitereignisse",
+            "disabled":    "Mit inaktivem Zeitplan starten"
         },
         "status":
         {

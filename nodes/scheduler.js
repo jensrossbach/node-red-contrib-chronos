@@ -55,7 +55,7 @@ module.exports = function(RED)
             node.status({});
 
             node.multiPort = settings.multiPort;
-            node.disabledSchedule = false;
+            node.disabledSchedule = (typeof settings.disabled == "undefined") ? false : settings.disabled;
 
             node.schedule = [];
             for (let i=0; i<settings.schedule.length; ++i)
@@ -265,8 +265,11 @@ module.exports = function(RED)
                     updateStatus();
                 });
 
+                if (!node.disabledSchedule)
+                {
                 startTimers();
             }
+        }
         }
 
         function startTimers()
