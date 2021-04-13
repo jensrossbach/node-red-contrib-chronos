@@ -118,6 +118,11 @@ SOFTWARE.
             angelegt, da zur Konfigurationszeit nicht feststeht, ob das Zeitereignis
             eine Nachricht als Ausgabe erzeugt oder nicht.
         </dd>
+        <dt>Mit inaktivem Zeitplan starten</dt>
+        <dd>
+            Wenn aktiviert, wird der Zeitplan beim Starten des Knotens initial
+            deaktiviert.
+        </dd>
     </dl>
     <h3>Eingabe</h3>
     <dt>Zeitplan aktivieren/deaktivieren</dt>
@@ -148,7 +153,7 @@ SOFTWARE.
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
         <dd>Auslöseart; entweder "time", "sun", "moon" oder "custom"</dd>
-        <dt>value<span class="property-type">string</span></dt>
+        <dt>value<span class="property-type">string | number</span></dt>
         <dd>Auslösezeitpunkt; der Inhalt ist abhängig von der Auslöseart</dd>
         <dt>offset<span class="property-type">number</span></dt>
         <dd>Zeitlicher Versatz zum Auslösezeitpunkt</dd>
