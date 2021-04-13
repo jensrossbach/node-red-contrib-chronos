@@ -53,7 +53,7 @@ SOFTWARE.
         icon:     "chronos_config.svg",
         label:    function()
         {
-            return (this.name || ((this.credentials.latitude && this.credentials.longitude) ? (this.credentials.latitude + ", " + this.credentials.longitude) : this._("config.label.node")));
+            return (this.name || ((this.credentials && this.credentials.latitude && this.credentials.longitude) ? (this.credentials.latitude + ", " + this.credentials.longitude) : this._("config.label.node")));
         },
         defaults:
         {
@@ -70,7 +70,7 @@ SOFTWARE.
                     {
                         const EXP = /^[0-9a-zA-Z_]+$/;
                         let valid = true;
-                        let names = []
+                        let names = [];
 
                         // check for invalid names
                         for (let i=0; i<v.length; ++i)
@@ -101,7 +101,7 @@ SOFTWARE.
                     {
                         return arr.some(item =>
                         {
-                            return arr.indexOf(item) !== arr.lastIndexOf(item);
+                            return (arr.indexOf(item) !== arr.lastIndexOf(item));
                         });
                     }
                 }
@@ -114,13 +114,13 @@ SOFTWARE.
                 type: "text",
                 value: "",
                 required: true
-			},
+            },
             longitude:
             {
                 type: "text",
                 value: "",
                 required: true
-			}
+            }
         },
         oneditprepare: function()
         {

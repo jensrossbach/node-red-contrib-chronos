@@ -68,11 +68,6 @@ function convertCondition(node, cond)
 
     if ((cond.operator == "before") || (cond.operator == "after"))
     {
-        if ((typeof cond.operands != "object") || !cond.operands)
-        {
-            return null;
-        }
-
         if (!validateOperand(node, cond.operands))
         {
             return null;

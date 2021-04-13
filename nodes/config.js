@@ -34,7 +34,53 @@ module.exports = function(RED)
         this.latitude = parseFloat(this.credentials.latitude);
         this.longitude = parseFloat(this.credentials.longitude);
 
-        chronos.initCustomTimes(config.sunPositions);
+        if (validateCustomTimes(config.sunPositions))
+        {
+            chronos.initCustomTimes(config.sunPositions);
+        }
+
+        function validateCustomTimes(data)
+        {
+            if (data && (data.length > 0))
+            {
+                const EXP = /^[0-9a-zA-Z_]+$/;
+                let valid = true;
+                let names = [];
+
+                // check for invalid names
+                for (let i=0; i<data.length; ++i)
+                {
+                    if (!EXP.test(data[i].riseName) || !EXP.test(data[i].setName))
+                    {
+                        valid = false;
+                        break;
+                    }
+
+                    names.push(data[i].riseName);
+                    names.push(data[i].setName);
+                    if (hasDuplicates(names))
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+
+                return valid;
+            }
+            else
+            {
+                return true;
+            }
+
+            function hasDuplicates(arr)
+            {
+                return arr.some(item =>
+                {
+                    return (arr.indexOf(item) !== arr.lastIndexOf(item));
+                });
+            }
+        }
+
     }
 
     RED.nodes.registerType("chronos-config", ChronosConfigNode,

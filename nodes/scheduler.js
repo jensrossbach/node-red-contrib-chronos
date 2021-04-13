@@ -39,6 +39,11 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
         }
+        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else if (settings.schedule.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "scheduler.status.noSchedule"});
@@ -106,6 +111,12 @@ module.exports = function(RED)
                             event.output.value = JSON.parse(event.output.value);
                         }
                         catch (e)
+                        {
+                            valid = false;
+                            break;
+                        }
+
+                        if (typeof event.output.value != "object")
                         {
                             valid = false;
                             break;
