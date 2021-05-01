@@ -146,12 +146,32 @@ SOFTWARE.
             const sunTimes =
             [
                 {
+                    value: "nauticalDawn",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                },
+                {
+                    value: "dawn",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                },
+                {
                     value: "sunrise",
                     label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
                 },
                 {
                     value: "sunriseEnd",
                     label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                },
+                {
+                    value: "goldenHourEnd",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                },
+                {
+                    value: "solarNoon",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                },
+                {
+                    value: "goldenHour",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
                 },
                 {
                     value: "sunsetStart",
@@ -162,30 +182,6 @@ SOFTWARE.
                     label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
                 },
                 {
-                    value: "goldenHour",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
-                },
-                {
-                    value: "goldenHourEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
-                },
-                {
-                    value: "night",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
-                },
-                {
-                    value: "nightEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
-                },
-                {
-                    value: "dawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
-                },
-                {
-                    value: "nauticalDawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
-                },
-                {
                     value: "dusk",
                     label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
                 },
@@ -194,12 +190,16 @@ SOFTWARE.
                     label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
                 },
                 {
-                    value: "solarNoon",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                    value: "night",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
                 },
                 {
                     value: "nadir",
                     label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                },
+                {
+                    value: "nightEnd",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
                 }
             ];
 
