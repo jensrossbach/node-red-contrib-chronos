@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.3] - 2021-05-01
+### Changed
+- Sunlight phases are now shown in chronological order in the selection menus of the configuration UIs.
+
 ## [1.10.2] - 2021-04-15
 ### Fixed
 - Fixed refusal of input messages with number-based target times for delay until nodes.
