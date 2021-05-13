@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.4] - 2021-05-13
+### Changed
+- Moved sunlight phase "Night (end)" to beginning of lists.
+- Minor code improvements
+
 ## [1.10.3] - 2021-05-01
 ### Changed
 - Sunlight phases are now shown in chronological order in the selection menus of the configuration UIs.
