@@ -232,6 +232,7 @@ module.exports = function(RED)
                             node.disabledSchedule = true;
                         }
 
+                        updateStatus();
                         done();
                     }
                     else if (Array.isArray(msg.payload))
@@ -255,21 +256,22 @@ module.exports = function(RED)
                         }
 
                         node.disabledSchedule = (numDisabled == node.schedule.length);
+
+                        updateStatus();
                         done();
                     }
                     else
                     {
+                        updateStatus();
                         done(RED._("scheduler.error.invalidInput"));
                     }
-
-                    updateStatus();
                 });
 
                 if (!node.disabledSchedule)
                 {
-                startTimers();
+                    startTimers();
+                }
             }
-        }
         }
 
         function startTimers()
