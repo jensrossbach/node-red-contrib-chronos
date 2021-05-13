@@ -1,8 +1,12 @@
 # Action for quality assurance (checking code with ESLint and running unit tests)
 name: Quality Assurance
 
-# Triggers
+# Trigger workflow on pushes to master including Javascript files and any pull requests for master
 on:
+  pull:
+    branches: [ master ]
+    paths:
+      - '**.js'
   pull_request:
     branches: [ master ]
 
