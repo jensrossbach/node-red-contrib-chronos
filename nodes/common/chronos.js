@@ -91,7 +91,7 @@ function getUserTime(RED, day, value)
                     {
                         if (hour >= 12)
                         {
-                            hour = 0;
+                            hour -= 12;
                         }
 
                         break;
@@ -108,7 +108,7 @@ function getUserTime(RED, day, value)
                 }
             }
 
-            ret = day.hour(hour).minute(min).second(sec ? sec : 0);
+            ret = day.hour(hour).minute(min).second(sec ? sec : 0).millisecond(0);
         }
     }
     else if (typeof value == "number")
