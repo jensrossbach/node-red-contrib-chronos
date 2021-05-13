@@ -3,7 +3,7 @@ name: Quality Assurance
 
 # Trigger workflow on pushes to master including Javascript files and any pull requests for master
 on:
-  pull:
+  push:
     branches: [ master ]
     paths:
       - '**.js'
