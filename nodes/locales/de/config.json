@@ -22,19 +22,19 @@
         {
             "sun":
             {
+                "nightEnd":       "Astronom. Morgendämmerung",
+                "nauticalDawn":   "Nautische Morgendämmerung",
+                "dawn":           "Bürgerliche Morgendämmerung",
                 "sunrise":        "Sonnenaufgang (Beginn)",
                 "sunriseEnd":     "Sonnenaufgang (Ende)",
+                "goldenHourEnd":  "Goldene Stunde (Ende)",
+                "solarNoon":      "Mittag",
+                "goldenHour":     "Goldene Stunde (Beginn)",
                 "sunsetStart":    "Sonnenuntergang (Beginn)",
                 "sunset":         "Sonnenuntergang (Ende)",
-                "goldenHour":     "Goldene Stunde (Beginn)",
-                "goldenHourEnd":  "Goldene Stunde (Ende)",
-                "night":          "Nacht (Beginn)",
-                "nightEnd":       "Nacht (Ende)",
-                "dawn":           "Morgendämmerung",
-                "nauticalDawn":   "Nautische Morgendämmerung",
-                "dusk":           "Abenddämmerung",
+                "dusk":           "Bürgerliche Abenddämmerung",
                 "nauticalDusk":   "Nautische Abenddämmerung",
-                "solarNoon":      "Mittag",
+                "night":          "Astronom. Abenddämmerung",
                 "nadir":          "Mitternacht"
             },
             "moon":

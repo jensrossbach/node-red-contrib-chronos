@@ -22,19 +22,19 @@
         {
             "sun":
             {
+                "nightEnd":       "Astronomical Dawn",
+                "nauticalDawn":   "Nautical Dawn",
+                "dawn":           "Civil Dawn",
                 "sunrise":        "Sunrise (start)",
                 "sunriseEnd":     "Sunrise (end)",
+                "goldenHourEnd":  "Golden Hour (end)",
+                "solarNoon":      "Solar Noon",
+                "goldenHour":     "Golden Hour (start)",
                 "sunsetStart":    "Sunset (start)",
                 "sunset":         "Sunset (end)",
-                "goldenHour":     "Golden Hour (start)",
-                "goldenHourEnd":  "Golden Hour (end)",
-                "night":          "Night (start)",
-                "nightEnd":       "Night (end)",
-                "dawn":           "Dawn",
-                "nauticalDawn":   "Nautical Dawn",
-                "dusk":           "Dusk",
+                "dusk":           "Civil Dusk",
                 "nauticalDusk":   "Nautical Dusk",
-                "solarNoon":      "Solar Noon",
+                "night":          "Astronomical Dusk",
                 "nadir":          "Nadir"
             },
             "moon":
