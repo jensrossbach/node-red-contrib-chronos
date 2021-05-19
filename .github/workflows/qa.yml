@@ -5,8 +5,7 @@ name: Quality Assurance
 on:
   push:
     branches: [ master ]
-    paths:
-      - "**.js"
+    paths:    [ "**.js" ]
   pull_request:
     branches: [ master ]
 
