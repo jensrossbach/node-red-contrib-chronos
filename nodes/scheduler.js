@@ -235,21 +235,65 @@ module.exports = function(RED)
                         updateStatus();
                         done();
                     }
+                    else if (typeof msg.payload == "string")
+                    {
+                        if (msg.payload == "toggle")
+                        {
+                            toggleTimers();
+                        }
+                        else if (msg.payload == "reload")
+                        {
+                            reloadTimers();
+                        }
+                        else if (msg.payload == "trigger")
+                        {
+                            triggerEvents(false);
+                        }
+                        else if (msg.payload == "trigger:forced")
+                        {
+                            triggerEvents(true);
+                        }
+
+                        updateStatus();
+                        done();
+                    }
                     else if (Array.isArray(msg.payload))
                     {
                         let numDisabled = 0;
                         for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
                         {
-                            if (msg.payload[i])
+                            if (typeof msg.payload[i] == "boolean")
                             {
-                                startTimer(node.schedule[i]);
+                                if (msg.payload[i])
+                                {
+                                    startTimer(node.schedule[i]);
+                                }
+                                else
+                                {
+                                    stopTimer(node.schedule[i]);
+                                }
                             }
-                            else
+                            else if (typeof msg.payload[i] == "string")
                             {
-                                stopTimer(node.schedule[i]);
+                                if (msg.payload[i] == "toggle")
+                                {
+                                    toggleTimer(node.schedule[i]);
+                                }
+                                else if (msg.payload == "reload")
+                                {
+                                    reloadTimer(node.schedule[i]);
+                                }
+                                else if (msg.payload == "trigger")
+                                {
+                                    triggerEvent(node.schedule[i], false);
+                                }
+                                else if (msg.payload == "trigger:forced")
+                                {
+                                    triggerEvent(node.schedule[i], true);
+                                }
                             }
 
-                            if (!msg.payload[i])
+                            if (!("timer" in node.schedule[i]))
                             {
                                 numDisabled++;
                             }
@@ -291,6 +335,44 @@ module.exports = function(RED)
             node.schedule.forEach(data =>
             {
                 stopTimer(data);
+            });
+        }
+
+        function toggleTimers()
+        {
+            node.debug("Toggling timers");
+
+            let numDisabled = 0;
+            node.schedule.forEach(data =>
+            {
+                toggleTimer(data);
+
+                if (!("timer" in data))
+                {
+                    numDisabled++;
+                }
+            });
+
+            node.disabledSchedule = (numDisabled == node.schedule.length);
+        }
+
+        function reloadTimers()
+        {
+            node.debug("Rescheduling timers");
+
+            node.schedule.forEach(data =>
+            {
+                reloadTimer(data);
+            });
+        }
+
+        function triggerEvents(forced)
+        {
+            node.debug("Triggering events" + (forced ? " (forced)" : ""));
+
+            node.schedule.forEach(data =>
+            {
+                triggerEvent(data, forced);
             });
         }
 
@@ -352,6 +434,34 @@ module.exports = function(RED)
             }
         }
 
+        function toggleTimer(data)
+        {
+            if ("timer" in data)
+            {
+                stopTimer(data);
+            }
+            else
+            {
+                startTimer(data);
+            }
+        }
+
+        function reloadTimer(data)
+        {
+            if ("timer" in data)
+            {
+                startTimer(data);
+            }
+        }
+
+        function triggerEvent(data, forced)
+        {
+            if (("timer" in data) || forced)
+            {
+                handleTimeout(data, false);
+            }
+        }
+
         function setUpTimer(data, repeat)
         {
             try
@@ -383,7 +493,7 @@ module.exports = function(RED)
                 }
 
                 node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + triggerTime.format("YYYY-MM-DD HH:mm:ss"));
-                data.timer = setTimeout(handleTimeout, triggerTime.diff(now), data);
+                data.timer = setTimeout(handleTimeout, triggerTime.diff(now), data, true);
             }
             catch (e)
             {
@@ -407,9 +517,14 @@ module.exports = function(RED)
             delete data.timer;
         }
 
-        function handleTimeout(data)
+        function handleTimeout(data, regular)
         {
-            delete data.timer;
+            node.debug("[Timer:" + data.id + "] Timer expired");
+
+            if (regular)
+            {
+                delete data.timer;
+            }
 
             if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
             {
@@ -435,7 +550,10 @@ module.exports = function(RED)
                 sendMessage(data, data.config.output.value);
             }
 
-            setUpTimer(data, true);
+            if (regular)
+            {
+                setUpTimer(data, true);
+            }
         }
 
         function sendMessage(data, msg)

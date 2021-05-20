@@ -119,9 +119,9 @@ SOFTWARE.
     <h3>Input</h3>
     <dt>Enable/disable schedule</dt>
     <dd>
-        The input message can be used to either disable or re-enable the schedule
-        or parts of it. Enabling the schedule will also reload any programmed
-        schedule events from context variables.
+        To either disable or re-enable the schedule or parts of it, a message
+        must be sent to the node. Enabling the schedule will also reload any
+        programmed schedule events from context variables.
     </dd>
     <dl class="message-properties">
         <dt>payload<span class="property-type">boolean | array</span></dt>
@@ -133,6 +133,50 @@ SOFTWARE.
         each element must be a boolean value and corresponds to the event in the
         schedule at the same index. If the value is true, the matching event is
         enabled, otherwise it is disabled.
+    </dd>
+    <dt>Control scheduler node</dt>
+    <dd>
+        The scheduler node can be dynamically controlled in various ways using
+        an input message.
+    </dd>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">string | array</span></dt>
+        <dd>Controls the node depending on the passed command(s)</dd>
+    </dl>
+    <dd>
+        If <code>msg.payload</code> is a string value, the passed command
+        affects the whole schedule. If <code>msg.payload</code> is an array,
+        each element must be a string value and corresponds to the event in the
+        schedule at the same index affecting only this one.
+    </dd>
+    <dd>
+        Hint: You can also mix boolean values and string values in the array
+        in order to enable/disable certain events and apply control commands
+        to other events at the same time. It is also possible to set single
+        elements in the array to <code>null</code> in order to ignore the
+        corresponding events.
+    </dd>
+    <dd>
+        The following commands are currently supported:
+        <ul>
+            <li>
+                <code>toggle</code>: Toggles the activation state (i.e., enabled
+                events become disabled and vice versa).
+            </li>
+            <li>
+                <code>reload</code>: Forces enabled events to be recalculated
+                (also reloads programmed data from context variables).
+            </li>
+            <li>
+                <code>trigger</code>: Triggers enabled events, i.e., the output
+                is applied as if the scheduled time has been reached. This does
+                not change the regular schedule time.
+            </li>
+            <li>
+                <code>trigger:force</code>: Same as above, but triggers all events,
+                not just enabled ones.
+            </li>
+        </ul>
     </dd>
     <dt>Dynamically program schedule</dt>
     <dd>

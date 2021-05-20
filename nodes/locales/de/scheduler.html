@@ -127,9 +127,9 @@ SOFTWARE.
     <h3>Eingabe</h3>
     <dt>Zeitplan aktivieren/deaktivieren</dt>
     <dd>
-        Eine Eingangsnachricht kann dazu verwendet werden, um den Zeitplan
-        oder einzelne Zeitereignisse zu aktivieren oder zu deaktivieren.
-        Das Aktivieren des Zeitplans führt auch dazu, dass programmierte
+        Um den Zeitplan oder einzelne Zeitereignisse zu aktivieren oder zu
+        deaktivieren, muss eine Nachricht an den Scheduler-Knoten geschickt
+        werden. Das Aktivieren des Zeitplans führt auch dazu, dass programmierte
         Zeitereignisse aus Kontextvariablen neu eingelesen werden.
     </dd>
     <dl class="message-properties">
@@ -143,6 +143,55 @@ SOFTWARE.
         boolescher Wert sein und ist dem Zeitereignis mit dem selben Index
         zugeordnet. Wenn der Wert wahr ist, wird das zugehörige Zeitereignis
         aktiviert, ansonsten deaktiviert.
+    </dd>
+    <dt>Scheduler-Knoten steuern</dt>
+    <dd>
+        Der Scheduler-Knoten kann auf verschiedene Weise dynamisch gesteuert
+        werden, indem eine Nachricht an den Knoten geschickt wird.
+    </dd>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">string | array</span></dt>
+        <dd>Steuert den Knoten abhängig von den angegebenen Kommandos</dd>
+    </dl>
+    <dd>
+        Wenn <code>msg.payload</code> eine Zeichenkette ist, wirkt sich das
+        angegebene Kommando auf den kompletten Zeitplan aus. Ist
+        <code>msg.payload</code> dagegen ein Array, muss jedes Element eine
+        Zeichenkette sein und ist dem Zeitereignis mit dem selben Index
+        zugeordnet. Das Kommando wirkt sich dann nur auf dieses Zeitereignis
+        aus.
+    </dd>
+    <dd>
+        Tipp: Es ist möglich, boolsche Werte und Zeichenketten in dem Array zu
+        mischen. Somit können mithilfe einer einzigen Nachricht einige
+        Zeitereignisse aktiviert oder deaktiviert und andere mit einem Kommando
+        gesteuert werden. Weiterhin ist es möglich, einzelne Array-Elemente auf
+        <code>null</code> zu setzen, um die dazugehörigen Zeitereignis zu
+        ignorieren.
+    </dd>
+    <dd>
+        Folgende Kommandos werden zurzeit unterstützt:
+        <ul>
+            <li>
+                <code>toggle</code>: Schaltet den Aktivierungszustand um (d.h.,
+                aktivierte Zeitereignisse werden deaktiviert und umgekehrt).
+            </li>
+            <li>
+                <code>reload</code>: Führt zu einer Neuberechnung von aktivierten
+                Zeitereignissen (programmierte Daten aus Kontextvariablen werden
+                ebenfalls erneut geladen).
+            </li>
+            <li>
+                <code>trigger</code>: Löst aktivierte Zeitereignisse aus, d.h.,
+                die Ausgabekonfiguration des Zeitereignisses wird angewendet, so
+                als wäre der geplante Zeitpunkt erreicht. Der reguläre Zeitpunkt
+                des Ereignisses wird dabei nicht verändert.
+            </li>
+            <li>
+                <code>trigger:force</code>: Wie oben, allerdings werden alle
+                Zeitereignisse ausgelöst, nicht nur aktivierte.
+            </li>
+        </ul>
     </dd>
     <dt>Zeitplan dynamisch programmieren</dt>
     <dd>
