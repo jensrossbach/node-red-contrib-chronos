@@ -298,7 +298,7 @@ describe("chronos", function()
                     .onFirstCall()
                     .returns({"sunrise": new Date("2000-01-01T08:00:00.000Z")})
                     .onSecondCall()
-                    .returns({"sunrise": "invalid"});
+                    .returns({"sunrise": [2010, 12]});
 
             (() => chronos.getTime(RED, node, moment(), "sun", "invalid")).should.throw(chronos.TimeError);
             (() => chronos.getTime(RED, node, moment(), "sun", "sunrise")).should.throw(chronos.TimeError);
@@ -336,7 +336,7 @@ describe("chronos", function()
                     .onFirstCall()
                     .returns({"rise": new Date("2000-01-01T22:00:00.000Z")})
                     .onSecondCall()
-                    .returns({"rise": "invalid"});
+                    .returns({"rise": [2010, 12]});
 
             (() => chronos.getTime(RED, node, moment(), "moon", "invalid")).should.throw(chronos.TimeError);
             (() => chronos.getTime(RED, node, moment(), "moon", "rise")).should.throw(chronos.TimeError);

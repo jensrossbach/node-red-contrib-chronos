@@ -279,15 +279,15 @@ module.exports = function(RED)
                                 {
                                     toggleTimer(node.schedule[i]);
                                 }
-                                else if (msg.payload == "reload")
+                                else if (msg.payload[i] == "reload")
                                 {
                                     reloadTimer(node.schedule[i]);
                                 }
-                                else if (msg.payload == "trigger")
+                                else if (msg.payload[i] == "trigger")
                                 {
                                     triggerEvent(node.schedule[i], false);
                                 }
-                                else if (msg.payload == "trigger:forced")
+                                else if (msg.payload[i] == "trigger:forced")
                                 {
                                     triggerEvent(node.schedule[i], true);
                                 }
