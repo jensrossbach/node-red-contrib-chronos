@@ -551,226 +551,224 @@ describe("scheduler node", function()
             sinon.restore();
         });
 
-        it("should switch on schedule", function(done)
+        it("should switch on schedule", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
 
-            helper.load([configNode, schedulerNode], flow, credentials, function()
-            {
-                try
-                {
-                    const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "setTimeout");
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
 
-                    sn1.on("input", function()
-                    {
-                        try
-                        {
-                            sn1.disabledSchedule.should.be.false();
-                            clock.setTimeout.should.be.calledOnce();
-                            done();
-                        }
-                        catch(e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.disabledSchedule.should.be.true();
-                    sn1.receive({payload: true});
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
+            sn1.disabledSchedule.should.be.true();
+            sn1.receive({payload: true});
+            sn1.disabledSchedule.should.be.false();
+            clock.setTimeout.should.be.calledOnce();
         });
 
-        it("should switch off schedule", function(done)
+        it("should switch off schedule", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
 
-            helper.load([configNode, schedulerNode], flow, credentials, function()
-            {
-                try
-                {
-                    const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "clearTimeout");
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "clearTimeout");
 
-                    sn1.on("input", function()
-                    {
-                        try
-                        {
-                            sn1.disabledSchedule.should.be.true();
-                            clock.clearTimeout.should.be.calledOnce();
-                            done();
-                        }
-                        catch(e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.disabledSchedule.should.be.false();
-                    sn1.receive({payload: false});
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: false});
+            sn1.disabledSchedule.should.be.true();
+            clock.clearTimeout.should.be.calledOnce();
         });
 
-        it("should switch on schedule partly", function(done)
+        it("should switch on schedule partly", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
 
-            helper.load([configNode, schedulerNode], flow, credentials, function()
-            {
-                try
-                {
-                    const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "setTimeout");
+            await helper.load([configNode, schedulerNode], flow, credentials)
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
 
-                    sn1.on("input", function()
-                    {
-                        try
-                        {
-                            sn1.disabledSchedule.should.be.false();
-                            clock.setTimeout.should.be.calledOnce();
-                            done();
-                        }
-                        catch(e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.disabledSchedule.should.be.true();
-                    sn1.receive({payload: [false, true]});
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
+            sn1.disabledSchedule.should.be.true();
+            sn1.receive({payload: [false, true]});
+            sn1.disabledSchedule.should.be.false();
+            clock.setTimeout.should.be.calledOnce();
         });
 
-        it("should switch on schedule fully", function(done)
+        it("should switch on schedule fully", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
 
-            helper.load([configNode, schedulerNode], flow, credentials, function()
-            {
-                try
-                {
-                    const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "setTimeout");
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
 
-                    sn1.on("input", function()
-                    {
-                        try
-                        {
-                            sn1.disabledSchedule.should.be.false();
-                            clock.setTimeout.should.be.calledTwice();
-                            done();
-                        }
-                        catch(e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.disabledSchedule.should.be.true();
-                    sn1.receive({payload: [true, true]});
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
+            sn1.disabledSchedule.should.be.true();
+            sn1.receive({payload: [true, true]});
+            sn1.disabledSchedule.should.be.false();
+            clock.setTimeout.should.be.calledTwice();
         });
 
-        it("should switch off schedule partly", function(done)
+        it("should switch off schedule partly", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
 
-            helper.load([configNode, schedulerNode], flow, credentials, function()
-            {
-                try
-                {
-                    const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "clearTimeout");
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "clearTimeout");
 
-                    sn1.on("input", function()
-                    {
-                        try
-                        {
-                            sn1.disabledSchedule.should.be.false();
-                            clock.clearTimeout.should.be.calledTwice();
-                            done();
-                        }
-                        catch(e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.disabledSchedule.should.be.false();
-                    sn1.receive({payload: [false, true]});
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: [false, true]});
+            sn1.disabledSchedule.should.be.false();
+            clock.clearTimeout.should.be.calledTwice();
         });
 
-        it("should switch off schedule fully", function(done)
+        it("should switch off schedule fully", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
 
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: [false, false]});
+            sn1.disabledSchedule.should.be.true();
+            clock.clearTimeout.should.be.calledTwice();
+        });
+
+        it("should toggle schedule (to on)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: "toggle"});
+            sn1.disabledSchedule.should.be.true();
+            clock.clearTimeout.should.be.calledTwice();
+        });
+
+        it("should toggle schedule (to off)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+
+            sn1.disabledSchedule.should.be.true();
+            sn1.receive({payload: "toggle"});
+            sn1.disabledSchedule.should.be.false();
+            clock.setTimeout.should.be.calledTwice();
+        });
+
+        it("should toggle schedule event (to off)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: ["toggle", null]});
+            sn1.disabledSchedule.should.be.false();
+            clock.clearTimeout.should.be.calledOnce();
+        });
+
+        it("should toggle schedule event (to on)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+
+            sn1.disabledSchedule.should.be.true();
+            sn1.receive({payload: [null, "toggle"]});
+            sn1.disabledSchedule.should.be.false();
+            clock.setTimeout.should.be.calledOnce();
+        });
+
+        it("should reload schedule", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: "reload"});
+            sn1.disabledSchedule.should.be.false();
+            clock.clearTimeout.should.be.calledTwice();
+            clock.setTimeout.should.be.calledTwice();
+        });
+
+        it("should not reload schedule", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.true();
+            sn1.receive({payload: "reload"});
+            sn1.disabledSchedule.should.be.true();
+            clock.clearTimeout.should.not.be.called();
+            clock.setTimeout.should.not.be.called();
+        });
+
+        it("should reload schedule event", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: ["reload", null]});
+            sn1.disabledSchedule.should.be.false();
+            clock.clearTimeout.should.be.calledOnce();
+            clock.setTimeout.should.be.calledOnce();
+        });
+
+        it("should trigger schedule", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], outputs: 1}, hlpNode, cfgNode];
+
             helper.load([configNode, schedulerNode], flow, credentials, function()
             {
                 try
                 {
                     const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "clearTimeout");
+                    const hn1 = helper.getNode("hn1");
+                    let count = 0;
 
-                    sn1.on("input", function()
+                    hn1.on("input", function(msg)
                     {
                         try
                         {
-                            sn1.disabledSchedule.should.be.true();
-                            clock.clearTimeout.should.be.calledTwice();
-                            done();
+                            count++;
+                            msg.should.have.property("payload", "test" + count);
+                            if (count == 2)
+                            {
+                                done();
+                            }
                         }
-                        catch(e)
+                        catch (e)
                         {
                             done(e);
                         }
                     });
 
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.disabledSchedule.should.be.false();
-                    sn1.receive({payload: [false, false]});
+                    sn1.receive({payload: "trigger"});
                 }
                 catch (e)
                 {
@@ -779,42 +777,192 @@ describe("scheduler node", function()
             });
         });
 
-        it("should handle invalid input message", function(done)
+        it("should not trigger disabled schedule", function(done)
         {
-            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
 
             helper.load([configNode, schedulerNode], flow, credentials, function()
             {
                 try
                 {
                     const sn1 = helper.getNode("sn1");
-                    sinon.spy(clock, "setTimeout");
-                    sinon.spy(clock, "clearTimeout");
+                    const hn1 = helper.getNode("hn1");
 
-                    sn1.on("input", function()
+                    hn1.on("input", function(msg)
                     {
-                        try
-                        {
-                            clock.setTimeout.should.not.be.called();
-                            clock.clearTimeout.should.not.be.called();
-                            done();
-                        }
-                        catch(e)
-                        {
-                            done(e);
-                        }
+                        done("unexpected message received");
                     });
 
-                    // workaround: add dummy listener, otherwise listener above is not called
-                    sn1.on("input", function() {});
-
-                    sn1.receive({payload: "invalid"});
+                    sn1.receive({payload: "trigger"});
+                    done();
                 }
                 catch (e)
                 {
                     done(e);
                 }
             });
+        });
+
+        it("should force trigger disabled schedule", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+                    let count = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            count++;
+                            msg.should.have.property("payload", "test" + count);
+                            if (count == 2)
+                            {
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    sn1.receive({payload: "trigger:forced"});
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should trigger schedule event", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], outputs: 1}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+                    let count = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            count++;
+                            if (count == 1)
+                            {
+                                msg.should.have.property("payload", "test1");
+                            }
+                            else if (count > 1)
+                            {
+                                done("unexpected message received");
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    sn1.receive({payload: ["trigger", null]});
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should not trigger disabled schedule events", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        done("unexpected message received");
+                    });
+
+                    sn1.receive({payload: ["trigger", null]});
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should force trigger disabled schedule event", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+                    let count = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            count++;
+                            if (count == 1)
+                            {
+                                msg.should.have.property("payload", "test1");
+                            }
+                            else if (count > 1)
+                            {
+                                done("unexpected message received");
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    sn1.receive({payload: ["trigger:forced", null]});
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should handle invalid input message", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.receive({payload: null});
+            clock.setTimeout.should.not.be.called();
+            clock.clearTimeout.should.not.be.called();
         });
     });
 });
