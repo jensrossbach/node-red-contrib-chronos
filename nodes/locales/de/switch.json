@@ -5,7 +5,9 @@
         {
             "node":              "Zeitweiche",
             "stopOnFirstMatch":  "Bei erster Übereinstimmung aufhören",
-            "and":               "und"
+            "and":               "und",
+            "not":               "Nicht",
+            "everyMonth":        "jeden Monats"
         }
     }
 }

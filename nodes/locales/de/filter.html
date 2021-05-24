@@ -94,6 +94,14 @@ SOFTWARE.
                     erste oder später als die zweite spezifizierte Zeit ist.
                 </li>
                 <li>
+                    Operator <i>Tage</i>: Prüft ob die Basiszeit auf spezielle Tage
+                    eines Monats zutrifft. Das kann der erste, zweite, dritte, vierte,
+                    fünfte oder letzte Tag, Wochentag, Werktag oder Wochenendtag sein.
+                    Es kann auch ein gerader Tag oder ein bestimmter Tag eines Monats
+                    oder jedes Monats sein. Alle Operanden können durch Aktivieren
+                    der Option <i>Ausschließen</i> negiert werden.
+                </li>
+                <li>
                     Operator <i>Wochentage</i>: Prüft ob die Basiszeit auf den ausgewählten
                     Wochentag zutrifft.
                 </li>
@@ -178,6 +186,24 @@ SOFTWARE.
         <dd>Zeitlicher Versatz zum Operandenwert</dd>
         <dt>random<span class="property-type">boolean</span></dt>
         <dd>Zufälliger Zeitversatz</dd>
+    </dl>
+    <p>
+        Wenn <code>operator</code> "days" enthält, muss <code>operands</code> ein
+        Objekt sein und folgende Eigenschaften enthalten:
+    </p>
+    <dl class="message-properties">
+        <dt>type<span class="property-type">string</span></dt>
+        <dd>
+            Art des Operanden; entweder "first", "second", "third", "fourth",
+            "fifth", "last", "even" oder "specific"
+        </dd>
+        <dt class="optional">day<span class="property-type">string | number</span></dt>
+        <dd>
+            Abhängig von der Art des Operanden der (englische) Name eines Tages
+            oder der Monatstag als Zahl; gilt nicht für den Typ "even"
+        </dd>
+        <dt class="optional">month<span class="property-type">string</span></dt>
+        <dd>(Englischer) Name des Monats; gilt nur für den Typ "specific"</dd>
     </dl>
     <p>
         Wenn <code>operator</code> "weekdays" enthält, muss <code>operands</code>

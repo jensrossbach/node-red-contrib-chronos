@@ -13,6 +13,7 @@
             "sun":          "Sonnenstand",
             "moon":         "Mondstand",
             "custom":       "Benutzerdefiniert",
+            "exclude":      "Ausschließen",
             "fullMessage":  "Komplette Nachricht",
             "offset":       "Versatz",
             "random":       "Zufällig",
@@ -52,6 +53,7 @@
                     "after":      "Nach",
                     "between":    "Zwischen",
                     "outside":    "Außerhalb",
+                    "days":       "Tage",
                     "weekdays":   "Wochentage",
                     "months":     "Monate",
                     "otherwise":  "Sonst"
@@ -60,6 +62,23 @@
                 {
                     "context":  "Kontext"
                 }
+            },
+            "dayType":
+            {
+                "first":     "erster",
+                "second":    "zweiter",
+                "third":     "dritter",
+                "fourth":    "vierter",
+                "fifth":     "fünfter",
+                "last":      "letzter",
+                "even":      "gerade",
+                "specific":  "fest"
+            },
+            "day":
+            {
+                "day":      "Tag",
+                "workday":  "Werktag",
+                "weekend":  "Wochenendtag"
             },
             "weekday":
             {
@@ -84,7 +103,8 @@
                 "september":  "SEP",
                 "october":    "OKT",
                 "november":   "NOV",
-                "december":   "DEZ"
+                "december":   "DEZ",
+                "any":        "jeder"
             }
         },
         "status":

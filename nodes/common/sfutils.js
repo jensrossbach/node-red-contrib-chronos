@@ -61,7 +61,7 @@ function convertCondition(node, cond)
         return null;
     }
 
-    if ((typeof cond.operator != "string") || !/^(before|after|between|outside|weekdays|months|otherwise)$/.test(cond.operator))
+    if (!/^(before|after|between|outside|days|weekdays|months|otherwise)$/.test(cond.operator))
     {
         return null;
     }
@@ -84,6 +84,44 @@ function convertCondition(node, cond)
         if (!validateOperand(node, cond.operands[0]) || !validateOperand(node, cond.operands[1]))
         {
             return null;
+        }
+    }
+
+    if (cond.operator == "days")
+    {
+        if ((typeof cond.operands != "object") || !cond.operands)
+        {
+            return false;
+        }
+
+        if (!/^(first|second|third|fourth|fifth|last|even|specific)$/.test(cond.operands.type))
+        {
+            return false;
+        }
+
+        if (((cond.operands.type == "first") || (cond.operands.type == "last")) &&
+            !/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|day|workday|weekend)$/.test(cond.operands.day))
+        {
+            return false;
+        }
+
+        if (((cond.operands.type == "second") || (cond.operands.type == "third") || (cond.operands.type == "fourth") || (cond.operands.type == "fifth")) &&
+            !/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/.test(cond.operands.day))
+        {
+            return false;
+        }
+
+        if ((cond.operands.type == "specific") &&
+            ((typeof cond.operands.day != "number") || (cond.operands.day < 1) || (cond.operands.day > 31) ||
+             ((typeof cond.operands.month != "undefined") &&
+              !/^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(cond.operands.month))))
+        {
+            return false;
+        }
+
+        if (typeof cond.operands.exclude != "boolean")
+        {
+            return false;
         }
     }
 
@@ -137,6 +175,22 @@ function convertCondition(node, cond)
     {
         convCond.operands = cond.operands;
     }
+    else if (convCond.operator == "days")
+    {
+        convCond.operands = {};
+        convCond.operands.type = cond.operands.type;
+        convCond.operands.exclude = cond.operands.exclude;
+
+        if (cond.operands.type != "even")
+        {
+            convCond.operands.day = cond.operands.day;
+        }
+
+        if (cond.operands.type == "specific")
+        {
+            convCond.operands.month = cond.operands.month ? cond.operands.month : "any";
+        }
+    }
     else if (convCond.operator == "weekdays")
     {
         convCond.operands = [false, false, false, false, false, false, false];
@@ -177,7 +231,7 @@ function validateOperand(node, operand)
         return false;
     }
 
-    if ((typeof operand.type != "string") || !/^(time|sun|moon|custom)$/.test(operand.type))
+    if (!/^(time|sun|moon|custom)$/.test(operand.type))
     {
         return false;
     }
@@ -260,6 +314,147 @@ function evaluateCondition(RED, node, baseTime, cond, id)
         {
             result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2))) ||
                       ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+        }
+    }
+    else if ((cond.operator == "days"))
+    {
+        if (cond.operands.type == "specific")
+        {
+            const MONTHS = {january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6, august: 7, september: 8, october: 9, november: 10, december: 11};
+
+            node.debug("[Condition:" + id + "] Check if " + (cond.operands.exclude ? "not " : "") + cond.operands.day + ". of " + ((cond.operands.month == "any") ? "any month" : cond.operands.month));
+            result = ((baseTime.date() == cond.operands.day) && ((cond.operands.month == "any") || (baseTime.month() == MONTHS[cond.operands.month])));
+        }
+        else if (cond.operands.type == "even")
+        {
+            node.debug("[Condition:" + id + "] Check if " + (cond.operands.exclude ? "not " : "") + cond.operands.type);
+            result = ((baseTime.date() % 2) == 0);
+        }
+        else
+        {
+            const WEEKDAYS = {sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6};
+
+            node.debug("[Condition:" + id + "] Check if " + (cond.operands.exclude ? "not " : "") + cond.operands.type + " " + cond.operands.day + " of month");
+            if (cond.operands.type == "last")
+            {
+                let lastDay = baseTime.clone().endOf("month");
+
+                switch (cond.operands.day)
+                {
+                    case "sunday":
+                    case "monday":
+                    case "tuesday":
+                    case "wednesday":
+                    case "thursday":
+                    case "friday":
+                    case "saturday":
+                    {
+                        let diff = lastDay.day() - WEEKDAYS[cond.operands.day];
+                        if (diff < 0)
+                        {
+                            diff += 7;
+                        }
+
+                        lastDay.subtract(diff, "days");
+                        result = (baseTime.date() == lastDay.date());
+
+                        break;
+                    }
+                    case "day":
+                    {
+                        result = (baseTime.date() == lastDay.date());
+                        break;
+                    }
+                    case "workday":
+                    {
+                        if (lastDay.day() == 6)  // Saturday
+                        {
+                            lastDay.subtract(1, "days");
+                        }
+                        else if (lastDay.day() == 0)  // Sunday
+                        {
+                            lastDay.subtract(2, "days");
+                        }
+
+                        result = (baseTime.date() == lastDay.date());
+                        break;
+                    }
+                    case "weekend":
+                    {
+                        let day = lastDay.day();
+                        if ((day >= 1) && (day <= 5))  // Monday .. Friday
+                        {
+                            lastDay.subtract(day, "days");
+                        }
+
+                        result = (baseTime.date() == lastDay.date());
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                const ORDINALS = {first: 0, second: 1, third: 2, fourth: 3, fifth: 4};
+                let firstDay = baseTime.clone().startOf("month");
+
+                switch (cond.operands.day)
+                {
+                    case "sunday":
+                    case "monday":
+                    case "tuesday":
+                    case "wednesday":
+                    case "thursday":
+                    case "friday":
+                    case "saturday":
+                    {
+                        let diff = WEEKDAYS[cond.operands.day] - firstDay.day();
+                        if (diff < 0)
+                        {
+                            diff += 7;
+                        }
+
+                        firstDay.add(diff + (7 * ORDINALS[cond.operands.type]), "days");
+                        result = ((baseTime.date() == firstDay.date()) && (baseTime.month() == firstDay.month()));
+
+                        break;
+                    }
+                    case "day":
+                    {
+                        result = (baseTime.date() == (ORDINALS[cond.operands.type] + 1));
+                        break;
+                    }
+                    case "workday":
+                    {
+                        if (firstDay.day() == 6)  // Saturday
+                        {
+                            firstDay.add(2, "days");
+                        }
+                        else if (firstDay.day() == 0)  // Sunday
+                        {
+                            firstDay.add(1, "days");
+                        }
+
+                        result = (baseTime.date() == firstDay.date());
+                        break;
+                    }
+                    case "weekend":
+                    {
+                        let day = firstDay.day();
+                        if ((day >= 1) && (day <= 5))  // Monday .. Friday
+                        {
+                            firstDay.add(6 - day, "days");
+                        }
+
+                        result = (baseTime.date() == firstDay.date());
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (cond.operands.exclude)
+        {
+            result = !result;
         }
     }
     else if ((cond.operator == "weekdays"))

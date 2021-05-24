@@ -5,7 +5,9 @@
         {
             "node":              "time switch",
             "stopOnFirstMatch":  "Stop on first match",
-            "and":               "and"
+            "and":               "and",
+            "not":               "not",
+            "everyMonth":        "every month"
         }
     }
 }
