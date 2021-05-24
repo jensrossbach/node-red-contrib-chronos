@@ -13,6 +13,7 @@
             "sun":          "Sun Position",
             "moon":         "Moon Position",
             "custom":       "Custom",
+            "exclude":      "Exclude",
             "fullMessage":  "full message",
             "offset":       "Offset",
             "random":       "Randomized",
@@ -52,6 +53,7 @@
                     "after":      "after",
                     "between":    "between",
                     "outside":    "outside",
+                    "days":       "days",
                     "weekdays":   "week days",
                     "months":     "months",
                     "otherwise":  "otherwise"
@@ -60,6 +62,23 @@
                 {
                     "context":  "context"
                 }
+            },
+            "dayType":
+            {
+                "first":     "first",
+                "second":    "second",
+                "third":     "third",
+                "fourth":    "fourth",
+                "fifth":     "fifth",
+                "last":      "last",
+                "even":      "even",
+                "specific":  "specific"
+            },
+            "day":
+            {
+                "day":      "day",
+                "workday":  "workday",
+                "weekend":  "weekend day"
             },
             "weekday":
             {
@@ -84,7 +103,8 @@
                 "september":  "SEP",
                 "october":    "OCT",
                 "november":   "NOV",
-                "december":   "DEC"
+                "december":   "DEC",
+                "any":        "any"
             }
         },
         "status":
