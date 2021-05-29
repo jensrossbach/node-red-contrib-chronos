@@ -79,6 +79,18 @@ describe("switch/filter utilities", function()
             RED.util.parseContextStore.should.be.calledOnce().and.calledWith("testVariable");
             ctx.flow.get.should.be.calledOnce().and.calledWith("testKey", "testStore");
 
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: 15, exclude: false}});
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: 15, month: "march", exclude: false}});
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "third", day: "monday", exclude: false}});
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "even", exclude: true}});
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
             ctx.flow.get.returns({operator: "weekdays", operands: {monday: true, wednesday: true, thursday: false}});
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
 
@@ -175,6 +187,48 @@ describe("switch/filter utilities", function()
             ctx.flow.get.returns({operator: "between", operands: [{type: "time", value: "12:00", offset: 0, random: false}, null]});
             (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
 
+            ctx.flow.get.returns({operator: "days", operands: null});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: "invalid"});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "invalid"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "first", day: "x-day"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "last", day: "x-day"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "second", day: "day"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "third", day: "day"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "fourth", day: "day"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "fifth", day: "day"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: "invalid"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: 0}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: 1, month: "invalid"}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: 32}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
+            ctx.flow.get.returns({operator: "days", operands: {type: "specific", day: 1}});
+            (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
+
             ctx.flow.get.returns({operator: "weekdays", operands: null});
             (() => sfutils.evaluateCondition(RED, node, baseTime, condition)).should.throw(node.chronos.TimeError);
 
@@ -249,7 +303,7 @@ describe("switch/filter utilities", function()
 
         it("should return true", function()
         {
-            const baseTime = moment("2021-03-15T10:00:00.000Z").utc();  // Monday, March
+            let baseTime = moment("2021-03-15T10:00:00.000Z").utc();  // Monday, March
 
             let condition = {operator: "before", operands: {type: "time", value: "12:00", offset: 0, random: false}};
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
@@ -257,8 +311,8 @@ describe("switch/filter utilities", function()
             condition = {operator: "before", operands: {type: "time", value: "9:45", offset: 30, random: false}};
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
 
-            let roundStub = sinon.stub(Math, "round").returnsArg(0);
-            let randomStub = sinon.stub(Math, "random").returns(10);
+            sinon.stub(Math, "round").returnsArg(0);
+            sinon.stub(Math, "random").returns(10);
 
             condition = {operator: "before", operands: {type: "time", value: "9:45", offset: 3, random: true}};
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
@@ -299,6 +353,142 @@ describe("switch/filter utilities", function()
 
             condition = {operator: "months", operands: [false, false, true, false, false, false, false, false, false, false, false, false]};
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-04T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "monday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-12T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "second", day: "tuesday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-20T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "third", day: "wednesday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-28T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "fourth", day: "thursday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-29T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "fifth", day: "friday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-02T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "saturday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-03T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "sunday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-05T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "fifth", day: "day", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-01T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "workday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-11-02T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "workday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-08-03T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "workday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-02T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "weekend", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-11-01T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "weekend", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-08-01T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "weekend", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-25T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "monday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-26T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "tuesday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-27T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "wednesday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-28T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "thursday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-29T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "friday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-30T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "saturday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-31T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "sunday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-31T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "day", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-29T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "workday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-10-30T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "workday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-11-30T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "workday", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-31T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "weekend", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-12-27T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "weekend", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2020-10-31T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "last", day: "weekend", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-04T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "even", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-08T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "specific", day: 8, month: "january", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-21T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "specific", day: 21, month: "any", exclude: false}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-02T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "first", day: "day", exclude: true}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-07T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "even", exclude: true}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
+
+            baseTime = moment("2021-01-05T10:00:00.000Z").utc();
+            condition = {operator: "days", operands: {type: "specific", day: 3, month: "february", exclude: true}};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.true();
         });
 
         it("should return false", function()
@@ -321,6 +511,9 @@ describe("switch/filter utilities", function()
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.false();
 
             condition = {operator: "outside", operands: [{type: "time", value: "8:00", offset: 0, random: false}, {type: "time", value: "12:00", offset: 0, random: false}]};
+            sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.false();
+
+            condition = {operator: "days", operands: {type: "specific", day: 14, month: "february", exclude: false}};
             sfutils.evaluateCondition(RED, node, baseTime, condition).should.be.false();
 
             condition = {operator: "weekdays", operands: [true, false, false, false, false, false, false]};
