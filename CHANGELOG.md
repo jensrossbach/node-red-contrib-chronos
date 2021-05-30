@@ -3,18 +3,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.11.0] - 2021-05-29
-### Added
-- Enhanced input messages with control commands for scheduler node
-- Condition for special days of a month for time switch and filter nodes
+## [1.11.1] - 2021-05-30
+### Fixed
+- Fixed online help for time switch and filter nodes (missing documentation of `exclude` property).
 
 ### Changed
-- UI text and translation improvements
+- Updated flow picture for scheduler node.
+
+## [1.11.0] - 2021-05-29
+### Added
+- Enhanced input messages with control commands for scheduler node.
+- Condition for special days of a month for time switch and filter nodes.
+
+### Changed
+- UI text and translation improvements.
 
 ## [1.10.4] - 2021-05-13
 ### Changed
 - Moved sunlight phase "Night (end)" to beginning of lists.
-- Minor code improvements
+- Minor code improvements.
 
 ## [1.10.3] - 2021-05-01
 ### Changed
