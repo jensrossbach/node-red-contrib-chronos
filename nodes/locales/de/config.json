@@ -3,21 +3,22 @@
     {
         "label":
         {
-            "inputPort":    "Eingehende Nachricht",
-            "name":         "Name",
-            "config":       "Konfiguration",
-            "baseTime":     "Basiszeit",
-            "msgIngress":   "Nachrichteneingang",
-            "conditions":   "Bedingungen",
-            "time":         "Uhrzeit",
-            "sun":          "Sonnenstand",
-            "moon":         "Mondstand",
-            "custom":       "Benutzerdefiniert",
-            "exclude":      "Ausschließen",
-            "fullMessage":  "Komplette Nachricht",
-            "offset":       "Versatz",
-            "random":       "Zufällig",
-            "min":          "min."
+            "inputPort":          "Eingehende Nachricht",
+            "name":               "Name",
+            "config":             "Konfiguration",
+            "baseTime":           "Basiszeit",
+            "msgIngress":         "Nachrichteneingang",
+            "conditions":         "Bedingungen",
+            "time":               "Uhrzeit",
+            "sun":                "Sonnenstand",
+            "moon":               "Mondstand",
+            "custom":             "Benutzerdefiniert",
+            "exclude":            "Ausschließen",
+            "fullMessage":        "Komplette Nachricht",
+            "offset":             "Versatz",
+            "random":             "Zufällig",
+            "min":                "min.",
+            "preserveCtrlProps":  "Steuereigenschaften in Nachrichten beibehalten"
         },
         "list":
         {

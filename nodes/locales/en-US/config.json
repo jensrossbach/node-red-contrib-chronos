@@ -3,21 +3,22 @@
     {
         "label":
         {
-            "inputPort":    "input message",
-            "name":         "Name",
-            "config":       "Configuration",
-            "baseTime":     "Base Time",
-            "msgIngress":   "message ingress",
-            "conditions":   "Conditions",
-            "time":         "Time of Day",
-            "sun":          "Sun Position",
-            "moon":         "Moon Position",
-            "custom":       "Custom",
-            "exclude":      "Exclude",
-            "fullMessage":  "full message",
-            "offset":       "Offset",
-            "random":       "Randomized",
-            "min":          "min."
+            "inputPort":          "input message",
+            "name":               "Name",
+            "config":             "Configuration",
+            "baseTime":           "Base Time",
+            "msgIngress":         "message ingress",
+            "conditions":         "Conditions",
+            "time":               "time of day",
+            "sun":                "sun position",
+            "moon":               "moon position",
+            "custom":             "custom",
+            "exclude":            "exclude",
+            "fullMessage":        "full message",
+            "offset":             "Offset",
+            "random":             "randomized",
+            "min":                "min.",
+            "preserveCtrlProps":  "Preserve control properties in messages"
         },
         "list":
         {

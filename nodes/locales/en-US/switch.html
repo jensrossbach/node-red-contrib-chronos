@@ -53,15 +53,15 @@ SOFTWARE.
                     <i>message ingress</i>: Ingress time of the input message.
                 </li>
                 <li>
-                    <i>global.</i>: Timestamp from a global variable as number
+                    <i>global</i>: Timestamp from a global variable as number
                     of milliseconds elapsed since the UNIX epoch.
                 </li>
                 <li>
-                    <i>flow.</i>: Timestamp from a flow variable as number of
+                    <i>flow</i>: Timestamp from a flow variable as number of
                     milliseconds elapsed since the UNIX epoch.
                 </li>
                 <li>
-                    <i>msg.</i>: Timestamp from a message property as number of
+                    <i>msg</i>: Timestamp from a message property as number of
                     milliseconds elapsed since the UNIX epoch.
                 </li>
             </ul>
@@ -119,19 +119,19 @@ SOFTWARE.
             following possibilities are available:
             <ul>
                 <li>
-                    <i>Time of Day</i>: A specific time can be entered directly
+                    <i>time of day</i>: A specific time can be entered directly
                     in the form <code>hh:mm[:ss] [am|pm]</code>.
                 </li>
                 <li>
-                    <i>Sun Position</i>: The sun position can be selected from
+                    <i>sun position</i>: The sun position can be selected from
                     a list of predefined values.
                 </li>
                 <li>
-                    <i>Moon Position</i>: The moon position can be selected from
+                    <i>moon position</i>: The moon position can be selected from
                     a list of predefined values.
                 </li>
                 <li>
-                    <i>Custom</i>: One of the user-defined sun position names
+                    <i>custom</i>: One of the user-defined sun position names
                     can be entered.
                 </li>
             </ul>
@@ -159,7 +159,7 @@ SOFTWARE.
     </p>
     <dl class="message-properties">
         <dt>operator<span class="property-type">string</span></dt>
-        <dd>Operator for comparison; one of "before", "after", "between", "outside", "weekdays", "months" or "otherwise"</dd>
+        <dd>Operator for comparison; one of "before", "after", "between", "outside", "days", "weekdays", "months" or "otherwise"</dd>
         <dt class="optional">operands<span class="property-type">object | array</span></dt>
         <dd>Operands for comparison; content is depending on operator</dd>
     </dl>

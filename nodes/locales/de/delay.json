@@ -3,10 +3,9 @@
     {
         "label":
         {
-            "node":               "Verzögerung",
-            "outputPort":         "Verzögerte Nachricht",
-            "when":               "Wann",
-            "preserveCtrlProps":  "Steuereigenschaften in Nachrichten beibehalten"
+            "node":        "Verzögerung",
+            "outputPort":  "Verzögerte Nachricht",
+            "when":        "Wann"
         },
         "status":
         {

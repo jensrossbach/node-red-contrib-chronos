@@ -24,7 +24,7 @@
                 "subtract":  "Abziehen",
                 "startOf":   "Anfang von",
                 "endOf":     "Ende von",
-                "toString":  "Zeichenkette"
+                "toString":  "Konvertieren"
             },
             "unit":
             {

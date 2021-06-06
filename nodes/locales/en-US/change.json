@@ -6,8 +6,8 @@
             "node":    "time change",
             "rules":   "Change Rules",
             "to":      "to",
-            "now":     "Current Time",
-            "date":    "Date & Time",
+            "now":     "current time",
+            "date":    "date & time",
             "format":  "Format"
         },
         "list":
@@ -24,29 +24,29 @@
                 "subtract":  "Subtract",
                 "startOf":   "Start of",
                 "endOf":     "End of",
-                "toString":  "To String"
+                "toString":  "Convert"
             },
             "unit":
             {
-                "year":          "Year",
-                "years":         "Year(s)",
-                "quarter":       "Quarter",
-                "quarters":      "Quarter(s)",
-                "month":         "Month",
-                "months":        "Month(s)",
-                "week":          "Week",
-                "weeks":         "Week(s)",
-                "weekday":       "Day of Week",
-                "day":           "Day",
-                "days":          "Day(s)",
-                "hour":          "Hour",
-                "hours":         "Hour(s)",
-                "minute":        "Minute",
-                "minutes":       "Minute(s)",
-                "second":        "Second",
-                "seconds":       "Second(s)",
-                "millisecond":   "Millisecond",
-                "milliseconds":  "Millisecond(s)"
+                "year":          "year",
+                "years":         "year(s)",
+                "quarter":       "quarter",
+                "quarters":      "quarter(s)",
+                "month":         "month",
+                "months":        "month(s)",
+                "week":          "week",
+                "weeks":         "week(s)",
+                "weekday":       "day of week",
+                "day":           "day",
+                "days":          "day(s)",
+                "hour":          "hour",
+                "hours":         "hour(s)",
+                "minute":        "minute",
+                "minutes":       "minute(s)",
+                "second":        "second",
+                "seconds":       "second(s)",
+                "millisecond":   "millisecond",
+                "milliseconds":  "millisecond(s)"
             }
         },
         "status":
