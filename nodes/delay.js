@@ -73,72 +73,79 @@ module.exports = function(RED)
 
                 node.on("input", (msg, send, done) =>
                 {
-                    if (!send)  // Node-RED 0.x backward compatibility
+                    if (msg)
                     {
-                        send = () =>
+                        if (!send)  // Node-RED 0.x backward compatibility
                         {
-                            node.send.apply(node, arguments);
-                        };
-                    }
-
-                    if (!done)  // Node-RED 0.x backward compatibility
-                    {
-                        done = () =>
-                        {
-                            var args = [...arguments];
-                            if (args.length > 0)
+                            send = () =>
                             {
-                                args.push(msg);
-                                node.error.apply(node, args);
-                            }
-                        };
-                    }
+                                node.send.apply(node, arguments);
+                            };
+                        }
 
-                    if ("drop" in msg)
-                    {
-                        tearDownDelayTimer();
-                        dropQueue();
-
-                        if ("enqueue" in msg)
+                        if (!done)  // Node-RED 0.x backward compatibility
                         {
-                            if (!node.preserveCtrlProps)
+                            done = () =>
                             {
-                                delete msg.drop;
-                                delete msg.enqueue;
-                            }
+                                var args = [...arguments];
+                                if (args.length > 0)
+                                {
+                                    args.push(msg);
+                                    node.error.apply(node, args);
+                                }
+                            };
+                        }
 
-                            enqueueMessage(msg, done);
+                        if ("drop" in msg)
+                        {
+                            tearDownDelayTimer();
+                            dropQueue();
+
+                            if ("enqueue" in msg)
+                            {
+                                if (!node.preserveCtrlProps)
+                                {
+                                    delete msg.drop;
+                                    delete msg.enqueue;
+                                }
+
+                                enqueueMessage(msg, done);
+                            }
+                            else
+                            {
+                                // we're done with the message as it gets discarded
+                                done();
+                            }
+                        }
+                        else if ("flush" in msg)
+                        {
+                            tearDownDelayTimer();
+                            flushQueue();
+
+                            if ("enqueue" in msg)
+                            {
+                                if (!node.preserveCtrlProps)
+                                {
+                                    delete msg.flush;
+                                    delete msg.enqueue;
+                                }
+
+                                enqueueMessage(msg, done);
+                            }
+                            else
+                            {
+                                // we're done with the message as it gets discarded
+                                done();
+                            }
                         }
                         else
                         {
-                            // we're done with the message as it gets discarded
-                            done();
-                        }
-                    }
-                    else if ("flush" in msg)
-                    {
-                        tearDownDelayTimer();
-                        flushQueue();
-
-                        if ("enqueue" in msg)
-                        {
-                            if (!node.preserveCtrlProps)
-                            {
-                                delete msg.flush;
-                                delete msg.enqueue;
-                            }
-
                             enqueueMessage(msg, done);
-                        }
-                        else
-                        {
-                            // we're done with the message as it gets discarded
-                            done();
                         }
                     }
                     else
                     {
-                        enqueueMessage(msg, done);
+                        done();
                     }
                 });
             }

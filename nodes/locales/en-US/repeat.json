@@ -1,0 +1,27 @@
+{
+    "repeat":
+    {
+        "label":
+        {
+            "node":        "repeat",
+            "outputPort":  "repeated message",
+            "every":       "every",
+            "interval":    "Interval",
+            "until":       "Until",
+            "nextMsg":     "next message"
+        },
+        "list":
+        {
+            "interval":
+            {
+                "seconds":  "second(s)",
+                "minutes":  "minute(s)",
+                "hours":    "hour(s)"
+            }
+        },
+        "status":
+        {
+            "next":  "next message at"
+        }
+    }
+}

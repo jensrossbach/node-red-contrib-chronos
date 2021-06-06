@@ -1,0 +1,324 @@
+<!--
+Copyright (c) 2021 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-template-name="chronos-repeat">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
+        <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
+    </div>
+    <div class="form-row" style="padding-top: 4px;">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> <span data-i18n="repeat.label.interval"></span></label>
+        <input id="node-input-interval" style="width: 60px; float: left;" value="1">
+        <select id="node-input-intervalUnit" style="width: auto;">
+            <option value="seconds" data-i18n="repeat.list.interval.seconds"></option>
+            <option value="minutes" data-i18n="repeat.list.interval.minutes"></option>
+            <option value="hours" data-i18n="repeat.list.interval.hours"></option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-until"><i class="fa fa-step-forward"></i> <span data-i18n="repeat.label.until"></span></label>
+        <input type="text" id="node-input-until" style="width: 70%;">
+        <input id="node-input-untilType" type="hidden">
+        <input id="node-input-untilValue" type="hidden">
+    </div>
+    <div class="form-row" id="node-input-offsetBox">
+        <label for="node-input-untilOffset"><i class="fa fa-arrows-h"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
+        <input id="node-input-untilOffset" style="width: 60px;">
+        <span style="padding-left: 10px;">
+            <input id="node-input-untilRandom" type="checkbox" style="width: auto; margin-top: 0px; margin-bottom: 1px;">
+            <label for="node-input-untilRandom" style="width: auto; margin-bottom: 0px;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.random"></label>
+        </span>
+    </div>
+    <div class="form-row" style="padding-top: 10px">
+        <input id="node-input-preserveCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-preserveCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.preserveCtrlProps"></label>
+    </div>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType("chronos-repeat",
+    {
+        category:     "chronos",
+        color:        "#DEB887",
+        icon:         "chronos_repeat.svg",
+        inputs:       1,
+        outputs:      1,
+        paletteLabel: "repeat",
+        label: function()
+        {
+            if (this.name)
+            {
+                return this.name;
+            }
+            else if (this.interval && this.intervalUnit)
+            {
+                return this._("repeat.label.every") + " " + this.interval + " " + this._("repeat.list.interval." + this.intervalUnit);
+            }
+            else
+            {
+                return this._("repeat.label.node");
+            }
+        },
+        labelStyle: function()
+        {
+            return (this.name ? "node_label_italic" : "");
+        },
+        inputLabels: function()
+        {
+            return this._("node-red-contrib-chronos/chronos-config:common.label.inputPort");
+        },
+        outputLabels: function(index)
+        {
+            return this._("repeat.label.outputPort");
+        },
+        defaults:
+        {
+            name:
+            {
+                value: ""
+            },
+            config:
+            {
+                value:    "",
+                type:     "chronos-config",
+                required: true
+            },
+            interval:
+            {
+                value: 1
+            },
+            intervalUnit:
+            {
+                value: "minutes"
+            },
+            untilType:
+            {
+                value: "nextMsg"
+            },
+            untilValue:
+            {
+                value: ""
+            },
+            untilOffset:
+            {
+                value: 0
+            },
+            untilRandom:
+            {
+                value: false
+            },
+            preserveCtrlProps:
+            {
+                value: false
+            }
+        },
+        oneditprepare: function()
+        {
+            let node = this;
+
+            const sunTimes =
+            [
+                {
+                    value: "nightEnd",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                },
+                {
+                    value: "nauticalDawn",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                },
+                {
+                    value: "dawn",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                },
+                {
+                    value: "sunrise",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                },
+                {
+                    value: "sunriseEnd",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                },
+                {
+                    value: "goldenHourEnd",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                },
+                {
+                    value: "solarNoon",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                },
+                {
+                    value: "goldenHour",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                },
+                {
+                    value: "sunsetStart",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                },
+                {
+                    value: "sunset",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                },
+                {
+                    value: "dusk",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                },
+                {
+                    value: "nauticalDusk",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                },
+                {
+                    value: "night",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                },
+                {
+                    value: "nadir",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                }
+            ];
+
+            const moonTimes =
+            [
+                {
+                    value: "rise",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                },
+                {
+                    value: "set",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                }
+            ];
+
+            const timeInput =
+            {
+                value: "time",
+                label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                icon: "fa fa-clock-o",
+                hasValue: true,
+                validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(am|AM|pm|PM)?$/
+            };
+
+            const sunTimeInput =
+            {
+                value: "sun",
+                label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                icon: "fa fa-sun-o",
+                options: sunTimes
+            };
+
+            const moonTimeInput =
+            {
+                value: "moon",
+                label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                icon: "fa fa-moon-o",
+                options: moonTimes
+            };
+
+            const customInput =
+            {
+                value: "custom",
+                label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                icon: "fa fa-wrench",
+                hasValue: true,
+                validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
+            };
+
+            const nextMsgInput =
+            {
+                value: "nextMsg",
+                label: node._("repeat.label.nextMsg"),
+                hasValue: false
+            };
+
+            const validateInput = function(event, ui)
+            {
+                var value = parseInt($(this).spinner("value"), 10);
+                var min = $(this).spinner("option", "min");
+                var max = $(this).spinner("option", "max");
+                if (isNaN(value) || (value < min))
+                {
+                    $(this).spinner("value", min);
+                }
+                else if (value > max)
+                {
+                    $(this).spinner("value", max);
+                }
+            };
+
+            let interval = $("#node-input-interval")
+                            .spinner({min: 1, max: 59, step: 1, change: validateInput});
+            let until = $("#node-input-until")
+                            .typedInput({types: [nextMsgInput, timeInput, sunTimeInput, moonTimeInput, customInput], typeField: $("#node-input-untilType")});
+            let untilOffset = $("#node-input-untilOffset")
+                            .spinner({min: -300, max: 300, step: 5, change: validateInput});
+
+            $("#node-input-intervalUnit").change(function()
+            {
+                let value = $(this).val();
+                switch (value)
+                {
+                    case "seconds":
+                    {
+                        interval.spinner("option", "max", 59);
+                        break;
+                    }
+                    case "minutes":
+                    {
+                        interval.spinner("option", "max", 59);
+                        break;
+                    }
+                    case "hours":
+                    {
+                        interval.spinner("option", "max", 23);
+                        break;
+                    }
+                }
+
+                validateInput.call(interval);
+            });
+
+            until.on("change", function()
+            {
+                let type = until.typedInput("type");
+                if (type === "nextMsg")
+                {
+                    $("#node-input-offsetBox").hide();
+                }
+                else
+                {
+                    $("#node-input-offsetBox").show();
+                }
+            });
+
+            until.typedInput("value", $("#node-input-untilValue").val());
+        },
+        oneditsave: function()
+        {
+            $("#node-input-untilValue").val($("#node-input-until").typedInput("value"));
+        }
+    });
+</script>

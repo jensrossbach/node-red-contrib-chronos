@@ -1,0 +1,27 @@
+{
+    "repeat":
+    {
+        "label":
+        {
+            "node":        "Wiederholung",
+            "outputPort":  "Wiederholte Nachricht",
+            "every":       "Alle",
+            "interval":    "Intervall",
+            "until":       "Bis",
+            "nextMsg":     "Nächste Nachricht"
+        },
+        "list":
+        {
+            "interval":
+            {
+                "seconds":  "Sekunde(n)",
+                "minutes":  "Minute(n)",
+                "hours":    "Stunde(n)"
+            }
+        },
+        "status":
+        {
+            "next":  "nächste Nachricht:"
+        }
+    }
+}

@@ -3,7 +3,7 @@
 <a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm version" src="https://badgen.net/npm/v/node-red-contrib-chronos"></a>
 <a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm downloads" src="https://badgen.net/npm/dt/node-red-contrib-chronos"></a>
 
-A collection of Node-RED nodes for date and time based scheduling, queueing, routing, filtering and manipulating. Automatically calculated times from sun events (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset) are supported as well.
+A collection of Node-RED nodes for date and time based scheduling, repeating, queueing, routing, filtering and manipulating. Automatically calculated times from sun events (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset) are supported as well.
 
 If you encountered a bug, would like to propose a new feature or simply want to share your opinion about the software, please have a look at the [contribution guide](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/CONTRIBUTING.md) on the GitHub repository to learn more about how to contribute to this project. If you need help or have questions, please check out the [instructions for getting support](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/SUPPORT.md).
 
@@ -14,8 +14,13 @@ Schedules the transmission of messages or setting of global/flow variables at sp
 
 ![Scheduler](images/scheduler.png)
 
+#### Repeat
+Repeats each message passing through the node based on a configurable interval.
+
+![Repeat](images/repeat.png)
+
 #### Delay Until
-Delays each message passing through the node until a specific time is reached.
+Delays each message passing through the node until a configurable time is reached.
 
 ![Delay Until](images/delay.png)
 
