@@ -1,0 +1,157 @@
+<!--
+Copyright (c) 2021 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/x-red" data-help-name="chronos-repeat">
+    <p>
+        Repeats each message passing through the node based on a configurable
+        interval.
+    </p>
+    <h3>Details</h3>
+    <p>
+        This node forwards an incoming message upon reception and then periodically
+        sends this messages according to the configured interval. The repetition
+        ends when a new message is received and optionally at a specific time.
+    </p>
+    <p>
+        For more information, please refer to the detailed documentation in the
+        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Repeat-Node">repository wiki</a>.
+    </p>
+    <h3>Configuration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>The name of the node (optional).</dd>
+        <dt>Configuration</dt>
+        <dd>
+            A reference to the configuration node to be used.
+        </dd>
+        <dt>Interval</dt>
+        <dd>
+            The interval for message sending repetition which can be expressed
+            in seconds, minutes or hours.
+        </dd>
+        <dt>Until</dt>
+        <dd>
+            The condition when periodic message sending should stop. A subsequently
+            received message always stops the repetition of the previous message.
+            Additonally a specific time can be configured as ending condition for
+            message sending repetition. Depending on the selection, the following
+            possibilities are available:
+            <ul>
+                <li>
+                    <i>next message</i>: Repetition is only stopped when receiving
+                    another message.
+                </li>
+                <li>
+                    <i>time of day</i>: A specific ending time can be entered directly
+                    in the form <code>hh:mm[:ss] [am|pm]</code>.
+                </li>
+                <li>
+                    <i>sun position</i>: The sun position can be selected from a list
+                    of predefined values.
+                </li>
+                <li>
+                    <i>moon position</i>: The moon position can be selected from a list
+                    of predefined values.
+                </li>
+                <li>
+                    <i>custom</i>: One of the user-defined sun position names can be
+                    entered.
+                </li>
+            </ul>
+        </dd>
+        <dt>Offset</dt>
+        <dd>
+            An offset between -300 and +300 can be specified in minutes. The offset
+            will be added to or substracted from the repetition ending time.
+        </dd>
+        <dt>Randomized</dt>
+        <dd>
+            When selected, the offset will be randomized between 0 and the
+            specified value.
+        </dd>
+        <dt>Preserve control properties in messages</dt>
+        <dd>
+            If selected, control properties as described below in chapter
+            <i>Input</i> are not deleted from input messages and hence still
+            be present in the messages when they are sent to the output port.
+        </dd>
+    </dl>
+    <h3>Input</h3>
+    <p>
+        The input message is forwarded as is but can also control the repetition
+        behavior of the node if the following properties are existing.
+    </p>
+    <dl class="message-properties">
+        <dt class="optional">stop<span class="property-type">any</span></dt>
+        <dd>
+            If present, message sending repetition is immediately stopped.
+            The message containing this property is discarded.
+        </dd>
+        <dt class="optional">interval<span class="property-type">object</span></dt>
+        <dd>
+            Overrides the interval for message sending repetition, see below
+            for details.
+        </dd>
+        <dt class="optional">until<span class="property-type">object</span></dt>
+        <dd>
+            Overrides the condition when message sending repetition should end,
+            see below for details.
+        </dd>
+    </dl>
+    <p>
+        If a property called <code>interval</code> is present in the input
+        message, the interval for repetition is overridden. The property must
+        have the following content:
+    </p>
+    <dl class="message-properties">
+        <dt>value<span class="property-type">number</span></dt>
+        <dd>The duration of the interval</dd>
+        <dt>unit<span class="property-type">string</span></dt>
+        <dd>The unit for the interval duration, one of "seconds", "minutes" or "hours"</dd>
+    </dl>
+    <p>
+        If a property called <code>until</code> is present in the input message,
+        the condition when message sending repetition should end is overridden.
+        The property may be <code>null</code>, in this case the repetition ends
+        only upon reception of the next message. Otherwise the property must
+        have the following content:
+    </p>
+    <dl class="message-properties">
+        <dt>type<span class="property-type">string</span></dt>
+        <dd>Ending time type; one of "time", "sun", "moon" or "custom"</dd>
+        <dt>value<span class="property-type">string | number</span></dt>
+        <dd>Ending time value; content is depending on ending time type</dd>
+        <dt>offset<span class="property-type">number</span></dt>
+        <dd>Offset to the ending time</dd>
+        <dt>random<span class="property-type">boolean</span></dt>
+        <dd>Randomized offset</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <p>
+        Messages are sent to the output upon reception and periodically until
+        the next message or a message with the property <code>stop</code> has
+        been received. If configured, message sending repetition also ends when
+        the ending time has been reached.
+    </p>
+</script>
