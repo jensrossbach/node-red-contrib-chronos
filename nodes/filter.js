@@ -58,8 +58,27 @@ module.exports = function(RED)
             node.baseTime = settings.baseTime;
             node.baseTimeType = settings.baseTimeType;
             node.conditions = settings.conditions;
-            node.allMustMatch = settings.allMustMatch;
-            node.annotateOnly = settings.annotateOnly;
+
+            node.evaluation = (typeof settings.evaluation != "undefined") ? settings.evaluation : "";
+            if (typeof settings.evaluationType == "undefined")
+            {
+                if (settings.annotateOnly)
+                {
+                    node.evaluationType = "annotation";
+                }
+                else if (settings.allMustMatch)
+                {
+                    node.evaluationType = "and";
+                }
+                else
+                {
+                    node.evaluationType = "or";
+                }
+            }
+            else
+            {
+                node.evaluationType = settings.evaluationType;
+            }
 
             // backward compatibility to v1.5.0
             if (!node.baseTimeType)
@@ -81,6 +100,22 @@ module.exports = function(RED)
                         valid = false;
                         break;
                     }
+                }
+            }
+
+            if (valid && (node.evaluationType == "jsonata"))
+            {
+                try
+                {
+                    node.expression = RED.util.prepareJSONataExpression(node.evaluation, node);
+                }
+                catch (e)
+                {
+                    node.debug(e.code + ": " + e.message);
+                    node.debug(e.stack);
+                    node.debug("Position: " + e.position + "  Token: " + e.token + "  Value: " + e.value);
+
+                    valid = false;
                 }
             }
 
@@ -122,7 +157,7 @@ module.exports = function(RED)
                             node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss"));
 
                             let result = false;
-                            let evaluation = [];
+                            let condResults = [];
 
                             for (let i=0; i<node.conditions.length; ++i)
                             {
@@ -157,30 +192,71 @@ module.exports = function(RED)
                                     result = false;
                                 }
 
-                                if (node.annotateOnly)
+                                if ((node.evaluationType == "annotation") || (node.evaluationType == "jsonata"))
                                 {
-                                    evaluation.push(result);
+                                    condResults.push(result);
                                 }
-                                else if ((node.allMustMatch && !result) ||
-                                        (!node.allMustMatch && result))
+                                else if (((node.evaluationType == "and") && !result) ||
+                                         ((node.evaluationType == "or") && result))
                                 {
                                     break;
                                 }
                             }
 
-                            if (node.annotateOnly)
+                            if (node.evaluationType == "annotation")
                             {
                                 if ("evaluation" in msg)
                                 {
                                     msg._evaluation = msg.evaluation;
                                 }
-                                msg.evaluation = evaluation;
+                                msg.evaluation = condResults;
 
-                                node.send(msg);
+                                send(msg);
+                                done();
+                            }
+                            else if (node.evaluationType == "jsonata")
+                            {
+                                let inputMsg = RED.util.cloneMessage(msg);
+                                if ("condition" in inputMsg)
+                                {
+                                    inputMsg._condition = inputMsg.condition;
+                                }
+                                inputMsg.condition = condResults;
+
+                                node.debug("Evaluating: " + node.evaluation + " -> " + JSON.stringify(inputMsg));
+                                RED.util.evaluateJSONataExpression(node.expression, inputMsg, (err, value) =>
+                                {
+                                    if (err)
+                                    {
+                                        node.debug(err.code + ": " + err.message);
+                                        node.debug(err.stack);
+                                        node.debug("Position: " + err.position + "  Token: " + err.token);
+
+                                        done(RED._("filter.error.evaluationFailed"));
+                                    }
+                                    else if (typeof value != "boolean")
+                                    {
+                                        done(RED._("filter.error.notBoolean"));
+                                    }
+                                    else if (value)
+                                    {
+                                        send(msg);
+                                        done();
+                                    }
+                                    else
+                                    {
+                                        done();
+                                    }
+                                });
                             }
                             else if (result)
                             {
-                                node.send(msg);
+                                send(msg);
+                                done();
+                            }
+                            else
+                            {
+                                done();
                             }
                         }
                         else
@@ -192,11 +268,9 @@ module.exports = function(RED)
                                 variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                             }
 
-                            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}), msg);
+                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
                         }
                     }
-
-                    done();
                 });
             }
         }

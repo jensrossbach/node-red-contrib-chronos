@@ -66,6 +66,32 @@ SOFTWARE.
                 </li>
             </ul>
         </dd>
+        <dt>Evaluation</dt>
+        <dd>
+            Specifies the evaluation method for forwarding messages based on the
+            results of the conditions. This can be one of:
+            <ul>
+                <li>
+                    <i>logical OR</i>: The message is forwarded if at least one
+                    of the conditions evaluates to true.
+                </li>
+                <li>
+                    <i>logical AND</i>: The message is forwarded only if all
+                    conditions evaluate to true.
+                </li>
+                <li>
+                    <i>annotation</i>: The message is always forwarded and
+                    the results of the conditions are stored as array of boolean
+                    values in the property <code>msg.evaluation</code>.
+                </li>
+                <li>
+                    <i>expression</i>: The message is forwarded if the specified
+                    JSONata expression evaluates to true. The results of the
+                    conditions can be accessed through the property <code>condition</code>
+                    which is an array of boolean values.
+                </li>
+            </ul>
+        </dd>
         <dt>Conditions</dt>
         <dd>
             The list containing the conditions for filtering messages. New entries
@@ -133,18 +159,6 @@ SOFTWARE.
             The specified times can additionally be shifted by an (optionally
             randomized) offset, accessible through the double down arrow on the
             right side.
-        </dd>
-        <dt>All conditions must match</dt>
-        <dd>
-            If selected, all conditions must match to hand over the message
-            (logical AND combination). Otherwise only a single condition must
-            match (logical OR combination).
-        </dd>
-        <dt>Annotate only, do not filter</dt>
-        <dd>
-            If selected, incoming messages are forwarded in any case and the
-            evaluation results of each condition are stored in property
-            <code>msg.evaluation</code>.
         </dd>
     </dl>
     <h3>Input</h3>
@@ -217,12 +231,11 @@ SOFTWARE.
     </p>
     <h3>Outputs</h3>
     <p>
-        If one or multiple conditions match the configured base time or if
-        <i>Annotate only, do not filter</i> is activated, the message is sent
-        out.
+        If one or multiple conditions match the configured base time according
+        to the specified evaluation method, the message is sent out.
     </p>
     <p>
-        Only if <i>Annotate only, do not filter</i> is activated:
+        Only if evaluation method <i>annotation</i> is activated:
     </p>
     <dl class="message-properties">
         <dt>evaluation<span class="property-type">array</span></dt>

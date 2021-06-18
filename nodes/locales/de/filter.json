@@ -3,10 +3,17 @@
     {
         "label":
         {
-            "node":          "Zeitfilter",
-            "outputPort":    "Bedingte Nachricht",
-            "allMustMatch":  "Alle Bedingungen müssen zutreffen",
-            "annotateOnly":  "Nur annotieren, nicht filtern"
+            "node":        "Zeitfilter",
+            "outputPort":  "Bedingte Nachricht",
+            "evaluation":  "Auswertung",
+            "logicalOr":   "Logisches ODER",
+            "logicalAnd":  "Logisches UND",
+            "annotation":  "Annotation"
+        },
+        "error":
+        {
+            "evaluationFailed":  "Fehler beim Auswerten des Ausdrucks",
+            "notBoolean":        "Ausdruck muss ein Wahrheitswert sein"
         }
     }
 }

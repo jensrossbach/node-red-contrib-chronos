@@ -68,6 +68,33 @@ SOFTWARE.
                 </li>
             </ul>
         </dd>
+        <dt>Auswertung</dt>
+        <dd>
+            Gibt die Auswertungsmethode zum Weiterleiten von Nachrichten basierend
+            auf den Ergebnissen der Bedingungen an. Es gibt folgende Möglichkeiten:
+            <ul>
+                <li>
+                    <i>Logisches ODER</i>: Die Nachricht wird weitergeleitet,
+                    wenn mindestens eine der Bedingungen wahr ist.
+                </li>
+                <li>
+                    <i>Logisches UND</i>: Die Nachricht wird nur weitergeleitet,
+                    wenn alle Bedingungen wahr sind.
+                </li>
+                <li>
+                    <i>Annotation</i>: Die Nachricht wird immer weitergeleitet
+                    und das Ergebnis der Bedingungen wird als Array von booleschen
+                    Werten in der Eigenschaft <code>msg.evaluation</code>
+                    bereitgestellt.
+                </li>
+                <li>
+                    <i>JSONata</i>: Die Nachricht wird weitergeleitet, wenn der
+                    angegebene JSONata-Ausdruck wahr ist. Über die Eigenschaft
+                    <code>condition</code> können die Ergebnisse der Bedingungen
+                    als Array von booleschen Werten abgefragt werden.
+                </li>
+            </ul>
+        </dd>
         <dt>Bedingungen</dt>
         <dd>
             Liste der Bedingungen zum Filtern der Nachrichten. Neue Einträge
@@ -226,11 +253,11 @@ SOFTWARE.
     <h3>Ausgaben</h3>
     <p>
         Wenn eine oder mehrere Bedingungen auf die konfigurierte Basiszeit
-        zutreffen oder wenn <i>Nur annotieren, nicht filtern</i> aktiviert ist,
+        unter Berücksichtigung der ausgewählten Auswertungsmethode zutreffen,
         wird die Nachricht zum Ausgabe-Port gesendet.
     </p>
     <p>
-        Nur wenn <i>Nur annotieren, nicht filtern</i> aktiviert ist:
+        Nur wenn für die Auswertungsmethode <i>Annotation</i> ausgewählt wurde:
     </p>
     <dl class="message-properties">
         <dt>evaluation<span class="property-type">array</span></dt>

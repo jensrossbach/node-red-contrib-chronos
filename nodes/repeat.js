@@ -111,10 +111,6 @@ module.exports = function(RED)
                             done();
                         }
                     }
-                    else
-                    {
-                        done();
-                    }
                 });
             }
         }
