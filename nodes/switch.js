@@ -213,7 +213,8 @@ module.exports = function(RED)
                                 }
                             }
 
-                            node.send(ports);
+                            send(ports);
+                            done();
                         }
                         else
                         {
@@ -224,11 +225,9 @@ module.exports = function(RED)
                                 variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                             }
 
-                            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}), msg);
+                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
                         }
                     }
-
-                    done();
                 });
             }
         }

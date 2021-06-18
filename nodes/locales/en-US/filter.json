@@ -3,10 +3,17 @@
     {
         "label":
         {
-            "node":          "time filter",
-            "outputPort":    "conditional message",
-            "allMustMatch":  "All conditions must match",
-            "annotateOnly":  "Annotate only, do not filter"
+            "node":        "time filter",
+            "outputPort":  "conditional message",
+            "evaluation":  "Evaluation",
+            "logicalOr":   "logical OR",
+            "logicalAnd":  "logical AND",
+            "annotation":  "annotation"
+        },
+        "error":
+        {
+            "evaluationFailed":  "Unable to evaluate expression",
+            "notBoolean":        "Expression must result in boolean value"
         }
     }
 }

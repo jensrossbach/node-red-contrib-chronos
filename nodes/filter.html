@@ -36,19 +36,16 @@ SOFTWARE.
         <input type="text" id="node-input-baseTime" style="width: 70%;">
         <input id="node-input-baseTimeType" type="hidden">
     </div>
+    <div class="form-row">
+        <label for="node-input-evaluation"><i class="fa fa-filter"></i> <span data-i18n="filter.label.evaluation"></span></label>
+        <input type="text" id="node-input-evaluation" style="width: 70%;">
+        <input id="node-input-evaluationType" type="hidden">
+    </div>
     <div class="form-row node-input-conditionList-row" style="padding-top: 10px">
         <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
         <div class="form-row">
             <ol id="node-input-conditionList"></ol>
         </div>
-    </div>
-    <div class="form-row">
-        <input id="node-input-allMustMatch" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-allMustMatch" style="margin-bottom: 0px; width: auto;" data-i18n="filter.label.allMustMatch"></label>
-    </div>
-    <div class="form-row">
-        <input id="node-input-annotateOnly" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-annotateOnly" style="margin-bottom: 0px; width: auto;" data-i18n="filter.label.annotateOnly"></label>
     </div>
 </script>
 
@@ -98,6 +95,15 @@ SOFTWARE.
             {
                 value: "msgIngress"
             },
+            evaluation:
+            {
+                value:    "",
+                validate: RED.validators.typedInput("evaluationType")
+            },
+            evaluationType:
+            {
+                value: "or"
+            },
             conditions:
             {
                 value: [{operator: "before", operands: {type: "time", value: ""}}],
@@ -106,15 +112,15 @@ SOFTWARE.
                     // just a simple check if there are any conditions, no detailed check of the content
                     return v.length > 0;
                 }
-            },
-            allMustMatch:
+            }
+            /* allMustMatch:
             {
                 value: false
             },
             annotateOnly:
             {
                 value: false
-            }
+            } */
         },
         oneditprepare: function()
         {
@@ -127,8 +133,32 @@ SOFTWARE.
                 hasValue: false
             };
 
+            const logicalOrInput =
+            {
+                value: "or",
+                label: node._("filter.label.logicalOr"),
+                hasValue: false
+            };
+
+            const logicalAndInput =
+            {
+                value: "and",
+                label: node._("filter.label.logicalAnd"),
+                hasValue: false
+            };
+
+            const annotationInput =
+            {
+                value: "annotation",
+                label: node._("filter.label.annotation"),
+                hasValue: false
+            };
+
             let baseTime = $("#node-input-baseTime")
                             .typedInput({types: [msgIngressInput, "global", "flow", "msg"], typeField: "#node-input-baseTimeType"});
+
+            let evaluation = $("#node-input-evaluation")
+                            .typedInput({types: [logicalOrInput, logicalAndInput, annotationInput, "jsonata"], typeField: "#node-input-evaluationType"});
 
             let conditionList = $("#node-input-conditionList").css("min-width", "500px").css("min-height", "150px").editableList(
             {
@@ -773,20 +803,6 @@ SOFTWARE.
                     operator.change();
                     dayType.change();
                     item[0].appendChild(fragment);
-                }
-            });
-
-            $("#node-input-annotateOnly").change(function()
-            {
-                if ($(this).prop("checked"))
-                {
-                    $("#node-input-allMustMatch").attr("disabled", true);
-                    $("label[for='node-input-allMustMatch']").addClass("disabled");
-                }
-                else
-                {
-                    $("#node-input-allMustMatch").attr("disabled", false);
-                    $("label[for='node-input-allMustMatch']").removeClass("disabled");
                 }
             });
 

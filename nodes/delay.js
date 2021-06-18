@@ -143,10 +143,6 @@ module.exports = function(RED)
                             enqueueMessage(msg, done);
                         }
                     }
-                    else
-                    {
-                        done();
-                    }
                 });
             }
         }
