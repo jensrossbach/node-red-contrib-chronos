@@ -114,7 +114,7 @@ describe("scheduler node", function()
             await helper.load(schedulerNode, flow, {});
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
-            sn1.error.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.noConfig");
         });
 
         it("should fail due to invalid latitude", async function()
@@ -125,7 +125,7 @@ describe("scheduler node", function()
             await helper.load([configNode, schedulerNode], flow, invalidCredentials);
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
-            sn1.error.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
         it("should fail due to invalid longitude", async function()
@@ -136,30 +136,31 @@ describe("scheduler node", function()
             await helper.load([configNode, schedulerNode], flow, invalidCredentials);
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
-            sn1.error.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
-        function testInvalidSchedule(title, flow)
+        function testInvalidSchedule(title, flow, exp)
         {
             it("should fail due to " + title, async function()
             {
                 await helper.load([configNode, schedulerNode], flow, credentials);
                 const sn1 = helper.getNode("sn1");
                 sn1.status.should.be.called();
-                sn1.error.should.be.calledOnce();
+                sn1.error.should.be.calledOnce().and.calledWith(exp);
             });
         }
 
-        testInvalidSchedule("missing schedule", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: []}, cfgNode]);
-        testInvalidSchedule("invalid schedule user time", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "", offset: 0, random: false}, output: {}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule context variable", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "flow", value: ""}, output: {}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "["}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule full message (no object)", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "true"}}]}, cfgNode]);
-        testInvalidSchedule("empty schedule property name", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: ""}}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule number property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "num", value: "invalid"}}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule boolean property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bool", value: "invalid"}}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule JSON property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "json", value: "invalid"}}}]}, cfgNode]);
-        testInvalidSchedule("invalid schedule binary buffer property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bin", value: "invalid"}}}]}, cfgNode]);
+        const invalidConfig = "node-red-contrib-chronos/chronos-config:common.error.invalidConfig";
+        testInvalidSchedule("missing schedule", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: []}, cfgNode], "scheduler.error.noSchedule");
+        testInvalidSchedule("invalid schedule user time", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "", offset: 0, random: false}, output: {}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule context variable", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "flow", value: ""}, output: {}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "["}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule full message (no object)", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "true"}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("empty schedule property name", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: ""}}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule number property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "num", value: "invalid"}}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule boolean property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bool", value: "invalid"}}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule JSON property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "json", value: "invalid"}}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule binary buffer property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bin", value: "invalid"}}}]}, cfgNode], invalidConfig);
     });
 
     context("node timers (part 1)", function()
@@ -222,11 +223,12 @@ describe("scheduler node", function()
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "flow", property: {name: "testVariable", type: "string", value: "test"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
             const ctx = {flow: {}, global: {}};
 
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
             await helper.load([configNode, schedulerNode], flow, credentials);
             const sn1 = helper.getNode("sn1");
 
-            sinon.spy(clock, "setTimeout");
-            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
             sinon.stub(sn1, "context").returns(ctx);
             ctx.flow.set = sinon.spy();
             ctx.global.set = sinon.spy();
@@ -377,11 +379,12 @@ describe("scheduler node", function()
                 const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "flow", value: "testVariable"}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
                 const ctx = {flow: {}, global: {}};
 
+                sinon.spy(clock, "setTimeout");
+                sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
                 await helper.load([configNode, schedulerNode], flow, credentials);
                 const sn1 = helper.getNode("sn1");
 
-                sinon.spy(clock, "setTimeout");
-                sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
                 sinon.stub(sn1, "context").returns(ctx);
                 ctx.flow.get = sinon.fake.returns(ctxVar);
                 ctx.global.get = sinon.fake.returns(ctxVar);
@@ -405,11 +408,12 @@ describe("scheduler node", function()
                 const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "flow", value: "testVariable"}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, hlpNode, cfgNode];
                 const ctx = {flow: {}, global: {}};
 
+                sinon.spy(clock, "setTimeout");
+                sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
                 await helper.load([configNode, schedulerNode], flow, credentials);
                 const sn1 = helper.getNode("sn1");
 
-                sinon.spy(clock, "setTimeout");
-                sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
                 sinon.stub(sn1, "context").returns(ctx);
                 ctx.flow.get = sinon.fake.returns(ctxVar);
                 ctx.global.get = sinon.fake.returns(ctxVar);
@@ -419,7 +423,7 @@ describe("scheduler node", function()
                 helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
                 sn1.context.should.be.calledOnce();
                 ctx.flow.get.should.be.calledWith("testKey", "testStore");
-                sn1.error.should.be.calledOnce();
+                sn1.error.should.be.calledOnce().and.calledWith("scheduler.error.invalidEvent");
                 clock.setTimeout.should.not.be.called();
             });
         }

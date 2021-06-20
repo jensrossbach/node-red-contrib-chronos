@@ -75,7 +75,7 @@ describe("time change node", function()
             await helper.load(changeNode, flow, {});
             const chn1 = helper.getNode("chn1");
             chn1.status.should.be.calledOnce();
-            chn1.error.should.be.calledOnce();
+            chn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.noConfig");
         });
 
         it("should fail due to invalid latitude", async function()
@@ -86,7 +86,7 @@ describe("time change node", function()
             await helper.load([configNode, changeNode], flow, invalidCredentials);
             const chn1 = helper.getNode("chn1");
             chn1.status.should.be.calledOnce();
-            chn1.error.should.be.calledOnce();
+            chn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
         it("should fail due to invalid longitude", async function()
@@ -97,24 +97,25 @@ describe("time change node", function()
             await helper.load([configNode, changeNode], flow, invalidCredentials);
             const chn1 = helper.getNode("chn1");
             chn1.status.should.be.calledOnce();
-            chn1.error.should.be.calledOnce();
+            chn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
-        function testInvalidRules(title, flow)
+        function testInvalidRules(title, flow, exp)
         {
             it("should fail due to " + title, async function()
             {
                 await helper.load([configNode, changeNode], flow, credentials);
                 const chn1 = helper.getNode("chn1");
                 chn1.status.should.be.called();
-                chn1.error.should.be.calledOnce();
+                chn1.error.should.be.calledOnce().and.calledWith(exp);
             });
         }
 
-        testInvalidRules("missing rules", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: []}, cfgNode]);
-        testInvalidRules("invalid date", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "date", date: "invalid", time: {type: "time", value: "10:00"}}]}, cfgNode]);
-        testInvalidRules("invalid time", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "date", date: "2000-01-01", time: {type: "time", value: "10_00"}}]}, cfgNode]);
-        testInvalidRules("empty to-string format", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "change", target: {type: "msg", name: "payload"}, type: "toString", format: ""}]}, cfgNode]);
+        const invalidConfig = "node-red-contrib-chronos/chronos-config:common.error.invalidConfig";
+        testInvalidRules("missing rules", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: []}, cfgNode], "change.error.noRules");
+        testInvalidRules("invalid date", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "date", date: "invalid", time: {type: "time", value: "10:00"}}]}, cfgNode], invalidConfig);
+        testInvalidRules("invalid time", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "date", date: "2000-01-01", time: {type: "time", value: "10_00"}}]}, cfgNode], invalidConfig);
+        testInvalidRules("empty to-string format", [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "change", target: {type: "msg", name: "payload"}, type: "toString", format: ""}]}, cfgNode], invalidConfig);
     });
 
     context("time errors", function()
@@ -217,11 +218,11 @@ describe("time change node", function()
         {
             const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "flow", name: "testVariable"}, type: "now"}]}, cfgNode];
             const ctx = {flow: {}};
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
             await helper.load([configNode, changeNode], flow, credentials);
             const chn1 = helper.getNode("chn1");
 
-            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
             sinon.stub(chn1, "context").returns(ctx);
             ctx.flow.set = sinon.spy();
 
@@ -235,11 +236,11 @@ describe("time change node", function()
         {
             const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "global", name: "testVariable"}, type: "now"}]}, cfgNode];
             const ctx = {global: {}};
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
             await helper.load([configNode, changeNode], flow, credentials);
             const chn1 = helper.getNode("chn1");
 
-            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
             sinon.stub(chn1, "context").returns(ctx);
             ctx.global.set = sinon.spy();
 
@@ -315,7 +316,7 @@ describe("time change node", function()
             const chn1 = helper.getNode("chn1");
 
             chn1.receive({payload: true});
-            chn1.error.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: true});
+            chn1.error.should.be.calledWith("change.error.invalidProperty", {_msgid: sinon.match.any, payload: true});
         });
 
         it("should handle invalid message property", async function()
@@ -328,7 +329,7 @@ describe("time change node", function()
 
             chn1.receive({payload: "test"});
             chronos.getTimeFrom.should.be.calledWith(sinon.match.any, "test");
-            chn1.error.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test"});
+            chn1.error.should.be.calledWith("change.error.invalidProperty", {_msgid: sinon.match.any, payload: "test"});
         });
 
         it("should handle invalid flow variable", async function()
@@ -337,11 +338,11 @@ describe("time change node", function()
             const ctx = {flow: {}};
 
             fakeMoment.isValid = sinon.stub().returns(false);
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
             await helper.load([configNode, changeNode], flow, credentials);
             const chn1 = helper.getNode("chn1");
 
-            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
             sinon.stub(chn1, "context").returns(ctx);
             ctx.flow.get = sinon.stub().returns("test");
 
@@ -350,7 +351,7 @@ describe("time change node", function()
             chn1.context.should.be.calledOnce();
             ctx.flow.get.should.be.calledWith("testKey", "testStore");
             chronos.getTimeFrom.should.be.calledWith(sinon.match.any, "test");
-            chn1.error.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: null});
+            chn1.error.should.be.calledWith("change.error.invalidProperty", {_msgid: sinon.match.any, payload: null});
         });
 
         it("should handle invalid global variable", async function()
@@ -359,11 +360,11 @@ describe("time change node", function()
             const ctx = {global: {}};
 
             fakeMoment.isValid = sinon.stub().returns(false);
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
             await helper.load([configNode, changeNode], flow, credentials);
             const chn1 = helper.getNode("chn1");
 
-            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
             sinon.stub(chn1, "context").returns(ctx);
             ctx.global.get = sinon.stub().returns("test");
 
@@ -372,7 +373,7 @@ describe("time change node", function()
             chn1.context.should.be.calledOnce();
             ctx.global.get.should.be.calledWith("testKey", "testStore");
             chronos.getTimeFrom.should.be.calledWith(sinon.match.any, "test");
-            chn1.error.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: null});
+            chn1.error.should.be.calledWith("change.error.invalidProperty", {_msgid: sinon.match.any, payload: null});
         });
 
         function testChangeSet(part, value, fake, input)
