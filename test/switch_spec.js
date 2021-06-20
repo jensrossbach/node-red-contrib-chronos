@@ -89,7 +89,7 @@ describe("time switch node", function()
             await helper.load(switchNode, flow, {});
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
-            sn1.error.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.noConfig");
         });
 
         it("should fail due to invalid latitude", async function()
@@ -100,7 +100,7 @@ describe("time switch node", function()
             await helper.load([configNode, switchNode], flow, invalidCredentials);
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
-            sn1.error.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
         it("should fail due to invalid longitude", async function()
@@ -111,7 +111,7 @@ describe("time switch node", function()
             await helper.load([configNode, switchNode], flow, invalidCredentials);
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
-            sn1.error.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
         it("should fail due to invalid condition", async function()
@@ -125,21 +125,22 @@ describe("time switch node", function()
             sn1.error.should.be.calledOnce();
         });
 
-        function testInvalidConfig(title, flow)
+        function testInvalidConfig(title, flow, exp)
         {
             it("should fail due to " + title, async function()
             {
                 await helper.load([configNode, switchNode], flow, credentials);
                 const sn1 = helper.getNode("sn1");
                 sn1.status.should.be.called();
-                sn1.error.should.be.calledOnce();
+                sn1.error.should.be.calledOnce().and.calledWith(exp);
             });
         }
 
-        testInvalidConfig("invalid basetime", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msg", baseTime: "", conditions: [{}], stopOnFirstMatch: false}, cfgNode]);
-        testInvalidConfig("missing conditions", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msgIngress", baseTime: "", conditions: [], stopOnFirstMatch: false}, cfgNode]);
-        testInvalidConfig("only otherwise", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msgIngress", baseTime: "", conditions: [{operator: "otherwise"}], stopOnFirstMatch: false}, cfgNode]);
-        testInvalidConfig("multiple otherwise", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msgIngress", baseTime: "", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "otherwise"}, {operator: "otherwise"}], stopOnFirstMatch: false}, cfgNode]);
+        const invalidConfig = "node-red-contrib-chronos/chronos-config:common.error.invalidConfig";
+        testInvalidConfig("invalid basetime", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msg", baseTime: "", conditions: [{}], stopOnFirstMatch: false}, cfgNode], invalidConfig);
+        testInvalidConfig("missing conditions", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msgIngress", baseTime: "", conditions: [], stopOnFirstMatch: false}, cfgNode], "node-red-contrib-chronos/chronos-config:common.error.noConditions");
+        testInvalidConfig("only otherwise", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msgIngress", baseTime: "", conditions: [{operator: "otherwise"}], stopOnFirstMatch: false}, cfgNode], invalidConfig);
+        testInvalidConfig("multiple otherwise", [{id: "sn1", type: "chronos-switch", name: "switch", config: "cn1", baseTimeType: "msgIngress", baseTime: "", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "otherwise"}, {operator: "otherwise"}], stopOnFirstMatch: false}, cfgNode], invalidConfig);
     });
 
     context("message routing", function()
@@ -162,13 +163,13 @@ describe("time switch node", function()
             it("should handle invalid basetime: " + title, async function()
             {
                 sinon.stub(sfUtils, "getBaseTime").returns(null);
+                sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
                 await helper.load([configNode, switchNode], flow, credentials);
                 const sn1 = helper.getNode("sn1");
-                sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
                 sn1.receive({});
-                sn1.error.should.be.calledOnce();
+                sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime");
             });
         }
 

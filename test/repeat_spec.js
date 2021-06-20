@@ -81,7 +81,7 @@ describe("repeat until node", function()
             await helper.load(repeatNode, flow, {});
             const rn1 = helper.getNode("rn1");
             rn1.status.should.be.calledOnce();
-            rn1.error.should.be.calledOnce();
+            rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.noConfig");
         });
 
         it("should fail due to invalid latitude", async function()
@@ -92,7 +92,7 @@ describe("repeat until node", function()
             await helper.load([configNode, repeatNode], flow, invalidCredentials);
             const rn1 = helper.getNode("rn1");
             rn1.status.should.be.calledOnce();
-            rn1.error.should.be.calledOnce();
+            rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
         it("should fail due to invalid longitude", async function()
@@ -103,7 +103,7 @@ describe("repeat until node", function()
             await helper.load([configNode, repeatNode], flow, invalidCredentials);
             const rn1 = helper.getNode("rn1");
             rn1.status.should.be.calledOnce();
-            rn1.error.should.be.calledOnce();
+            rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
         it("should fail due to invalid until time", async function()
@@ -113,7 +113,7 @@ describe("repeat until node", function()
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
             rn1.status.should.be.calledTwice();
-            rn1.error.should.be.calledOnce();
+            rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
     });
 
