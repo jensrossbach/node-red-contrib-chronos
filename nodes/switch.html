@@ -276,6 +276,7 @@ SOFTWARE.
                     let daysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
                     let weekdaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
                     let monthsBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
+                    let expressionBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(fragment);
                     let contextBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(fragment);
                     $("<div/>", {class: "node-input-index", style: "position: absolute; width: auto; top: 50%; right: 26px; margin-top: -9px;"})
                                         .html("&#8594; " + (index + 1))
@@ -294,6 +295,7 @@ SOFTWARE.
                                         .append($("<option></option>").val("otherwise").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.otherwise")))
                                         .appendTo(operator);
                     let fromGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.sources"))
+                                        .append($("<option></option>").val("expression").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.expression")))
                                         .append($("<option></option>").val("context").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.context")))
                                         .appendTo(operator);
 
@@ -475,6 +477,11 @@ SOFTWARE.
                     $("<label/>", {style: "margin-left: 4px; margin-bottom: 0px; width: 40px;"})
                                         .text(node._("node-red-contrib-chronos/chronos-config:common.list.month.december")).appendTo(monthsRow3);
 
+                    let expression = $("<input/>", {type: "text", class: "node-input-expression"})
+                                        .appendTo(expressionBox)
+                                        .typedInput({types: ["jsonata"]});
+                    expression.typedInput("width", "280px");
+
                     let context = $("<input/>", {type: "text", class: "node-input-context"})
                                         .appendTo(contextBox)
                                         .typedInput({types: ["global", "flow"]});
@@ -487,6 +494,7 @@ SOFTWARE.
                         daysBox.hide();
                         weekdaysBox.hide();
                         monthsBox.hide();
+                        expressionBox.hide();
                         contextBox.hide();
 
                         var value = $(this).val();
@@ -518,6 +526,11 @@ SOFTWARE.
                             case "months":
                             {
                                 monthsBox.show();
+                                break;
+                            }
+                            case "expression":
+                            {
+                                expressionBox.show();
                                 break;
                             }
                             case "context":
@@ -764,6 +777,11 @@ SOFTWARE.
                         november.prop("checked", data.operands[10]);
                         december.prop("checked", data.operands[11]);
                     }
+                    else if (data.operator == "expression")
+                    {
+                        expression.typedInput("value", data.expression);
+                        expression.typedInput("type", "jsonata");
+                    }
                     else if (data.operator == "context")
                     {
                         context.typedInput("value", data.context.value);
@@ -866,6 +884,7 @@ SOFTWARE.
                 let october = $(this).find(".node-input-october");
                 let november = $(this).find(".node-input-november");
                 let december = $(this).find(".node-input-december");
+                let expression = $(this).find(".node-input-expression");
                 let context = $(this).find(".node-input-context");
 
                 data.operator = operator.val();
@@ -1003,6 +1022,18 @@ SOFTWARE.
                         {
                             data.label += " " + MONTHS[i];
                         }
+                    }
+                }
+                else if (data.operator == "expression")
+                {
+                    data.expression = expression.typedInput("value");
+                    if (data.expression.length <= 50)
+                    {
+                        data.label = data.expression;
+                    }
+                    else
+                    {
+                        data.label = data.expression.substring(0, 49) + "...";
                     }
                 }
                 else if (data.operator == "context")

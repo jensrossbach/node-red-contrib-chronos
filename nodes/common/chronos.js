@@ -227,6 +227,38 @@ function getTime(RED, node, day, type, value)
     }
 }
 
+function applyOffset(time, offset, random)
+{
+    if (offset)
+    {
+        time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
+    }
+
+    return time;
+}
+
+function getJSONataExpression(RED, node, expr)
+{
+    const expression = RED.util.prepareJSONataExpression(expr, node);
+
+    expression.registerFunction("millisecond", ts => { return moment(ts).millisecond(); }, "<(sn):n>");
+    expression.registerFunction("second", ts => { return moment(ts).second(); }, "<(sn):n>");
+    expression.registerFunction("minute", ts => { return moment(ts).minute(); }, "<(sn):n>");
+    expression.registerFunction("hour", ts => { return moment(ts).hour(); }, "<(sn):n>");
+    expression.registerFunction("day", ts => { return moment(ts).date(); }, "<(sn):n>");
+    expression.registerFunction("dayOfWeek", ts => { return moment(ts).weekday() + 1; }, "<(sn):n>");
+    expression.registerFunction("dayOfYear", ts => { return moment(ts).dayOfYear(); }, "<(sn):n>");
+    expression.registerFunction("week", ts => { return moment(ts).week(); }, "<(sn):n>");
+    expression.registerFunction("month", ts => { return moment(ts).month() + 1; }, "<(sn):n>");
+    expression.registerFunction("quarter", ts => { return moment(ts).quarter(); }, "<(sn):n>");
+    expression.registerFunction("year", ts => { return moment(ts).year(); }, "<(sn):n>");
+    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(RED, node, moment(ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?b?:n>");
+    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, moment(ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
+    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, moment(ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
+
+    return expression;
+}
+
 
 module.exports =
 {
@@ -240,5 +272,6 @@ module.exports =
     getUserDate: getUserDate,
     isValidUserTime: isValidUserTime,
     isValidUserDate: isValidUserDate,
+    getJSONataExpression: getJSONataExpression,
     TimeError: TimeError
 };

@@ -163,7 +163,7 @@ module.exports = function(RED)
                             {
                                 try
                                 {
-                                    result = sfUtils.evaluateCondition(RED, node, baseTime, node.conditions[i], i+1);
+                                    result = sfUtils.evaluateCondition(RED, node, msg, baseTime, node.conditions[i], i+1);
                                 }
                                 catch (e)
                                 {
@@ -227,11 +227,11 @@ module.exports = function(RED)
                                         node.debug(err.stack);
                                         node.debug("Position: " + err.position + "  Token: " + err.token);
 
-                                        done(RED._("filter.error.evaluationFailed"));
+                                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"));
                                     }
                                     else if (typeof value != "boolean")
                                     {
-                                        done(RED._("filter.error.notBoolean"));
+                                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"));
                                     }
                                     else if (value)
                                     {

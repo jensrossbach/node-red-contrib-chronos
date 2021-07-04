@@ -61,7 +61,8 @@
                 },
                 "source":
                 {
-                    "context":  "Kontext"
+                    "expression":  "Ausdruck",
+                    "context":     "Kontext"
                 }
             },
             "dayType":
@@ -121,9 +122,11 @@
             "invalidConfig":     "Konfiguration enthält ungültige Werte",
             "invalidTime":       "Ungültige Uhrzeit angegeben",
             "invalidBaseTime":   "Ungültige Basiszeit angegeben: __baseTime__",
-            "invalidCondition":  "Ungültige Bedingung aus Kontextvariable: __condition__",
+            "invalidCondition":  "Ungültige Bedingung",
             "invalidName":       "Ungültiger benutzerdefinierter Sonnenstand angegeben",
-            "unavailableTime":   "Kein Zeitpunkt für Ereignis verfügbar"
+            "unavailableTime":   "Kein Zeitpunkt für Ereignis verfügbar",
+            "evaluationFailed":  "Fehler beim Auswerten des Ausdrucks",
+            "notBoolean":        "Ausdruck muss ein Wahrheitswert sein"
         }
     },
     "config":
