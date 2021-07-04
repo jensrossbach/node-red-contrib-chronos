@@ -60,7 +60,7 @@ module.exports = function(RED)
             node.conditions = settings.conditions;
 
             node.evaluation = (typeof settings.evaluation != "undefined") ? settings.evaluation : "";
-            if (typeof settings.evaluationType == "undefined")
+            if (typeof settings.evaluationType == "undefined")  // backward compatibility to v1.11.1
             {
                 if (settings.annotateOnly)
                 {
@@ -216,15 +216,10 @@ module.exports = function(RED)
                             }
                             else if (node.evaluationType == "jsonata")
                             {
-                                let inputMsg = RED.util.cloneMessage(msg);
-                                if ("condition" in inputMsg)
-                                {
-                                    inputMsg._condition = inputMsg.condition;
-                                }
-                                inputMsg.condition = condResults;
+                                node.expression.assign("condition", condResults);
 
-                                node.debug("Evaluating: " + node.evaluation + " -> " + JSON.stringify(inputMsg));
-                                RED.util.evaluateJSONataExpression(node.expression, inputMsg, (err, value) =>
+                                node.debug("Evaluating: " + node.evaluation + " -> " + JSON.stringify(condResults));
+                                RED.util.evaluateJSONataExpression(node.expression, msg, (err, value) =>
                                 {
                                     if (err)
                                     {
