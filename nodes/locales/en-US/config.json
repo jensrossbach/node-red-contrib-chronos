@@ -61,7 +61,8 @@
                 },
                 "source":
                 {
-                    "context":  "context"
+                    "expression":  "expression",
+                    "context":     "context"
                 }
             },
             "dayType":
@@ -121,9 +122,11 @@
             "invalidConfig":     "Configuration contains invalid values",
             "invalidTime":       "Invalid time specified",
             "invalidBaseTime":   "Invalid base time specified: __baseTime__",
-            "invalidCondition":  "Invalid condition from context variable: __condition__",
+            "invalidCondition":  "Invalid condition",
             "invalidName":       "Invalid custom sun position specified",
-            "unavailableTime":   "No time available for event"
+            "unavailableTime":   "No time available for event",
+            "evaluationFailed":  "Unable to evaluate expression",
+            "notBoolean":        "Expression must result in boolean value"
         }
     },
     "config":

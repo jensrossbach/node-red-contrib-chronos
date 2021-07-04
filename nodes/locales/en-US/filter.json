@@ -9,11 +9,6 @@
             "logicalOr":   "logical OR",
             "logicalAnd":  "logical AND",
             "annotation":  "annotation"
-        },
-        "error":
-        {
-            "evaluationFailed":  "Unable to evaluate expression",
-            "notBoolean":        "Expression must result in boolean value"
         }
     }
 }

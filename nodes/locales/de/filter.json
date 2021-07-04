@@ -9,11 +9,6 @@
             "logicalOr":   "Logisches ODER",
             "logicalAnd":  "Logisches UND",
             "annotation":  "Annotation"
-        },
-        "error":
-        {
-            "evaluationFailed":  "Fehler beim Auswerten des Ausdrucks",
-            "notBoolean":        "Ausdruck muss ein Wahrheitswert sein"
         }
     }
 }
