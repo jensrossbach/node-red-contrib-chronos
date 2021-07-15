@@ -27,6 +27,7 @@ const sinon = require("sinon");
 const chronos = require("../../nodes/common/chronos.js");
 const moment = require("moment");
 const sunCalc = require("suncalc");
+const jsonata = require("jsonata");
 
 require("should-sinon");
 
@@ -359,6 +360,135 @@ describe("chronos", function()
             chronos.getTime(RED, node, moment(), "invalid", "abc");
 
             // TODO: how to validate best?
+        });
+    });
+
+    context("getJSONataExpression", function()
+    {
+        it("should return expression", function()
+        {
+            const jsnExpr = {testToken: "chronos", registerFunction: sinon.stub()};
+            const RED = {util: {prepareJSONataExpression: sinon.stub().returns(jsnExpr)}};
+            const node = "fake";
+
+            let expr = chronos.getJSONataExpression(RED, node, "my expression");
+            expr.should.have.property("testToken", "chronos");
+            RED.util.prepareJSONataExpression.should.be.calledWith("my expression", node);
+            jsnExpr.registerFunction.should.have.callCount(14);
+        });
+
+        it("should register functions", function()
+        {
+            const RED = {"_": () => "", util: {prepareJSONataExpression: function(expr, node)
+            {
+                return jsonata(expr);
+            }}};
+            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const ts = chronos.getTimeFrom(node, "2021-12-02T12:34:56.789").valueOf();
+
+            let expr = chronos.getJSONataExpression(RED, node, "$millisecond($ts)");
+            expr.assign("ts", ts);
+            let result = expr.evaluate({});
+            result.should.equal(789);
+
+            expr = chronos.getJSONataExpression(RED, node, "$second($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(56);
+
+            expr = chronos.getJSONataExpression(RED, node, "$minute($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(34);
+
+            expr = chronos.getJSONataExpression(RED, node, "$hour($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(12);
+
+            expr = chronos.getJSONataExpression(RED, node, "$day($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(2);
+
+            expr = chronos.getJSONataExpression(RED, node, "$dayOfWeek($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(5);
+
+            expr = chronos.getJSONataExpression(RED, node, "$dayOfYear($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(336);
+
+            expr = chronos.getJSONataExpression(RED, node, "$week($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(49);
+
+            expr = chronos.getJSONataExpression(RED, node, "$month($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(12);
+
+            expr = chronos.getJSONataExpression(RED, node, "$quarter($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(4);
+
+            expr = chronos.getJSONataExpression(RED, node, "$year($ts)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(2021);
+
+            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22')");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(1638440520000);
+
+            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 0, false)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(1638440520000);
+
+            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 10, false)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(1638441120000);
+
+            sinon.stub(Math, "random").returns(0.5);
+            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 20, true)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            result.should.equal(1638441120000);
+
+            sinon.stub(sunCalc, "getTimes").returns({"sunset": new Date("2000-01-01T11:22:33.444Z")});
+            expr = chronos.getJSONataExpression(RED, node, "$sunTime($ts, 'sunset', 0, false)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            sunCalc.getTimes.should.be.calledOnce();
+            result.should.equal(946725753444);
+
+            sunCalc.getTimes.resetHistory();
+            expr = chronos.getJSONataExpression(RED, node, "$sunTime($ts, 'sunset')");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            sunCalc.getTimes.should.be.calledOnce();
+            result.should.equal(946725753444);
+
+            sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T11:22:33.444Z")});
+            expr = chronos.getJSONataExpression(RED, node, "$moonTime($ts, 'rise', 0, false)");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            sunCalc.getTimes.should.be.calledOnce();
+            result.should.equal(946725753444);
+
+            sunCalc.getMoonTimes.resetHistory();
+            expr = chronos.getJSONataExpression(RED, node, "$moonTime($ts, 'rise')");
+            expr.assign("ts", ts);
+            result = expr.evaluate({});
+            sunCalc.getTimes.should.be.calledOnce();
+            result.should.equal(946725753444);
         });
     });
 });

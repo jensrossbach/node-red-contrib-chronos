@@ -253,36 +253,21 @@ describe("time filter node", function()
 
         it("should add conditions for JSONata expression", async function()
         {
-            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "condition[0]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, cfgNode];
+            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "$condition[0]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, cfgNode];
+
             sinon.stub(sfUtils, "evaluateCondition").returns(true);
-
-            await helper.load([configNode, filterNode], flow, credentials);
-            const fn1 = helper.getNode("fn1");
-
+            sinon.stub(helper._RED.util, "prepareJSONataExpression").returns({assign: sinon.spy()});
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
             {
                 cb(true);
             });
+
+            await helper.load([configNode, filterNode], flow, credentials);
+            const fn1 = helper.getNode("fn1");
 
             fn1.receive({payload: "test"});
-            helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test", condition: [true]}, sinon.match.any);
-        });
-
-        it("should add conditions for JSONata expression and rename original property", async function()
-        {
-            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "condition[0]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, cfgNode];
-            sinon.stub(sfUtils, "evaluateCondition").returns(true);
-
-            await helper.load([configNode, filterNode], flow, credentials);
-            const fn1 = helper.getNode("fn1");
-
-            sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
-            {
-                cb(true);
-            });
-
-            fn1.receive({payload: "test", condition: "something"});
-            helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test", condition: [true], _condition: "something"}, sinon.match.any);
+            fn1.expression.assign.should.be.calledWith("condition", [true]);
+            helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test"}, sinon.match.any);
         });
 
         it("should handle expression error during JSONata evaluation", async function()
@@ -290,7 +275,7 @@ describe("time filter node", function()
             const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "my JSONata expression", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]},
                           {id: "chn1", type: "catch", name: "", scope: null, uncaught: false, wires: [["hn1"]]}, hlpNode, cfgNode];
 
-            sinon.stub(helper._RED.util, "prepareJSONataExpression").returns(true);
+            sinon.stub(helper._RED.util, "prepareJSONataExpression").returns({assign: sinon.spy()});
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
             {
                 cb("some error occurred");
@@ -301,7 +286,8 @@ describe("time filter node", function()
 
             helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
             fn1.receive({payload: "test"});
-            fn1.error.should.be.calledOnce().and.calledWith("filter.error.evaluationFailed");
+            fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
+            fn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed");
         });
 
         it("should handle no boolean error during JSONata evaluation", async function()
@@ -309,7 +295,7 @@ describe("time filter node", function()
             const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "my JSONata expression", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]},
                           {id: "chn1", type: "catch", name: "", scope: null, uncaught: false, wires: [["hn1"]]}, hlpNode, cfgNode];
 
-            sinon.stub(helper._RED.util, "prepareJSONataExpression").returns(true);
+            sinon.stub(helper._RED.util, "prepareJSONataExpression").returns({assign: sinon.spy()});
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
             {
                 cb(null, 42);
@@ -320,7 +306,8 @@ describe("time filter node", function()
 
             helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
             fn1.receive({payload: "test"});
-            fn1.error.should.be.calledOnce().and.calledWith("filter.error.notBoolean");
+            fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
+            fn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.notBoolean");
         });
 
         it("should pass through (one match)", function(done)
@@ -520,7 +507,7 @@ describe("time filter node", function()
 
         it("should pass through (JSONata match)", function(done)
         {
-            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", wires: [["hn1"]], baseTimeType: "msgIngress", baseTime: "", evaluation: "condition[0] or condition[1]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, hlpNode, cfgNode];
+            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", wires: [["hn1"]], baseTimeType: "msgIngress", baseTime: "", evaluation: "$condition[0] or $condition[1]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, hlpNode, cfgNode];
             sinon.stub(sfUtils, "evaluateCondition").onFirstCall().returns(false).onSecondCall().returns(true);
 
             helper.load([configNode, filterNode], flow, credentials, function()
@@ -544,7 +531,7 @@ describe("time filter node", function()
                     });
 
                     fn1.should.have.property("evaluationType", "jsonata");
-                    fn1.should.have.property("evaluation", "condition[0] or condition[1]");
+                    fn1.should.have.property("evaluation", "$condition[0] or $condition[1]");
                     fn1.receive({payload: "test"});
                 }
                 catch (e)
@@ -556,7 +543,7 @@ describe("time filter node", function()
 
         it("should filter out (no JSONata match)", function(done)
         {
-            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", wires: [["hn1"]], baseTimeType: "msgIngress", baseTime: "", evaluation: "condition[0] and condition[1]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, hlpNode, cfgNode];
+            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", wires: [["hn1"]], baseTimeType: "msgIngress", baseTime: "", evaluation: "$condition[0] and $condition[1]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, hlpNode, cfgNode];
             sinon.stub(sfUtils, "evaluateCondition").onFirstCall().returns(false).onSecondCall().returns(true);
 
             helper.load([configNode, filterNode], flow, credentials, function()
@@ -579,7 +566,7 @@ describe("time filter node", function()
                     });
 
                     fn1.should.have.property("evaluationType", "jsonata");
-                    fn1.should.have.property("evaluation", "condition[0] and condition[1]");
+                    fn1.should.have.property("evaluation", "$condition[0] and $condition[1]");
                     fn1.receive({payload: "test"});
                     done();
                 }
