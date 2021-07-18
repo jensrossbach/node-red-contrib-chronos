@@ -284,7 +284,7 @@ SOFTWARE.
 
                     let date = $("<input/>", {type: "text", class: "node-input-date"})
                                         .appendTo(setRow1)
-                                        .typedInput({types: [nowInput, dateInput]});
+                                        .typedInput({types: [nowInput, dateInput, "jsonata"]});
                     date.typedInput("width", "280px");
                     let time = $("<input/>", {type: "text", class: "node-input-time"})
                                         .appendTo(setRow2)
@@ -484,11 +484,11 @@ SOFTWARE.
                     date.on("change", function()
                     {
                         let type = date.typedInput("type");
-                        if (type === "now")
+                        if ((type === "now") || (type === "jsonata"))
                         {
                             setRow2.hide();
                         }
-                        else if (type === "date")
+                        else
                         {
                             setRow2.show();
                         }
@@ -522,6 +522,10 @@ SOFTWARE.
                             date.typedInput("value", data.date);
                             time.typedInput("type", data.time.type);
                             time.typedInput("value", data.time.value);
+                        }
+                        else if (data.type == "jsonata")
+                        {
+                            date.typedInput("value", data.expression);
                         }
                     }
                     else if (data.action == "change")
@@ -597,6 +601,10 @@ SOFTWARE.
                         data.time = {};
                         data.time.type = time.typedInput("type");
                         data.time.value = time.typedInput("value");
+                    }
+                    else if (data.type == "jsonata")
+                    {
+                        data.expression = date.typedInput("value");
                     }
                 }
                 else if (data.action == "change")

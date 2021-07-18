@@ -76,10 +76,26 @@ SOFTWARE.
                 variable or a global variable.
             </p>
             <p>
-                For the set action, either the current date and time can be used
-                or a manually entered date and time can be specified. The date
-                has to be entered in the form <code>YYYY-MM-DD</code>, the time
-                can be provided in the following ways:
+                For the set action, the following possibilities can be selected:
+                <ul>
+                    <li>
+                        <i>current time</i>: Sets the target to the current time
+                        of the current day.
+                    </li>
+                    <li>
+                        <i>date and time</i>: Sets the target to a specific date
+                        and time. See below for more details.
+                    </li>
+                    <li>
+                        <i>expression</i>: Sets the target to the result of the
+                        provided JSONata expression. Additional time calculation
+                        functions are supported and the current target value can
+                        be accessed through variable <code>$target</code>.
+                    </li>
+                </ul>
+                For the date and time input, the date has to be entered in the
+                form <code>YYYY-MM-DD</code> and the time can be provided in the
+                following ways:
                 <ul>
                     <li>
                         <i>time of day</i>: A specific time can be entered
