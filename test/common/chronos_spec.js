@@ -443,24 +443,28 @@ describe("chronos", function()
 
             expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22')");
             expr.assign("ts", ts);
-            result = expr.evaluate({});
-            result.should.equal(1638440520000);
+            result = moment(expr.evaluate({}));
+            result.add(result.utcOffset(), "minutes");
+            result.valueOf().should.equal(1638444120000);
 
             expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 0, false)");
             expr.assign("ts", ts);
-            result = expr.evaluate({});
-            result.should.equal(1638440520000);
+            result = moment(expr.evaluate({}));
+            result.add(result.utcOffset(), "minutes");
+            result.valueOf().should.equal(1638444120000);
 
             expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 10, false)");
             expr.assign("ts", ts);
-            result = expr.evaluate({});
-            result.should.equal(1638441120000);
+            result = moment(expr.evaluate({}));
+            result.add(result.utcOffset(), "minutes");
+            result.valueOf().should.equal(1638444720000);
 
             sinon.stub(Math, "random").returns(0.5);
             expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 20, true)");
             expr.assign("ts", ts);
-            result = expr.evaluate({});
-            result.should.equal(1638441120000);
+            result = moment(expr.evaluate({}));
+            result.add(result.utcOffset(), "minutes");
+            result.valueOf().should.equal(1638444720000);
 
             sinon.stub(sunCalc, "getTimes").returns({"sunset": new Date("2000-01-01T11:22:33.444Z")});
             expr = chronos.getJSONataExpression(RED, node, "$sunTime($ts, 'sunset', 0, false)");
