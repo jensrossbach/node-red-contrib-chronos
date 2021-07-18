@@ -132,6 +132,68 @@ module.exports = function(RED)
                                             setTarget(msg, rule.target, node.chronos.getTime(RED, node, node.chronos.getUserDate(RED, node, rule.date), rule.time.type, rule.time.value).valueOf());
                                             break;
                                         }
+                                        case "jsonata":
+                                        {
+                                            let expression = null;
+                                            let result = null;
+
+                                            try
+                                            {
+                                                expression = node.chronos.getJSONataExpression(RED, node, rule.expression);
+
+                                                // time change node specific JSONata extensions
+                                                expression.assign("target", getTarget(msg, rule.target));
+
+                                                expression.registerFunction("set", (ts, part, value) =>
+                                                {
+                                                    return setPart(node.chronos.getTimeFrom(node, ts), part, value);
+                                                }, "<(sn)sn:n>");
+
+                                                expression.registerFunction("add", (ts, value, unit) =>
+                                                {
+                                                    return node.chronos.getTimeFrom(node, ts).add(value, unit).valueOf();
+                                                }, "<(sn)ns:n>");
+
+                                                expression.registerFunction("subtract", (ts, value, unit) =>
+                                                {
+                                                    return node.chronos.getTimeFrom(node, ts).subtract(value, unit).valueOf();
+                                                }, "<(sn)ns:n>");
+
+                                                expression.registerFunction("startOf", (ts, arg) =>
+                                                {
+                                                    return node.chronos.getTimeFrom(node, ts).startOf(arg).valueOf();
+                                                }, "<(sn)s:n>");
+
+                                                expression.registerFunction("endOf", (ts, arg) =>
+                                                {
+                                                    return node.chronos.getTimeFrom(node, ts).endOf(arg).valueOf();
+                                                }, "<(sn)s:n>");
+
+                                                result = RED.util.evaluateJSONataExpression(expression, msg);
+                                            }
+                                            catch (e)
+                                            {
+                                                node.debug(e.code + ": " + e.message);
+                                                node.debug(e.stack);
+
+                                                const details = {rule: i+1, expression: rule.expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                                                if (e.value)
+                                                {
+                                                    details.value = e.value;
+                                                }
+
+                                                throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+                                            }
+
+                                            if ((typeof result != "number") && (typeof result != "string"))
+                                            {
+                                                throw new node.chronos.TimeError(RED._("change.error.notTime"),
+                                                                                 {rule: i+1, expression: rule.expression, result: result});
+                                            }
+
+                                            setTarget(msg, rule.target, result);
+                                            break;
+                                        }
                                     }
                                 }
                                 else if (rule.action == "change")
@@ -156,61 +218,7 @@ module.exports = function(RED)
                                         {
                                             case "set":
                                             {
-                                                switch (rule.part)
-                                                {
-                                                    case "year":
-                                                    {
-                                                        input.year(rule.value);
-                                                        break;
-                                                    }
-                                                    case "quarter":
-                                                    {
-                                                        input.quarter(rule.value);
-                                                        break;
-                                                    }
-                                                    case "month":
-                                                    {
-                                                        input.month(rule.value - 1);
-                                                        break;
-                                                    }
-                                                    case "week":
-                                                    {
-                                                        input.week(rule.value);
-                                                        break;
-                                                    }
-                                                    case "weekday":
-                                                    {
-                                                        input.weekday(rule.value - 1);
-                                                        break;
-                                                    }
-                                                    case "day":
-                                                    {
-                                                        input.date(rule.value);
-                                                        break;
-                                                    }
-                                                    case "hour":
-                                                    {
-                                                        input.hour(rule.value);
-                                                        break;
-                                                    }
-                                                    case "minute":
-                                                    {
-                                                        input.minute(rule.value);
-                                                        break;
-                                                    }
-                                                    case "second":
-                                                    {
-                                                        input.second(rule.value);
-                                                        break;
-                                                    }
-                                                    case "millisecond":
-                                                    {
-                                                        input.millisecond(rule.value);
-                                                        break;
-                                                    }
-                                                }
-
-                                                output = input.valueOf();
+                                                output = setPart(input, rule.part, rule.value);
                                                 break;
                                             }
                                             case "add":
@@ -282,11 +290,69 @@ module.exports = function(RED)
                         }
 
                         node.send(msg);
+                        done();
                     }
-
-                    done();
                 });
             }
+        }
+
+        function setPart(input, part, value)
+        {
+            switch (part)
+            {
+                case "year":
+                {
+                    input.year(value);
+                    break;
+                }
+                case "quarter":
+                {
+                    input.quarter(value);
+                    break;
+                }
+                case "month":
+                {
+                    input.month(value - 1);
+                    break;
+                }
+                case "week":
+                {
+                    input.week(value);
+                    break;
+                }
+                case "weekday":
+                {
+                    input.weekday(value - 1);
+                    break;
+                }
+                case "day":
+                {
+                    input.date(value);
+                    break;
+                }
+                case "hour":
+                {
+                    input.hour(value);
+                    break;
+                }
+                case "minute":
+                {
+                    input.minute(value);
+                    break;
+                }
+                case "second":
+                {
+                    input.second(value);
+                    break;
+                }
+                case "millisecond":
+                {
+                    input.millisecond(value);
+                    break;
+                }
+            }
+
+            return input.valueOf();
         }
 
         function getTarget(msg, target)

@@ -79,10 +79,26 @@ SOFTWARE.
                 Variable sein.
             </p>
             <p>
-                Für die Aktion <i>Festlegen</i> kann entweder die aktuelle Zeit
-                verwendet oder ein Datum und eine Zeit eingegeben werden. Das
-                Datum muss in der Form <code>JJJJ-MM-TT</code> angegeben werden,
-                für die Zeit gilt:
+                Für die Aktion <i>Festlegen</i> gibt es folgende Auswahlmöglichkeiten:
+                <ul>
+                    <li>
+                        <i>Aktuelle Zeit</i>: Legt das Ziel auf die aktuelle Uhrzeit
+                        des aktuellen Tages fest.
+                    </li>
+                    <li>
+                        <i>Datum & Uhrzeit</i>: Left das Ziel auf ein bestimmtes
+                        Datum und eine bestimmte Uhrzeit fest, siehe weiter unten
+                        für Details.
+                    </li>
+                    <li>
+                        <i>JSONata</i>: Setzt das Ziel auf das Ergebnis des angegebenen
+                        JSONata-Ausdrucks. Es werden zusätzliche Zeitberechnungsfunktionen
+                        unterstützt und der aktuelle Zielwert kann über die Variable
+                        <code>$target</code> abgefragt werden.
+                    </li>
+                </ul>
+                Für die Datums- und Uhrzeiteingabe muss das Datum in der Form
+                <code>JJJJ-MM-TT</code> angegeben werden und für die Zeit gilt:
                 <ul>
                     <li>
                         <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt in der
