@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2021-07-23
+
+---
+
+### NOTE
+**Please be aware that this version introduces a change that requires adaptation in case you are using the JSONata based filter result evaluation which has been introduced in version 1.12. The condition result array has been changed to be an expression variable instead of an input property. This means it has to be referenced as `$condition` instead of `condition` (note the prepended dollar sign) and any property from the input message with the name "condition" will no longer be renamed.**
+
+---
+
+### Added
+- Added support for JSONata based time switch/filter node conditions.
+- Added new set action based on JSONata expressions to time change node.
+
+### Changed
+- Condition result array in JSONata result evaluation of time filter node is now an expression variable instead of an input property.
+
 ## [1.12.0] - 2021-06-21
 ### Added
 - New repeat node which repeats incoming messages periodically based on a configurable interval.
