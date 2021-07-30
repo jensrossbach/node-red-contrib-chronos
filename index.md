@@ -1,37 +1,82 @@
-## Welcome to GitHub Pages
+# node-red-contrib-chronos
 
-You can use the [editor on GitHub](https://github.com/jensrossbach/node-red-contrib-chronos/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+<a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm version" src="https://badgen.net/npm/v/node-red-contrib-chronos"></a>
+<a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm downloads" src="https://badgen.net/npm/dt/node-red-contrib-chronos"></a>
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+A collection of Node-RED nodes for date and time based scheduling, repeating, queueing, routing, filtering and manipulating. Automatically calculated times from sun events (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset) are supported as well.
 
-### Markdown
+If you encountered a bug, would like to propose a new feature or simply want to share your opinion about the software, please have a look at the [contribution guide](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/CONTRIBUTING.md) on the GitHub repository to learn more about how to contribute to this project. If you need help or have questions, please check out the [instructions for getting support](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/SUPPORT.md).
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+To see what has changed in recent versions of the software, please have a look at the project's [change log](https://github.com/jensrossbach/node-red-contrib-chronos/blob/master/CHANGELOG.md).
 
-```markdown
-Syntax highlighted code block
+#### Scheduler
+Schedules the transmission of messages or setting of global/flow variables at specific times.
 
-# Header 1
-## Header 2
-### Header 3
+![Scheduler](images/scheduler.png)
 
-- Bulleted
-- List
+#### Repeat
+Repeats each message passing through the node based on a configurable interval.
 
-1. Numbered
-2. List
+![Repeat](images/repeat.png)
 
-**Bold** and _Italic_ and `Code` text
+#### Delay Until
+Delays each message passing through the node until a configurable time is reached.
 
-[Link](url) and ![Image](src)
-```
+![Delay Until](images/delay.png)
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+#### Time Switch
+Routes messages based on a specific time.
 
-### Jekyll Themes
+![Time Switch](images/switch.png)
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/jensrossbach/node-red-contrib-chronos/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+#### Time Filter
+Filters messages based on a specific time.
 
-### Support or Contact
+![Timer Filter](images/filter.png)
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+#### Time Change
+Modifies time values in messages or context stores.
+
+![Timer Change](images/change.png)
+
+## Documentation
+The detailed documentation of each node is available in the wiki of the GitHub repository.
+
+**&rarr; [Documentation](https://github.com/jensrossbach/node-red-contrib-chronos/wiki)**
+
+## License
+Copyright (c) 2021 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Attribution
+The following icons have been taken from Node-RED provided nodes:
+* Timer icon (Node-RED delay node)
+* Switch icon (Node-RED switch node)
+* Flip icon (Node-RED change node)
+
+The following icons have been taken from Flaticon:
+* Hour glass icon made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
+* Funnel icon made by <a href="https://www.flaticon.com/free-icon/funnel_843709?term=filter&page=1&position=13" title="Kiranshastry">Kiranshastry</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
+
+For the calculation of sun and moon position based times, the nodes make use of the great Node.js library [SunCalc](https://www.npmjs.com/package/suncalc) from [Vladimir Agafonkin](https://www.npmjs.com/~mourner). Date and time algorithms are provided by the Node.js library [Moment.js](https://www.npmjs.com/package/moment).
+
+The map for showing the location coordinates in the configuration node is provided by [OpenStreetMap](https://www.openstreetmap.org).
