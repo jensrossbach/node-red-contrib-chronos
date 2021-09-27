@@ -330,7 +330,7 @@ SOFTWARE.
                     $("<label/>", {style: "width: auto; margin-right: 6px;"})
                                         .text(node._("node-red-contrib-chronos/chronos-config:common.label.offset"))
                                         .appendTo(time1Row2);
-                    let offset1 = $("<input/>", {class: "node-input-offset1", style: "width: 50px;"})
+                    let offset1 = $("<input/>", {class: "node-input-offset1", style: "width: 50px !important;"})
                                         .appendTo(time1Row2)
                                         .spinner(offsetInput);
                     let random1 = $("<input/>", {type: "checkbox", class: "node-input-random1", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
@@ -342,7 +342,7 @@ SOFTWARE.
                     $("<label/>", {style: "width: auto; margin-right: 6px;"})
                                         .text(node._("node-red-contrib-chronos/chronos-config:common.label.offset"))
                                         .appendTo(time2Row2);
-                    let offset2 = $("<input/>", {class: "node-input-offset2", style: "width: 50px;"})
+                    let offset2 = $("<input/>", {class: "node-input-offset2", style: "width: 50px !important;"})
                                         .appendTo(time2Row2)
                                         .spinner(offsetInput);
                     let random2 = $("<input/>", {type: "checkbox", class: "node-input-random2", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
@@ -375,7 +375,7 @@ SOFTWARE.
                                         .append($("<option></option>").val("workday").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.workday")))
                                         .append($("<option></option>").val("weekend").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.weekend")))
                                         .appendTo(nthDaysBox);
-                    let fixedDay = $("<input/>", {class: "node-input-fixedDay", style: "width: 30px;"})
+                    let fixedDay = $("<input/>", {class: "node-input-fixedDay", style: "width: 30px !important;"})
                                         .appendTo(specificDaysBox)
                                         .spinner(fixedDayInput);
                     let fixedMonth = $("<select/>", {class: "node-input-fixedMonth", style: "width: auto; margin-left: 6px;"})

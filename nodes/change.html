@@ -320,11 +320,11 @@ SOFTWARE.
                     $("<label/>", {style: "margin-bottom: 0px; width: auto; text-align: right; margin-left: 4px; margin-right: 4px;"})
                                         .text(node._("change.label.to"))
                                         .appendTo(setPartBox);
-                    let setPartValue = $("<input/>", {class: "node-input-setPartValue", style: "width: 100px;"})
+                    let setPartValue = $("<input/>", {class: "node-input-setPartValue", style: "width: 100px !important;"})
                                         .appendTo(setPartBox)
                                         .spinner(partInput);
 
-                    let addsub = $("<input/>", {class: "node-input-addsub", style: "width: 100px;"})
+                    let addsub = $("<input/>", {class: "node-input-addsub", style: "width: 100px !important;"})
                                         .appendTo(addsubBox)
                                         .spinner(addsubInput);
                     let addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: auto; margin-left: 4px"})

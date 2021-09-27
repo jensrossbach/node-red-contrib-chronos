@@ -266,7 +266,7 @@ SOFTWARE.
                     let offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
                                         .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
                                         .appendTo(offsetBox);
-                    let triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px;"})
+                    let triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
                                         .appendTo(offsetLabel)
                                         .spinner(offsetInput);
                     let randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
