@@ -292,6 +292,26 @@ module.exports = function(RED)
                                     triggerEvent(node.schedule[i], true);
                                 }
                             }
+                            else if (typeof msg.payload[i] == "object")
+                            {
+                                let data = node.schedule[i];
+
+                                if (validateExtendedContextData(msg.payload[i]))
+                                {
+                                    data.orig = {trigger: data.config.trigger, output: data.config.output};
+                                    data.config.trigger = msg.payload[i].trigger;
+                                    data.config.output = msg.payload[i].output;
+
+                                    startTimer(data, true);
+                                }
+                                else if (validateContextData(msg.payload[i]))
+                                {
+                                    data.orig = {trigger: data.config.trigger};
+                                    data.config.trigger = msg.payload[i];
+
+                                    startTimer(data, true);
+                                }
+                            }
 
                             if (!("timer" in node.schedule[i]))
                             {
@@ -376,9 +396,9 @@ module.exports = function(RED)
             });
         }
 
-        function startTimer(data)
+        function startTimer(data, keepOrig = false)
         {
-            stopTimer(data);
+            stopTimer(data, keepOrig);
 
             if ((data.config.trigger.type == "global") || (data.config.trigger.type == "flow"))
             {
@@ -389,8 +409,6 @@ module.exports = function(RED)
 
                 if (validateExtendedContextData(ctxData))
                 {
-                    node.debug("[Timer:" + data.id + "] Detected extended context variable format, overriding configured output");
-
                     data.orig = {trigger: data.config.trigger, output: data.config.output};
                     data.config.trigger = ctxData.trigger;
                     data.config.output = ctxData.output;
@@ -411,9 +429,9 @@ module.exports = function(RED)
             setUpTimer(data, false);
         }
 
-        function stopTimer(data)
+        function stopTimer(data, keepOrig = false)
         {
-            if ("orig" in data)
+            if (("orig" in data) && (!keepOrig))
             {
                 if ("trigger" in data.orig)
                 {
