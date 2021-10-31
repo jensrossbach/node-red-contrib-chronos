@@ -180,8 +180,16 @@ SOFTWARE.
     </dd>
     <dt>Dynamically program schedule</dt>
     <dd>
-        The trigger configuration can be dynamically loaded from a context
-        variable. The variables must be objects containing the following properties:
+        The trigger configuration can be dynamically overridden via the input message
+        or loaded from a context variable.
+    </dd>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">array</span></dt>
+        <dd>Overrides a single or multiple schedule events</dd>
+    </dl>
+    <dd>
+        The context variables and the elements of the <code>msg.payload</code>
+        array must be objects containing the following properties:
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
@@ -195,8 +203,8 @@ SOFTWARE.
     </dl>
     <dd>
         Additionally it is possible to override the output of the schedule. In
-        this case, an extended format must be used for the context variables where
-        the trigger configuration (see above) is encapsulated by an object property
+        this case, an extended format must be used for the objects where the
+        trigger configuration (see above) is encapsulated by an object property
         called <code>trigger</code> and the following properties are present:
     </dd>
     <dl class="message-properties">
@@ -215,6 +223,6 @@ SOFTWARE.
     <p>
         Scheduled messages are sent to the output of this node. The structure and
         content of the message can be statically defined through the configuration
-        or dynamically programmed via context variables.
+        or dynamically programmed via input message and context variables.
     </p>
 </script>

@@ -195,9 +195,16 @@ SOFTWARE.
     </dd>
     <dt>Zeitplan dynamisch programmieren</dt>
     <dd>
-        Die Konfiguration des Zielzeitpunkts kann dynamisch aus einer
-        Kontextvariablen geladen werden. Die Variablen müssen Objekte sein und
-        die folgenden Eigenschaften enthalten:
+        Die Konfiguration des Zielzeitpunkts kann dynamisch über die Eingangsnachricht
+        überschrieben oder aus einer Kontextvariablen geladen werden.
+    </dd>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">array</span></dt>
+        <dd>Überschreibt ein einzelnes oder mehrere Zeitereignisse</dd>
+    </dl>
+    <dd>
+        Die Kontextvariablen und die Elemente des <code>msg.payload</code> Arrays
+        müssen Objekte sein und die folgenden Eigenschaften enthalten:
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
@@ -211,10 +218,10 @@ SOFTWARE.
     </dl>
     <dd>
         Außerdem ist es möglich, die Ausgaben der Zeitereignisse zu überschreiben.
-        In diesem Fall muss ein erweitertes Format für die Kontextvariablen
-        verwendet werden, bei dem die Daten für den Zielzeitpunkt (siehe oben)
-        in eine Objekteigenschaft mit dem Namen <code>trigger</code> eingebettet
-        werden und folgende weitere Eigenschaften vorhanden sind:
+        In diesem Fall muss ein erweitertes Format für die Objekte verwendet
+        werden, bei dem die Daten für den Zielzeitpunkt (siehe oben) in eine
+        Objekteigenschaft mit dem Namen <code>trigger</code> eingebettet werden
+        und folgende weitere Eigenschaften vorhanden sind:
     </dd>
     <dl class="message-properties">
         <dt>output.type<span class="property-type">string</span></dt>
@@ -232,6 +239,7 @@ SOFTWARE.
     <p>
         Geplante Nachrichten werden an den Ausgabe-Port der Nachricht gesendet.
         Der Aufbau und Inhalt der Nachricht kann statisch über die Konfiguration
-        oder dynamisch über Kontextvariablen festgelegt werden.
+        oder dynamisch über Eingangsnachrichten und Kontextvariablen festgelegt
+        werden.
     </p>
 </script>
