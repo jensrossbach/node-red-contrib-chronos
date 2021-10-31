@@ -955,6 +955,60 @@ describe("scheduler node", function()
             });
         });
 
+        it("should override schedule event (trigger only)", async function()
+        {
+            const orig = {type: "time", value: "00:01", offset: 0, random: false};
+            const override = {type: "time", value: "11:11", offset: 11, random: true};
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: orig, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: [override, null]});
+
+            sn1.schedule[0].config.trigger.should.be.eql(override);
+            clock.clearTimeout.should.be.calledOnce();
+            clock.setTimeout.should.be.calledOnce();
+
+            clock.clearTimeout.resetHistory();
+            clock.setTimeout.resetHistory();
+            sn1.receive({payload: ["reload", null]});
+
+            sn1.schedule[0].config.trigger.should.be.eql(orig);
+            clock.clearTimeout.should.be.calledOnce();
+            clock.setTimeout.should.be.calledOnce();
+        });
+
+        it("should override schedule event (trigger and output)", async function()
+        {
+            const orig = {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}};
+            const override = {trigger: {type: "time", value: "11:11", offset: 11, random: true}, output: {type: "flow", property: {name: "var1", type: "string", value: "overridden"}}};
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [orig, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: [override, null]});
+
+            sn1.schedule[0].config.should.be.eql(override);
+            clock.clearTimeout.should.be.calledOnce();
+            clock.setTimeout.should.be.calledOnce();
+
+            clock.clearTimeout.resetHistory();
+            clock.setTimeout.resetHistory();
+            sn1.receive({payload: ["reload", null]});
+
+            sn1.schedule[0].config.should.be.eql(orig);
+            clock.clearTimeout.should.be.calledOnce();
+            clock.setTimeout.should.be.calledOnce();
+        });
+
         it("should handle invalid input message", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
