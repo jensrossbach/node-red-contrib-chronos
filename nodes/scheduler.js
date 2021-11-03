@@ -292,7 +292,7 @@ module.exports = function(RED)
                                     triggerEvent(node.schedule[i], true);
                                 }
                             }
-                            else if (typeof msg.payload[i] == "object")
+                            else if ((typeof msg.payload[i] == "object") && (msg.payload[i] != null))
                             {
                                 let data = node.schedule[i];
 
@@ -310,6 +310,10 @@ module.exports = function(RED)
                                     data.config.trigger = msg.payload[i];
 
                                     startTimer(data, true);
+                                }
+                                else
+                                {
+                                    node.error(RED._("scheduler.error.invalidMsgEvent", {event: "msg.payload[" + i + "]"}), msg);
                                 }
                             }
 
@@ -421,7 +425,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    node.error(RED._("scheduler.error.invalidEvent", {event: data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "")}), {});
+                    node.error(RED._("scheduler.error.invalidCtxEvent", {event: data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "")}), {});
                     return;
                 }
             }
