@@ -75,9 +75,13 @@ SOFTWARE.
                             vorgegebener Werte ausgewählt werden.
                         </li>
                         <li>
-                            <i>Benutzerdefiniert</i>: Einer der Namen für
+                            <i>Sonnenstand (benutzerdf.)</i>: Einer der Namen für
                             benutzerdefinierte Sonnenstände kann eingegeben
                             werden.
+                        </li>
+                        <li>
+                            <i>Cron-Tabelle</i>: Ein Cron-Zeitplan nach <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS Syntax</a>
+                            kann eingegeben werden.
                         </li>
                         <li>
                             <i>global</i>: Der Zielzeitpunkt wird aus der
@@ -208,13 +212,13 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
-        <dd>Auslöseart; entweder "time", "sun", "moon" oder "custom"</dd>
+        <dd>Auslöseart; entweder "time", "sun", "moon", "custom" oder "crontab"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Auslösezeitpunkt; der Inhalt ist abhängig von der Auslöseart</dd>
-        <dt>offset<span class="property-type">number</span></dt>
-        <dd>Zeitlicher Versatz zum Auslösezeitpunkt</dd>
-        <dt>random<span class="property-type">boolean</span></dt>
-        <dd>Zufälliger Zeitversatz</dd>
+        <dt class="optional">offset<span class="property-type">number</span></dt>
+        <dd>Zeitlicher Versatz zum Auslösezeitpunkt (nicht zutreffend auf Auslöseart "crontab")</dd>
+        <dt class="optional">random<span class="property-type">boolean</span></dt>
+        <dd>Zufälliger Zeitversatz (nicht zutreffend auf Auslöseart "crontab")</dd>
     </dl>
     <dd>
         Außerdem ist es möglich, die Ausgaben der Zeitereignisse zu überschreiben.

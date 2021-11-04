@@ -3,13 +3,15 @@
     {
         "label":
         {
-            "node":        "Zeitplaner",
-            "inputPort":   "Ein-/Ausschalten",
-            "outputPort":  "Geplante Nachricht",
-            "schedule":    "Zeitplan",
-            "output":      "Ausgabe",
-            "multiPort":   "Separate Ausgabe-Ports für Zeitereignisse",
-            "disabled":    "Mit inaktivem Zeitplan starten"
+            "node":         "Zeitplaner",
+            "inputPort":    "Ein-/Ausschalten",
+            "outputPort":   "Geplante Nachricht",
+            "schedule":     "Zeitplan",
+            "output":       "Ausgabe",
+            "crontab":      "Cron-Tabelle",
+            "fullMessage":  "Komplette Nachricht",
+            "multiPort":    "Separate Ausgabe-Ports für Zeitereignisse",
+            "disabled":     "Mit inaktivem Zeitplan starten"
         },
         "status":
         {

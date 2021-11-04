@@ -27,6 +27,7 @@ module.exports = function(RED)
     function ChronosSchedulerNode(settings)
     {
         const chronos = require("./common/chronos.js");
+        const cronosjs = require("cronosjs");
 
         let node = this;
         RED.nodes.createNode(node, settings);
@@ -96,6 +97,12 @@ module.exports = function(RED)
 
                 // check for valid user time
                 if ((event.trigger.type == "time") && !chronos.isValidUserTime(event.trigger.value))
+                {
+                    valid = false;
+                    break;
+                }
+
+                if ((event.trigger.type == "crontab") && !cronosjs.validate(event.trigger.value, {strict: true}))
                 {
                     valid = false;
                     break;
@@ -491,31 +498,41 @@ module.exports = function(RED)
                 node.debug("[Timer:" + data.id + "] Set up timer" + (repeat ? " (repeating)" : ""));
                 node.trace("[Timer:" + data.id + "] Timer specification: " + JSON.stringify(data.config));
 
-                const now = chronos.getCurrentTime(node);
-                let triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
-
-                if (data.config.trigger.offset != 0)
+                if (data.config.trigger.type == "crontab")
                 {
-                    let offset = data.config.trigger.random ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
-                    triggerTime.add(offset, "minutes");
+                    data.timer = cronosjs.scheduleTask(data.config.trigger.value, () =>
+                    {
+                        handleTimeout(data, false);
+                    });
                 }
-
-                if (triggerTime.isBefore(now))
+                else
                 {
-                    node.debug("[Timer:" + data.id + "] Trigger time before current time, adding one day");
+                    const now = chronos.getCurrentTime(node);
+                    let triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
-                    if (data.config.trigger.type == "time")
+                    if (data.config.trigger.offset != 0)
                     {
-                        triggerTime.add(1, "days");
+                        let offset = data.config.trigger.random ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
+                        triggerTime.add(offset, "minutes");
                     }
-                    else
+
+                    if (triggerTime.isBefore(now))
                     {
-                        triggerTime = chronos.getTime(RED, node, triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
+                        node.debug("[Timer:" + data.id + "] Trigger time before current time, adding one day");
+
+                        if (data.config.trigger.type == "time")
+                        {
+                            triggerTime.add(1, "days");
+                        }
+                        else
+                        {
+                            triggerTime = chronos.getTime(RED, node, triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
+                        }
                     }
+
+                    node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + triggerTime.format("YYYY-MM-DD HH:mm:ss"));
+                    data.timer = setTimeout(handleTimeout, triggerTime.diff(now), data, true);
                 }
-
-                node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + triggerTime.format("YYYY-MM-DD HH:mm:ss"));
-                data.timer = setTimeout(handleTimeout, triggerTime.diff(now), data, true);
             }
             catch (e)
             {
@@ -535,7 +552,15 @@ module.exports = function(RED)
         {
             node.debug("[Timer:" + data.id + "] Tear down timer");
 
-            clearTimeout(data.timer);
+            if (data.timer instanceof cronosjs.CronosTask)
+            {
+                data.timer.stop();
+            }
+            else
+            {
+                clearTimeout(data.timer);
+            }
+
             delete data.timer;
         }
 
@@ -599,7 +624,7 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.type != "string") || !/^(time|sun|moon|custom)$/.test(data.type))
+            if ((typeof data.type != "string") || !/^(time|sun|moon|custom|crontab)$/.test(data.type))
             {
                 return false;
             }
@@ -607,17 +632,18 @@ module.exports = function(RED)
             if (((typeof data.value != "string") && (typeof data.value != "number")) ||
                 ((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
                 ((data.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(data.value)) ||
-                ((data.type == "moon") && !/^(rise|set)$/.test(data.value)))
+                ((data.type == "moon") && !/^(rise|set)$/.test(data.value)) ||
+                ((data.type == "crontab") && !cronosjs.validate(data.value, {strict: true})))
             {
                 return false;
             }
 
-            if ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300))
+            if ((data.type != "crontab") && ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300)))
             {
                 return false;
             }
 
-            if (typeof data.random != "boolean")
+            if ((data.type != "crontab") && (typeof data.random != "boolean"))
             {
                 return false;
             }
