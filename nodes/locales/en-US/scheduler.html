@@ -70,8 +70,12 @@ SOFTWARE.
                             selected from a list of predefined values.
                         </li>
                         <li>
-                            <i>custom</i>: One of the user-defined sun position
+                            <i>custom sun position</i>: One of the user-defined sun position
                             names can be entered.
+                        </li>
+                        <li>
+                            <i>cron table</i>: A cron table can be entered
+                            according to <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS expression syntax</a>.
                         </li>
                         <li>
                             <i>global</i>: Trigger configuration will be loaded
@@ -193,13 +197,13 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
-        <dd>Trigger type; one of "time", "sun", "moon" or "custom"</dd>
+        <dd>Trigger type; one of "time", "sun", "moon", "custom" or "crontab"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Trigger value; content is depending on trigger type</dd>
-        <dt>offset<span class="property-type">number</span></dt>
-        <dd>Offset to the trigger time</dd>
-        <dt>random<span class="property-type">boolean</span></dt>
-        <dd>Randomized offset</dd>
+        <dt class="optional">offset<span class="property-type">number</span></dt>
+        <dd>Offset to the trigger time (not applicable to type "crontab")</dd>
+        <dt class="optional">random<span class="property-type">boolean</span></dt>
+        <dd>Randomized offset (not applicable to type "crontab")</dd>
     </dl>
     <dd>
         Additionally it is possible to override the output of the schedule. In

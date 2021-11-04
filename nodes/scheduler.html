@@ -220,13 +220,22 @@ SOFTWARE.
                         label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
                         icon: "fa fa-wrench",
                         hasValue: true,
-                        validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
+                        validate: /^[a-zA-Z][0-9a-zA-Z_]+$/
+                    };
+
+                    const cronInput =
+                    {
+                        value: "crontab",
+                        label: node._("scheduler.label.crontab"),
+                        icon: "fa fa-table",
+                        hasValue: true,
+                        validate: /^[0-9a-zA-Z ,#@*/?-]+$/
                     };
 
                     const fullMessageInput =
                     {
                         value: "fullMsg",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
+                        label: node._("scheduler.label.fullMessage"),
                         hasValue: false
                     };
 
@@ -258,7 +267,7 @@ SOFTWARE.
 
                     let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
                                         .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "global", "flow"]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, cronInput, "global", "flow"]});
                     triggerType.typedInput("width", "280px");
                     triggerType._prevType = "time";
 
@@ -300,7 +309,7 @@ SOFTWARE.
                     triggerType.on("change", function()
                     {
                         let type = triggerType.typedInput("type");
-                        if ((type === "global") || (type === "flow"))
+                        if ((type === "crontab") || (type === "global") || (type === "flow"))
                         {
                             offsetBox.hide();
                         }
@@ -354,10 +363,15 @@ SOFTWARE.
                     triggerType._prevType = data.trigger.type;
                     triggerType.typedInput("type", data.trigger.type);
 
-                    if ((data.trigger.type != "global") && (data.trigger.type != "flow"))
+                    if ((data.trigger.type != "crontab") && (data.trigger.type != "global") && (data.trigger.type != "flow"))
                     {
                         triggerOffset.spinner("value", data.trigger.offset);
                         triggerRandom.prop("checked", data.trigger.random);
+                    }
+                    else
+                    {
+                        triggerOffset.spinner("value", 0);
+                        triggerRandom.prop("checked", false);
                     }
 
                     if (data.output.type == "fullMsg")
@@ -405,7 +419,7 @@ SOFTWARE.
                 data.trigger.type = triggerType.typedInput("type");
                 data.trigger.value = triggerType.typedInput("value");
 
-                if ((data.trigger.type != "global") && (data.trigger.type != "flow"))
+                if ((data.trigger.type != "crontab") && (data.trigger.type != "global") && (data.trigger.type != "flow"))
                 {
                     data.trigger.offset = triggerOffset.spinner("value");
                     data.trigger.random = triggerRandom.prop("checked");
@@ -436,7 +450,7 @@ SOFTWARE.
                         }
                         else
                         {
-                            if ((data.trigger.type == "time") || (data.trigger.type == "custom"))
+                            if ((data.trigger.type == "time") || (data.trigger.type == "custom") || (data.trigger.type == "crontab"))
                             {
                                 data.label = data.trigger.value;
                             }
