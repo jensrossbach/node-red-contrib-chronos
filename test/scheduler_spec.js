@@ -30,6 +30,7 @@ const configNode = require("../nodes/config.js");
 const schedulerNode = require("../nodes/scheduler.js");
 const chronos = require("../nodes/common/chronos.js");
 const moment = require("moment");
+const cronosjs = require("cronosjs");
 
 require("should-sinon");
 
@@ -153,6 +154,7 @@ describe("scheduler node", function()
         const invalidConfig = "node-red-contrib-chronos/chronos-config:common.error.invalidConfig";
         testInvalidSchedule("missing schedule", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: []}, cfgNode], "scheduler.error.noSchedule");
         testInvalidSchedule("invalid schedule user time", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "", offset: 0, random: false}, output: {}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("invalid schedule cron table", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "crontab", value: "invalid", offset: 0, random: false}, output: {}}]}, cfgNode], invalidConfig);
         testInvalidSchedule("invalid schedule context variable", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "flow", value: ""}, output: {}}]}, cfgNode], invalidConfig);
         testInvalidSchedule("invalid schedule full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "["}}]}, cfgNode], invalidConfig);
         testInvalidSchedule("invalid schedule full message (no object)", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "true"}}]}, cfgNode], invalidConfig);
@@ -352,6 +354,41 @@ describe("scheduler node", function()
             });
         });
 
+        it("should schedule a cron table", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "crontab", value: "0 * * * * *", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: false, outputs: 1}, hlpNode, cfgNode];
+
+            sinon.spy(cronosjs, "scheduleTask");
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    cronosjs.scheduleTask.should.be.calledWith("0 * * * * *", sinon.match.any);
+                    clock.tick(60000);  // advance clock by 1 min
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
         it("should handle time error during setup of timer", async function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "sun", value: "sunset", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
@@ -423,7 +460,7 @@ describe("scheduler node", function()
                 helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
                 sn1.context.should.be.calledOnce();
                 ctx.flow.get.should.be.calledWith("testKey", "testStore");
-                sn1.error.should.be.calledOnce().and.calledWith("scheduler.error.invalidEvent");
+                sn1.error.should.be.calledOnce().and.calledWith("scheduler.error.invalidCtxEvent");
                 clock.setTimeout.should.not.be.called();
             });
         }
@@ -441,6 +478,7 @@ describe("scheduler node", function()
         testInvalidContextVariable("trigger value invalid time", {type: "time", value: "12_14", offset: 0, random: false});
         testInvalidContextVariable("trigger value invalid sun position", {type: "sun", value: "invalid", offset: 0, random: false});
         testInvalidContextVariable("trigger value invalid moon position", {type: "moon", value: "invalid", offset: 0, random: false});
+        testInvalidContextVariable("trigger value invalid crontab", {type: "crontab", value: "invalid", offset: 0, random: false});
         testInvalidContextVariable("trigger offset wrong type", {type: "time", value: "00:01", offset: "invalid", random: false});
         testInvalidContextVariable("trigger offset too small", {type: "time", value: "00:01", offset: -301, random: false});
         testInvalidContextVariable("trigger offset too large", {type: "time", value: "00:01", offset: 301, random: false});
@@ -637,6 +675,26 @@ describe("scheduler node", function()
             sn1.receive({payload: [false, false]});
             sn1.disabledSchedule.should.be.true();
             clock.clearTimeout.should.be.calledTwice();
+        });
+
+        it("should switch off schedule correctly", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "crontab", value: "0 * * * *", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            const clr = sinon.spy(clock, "clearTimeout");
+            const ctstop = sinon.spy(sn1.schedule[1].timer, "stop");
+            const tmr = sn1.schedule[0].timer;
+
+            sn1.receive({payload: [false, null]});
+            clr.should.be.calledWith(tmr);
+            ctstop.should.not.be.called();
+
+            clr.resetHistory();
+            sn1.receive({payload: [null, false]});
+            clr.should.not.be.calledWith(tmr);
+            ctstop.should.be.called();
         });
 
         it("should toggle schedule (to on)", async function()
@@ -1007,6 +1065,23 @@ describe("scheduler node", function()
             sn1.schedule[0].config.should.be.eql(orig);
             clock.clearTimeout.should.be.calledOnce();
             clock.setTimeout.should.be.calledOnce();
+        });
+
+        it("should handle invalid schedule event override", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
+
+            sn1.disabledSchedule.should.be.false();
+            sn1.receive({payload: [{}, null]});
+
+            sn1.error.should.be.calledOnce().and.calledWith("scheduler.error.invalidMsgEvent");
+            clock.setTimeout.should.not.be.called();
+            clock.clearTimeout.should.not.be.called();
         });
 
         it("should handle invalid input message", async function()
