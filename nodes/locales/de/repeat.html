@@ -25,7 +25,7 @@ SOFTWARE.
 <script type="text/x-red" data-help-name="chronos-repeat">
     <p>
         Wiederholt eintreffende Nachrichten beim Durchlaufen des Knotens auf
-        Grundlage eines konfigurierbaren Intervalls.
+        Grundlage eines konfigurierbaren Intervalls oder Cron-Zeitplans.
     </p>
     <h3>Details</h3>
     <p>
@@ -47,10 +47,21 @@ SOFTWARE.
         <dd>
             Ein Verweis auf den zu verwendenden Konfigurationsknoten.
         </dd>
+        <dt>Modus</dt>
+        <dd>
+            Der Wiederholungsmodus, der entweder einfach (siehe "Intervall"
+            unten) oder erweitert (siehe "Cron-Tabelle unten") sein kann.
+        </dd>
         <dt>Intervall</dt>
         <dd>
-            Das Intervall zum Wiederholen der Ausgabe-Nachrichten, welches in
-            Sekunden, Minuten oder Stunden angegeben werden kann.
+            Im einfachen Modus wird hier das Intervall zum Wiederholen der
+            Ausgabe-Nachrichten in Sekunden, Minuten oder Stunden angegeben.
+        </dd>
+        <dt>Cron-Tabelle</dt>
+        <dd>
+            Im erweiterten Modus wird hier ein Cron-Zeitplan angegeben, der der
+            <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS Ausdruckssyntax</a>
+            entsprechen muss.
         </dd>
         <dt>Bis</dt>
         <dd>

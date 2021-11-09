@@ -27,12 +27,19 @@ module.exports = function(RED)
     function ChronosRepeatNode(settings)
     {
         const chronos = require("./common/chronos.js");
+        const cronosjs = require("cronosjs");
 
         let node = this;
         RED.nodes.createNode(node, settings);
 
         node.config = RED.nodes.getNode(settings.config);
         node.locale = require("os-locale").sync();
+
+        // backward compatibility to v1.14.x and earlier
+        if (typeof settings.mode == "undefined")
+        {
+            settings.mode = "simple";
+        }
 
         if (!node.config)
         {
@@ -44,13 +51,20 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
         }
+        else if ((settings.mode == "advanced") && !cronosjs.validate(settings.crontab))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else
         {
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
             node.status({});
 
+            node.mode = settings.mode;
             node.interval = settings.interval;
             node.intervalUnit = settings.intervalUnit;
+            node.crontab = (typeof settings.crontab == "undefined") ? "" : settings.crontab;
             node.untilType = settings.untilType;
             node.untilValue = settings.untilValue;
             node.untilOffset = settings.untilOffset;
@@ -119,8 +133,10 @@ module.exports = function(RED)
         {
             const now = chronos.getCurrentTime(node);
 
+            let mode = node.mode;
             let interval = node.interval;
             let intervalUnit = node.intervalUnit;
+            let crontab = node.crontab;
             let untilType = node.untilType;
             let untilValue = node.untilValue;
             let untilOffset = node.untilOffset;
@@ -130,12 +146,26 @@ module.exports = function(RED)
             {
                 node.debug("Input message has override property for interval");
 
+                mode = "simple";
                 interval = msg.interval.value;
                 intervalUnit = msg.interval.unit;
 
                 if (!node.preserveCtrlProps)
                 {
                     delete msg.interval;
+                }
+            }
+
+            if (hasCrontabOverride(msg.crontab))
+            {
+                node.debug("Input message has override property for cron table");
+
+                mode = "advanced";
+                crontab = msg.crontab;
+
+                if (!node.preserveCtrlProps)
+                {
+                    delete msg.crontab;
                 }
             }
 
@@ -165,7 +195,15 @@ module.exports = function(RED)
             }
 
             node.message = msg;
-            setupRepeatTimer(now, interval, intervalUnit, getUntilTime(now, untilType, untilValue, untilOffset, untilRandom));
+
+            if (mode == "simple")
+            {
+                setupSimpleRepeatTimer(now, interval, intervalUnit, getUntilTime(now, untilType, untilValue, untilOffset, untilRandom));
+            }
+            else
+            {
+                setupAdvancedRepeatTimer(crontab, getUntilTime(now, untilType, untilValue, untilOffset, untilRandom));
+            }
         }
 
         function getUntilTime(now, type, value, offset, random)
@@ -185,7 +223,7 @@ module.exports = function(RED)
             return ret;
         }
 
-        function setupRepeatTimer(now, interval, intervalUnit, untilTime)
+        function setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime)
         {
             node.debug("Set up timer for interval " + interval + " " + intervalUnit + " until " + (untilTime ? untilTime.format("YYYY-MM-DD HH:mm:ss") : "next message"));
             node.sendTime = now.clone().add(interval, intervalUnit);
@@ -198,12 +236,63 @@ module.exports = function(RED)
                     delete node.repeatTimer;
 
                     node.send(RED.util.cloneMessage(node.message));
-                    setupRepeatTimer(chronos.getCurrentTime(node), interval, intervalUnit, untilTime);
+                    setupSimpleRepeatTimer(chronos.getCurrentTime(node), interval, intervalUnit, untilTime);
                 }, node.sendTime.diff(now));
             }
             else
             {
                 node.sendTime = null;
+            }
+
+            updateStatus();
+        }
+
+        function setupAdvancedRepeatTimer(crontab, untilTime)
+        {
+            node.debug("Set up timer for cron table '" + crontab + "' until " + (untilTime ? untilTime.format("YYYY-MM-DD HH:mm:ss") : "next message"));
+
+            const expression = cronosjs.CronosExpression.parse(crontab);
+            let firstTrigger = expression.nextDate();
+
+            if (firstTrigger)
+            {
+                node.sendTime = chronos.getTimeFrom(node, firstTrigger);
+
+                if (!untilTime || node.sendTime.isSameOrBefore(untilTime))
+                {
+                    node.repeatTimer = new cronosjs.CronosTask(expression);
+
+                    node.repeatTimer.on("run", () =>
+                    {
+                        node.send(RED.util.cloneMessage(node.message));
+
+                        let nextTrigger = expression.nextDate();
+                        if (nextTrigger)
+                        {
+                            node.sendTime = chronos.getTimeFrom(node, nextTrigger);
+                            if (untilTime && node.sendTime.isAfter(untilTime))
+                            {
+                                node.repeatTimer.stop();
+
+                                delete node.repeatTimer;
+                                node.sendTime = null;
+                            }
+                        }
+                        else
+                        {
+                            delete node.repeatTimer;
+                            node.sendTime = null;
+                        }
+
+                        updateStatus();
+                    });
+
+                    node.repeatTimer.start();
+                }
+                else
+                {
+                    node.sendTime = null;
+                }
             }
 
             updateStatus();
@@ -215,9 +304,16 @@ module.exports = function(RED)
             {
                 node.debug("Tear down timer");
 
-                clearTimeout(node.repeatTimer);
-                delete node.repeatTimer;
+                if (node.repeatTimer instanceof cronosjs.CronosTask)
+                {
+                    node.repeatTimer.stop();
+                }
+                else
+                {
+                    clearTimeout(node.repeatTimer);
+                }
 
+                delete node.repeatTimer;
                 node.sendTime = null;
             }
         }
@@ -237,6 +333,21 @@ module.exports = function(RED)
             if ((typeof data.value != "number") ||
                 (((data.unit == "seconds") || (data.unit == "minutes")) && ((data.value < 1) || (data.value > 59))) ||
                 ((data.unit == "hours") && ((data.value < 1) || (data.value > 23))))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function hasCrontabOverride(data)
+        {
+            if ((typeof data != "string") || !data)
+            {
+                return false;
+            }
+
+            if (!cronosjs.validate(data))
             {
                 return false;
             }

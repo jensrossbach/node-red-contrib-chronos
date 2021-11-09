@@ -6,12 +6,19 @@
             "node":        "Wiederholung",
             "outputPort":  "Wiederholte Nachricht",
             "every":       "Alle",
+            "mode":        "Modus",
             "interval":    "Intervall",
+            "crontab":     "Cron-Tabelle",
             "until":       "Bis",
             "nextMsg":     "Nächste Nachricht"
         },
         "list":
         {
+            "mode":
+            {
+                "simple":    "Einfach",
+                "advanced":  "Erweitert"
+            },
             "interval":
             {
                 "seconds":  "Sekunde(n)",
