@@ -32,6 +32,13 @@ SOFTWARE.
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
     <div class="form-row" style="padding-top: 4px;">
+        <label for="node-input-mode"><i class="fa fa-sliders"></i> <span data-i18n="repeat.label.mode"></span></label>
+        <select id="node-input-mode" style="width: auto;">
+            <option value="simple" data-i18n="repeat.list.mode.simple"></option>
+            <option value="advanced" data-i18n="repeat.list.mode.advanced"></option>
+        </select>
+    </div>
+    <div id="form-row-simple" class="form-row">
         <label for="node-input-interval"><i class="fa fa-clock-o"></i> <span data-i18n="repeat.label.interval"></span></label>
         <input id="node-input-interval" style="width: 60px !important; float: left;" value="1">
         <select id="node-input-intervalUnit" style="width: auto;">
@@ -39,6 +46,10 @@ SOFTWARE.
             <option value="minutes" data-i18n="repeat.list.interval.minutes"></option>
             <option value="hours" data-i18n="repeat.list.interval.hours"></option>
         </select>
+    </div>
+    <div id="form-row-advanced" class="form-row">
+        <label for="node-input-crontab"><i class="fa fa-table"></i> <span data-i18n="repeat.label.crontab"></span></label>
+        <input type="text" id="node-input-crontab" placeholder="* * * * * * *">
     </div>
     <div class="form-row">
         <label for="node-input-until"><i class="fa fa-step-forward"></i> <span data-i18n="repeat.label.until"></span></label>
@@ -75,9 +86,13 @@ SOFTWARE.
             {
                 return this.name;
             }
-            else if (this.interval && this.intervalUnit)
+            else if ((this.mode == "simple") && this.interval && this.intervalUnit)
             {
                 return this._("repeat.label.every") + " " + this.interval + " " + this._("repeat.list.interval." + this.intervalUnit);
+            }
+            else if ((this.mode == "advanced") && this.crontab)
+            {
+                return this.crontab;
             }
             else
             {
@@ -108,6 +123,10 @@ SOFTWARE.
                 type:     "chronos-config",
                 required: true
             },
+            mode:
+            {
+                value: "simple"
+            },
             interval:
             {
                 value: 1
@@ -115,6 +134,21 @@ SOFTWARE.
             intervalUnit:
             {
                 value: "minutes"
+            },
+            crontab:
+            {
+                value: "",
+                validate: function(v)
+                {
+                    if (this.mode == "simple")
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return /^[0-9a-zA-Z ,#@*/?-]+$/.test(v);
+                    }
+                }
             },
             untilType:
             {
@@ -301,6 +335,26 @@ SOFTWARE.
                 validateInput.call(interval);
             });
 
+            $("#node-input-mode").change(function()
+            {
+                let value = $(this).val();
+                switch (value)
+                {
+                    case "simple":
+                    {
+                        $("#form-row-simple").show();
+                        $("#form-row-advanced").hide();
+                        break;
+                    }
+                    case "advanced":
+                    {
+                        $("#form-row-simple").hide();
+                        $("#form-row-advanced").show();
+                        break;
+                    }
+                }
+            });
+
             until.on("change", function()
             {
                 let type = until.typedInput("type");
@@ -314,6 +368,14 @@ SOFTWARE.
                 }
             });
 
+            // backward compatibility to v1.14.x and earlier
+            if (typeof node.mode == "undefined")
+            {
+                node.mode = "simple";
+                $("#node-input-mode").val(node.mode);
+            }
+
+            $("#node-input-mode").change();
             until.typedInput("value", $("#node-input-untilValue").val());
         },
         oneditsave: function()

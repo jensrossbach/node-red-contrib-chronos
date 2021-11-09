@@ -6,12 +6,19 @@
             "node":        "repeat",
             "outputPort":  "repeated message",
             "every":       "every",
+            "mode":        "Mode",
             "interval":    "Interval",
+            "crontab":     "Cron Table",
             "until":       "Until",
             "nextMsg":     "next message"
         },
         "list":
         {
+            "mode":
+            {
+                "simple":    "Simple",
+                "advanced":  "Advanced"
+            },
             "interval":
             {
                 "seconds":  "second(s)",

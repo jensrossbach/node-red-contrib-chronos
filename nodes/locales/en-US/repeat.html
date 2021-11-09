@@ -30,8 +30,9 @@ SOFTWARE.
     <h3>Details</h3>
     <p>
         This node forwards an incoming message upon reception and then periodically
-        sends this messages according to the configured interval. The repetition
-        ends when a new message is received and optionally at a specific time.
+        sends this messages according to the configured interval or cron-like
+        schedule. The repetition ends when a new message is received and optionally
+        at a specific time.
     </p>
     <p>
         For more information, please refer to the detailed documentation in the
@@ -45,10 +46,21 @@ SOFTWARE.
         <dd>
             A reference to the configuration node to be used.
         </dd>
+        <dt>Mode</dt>
+        <dd>
+            The repetition mode which can be either simple (see "Interval" below)
+            or advanced (see "Cron Table" below).
+        </dd>
         <dt>Interval</dt>
         <dd>
-            The interval for message sending repetition which can be expressed
-            in seconds, minutes or hours.
+            In simple mode, this specifies the interval for message sending repetition
+            which can be expressed in seconds, minutes or hours.
+        </dd>
+        <dt>Cron Table</dt>
+        <dd>
+            For advanced mode, this specifies the cron-based schedule for message
+            repetition which must be entered according to
+            <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS expression syntax</a>.
         </dd>
         <dt>Until</dt>
         <dd>
