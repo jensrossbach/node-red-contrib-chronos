@@ -77,6 +77,6 @@ The following icons have been taken from Flaticon:
 * Hour glass icon made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
 * Funnel icon made by <a href="https://www.flaticon.com/free-icon/funnel_843709?term=filter&page=1&position=13" title="Kiranshastry">Kiranshastry</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
 
-For the calculation of sun and moon position based times, the nodes make use of the great Node.js library [SunCalc](https://www.npmjs.com/package/suncalc) from [Vladimir Agafonkin](https://www.npmjs.com/~mourner). Date and time algorithms are provided by the Node.js library [Moment.js](https://www.npmjs.com/package/moment).
+For the calculation of sun and moon position based times, the nodes make use of the great Node.js library [SunCalc](https://www.npmjs.com/package/suncalc) from [Vladimir Agafonkin](https://www.npmjs.com/~mourner). The processing of cron based schedules is done via the Node.js library [CronosJS](https://www.npmjs.com/package/cronosjs) and date and time algorithms are provided by the Node.js library [Moment.js](https://www.npmjs.com/package/moment).
 
 The map for showing the location coordinates in the configuration node is provided by [OpenStreetMap](https://www.openstreetmap.org).
