@@ -10,7 +10,8 @@
             "interval":    "Interval",
             "crontab":     "Cron Table",
             "until":       "Until",
-            "nextMsg":     "next message"
+            "nextMsg":     "next message",
+            "msgIngress":  "When message arrives on input"
         },
         "list":
         {
@@ -24,6 +25,12 @@
                 "seconds":  "second(s)",
                 "minutes":  "minute(s)",
                 "hours":    "hour(s)"
+            },
+            "msgIngress":
+            {
+                "noop":           "do nothing",
+                "forward":        "forward message",
+                "forcedForward":  "forced forward message"
             }
         },
         "status":

@@ -40,6 +40,10 @@ module.exports = function(RED)
         {
             settings.mode = "simple";
         }
+        if (typeof settings.msgIngress == "undefined")
+        {
+            settings.msgIngress = "forward:forced";
+        }
 
         if (!node.config)
         {
@@ -69,6 +73,7 @@ module.exports = function(RED)
             node.untilValue = settings.untilValue;
             node.untilOffset = settings.untilOffset;
             node.untilRandom = settings.untilRandom;
+            node.msgIngress = settings.msgIngress;
             node.preserveCtrlProps = settings.preserveCtrlProps;
 
             node.sendTime = null;
@@ -119,9 +124,11 @@ module.exports = function(RED)
                         }
                         else
                         {
-                            scheduleMessage(msg);
+                            if (scheduleMessage(msg))
+                            {
+                                send(node.message);
+                            }
 
-                            send(RED.util.cloneMessage(node.message));
                             done();
                         }
                     }
@@ -141,6 +148,7 @@ module.exports = function(RED)
             let untilValue = node.untilValue;
             let untilOffset = node.untilOffset;
             let untilRandom = node.untilRandom;
+            let msgIngress = node.msgIngress;
 
             if (hasIntervalOverride(msg.interval))
             {
@@ -194,16 +202,32 @@ module.exports = function(RED)
                 }
             }
 
+            if (hasIngressOverride(msg.ingress))
+            {
+                node.debug("Input message has override property for ingress behavior '" +  msg.ingress + "'");
+
+                msgIngress = msg.ingress;
+
+                if (!node.preserveCtrlProps)
+                {
+                    delete msg.ingress;
+                }
+            }
+
             node.message = msg;
 
+            const untilTime = getUntilTime(now, untilType, untilValue, untilOffset, untilRandom);
             if (mode == "simple")
             {
-                setupSimpleRepeatTimer(now, interval, intervalUnit, getUntilTime(now, untilType, untilValue, untilOffset, untilRandom));
+                setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime);
             }
             else
             {
-                setupAdvancedRepeatTimer(crontab, getUntilTime(now, untilType, untilValue, untilOffset, untilRandom));
+                setupAdvancedRepeatTimer(crontab, untilTime);
             }
+
+            return (((msgIngress == "forward") && (!untilTime || now.isSameOrBefore(untilTime))) ||
+                    (msgIngress == "forward:forced"));
         }
 
         function getUntilTime(now, type, value, offset, random)
@@ -386,6 +410,21 @@ module.exports = function(RED)
                 {
                     return false;
                 }
+            }
+
+            return true;
+        }
+
+        function hasIngressOverride(data)
+        {
+            if ((typeof data != "string")  || !data)
+            {
+                return false;
+            }
+
+            if (!/^(noop|forward|forward:forced)$/.test(data))
+            {
+                return false;
             }
 
             return true;

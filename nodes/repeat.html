@@ -65,6 +65,16 @@ SOFTWARE.
             <label for="node-input-untilRandom" style="width: auto; margin-bottom: 0px;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.random"></label>
         </span>
     </div>
+    <div class="form-row" style="margin-bottom: 4px; padding-top: 10px">
+        <label for="node-input-msgIngress" style="width: auto;"><i class="fa fa-sign-in"></i> <span data-i18n="repeat.label.msgIngress"></span></label>
+    </div>
+    <div class="form-row">
+        <select id="node-input-msgIngress" style="margin-left: 104px; width: auto;">
+            <option value="noop" data-i18n="repeat.list.msgIngress.noop"></option>
+            <option value="forward" data-i18n="repeat.list.msgIngress.forward"></option>
+            <option value="forward:forced" data-i18n="repeat.list.msgIngress.forcedForward"></option>
+        </select>
+    </div>
     <div class="form-row" style="padding-top: 10px">
         <input id="node-input-preserveCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-preserveCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.preserveCtrlProps"></label>
@@ -165,6 +175,10 @@ SOFTWARE.
             untilRandom:
             {
                 value: false
+            },
+            msgIngress:
+            {
+                value: "forward"
             },
             preserveCtrlProps:
             {
@@ -373,6 +387,11 @@ SOFTWARE.
             {
                 node.mode = "simple";
                 $("#node-input-mode").val(node.mode);
+            }
+            if (typeof node.msgIngress == "undefined")
+            {
+                node.msgIngress = "forward:forced";
+                $("#node-input-msgIngress").val(node.msgIngress);
             }
 
             $("#node-input-mode").change();
