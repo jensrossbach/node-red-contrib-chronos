@@ -104,6 +104,28 @@ SOFTWARE.
             Wenn aktiviert, wird der Versatz im Bereich zwischen 0 und dem
             angegeben Wert zufällig ausgewählt.
         </dd>
+        <dt>Beim Eintreffen einer Nachricht</dt>
+        <dd>
+            Bestimmt das Verhalten beim Eintreffen einer Nachricht.
+            <ul>
+                <li>
+                    <i>Nichts machen</i>: Die Nachricht wird beim Eintreffen
+                    nicht weitergeleitet, der nächste Versand der Nachricht
+                    erfolgt nach Ablauf des ersten Intervalls (vorausgesetzt
+                    die Ende-Bedingung wurde dann noch nicht erfüllt).
+                </li>
+                <li>
+                    <i>Nachricht weiterleiten</i>: Die Nachricht wird sofort
+                    weitergeleitet, vorausgesetzt die Endezeit wurde noch nicht
+                    überschritten oder es wurde keine Endezeit angegeben.
+                </li>
+                <li>
+                    <i>Nachricht immer weiterleiten</i>: Die Nachricht wird
+                    sofort weitergeleitet, unabhängig davon ob die Endezeit
+                    bereits überschritten wurde oder nicht.
+                </li>
+            </ul>
+        </dd>
         <dt>Steuereigenschaften in Nachrichten beibehalten</dt>
         <dd>
             Wenn aktiviert, werden Steuereigenschaften, wie unten in Kapitel
@@ -115,8 +137,8 @@ SOFTWARE.
     <h3>Eingabe</h3>
     <p>
         Die Eingangsnachricht wird unverändert weitergereicht, kann jedoch auch
-        das Sendeverhalten des Knotens beeinflussen, wenn folgende Eigenschaften
-        vorhanden sind.
+        das Verhalten des Knotens in Bezug auf diese Nachricht beeinflussen, wenn
+        folgende Eigenschaften vorhanden sind.
     </p>
     <dl class="message-properties">
         <dt class="optional">stop<span class="property-type">any</span></dt>
@@ -133,6 +155,11 @@ SOFTWARE.
         <dd>
             Überschreibt die Bedingung, wann das periodische Senden der Nachricht
             beendet werden soll, siehe unten für weitere Informationen.
+        </dd>
+        <dt class="optional">ingress<span class="property-type">string</span></dt>
+        <dd>
+            Überschreibt das Verhalten beim Eintreffen einer Nachricht. Mögliche
+            Werte sind "noop", "forward" und "forward:forced".
         </dd>
     </dl>
     <p>

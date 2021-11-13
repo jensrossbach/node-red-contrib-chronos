@@ -10,7 +10,8 @@
             "interval":    "Intervall",
             "crontab":     "Cron-Tabelle",
             "until":       "Bis",
-            "nextMsg":     "Nächste Nachricht"
+            "nextMsg":     "Nächste Nachricht",
+            "msgIngress":  "Beim Eintreffen einer Nachricht"
         },
         "list":
         {
@@ -24,6 +25,12 @@
                 "seconds":  "Sekunde(n)",
                 "minutes":  "Minute(n)",
                 "hours":    "Stunde(n)"
+            },
+            "msgIngress":
+            {
+                "noop":           "Nichts machen",
+                "forward":        "Nachricht weiterleiten",
+                "forcedForward":  "Nachricht immer weiterleiten"
             }
         },
         "status":

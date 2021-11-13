@@ -102,17 +102,39 @@ SOFTWARE.
             When selected, the offset will be randomized between 0 and the
             specified value.
         </dd>
+        <dt>When message arrives on input</dt>
+        <dd>
+            Specifies the behavior upon message ingress.
+            <ul>
+                <li>
+                    <i>do nothing</i>: The message is not forwarded on ingress,
+                    next sending of the message happens after the first interval
+                    has passed (provided that the end condition is not reached).
+                </li>
+                <li>
+                    <i>forward message</i>: The message is immediately forwarded
+                    provided that the end time is not exceeded or no end time has
+                    been set.
+                </li>
+                <li>
+                    <i>forced forward message</i>: The message is immediately
+                    forwarded regardless if the end time has been exceeded or
+                    not.
+                </li>
+            </ul>
+        </dd>
         <dt>Preserve control properties in messages</dt>
         <dd>
             If selected, control properties as described below in chapter
-            <i>Input</i> are not deleted from input messages and hence still
-            be present in the messages when they are sent to the output port.
+            <i>Input</i> are not deleted from input messages and hence are still
+            present in the messages when they are sent to the output port.
         </dd>
     </dl>
     <h3>Input</h3>
     <p>
-        The input message is forwarded as is but can also control the repetition
-        behavior of the node if the following properties are existing.
+        The input message is forwarded as is but can also control the
+        behavior of the node for that message if the following properties are
+        existing.
     </p>
     <dl class="message-properties">
         <dt class="optional">stop<span class="property-type">any</span></dt>
@@ -129,6 +151,11 @@ SOFTWARE.
         <dd>
             Overrides the condition when message sending repetition should end,
             see below for details.
+        </dd>
+        <dt class="optional">ingress<span class="property-type">string</span></dt>
+        <dd>
+            Overrides the behavior upon message ingress. Possible values are
+            "noop", "forward" and "forward:forced".
         </dd>
     </dl>
     <p>
