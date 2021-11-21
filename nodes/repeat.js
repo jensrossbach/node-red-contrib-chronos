@@ -71,6 +71,7 @@ module.exports = function(RED)
             node.crontab = (typeof settings.crontab == "undefined") ? "" : settings.crontab;
             node.untilType = settings.untilType;
             node.untilValue = settings.untilValue;
+            node.untilDate = settings.untilDate;
             node.untilOffset = settings.untilOffset;
             node.untilRandom = settings.untilRandom;
             node.msgIngress = settings.msgIngress;
@@ -124,12 +125,38 @@ module.exports = function(RED)
                         }
                         else
                         {
-                            if (scheduleMessage(msg))
+                            try
                             {
-                                send(node.message);
+                                if (scheduleMessage(msg))
+                                {
+                                    send(node.message);
+                                }
+
+                                done();
+                            }
+                            catch (e)
+                            {
+                                if (e instanceof chronos.TimeError)
+                                {
+                                    if (e.details)
+                                    {
+                                        if ("errorDetails" in msg)
+                                        {
+                                            msg._errorDetails = msg.errorDetails;
+                                        }
+                                        msg.errorDetails = e.details;
+                                    }
+
+                                    done(e.message);
+                                }
+                                else
+                                {
+                                    node.error(e.message);
+                                    node.debug(e.stack);
+                                    done();
+                                }
                             }
 
-                            done();
                         }
                     }
                 });
@@ -146,6 +173,7 @@ module.exports = function(RED)
             let crontab = node.crontab;
             let untilType = node.untilType;
             let untilValue = node.untilValue;
+            let untilDate = node.untilDate;
             let untilOffset = node.untilOffset;
             let untilRandom = node.untilRandom;
             let msgIngress = node.msgIngress;
@@ -185,6 +213,7 @@ module.exports = function(RED)
                 {
                     untilType = msg.until.type;
                     untilValue = msg.until.value;
+                    untilDate = msg.until.date;
                     untilOffset = msg.until.offset;
                     untilRandom = msg.until.random;
                 }
@@ -192,6 +221,7 @@ module.exports = function(RED)
                 {
                     untilType = "nextMsg";
                     untilValue = "";
+                    untilDate = null;
                     untilOffset = 0;
                     untilRandom = false;
                 }
@@ -216,7 +246,7 @@ module.exports = function(RED)
 
             node.message = msg;
 
-            const untilTime = getUntilTime(now, untilType, untilValue, untilOffset, untilRandom);
+            const untilTime = getUntilTime(untilDate ? chronos.getUserDate(RED, node, untilDate) : now, untilType, untilValue, untilOffset, untilRandom);
             if (mode == "simple")
             {
                 setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime);
@@ -397,6 +427,16 @@ module.exports = function(RED)
                     ((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
                     ((data.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(data.value)) ||
                     ((data.type == "moon") && !/^(rise|set)$/.test(data.value)))
+                {
+                    return false;
+                }
+
+                if ((typeof data.date != "undefined") && (typeof data.date != "string"))
+                {
+                    return false;
+                }
+
+                if ((typeof data.date == "string") && !chronos.isValidUserDate(data.date))
                 {
                     return false;
                 }

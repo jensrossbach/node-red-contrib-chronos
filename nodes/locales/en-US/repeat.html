@@ -92,6 +92,11 @@ SOFTWARE.
                 </li>
             </ul>
         </dd>
+        <dt>Date</dt>
+        <dd>
+            A date can be provided in the form <code>YYYY-MM-DD</code> for the
+            ending time. If omitted, the date of the message ingress is used.
+        </dd>
         <dt>Offset</dt>
         <dd>
             An offset between -300 and +300 can be specified in minutes. The offset
@@ -181,6 +186,8 @@ SOFTWARE.
         <dd>Ending time type; one of "time", "sun", "moon" or "custom"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Ending time value; content is depending on ending time type</dd>
+        <dt class="optional">date<span class="property-type">string</span></dt>
+        <dd>Ending date in the form <code>YYYY-MM-DD</code></dd>
         <dt>offset<span class="property-type">number</span></dt>
         <dd>Offset to the ending time</dd>
         <dt>random<span class="property-type">boolean</span></dt>

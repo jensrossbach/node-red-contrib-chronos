@@ -93,6 +93,12 @@ SOFTWARE.
                 </li>
             </ul>
         </dd>
+        <dt>Datum</dt>
+        <dd>
+            Ein Datum für den Endezeitpunkt kann in der Form <code>JJJJ-MM-TT</code>
+            angegeben werden. Falls nicht angegeben, wird das Datum des Eintreffens
+            der Nachricht verwendet.
+        </dd>
         <dt>Versatz</dt>
         <dd>
             Ein zeitlicher Versatz in Minuten zwischen -300 und +300 kann angegeben
@@ -186,6 +192,8 @@ SOFTWARE.
         <dd>Art des Endezeitpunkts; entweder "time", "sun", "moon" oder "custom"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Endezeitpunkt; der Inhalt ist abhängig von der Art des Endezeitpunkts</dd>
+        <dt class="optional">date<span class="property-type">string</span></dt>
+        <dd>Datum des Endezeitpunkts in der Form <code>JJJJ-MM-TT</code></dd>
         <dt>offset<span class="property-type">number</span></dt>
         <dd>Zeitlicher Versatz zum Endezeitpunkt</dd>
         <dt>random<span class="property-type">boolean</span></dt>

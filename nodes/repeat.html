@@ -57,7 +57,11 @@ SOFTWARE.
         <input id="node-input-untilType" type="hidden">
         <input id="node-input-untilValue" type="hidden">
     </div>
-    <div class="form-row" id="node-input-offsetBox">
+    <div class="form-row" id="form-row-untilDate">
+        <label for="node-input-untilDate"><i class="fa fa-calendar"></i> <span data-i18n="repeat.label.date"></span></label>
+        <input type="text" id="node-input-untilDate" style="width: 70%;" data-i18n="[placeholder]repeat.label.datePlaceholder">
+    </div>
+    <div class="form-row" id="form-row-offsetBox">
         <label for="node-input-untilOffset"><i class="fa fa-arrows-h"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
         <input id="node-input-untilOffset" style="width: 60px !important;">
         <span style="padding-left: 10px;">
@@ -167,6 +171,21 @@ SOFTWARE.
             untilValue:
             {
                 value: ""
+            },
+            untilDate:
+            {
+                value: "",
+                validate: function(v)
+                {
+                    if (!v)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/.test(v);
+                    }
+                }
             },
             untilOffset:
             {
@@ -319,6 +338,12 @@ SOFTWARE.
 
             let interval = $("#node-input-interval")
                             .spinner({min: 1, max: 59, step: 1, change: validateInput});
+            let untilDate = $("#node-input-untilDate")
+                            .datepicker({dateFormat: "yy-mm-dd",
+                                         minDate: "2000-01-01",
+                                         maxDate: "9999-12-31",
+                                         changeYear: true,
+                                         firstDay: 1});
             let until = $("#node-input-until")
                             .typedInput({types: [nextMsgInput, timeInput, sunTimeInput, moonTimeInput, customInput], typeField: $("#node-input-untilType")});
             let untilOffset = $("#node-input-untilOffset")
@@ -374,11 +399,13 @@ SOFTWARE.
                 let type = until.typedInput("type");
                 if (type === "nextMsg")
                 {
-                    $("#node-input-offsetBox").hide();
+                    $("#form-row-untilDate").hide();
+                    $("#form-row-offsetBox").hide();
                 }
                 else
                 {
-                    $("#node-input-offsetBox").show();
+                    $("#form-row-untilDate").show();
+                    $("#form-row-offsetBox").show();
                 }
             });
 
