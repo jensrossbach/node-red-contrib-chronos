@@ -386,7 +386,7 @@ module.exports = function(RED)
 
             if ((typeof data.value != "number") ||
                 (((data.unit == "seconds") || (data.unit == "minutes")) && ((data.value < 1) || (data.value > 59))) ||
-                ((data.unit == "hours") && ((data.value < 1) || (data.value > 23))))
+                ((data.unit == "hours") && ((data.value < 1) || (data.value > 24))))
             {
                 return false;
             }
