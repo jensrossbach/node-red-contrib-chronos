@@ -3,15 +3,17 @@
     {
         "label":
         {
-            "node":        "Wiederholung",
-            "outputPort":  "Wiederholte Nachricht",
-            "every":       "Alle",
-            "mode":        "Modus",
-            "interval":    "Intervall",
-            "crontab":     "Cron-Tabelle",
-            "until":       "Bis",
-            "nextMsg":     "Nächste Nachricht",
-            "msgIngress":  "Beim Eintreffen einer Nachricht"
+            "node":             "Wiederholung",
+            "outputPort":       "Wiederholte Nachricht",
+            "every":            "Alle",
+            "mode":             "Modus",
+            "interval":         "Intervall",
+            "crontab":          "Cron-Tabelle",
+            "until":            "Bis",
+            "date":             "Datum",
+            "datePlaceholder":  "JJJJ-MM-TT",
+            "nextMsg":          "Nächste Nachricht",
+            "msgIngress":       "Beim Eintreffen einer Nachricht"
         },
         "list":
         {

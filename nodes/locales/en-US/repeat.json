@@ -3,15 +3,17 @@
     {
         "label":
         {
-            "node":        "repeat",
-            "outputPort":  "repeated message",
-            "every":       "every",
-            "mode":        "Mode",
-            "interval":    "Interval",
-            "crontab":     "Cron Table",
-            "until":       "Until",
-            "nextMsg":     "next message",
-            "msgIngress":  "When message arrives on input"
+            "node":             "repeat",
+            "outputPort":       "repeated message",
+            "every":            "every",
+            "mode":             "Mode",
+            "interval":         "Interval",
+            "crontab":          "Cron Table",
+            "until":            "Until",
+            "date":             "Date",
+            "datePlaceholder":  "YYYY-MM-DD",
+            "nextMsg":          "next message",
+            "msgIngress":       "When message arrives on input"
         },
         "list":
         {
