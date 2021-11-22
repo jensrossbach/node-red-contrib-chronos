@@ -30,6 +30,7 @@ const configNode = require("../nodes/config.js");
 const repeatNode = require("../nodes/repeat.js");
 const chronos = require("../nodes/common/chronos.js");
 const moment = require("moment");
+const cronosjs = require("cronosjs");
 
 require("should-sinon");
 
@@ -106,18 +107,329 @@ describe("repeat until node", function()
             rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
+        it("should fail due to invalid cron table", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "invalid", untilType: "time", untilValue: "invalid", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+            rn1.status.should.be.calledOnce();
+            rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
+        });
+
         it("should fail due to invalid until time", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "invalid", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "invalid", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
             rn1.status.should.be.calledTwice();
             rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
+
+        it("should preserve backward compatibility to v1.14.x and earlier", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+            rn1.mode.should.equal("simple");
+            rn1.crontab.should.equal("");
+            rn1.msgIngress.should.equal("forward:forced");
+        });
     });
 
-    context("message repeating (until next message)", function()
+    context("message ingress behavior", function()
+    {
+        let clock = null;
+        let curTime = 0;
+
+        beforeEach(function()
+        {
+            curTime = 0;
+            clock = sinon.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+            sinon.stub(chronos, "getCurrentTime").callsFake(function() { return moment.utc(curTime); });
+        });
+
+        afterEach(function()
+        {
+            helper.unload();
+            sinon.restore();
+        });
+
+        it("should never forward message on ingress", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        done("unexpected message received");
+                    });
+
+                    rn1.receive({payload: "test"});
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should not forward message on ingress due to exceeded until time", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilOffset: 0, untilRandom: false, msgIngress: "forward", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        done("unexpected message received");
+                    });
+
+                    curTime += 60000;
+                    rn1.receive({payload: "test"});
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should forward message on ingress (until time not reached)", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilOffset: 0, untilRandom: false, msgIngress: "forward", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should forward message on ingress (no until time)", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should forward message on ingress (forced)", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    curTime += 60000;
+                    rn1.receive({payload: "test"});
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should override ingress behavior", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            msg.should.have.property("ingress", "forward");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test", ingress: "forward"});
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should override ingress behavior and not preserve", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: false}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            msg.should.not.have.property("ingress");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test", ingress: "forward"});
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        function testInvalidIngressOverride(title, override)
+        {
+            it("should fall back to configured ingress behavior: " + title, function(done)
+            {
+                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward", preserveCtrlProps: true}, hlpNode, cfgNode];
+                sinon.spy(clock, "setTimeout");
+
+                helper.load([configNode, repeatNode], flow, credentials, function()
+                {
+                    try
+                    {
+                        const rn1 = helper.getNode("rn1");
+                        const hn1 = helper.getNode("hn1");
+
+                        hn1.on("input", function(msg)
+                        {
+                            try
+                            {
+                                msg.should.have.property("payload", "test");
+                                msg.should.have.property("ingress", override);
+                                done();
+                            }
+                            catch (e)
+                            {
+                                done(e);
+                            }
+                        });
+
+                        rn1.receive({payload: "test", ingress: override});
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
+        }
+
+        testInvalidIngressOverride("null override", null);
+        testInvalidIngressOverride("empty override", "");
+        testInvalidIngressOverride("invalid override", 42);
+        testInvalidIngressOverride("invalid ingress", "invalid");
+    });
+
+    context("message repeating in simple mode (until next message)", function()
     {
         let clock = null;
 
@@ -182,7 +494,7 @@ describe("repeat until node", function()
 
         it("should repeat message until next message is received", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -224,7 +536,7 @@ describe("repeat until node", function()
 
         it("should repeat message until stopped", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -275,7 +587,7 @@ describe("repeat until node", function()
 
         it("should override interval", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -326,7 +638,7 @@ describe("repeat until node", function()
 
         it("should override interval and not preserve", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: false}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -379,7 +691,7 @@ describe("repeat until node", function()
         {
             it("should fall back to configured interval: " + title, function(done)
             {
-                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
                 sinon.spy(clock, "setTimeout");
 
                 helper.load([configNode, repeatNode], flow, credentials, function()
@@ -420,6 +732,10 @@ describe("repeat until node", function()
 
         testInvalidIntervalOverride("invalid override", "invalid");
         testInvalidIntervalOverride("null override", null);
+        testInvalidIntervalOverride("empty override", {});
+
+        testInvalidIntervalOverride("no value", {unit: "hours"});
+        testInvalidIntervalOverride("no uniot", {value: 4});
 
         testInvalidIntervalOverride("invalid unit", {value: 4, unit: "invalid"});
         testInvalidIntervalOverride("invalid value", {value: "invalid", unit: "seconds"});
@@ -428,10 +744,62 @@ describe("repeat until node", function()
         testInvalidIntervalOverride("value too small for minutes", {value: 0, unit: "minutes"});
         testInvalidIntervalOverride("value too large for minutes", {value: 60, unit: "minutes"});
         testInvalidIntervalOverride("value too small for hours", {value: 0, unit: "hours"});
-        testInvalidIntervalOverride("value too large for hours", {value: 24, unit: "hours"});
+        testInvalidIntervalOverride("value too large for hours", {value: 25, unit: "hours"});
+
+        it("should handle time error", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+
+            sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", {type: "sun", value: "sunset"}); });
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            rn1.receive({payload: "test"});
+            rn1.error.should.be.calledWith("time error", {_msgid: sinon.match.any, payload: "test", errorDetails: {type: "sun", value: "sunset"}});
+        });
+
+        it("should handle time error (rename errorDetails)", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+
+            sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", {type: "sun", value: "sunset"}); });
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            rn1.receive({payload: "test", errorDetails: "details"});
+            rn1.error.should.be.calledWith("time error", {_msgid: sinon.match.any, payload: "test", _errorDetails: "details", errorDetails: {type: "sun", value: "sunset"}});
+        });
+
+        it("should handle time error (no details)", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+
+            sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", null); });
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            rn1.receive({payload: "test"});
+            rn1.error.should.be.calledWith("time error", {_msgid: sinon.match.any, payload: "test"});
+        });
+
+        it("should handle other error", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+
+            sinon.stub(chronos, "getTime").throws("error", "error message");
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            rn1.receive({payload: "test"});
+            rn1.error.should.be.calledWith("error message");
+        });
     });
 
-    context("message repeating (until specifc time)", function()
+    context("message repeating in simple mode (until specifc time)", function()
     {
         let clock = null;
         let curTime = 0;
@@ -440,7 +808,8 @@ describe("repeat until node", function()
         {
             curTime = 0;
             clock = sinon.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
-            sinon.stub(chronos, "getCurrentTime").callsFake(function() { return moment(curTime).utc(); });
+            sinon.stub(chronos, "getCurrentTime").callsFake(function() { return moment.utc(curTime); });
+            sinon.stub(chronos, "getUserDate").callsFake(function(RED, node, value) { return moment.utc(value, "YYYY-MM-DD"); });
         });
 
         afterEach(function()
@@ -451,7 +820,7 @@ describe("repeat until node", function()
 
         it("should repeat message until ending time is reached", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -496,9 +865,57 @@ describe("repeat until node", function()
             });
         });
 
+        it("should repeat message until ending time at specific date is reached", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 24, intervalUnit: "hours", crontab: "", untilType: "time", untilValue: "00:05:00", untilDate: "2000-01-03", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+            curTime = 946684800000;  // 2000-01-01 00:00:00
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 86400000).and.have.callCount(2);
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
         it("should repeat message until ending time with offset is reached", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "minutes", untilType: "time", untilValue: "00:02:00", untilOffset: 1, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "minutes", crontab: "", untilType: "time", untilValue: "00:02:00", untilOffset: 1, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -545,7 +962,7 @@ describe("repeat until node", function()
 
         it("should repeat message until ending time with random offset is reached", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "minutes", untilType: "time", untilValue: "00:02:00", untilOffset: 2, untilRandom: true, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "minutes", crontab: "", untilType: "time", untilValue: "00:02:00", untilOffset: 2, untilRandom: true, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
             sinon.stub(Math, "random").returns(0.5);
 
@@ -593,7 +1010,7 @@ describe("repeat until node", function()
 
         it("should override until time", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "00:00:06", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00:06", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -641,7 +1058,7 @@ describe("repeat until node", function()
 
         it("should override until time and not preserve", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "00:00:06", untilOffset: 0, untilRandom: false, preserveCtrlProps: false}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00:06", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -689,7 +1106,7 @@ describe("repeat until node", function()
 
         it("should override until time with next message", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -761,7 +1178,7 @@ describe("repeat until node", function()
         {
             it("should fall back to configured ending time: " + title, function(done)
             {
-                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, hlpNode, cfgNode];
+                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
                 sinon.spy(clock, "setTimeout");
 
                 helper.load([configNode, repeatNode], flow, credentials, function()
@@ -809,6 +1226,12 @@ describe("repeat until node", function()
         }
 
         testInvalidUntilOverride("invalid override", "invalid");
+        testInvalidUntilOverride("empty override", {});
+
+        testInvalidUntilOverride("no type", {value: "00:01", offset: 0, random: false});
+        testInvalidUntilOverride("no value", {type: "time", offset: 0, random: false});
+        testInvalidUntilOverride("no offset", {type: "time", value: "00:01", random: false});
+        testInvalidUntilOverride("no random", {type: "time", value: "00:01", offset: 0});
 
         testInvalidUntilOverride("override type no string", {type: 5, value: "00:01", offset: 0, random: false});
         testInvalidUntilOverride("override type wrong string", {type: "invalid", value: "00:01", offset: 0, random: false});
@@ -816,9 +1239,344 @@ describe("repeat until node", function()
         testInvalidUntilOverride("override value invalid time", {type: "time", value: "12_14", offset: 0, random: false});
         testInvalidUntilOverride("override value invalid sun position", {type: "sun", value: "invalid", offset: 0, random: false});
         testInvalidUntilOverride("override value invalid moon position", {type: "moon", value: "invalid", offset: 0, random: false});
+        testInvalidUntilOverride("override date wrong type", {type: "time", value: "00:01", date: 42, offset: "invalid", random: false});
+        testInvalidUntilOverride("override date invalid format", {type: "time", value: "00:01", date: "invalid", offset: "invalid", random: false});
         testInvalidUntilOverride("override offset wrong type", {type: "time", value: "00:01", offset: "invalid", random: false});
         testInvalidUntilOverride("override offset too small", {type: "time", value: "00:01", offset: -301, random: false});
         testInvalidUntilOverride("override offset too large", {type: "time", value: "00:01", offset: 301, random: false});
         testInvalidUntilOverride("override random wrong type", {type: "time", value: "00:01", offset: 0, random: "invalid"});
+    });
+
+    context("message repeating in advanced mode", function()
+    {
+        let clock = null;
+
+        beforeEach(function()
+        {
+            clock = sinon.useFakeTimers({toFake: ["Date", "setTimeout", "clearTimeout"]});
+            sinon.stub(chronos, "getCurrentTime").returns(moment().utc());
+            sinon.stub(cronosjs.CronosExpression, "parse").callsFake(function(crontab)
+            {
+                return cronosjs.CronosExpression.parse.wrappedMethod.apply(this, [crontab, {timezone: "UTC"}]);
+            });
+        });
+
+        afterEach(function()
+        {
+            helper.unload();
+            sinon.restore();
+        });
+
+        it("should repeat according to cron table", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "*/2 * * * * *", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    let numOutMsgs = 0;
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            numOutMsgs++;
+                            msg.should.have.property("payload", "test");
+
+                            if (numOutMsgs == 4)
+                            {
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                    clock.tick(2000);
+                    clock.tick(2000);
+                    clock.tick(2000);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should not repeat due to no first trigger", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "*/2 * * * * *", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+            cronosjs.CronosExpression.parse.restore();
+            sinon.stub(cronosjs.CronosExpression, "parse").returns({nextDate: () => null});
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        done("unexpected message received");
+                    });
+
+                    rn1.receive({payload: "test"});
+                    clock.tick(2000);
+                    should(rn1.sendTime).be.null();
+                    should(rn1.repeatTimer).be.undefined();
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should not repeat due to exceeded end time", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "*/2 * * * * *", untilType: "time", untilValue: "00:00", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        done("unexpected message received");
+                    });
+
+                    rn1.receive({payload: "test"});
+                    clock.tick(2000);
+                    should(rn1.sendTime).be.null();
+                    should(rn1.repeatTimer).be.undefined();
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should repeat only once due to no second trigger", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "0 0 0 1 12 * 1970", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                    clock.tick(28857600000);
+                    should(rn1.sendTime).be.null();
+                    should(rn1.repeatTimer).be.undefined();
+            }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should repeat only once due to exceeded end time", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "0 * * * * *", untilType: "time", untilValue: "00:01", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                    clock.tick(60000);
+                    should(rn1.sendTime).be.null();
+                    should(rn1.repeatTimer).be.undefined();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should override cron table", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "*/2 * * * * *", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    let numOutMsgs = 0;
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            numOutMsgs++;
+                            msg.should.have.property("payload", "test");
+                            msg.should.have.property("crontab", "*/4 * * * * *");
+
+                            if (numOutMsgs == 4)
+                            {
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test", crontab: "*/4 * * * * *"});
+                    clock.tick(4000);
+                    clock.tick(4000);
+                    clock.tick(4000);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should override cron table and not preserve", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "*/2 * * * * *", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, hlpNode, cfgNode];
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    let numOutMsgs = 0;
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            numOutMsgs++;
+                            msg.should.have.property("payload", "test");
+                            msg.should.not.have.property("crontab");
+
+                            if (numOutMsgs == 4)
+                            {
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test", crontab: "*/4 * * * * *"});
+                    clock.tick(4000);
+                    clock.tick(4000);
+                    clock.tick(4000);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        function testInvalidCrontabOverride(title, override)
+        {
+            it("should fall back to configured cron table: " + title, function(done)
+            {
+                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "advanced", interval: 1, intervalUnit: "seconds", crontab: "*/2 * * * * *", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+
+                helper.load([configNode, repeatNode], flow, credentials, function()
+                {
+                    try
+                    {
+                        const rn1 = helper.getNode("rn1");
+                        const hn1 = helper.getNode("hn1");
+
+                        let numOutMsgs = 0;
+                        hn1.on("input", function(msg)
+                        {
+                            try
+                            {
+                                numOutMsgs++;
+                                msg.should.have.property("payload", "test");
+                                msg.should.have.property("crontab", override);
+
+                                if (numOutMsgs == 4)
+                                {
+                                    done();
+                                }
+                            }
+                            catch (e)
+                            {
+                                done(e);
+                            }
+                        });
+
+                        rn1.receive({payload: "test", crontab: override});
+                        clock.tick(2000);
+                        clock.tick(2000);
+                        clock.tick(2000);
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
+        }
+
+        testInvalidCrontabOverride("null override", null);
+        testInvalidCrontabOverride("empty override", "");
+        testInvalidCrontabOverride("invalid override", 42);
+        testInvalidCrontabOverride("invalid cron table", "* * X * * J");
     });
 });
