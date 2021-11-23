@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2021-11-23
+
+### Added
+- Added support for cron-like scheduling of repetition in the repeat node.
+- Added possibility to specify the date for the ending time in the repeat node.
+- Added the possibility to configure forwarding behavior on message ingress for the repeat node.
+
+### Fixed
+- Fixed potential crash of the repeat node when ending time is not calculatable.
+
 ## [1.14.0] - 2021-11-06
 
 ### Added
