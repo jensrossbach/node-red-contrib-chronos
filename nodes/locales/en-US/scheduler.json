@@ -16,8 +16,9 @@
         "status":
         {
             "noSchedule":        "no schedule",
-            "enabledSchedule":   "enabled",
-            "disabledSchedule":  "disabled"
+            "noTime":            "no time",
+            "disabledSchedule":  "disabled",
+            "nextEvent":         "next event at"
         },
         "error":
         {

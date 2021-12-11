@@ -16,8 +16,9 @@
         "status":
         {
             "noSchedule":        "Kein Zeitplan",
-            "enabledSchedule":   "Zeitplan aktiv",
-            "disabledSchedule":  "Zeitplan inaktiv"
+            "noTime":            "Kein Zeitpunkt",
+            "disabledSchedule":  "Zeitplan inaktiv",
+            "nextEvent":         "Nächstes Ereignis:"
         },
         "error":
         {

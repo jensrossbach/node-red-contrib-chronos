@@ -500,39 +500,64 @@ module.exports = function(RED)
 
                 if (data.config.trigger.type == "crontab")
                 {
-                    data.timer = cronosjs.scheduleTask(data.config.trigger.value, () =>
+                    const expression = cronosjs.CronosExpression.parse(data.config.trigger.value);
+                    let firstTrigger = expression.nextDate();
+
+                    if (firstTrigger)
                     {
-                        handleTimeout(data, false);
-                    });
+                        data.triggerTime = chronos.getTimeFrom(node, firstTrigger);
+                        data.timer = new cronosjs.CronosTask(expression);
+
+                        data.timer.on("run", () =>
+                        {
+                            handleTimeout(data, false);
+
+                            let nextTrigger = expression.nextDate();
+                            if (nextTrigger)
+                            {
+                                data.triggerTime = chronos.getTimeFrom(node, nextTrigger);
+                            }
+                            else
+                            {
+                                delete data.triggerTime;
+                            }
+
+                            updateStatus();
+                        });
+
+                        data.timer.start();
+                    }
                 }
                 else
                 {
                     const now = chronos.getCurrentTime(node);
-                    let triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
+                    data.triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
                     if (data.config.trigger.offset != 0)
                     {
                         let offset = data.config.trigger.random ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
-                        triggerTime.add(offset, "minutes");
+                        data.triggerTime.add(offset, "minutes");
                     }
 
-                    if (triggerTime.isBefore(now))
+                    if (data.triggerTime.isBefore(now))
                     {
                         node.debug("[Timer:" + data.id + "] Trigger time before current time, adding one day");
 
                         if (data.config.trigger.type == "time")
                         {
-                            triggerTime.add(1, "days");
+                            data.triggerTime.add(1, "days");
                         }
                         else
                         {
-                            triggerTime = chronos.getTime(RED, node, triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
+                            data.triggerTime = chronos.getTime(RED, node, data.triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
                         }
                     }
 
-                    node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + triggerTime.format("YYYY-MM-DD HH:mm:ss"));
-                    data.timer = setTimeout(handleTimeout, triggerTime.diff(now), data, true);
+                    node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss"));
+                    data.timer = setTimeout(handleTimeout, data.triggerTime.diff(now), data, true);
                 }
+
+                updateStatus();
             }
             catch (e)
             {
@@ -545,6 +570,8 @@ module.exports = function(RED)
                     node.error(e.message);
                     node.debug(e.stack);
                 }
+
+                delete data.triggerTime;
             }
         }
 
@@ -562,13 +589,14 @@ module.exports = function(RED)
             }
 
             delete data.timer;
+            delete data.triggerTime;
         }
 
-        function handleTimeout(data, regular)
+        function handleTimeout(data, restartTimer)
         {
             node.debug("[Timer:" + data.id + "] Timer expired");
 
-            if (regular)
+            if (restartTimer)
             {
                 delete data.timer;
             }
@@ -597,7 +625,7 @@ module.exports = function(RED)
                 sendMessage(data, data.config.output.value);
             }
 
-            if (regular)
+            if (restartTimer)
             {
                 setUpTimer(data, true);
             }
@@ -707,7 +735,45 @@ module.exports = function(RED)
             }
             else
             {
-                node.status({fill: "green", shape: "dot", text: "scheduler.status.enabledSchedule"});
+                let nextTrigger = null;
+                node.schedule.forEach(data =>
+                {
+                    if (data.triggerTime)
+                    {
+                        if (nextTrigger)
+                        {
+                            if (data.triggerTime.isBefore(nextTrigger))
+                            {
+                                nextTrigger = data.triggerTime;
+                            }
+                        }
+                        else
+                        {
+                            nextTrigger = data.triggerTime;
+                        }
+                    }
+                });
+
+                if (nextTrigger)
+                {
+                    let when = nextTrigger.calendar(
+                    {
+                        sameDay: function()
+                        {
+                            return "LT" + ((this.second() > 0) ? "S" : "");
+                        },
+                        nextDay: function()
+                        {
+                            return "l LT" + ((this.second() > 0) ? "S" : "");
+                        }
+                    });
+
+                    node.status({fill: "green", shape: "dot", text: RED._("scheduler.status.nextEvent") + " " + when});
+                }
+                else
+                {
+                    node.status({fill: "yellow", shape: "dot", text: "scheduler.status.noTime"});
+                }
             }
         }
     }
