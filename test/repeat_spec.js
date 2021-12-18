@@ -1398,7 +1398,7 @@ describe("repeat until node", function()
                     clock.tick(28857600000);
                     should(rn1.sendTime).be.null();
                     should(rn1.repeatTimer).be.undefined();
-            }
+                }
                 catch (e)
                 {
                     done(e);

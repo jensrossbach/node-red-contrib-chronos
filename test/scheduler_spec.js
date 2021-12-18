@@ -173,6 +173,10 @@ describe("scheduler node", function()
         {
             clock = sinon.useFakeTimers({toFake: ["Date", "setTimeout", "clearTimeout"]});
             sinon.stub(chronos, "getCurrentTime").returns(moment().utc());
+            sinon.stub(cronosjs.CronosExpression, "parse").callsFake(function(crontab)
+            {
+                return cronosjs.CronosExpression.parse.wrappedMethod.apply(this, [crontab, {timezone: "UTC"}]);
+            });
         });
 
         afterEach(function()
@@ -358,8 +362,6 @@ describe("scheduler node", function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "crontab", value: "0 * * * * *", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: false, outputs: 1}, hlpNode, cfgNode];
 
-            sinon.spy(cronosjs, "scheduleTask");
-
             helper.load([configNode, schedulerNode], flow, credentials, function()
             {
                 try
@@ -379,8 +381,73 @@ describe("scheduler node", function()
                         }
                     });
 
-                    cronosjs.scheduleTask.should.be.calledWith("0 * * * * *", sinon.match.any);
+                    cronosjs.CronosExpression.parse.should.be.calledWith("0 * * * * *");
                     clock.tick(60000);  // advance clock by 1 min
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should not schedule a cron job due to no first trigger", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "crontab", value: "*/2 * * * * *", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: false, outputs: 1}, hlpNode, cfgNode];
+
+            cronosjs.CronosExpression.parse.restore();
+            sinon.stub(cronosjs.CronosExpression, "parse").returns({nextDate: () => null});
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        done("unexpected message received");
+                    });
+
+                    clock.tick(2000);
+                    should(sn1.schedule[0].triggerTime).be.undefined();
+                    should(sn1.schedule[0].timer).be.undefined();
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should not reschedule a cron job due to no second trigger", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "crontab", value: "0 0 0 1 12 * 1970", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: false, outputs: 1}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    clock.tick(28857600000);
+                    should(sn1.schedule[0].triggerTime).be.undefined();
                 }
                 catch (e)
                 {
