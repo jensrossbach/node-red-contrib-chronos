@@ -256,22 +256,87 @@ module.exports = function(RED)
                 setupAdvancedRepeatTimer(crontab, untilTime);
             }
 
-            return (((msgIngress == "forward") && (!untilTime || now.isSameOrBefore(untilTime))) ||
+            return (((msgIngress == "forward") && !untilTime.isExceededAt(now)) ||
                     (msgIngress == "forward:forced"));
         }
 
         function getUntilTime(now, type, value, offset, random)
         {
-            let ret = null;
+            let ret = {};
 
-            if (type != "nextMsg")
+            if (type == "jsonata")
             {
-                ret = chronos.getTime(RED, node, now.clone(), type, value);
+                ret.expression = value;
+
+                ret.isExceededAt = function(next)
+                {
+                    let result = false;
+
+                    try
+                    {
+                        let expression = chronos.getJSONataExpression(RED, node, this.expression);
+                        expression.assign("next", next.valueOf());
+
+                        result = RED.util.evaluateJSONataExpression(expression, node.message);
+                    }
+                    catch(e)
+                    {
+                        node.debug(e.code + ": " + e.message);
+                        node.debug(e.stack);
+
+                        const details = {expression: this.expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                        if (e.value)
+                        {
+                            details.value = e.value;
+                        }
+
+                        throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+                    }
+
+                    if (typeof result != "boolean")
+                    {
+                        throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"),
+                                                    {expression: this.expression, result: result});
+                    }
+
+                    return result;
+                };
+
+                ret.print = function()
+                {
+                    return "expression evaluates to true";
+                };
+            }
+            else if (type == "nextMsg")
+            {
+                ret.isExceededAt = function()
+                {
+                    return false;
+                };
+
+                ret.print = function()
+                {
+                    return "next message";
+                };
+            }
+            else
+            {
+                ret.time = chronos.getTime(RED, node, now.clone(), type, value);
 
                 if (offset != 0)
                 {
-                    ret.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
+                    ret.time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
                 }
+
+                ret.isExceededAt = function(next)
+                {
+                    return next.isAfter(this.time);
+                };
+
+                ret.print = function()
+                {
+                    return this.time.format("YYYY-MM-DD HH:mm:ss");
+                };
             }
 
             return ret;
@@ -279,10 +344,10 @@ module.exports = function(RED)
 
         function setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime)
         {
-            node.debug("Set up timer for interval " + interval + " " + intervalUnit + " until " + (untilTime ? untilTime.format("YYYY-MM-DD HH:mm:ss") : "next message"));
+            node.debug("Set up timer for interval " + interval + " " + intervalUnit + " until " + untilTime.print());
             node.sendTime = now.clone().add(interval, intervalUnit);
 
-            if (!untilTime || node.sendTime.isSameOrBefore(untilTime))
+            if (!untilTime.isExceededAt(node.sendTime))
             {
                 node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss"));
                 node.repeatTimer = setTimeout(() =>
@@ -303,7 +368,7 @@ module.exports = function(RED)
 
         function setupAdvancedRepeatTimer(crontab, untilTime)
         {
-            node.debug("Set up timer for cron table '" + crontab + "' until " + (untilTime ? untilTime.format("YYYY-MM-DD HH:mm:ss") : "next message"));
+            node.debug("Set up timer for cron table '" + crontab + "' until " + untilTime.print());
 
             const expression = cronosjs.CronosExpression.parse(crontab);
             let firstTrigger = expression.nextDate();
@@ -312,7 +377,7 @@ module.exports = function(RED)
             {
                 node.sendTime = chronos.getTimeFrom(node, firstTrigger);
 
-                if (!untilTime || node.sendTime.isSameOrBefore(untilTime))
+                if (!untilTime.isExceededAt(node.sendTime))
                 {
                     node.repeatTimer = new cronosjs.CronosTask(expression);
 
@@ -324,7 +389,7 @@ module.exports = function(RED)
                         if (nextTrigger)
                         {
                             node.sendTime = chronos.getTimeFrom(node, nextTrigger);
-                            if (untilTime && node.sendTime.isAfter(untilTime))
+                            if (untilTime.isExceededAt(node.sendTime))
                             {
                                 node.repeatTimer.stop();
 
@@ -418,7 +483,7 @@ module.exports = function(RED)
 
             if (data != null)
             {
-                if (!/^(time|sun|moon|custom)$/.test(data.type))
+                if (!/^(time|sun|moon|custom|jsonata)$/.test(data.type))
                 {
                     return false;
                 }
@@ -441,12 +506,12 @@ module.exports = function(RED)
                     return false;
                 }
 
-                if ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300))
+                if ((data.type != "jsonata") && ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300)))
                 {
                     return false;
                 }
 
-                if (typeof data.random != "boolean")
+                if ((data.type != "jsonata") && (typeof data.random != "boolean"))
                 {
                     return false;
                 }

@@ -345,7 +345,7 @@ SOFTWARE.
                                          changeYear: true,
                                          firstDay: 1});
             let until = $("#node-input-until")
-                            .typedInput({types: [nextMsgInput, timeInput, sunTimeInput, moonTimeInput, customInput], typeField: $("#node-input-untilType")});
+                            .typedInput({types: [nextMsgInput, timeInput, sunTimeInput, moonTimeInput, customInput, "jsonata"], typeField: $("#node-input-untilType")});
             let untilOffset = $("#node-input-untilOffset")
                             .spinner({min: -300, max: 300, step: 5, change: validateInput});
 
@@ -397,7 +397,7 @@ SOFTWARE.
             until.on("change", function()
             {
                 let type = until.typedInput("type");
-                if (type === "nextMsg")
+                if ((type === "nextMsg") || (type === "jsonata"))
                 {
                     $("#form-row-untilDate").hide();
                     $("#form-row-offsetBox").hide();

@@ -66,8 +66,8 @@ SOFTWARE.
         <dd>
             The condition when periodic message sending should stop. A subsequently
             received message always stops the repetition of the previous message.
-            Additonally a specific time can be configured as ending condition for
-            message sending repetition. Depending on the selection, the following
+            Additonally a time-based or custom ending condition can be configured
+            for message sending repetition. Depending on the selection, the following
             possibilities are available:
             <ul>
                 <li>
@@ -87,8 +87,14 @@ SOFTWARE.
                     of predefined values.
                 </li>
                 <li>
-                    <i>custom</i>: One of the user-defined sun position names can be
+                    <i>custom sun position</i>: One of the user-defined sun position names can be
                     entered.
+                </li>
+                <li>
+                    <i>expression</i>: A JSONata expression can be entered which should
+                    evaluate to either <code>false</code> (ending condition not reached)
+                    or <code>true</code> (ending condition reached). The time of the
+                    next trigger can be accessed via expression variable <code>$next</code>.
                 </li>
             </ul>
         </dd>

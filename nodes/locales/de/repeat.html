@@ -67,9 +67,9 @@ SOFTWARE.
         <dd>
             Die Bedingung, wann das periodische Senden der Nachricht beendet werden
             soll. Nachfolgende Nachrichten beenden die Wiederholung der vorherigen
-            Ausgabe-Nachrichten immer. Zusätzlich kann eine bestimmte Zeit als
-            Ende-Bedingung konfiguriert werden. Abhängig von der Auswahl gibt es
-            folgende Möglichkeiten:
+            Ausgabe-Nachrichten immer. Zusätzlich kann eine zeitbasierte oder
+            benutzerdefinierte Ende-Bedingung konfiguriert werden. Abhängig von der
+            Auswahl gibt es folgende Möglichkeiten:
             <ul>
                 <li>
                     <i>Nächste Nachricht</i>: Die Wiederholung wird nur bei
@@ -88,8 +88,15 @@ SOFTWARE.
                     vorgegebener Werte ausgewählt werden.
                 </li>
                 <li>
-                    <i>Benutzerdefiniert</i>: Einer der Namen für benutzerdefinierte
+                    <i>Sonnenstand (benutzerdef.)</i>: Einer der Namen für benutzerdefinierte
                     Sonnenstände kann eingegeben werden.
+                </li>
+                <li>
+                    <i>JSONata</i>: Ein JSONata-Ausdruck, der entweder <code>false</code>
+                    (Ende-Bedingung nicht erreicht) oder <code>true</code> (Ende-Bedingung
+                    erreicht) ergibt, kann eingegeben werden. Der Zeitpunkt des nächsten
+                    Sendens der Nachricht kann über die Variable <code>$next</code>
+                    abgefragt werden.
                 </li>
             </ul>
         </dd>
