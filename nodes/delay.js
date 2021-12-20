@@ -54,6 +54,7 @@ module.exports = function(RED)
             node.offset = settings.offset;
             node.random = settings.random;
             node.preserveCtrlProps = settings.preserveCtrlProps;
+            node.ignoreCtrlProps = settings.ignoreCtrlProps;
 
             node.sendTime = null;
 
@@ -96,7 +97,7 @@ module.exports = function(RED)
                             };
                         }
 
-                        if ("drop" in msg)
+                        if (!node.ignoreCtrlProps && ("drop" in msg))
                         {
                             tearDownDelayTimer();
                             dropQueue();
@@ -117,7 +118,7 @@ module.exports = function(RED)
                                 done();
                             }
                         }
-                        else if ("flush" in msg)
+                        else if (!node.ignoreCtrlProps && ("flush" in msg))
                         {
                             tearDownDelayTimer();
                             flushQueue();
@@ -151,7 +152,7 @@ module.exports = function(RED)
         {
             try
             {
-                if (hasOverride(msg.when))
+                if (!node.ignoreCtrlProps && hasOverride(msg.when))
                 {
                     node.debug("Input message has override property");
 
