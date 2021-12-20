@@ -369,7 +369,16 @@ module.exports = function(RED)
                 }
                 case "msg":
                 {
-                    value = RED.util.getMessageProperty(msg, target.name);
+                    try
+                    {
+                        value = RED.util.getMessageProperty(msg, target.name);
+                    }
+                    catch (e)
+                    {
+                        // message property is not existing
+                        value = undefined;
+                    }
+
                     break;
                 }
             }
