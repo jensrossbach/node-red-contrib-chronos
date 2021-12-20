@@ -116,16 +116,18 @@
         },
         "error":
         {
-            "noConfig":          "No configuration selected",
-            "noConditions":      "No conditions configured",
-            "invalidConfig":     "Configuration contains invalid values",
-            "invalidTime":       "Invalid time specified",
-            "invalidBaseTime":   "Invalid base time specified: __baseTime__",
-            "invalidCondition":  "Invalid condition",
-            "invalidName":       "Invalid custom sun position specified",
-            "unavailableTime":   "No time available for event",
-            "evaluationFailed":  "Unable to evaluate expression",
-            "notBoolean":        "Expression must result in boolean value"
+            "noConfig":            "No configuration selected",
+            "noConditions":        "No conditions configured",
+            "invalidConfig":       "Configuration contains invalid values",
+            "invalidTime":         "Invalid time specified",
+            "invalidBaseTime":     "Invalid base time specified: __baseTime__",
+            "invalidCondition":    "Invalid condition",
+            "invalidName":         "Invalid custom sun position specified",
+            "unavailableTime":     "No time available for event",
+            "evaluationFailed":    "Unable to evaluate expression",
+            "notBoolean":          "Expression must result in boolean value",
+            "notTime":             "Expression must result in valid time value (number or string)",
+            "intervalOutOfRange":  "Interval must be between one second and one week"
         }
     },
     "config":

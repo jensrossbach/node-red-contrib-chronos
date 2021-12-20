@@ -36,6 +36,7 @@ SOFTWARE.
         <select id="node-input-mode" style="width: auto;">
             <option value="simple" data-i18n="repeat.list.mode.simple"></option>
             <option value="advanced" data-i18n="repeat.list.mode.advanced"></option>
+            <option value="custom" data-i18n="repeat.list.mode.custom"></option>
         </select>
     </div>
     <div id="form-row-simple" class="form-row">
@@ -50,6 +51,11 @@ SOFTWARE.
     <div id="form-row-advanced" class="form-row">
         <label for="node-input-crontab"><i class="fa fa-table"></i> <span data-i18n="repeat.label.crontab"></span></label>
         <input type="text" id="node-input-crontab" placeholder="* * * * * * *">
+    </div>
+    <div id="form-row-custom" class="form-row">
+        <label for="node-input-expressionField"><i class="fa fa-code"></i> <span data-i18n="repeat.label.expression"></span></label>
+        <input type="text" id="node-input-expressionField" style="width: 70%;">
+        <input id="node-input-expression" type="hidden">
     </div>
     <div class="form-row">
         <label for="node-input-until"><i class="fa fa-step-forward"></i> <span data-i18n="repeat.label.until"></span></label>
@@ -108,6 +114,17 @@ SOFTWARE.
             {
                 return this.crontab;
             }
+            else if ((this.mode == "custom") && this.expression)
+            {
+                if (this.expression.length <= 20)
+                {
+                    return this.expression;
+                }
+                else
+                {
+                    return this.expression.substring(0, 19) + "...";
+                }
+            }
             else
             {
                 return this._("repeat.label.node");
@@ -154,13 +171,28 @@ SOFTWARE.
                 value: "",
                 validate: function(v)
                 {
-                    if (this.mode == "simple")
+                    if (this.mode == "advanced")
                     {
-                        return true;
+                        return /^[0-9a-zA-Z ,#@*/?-]+$/.test(v);
                     }
                     else
                     {
-                        return /^[0-9a-zA-Z ,#@*/?-]+$/.test(v);
+                        return true;
+                    }
+                }
+            },
+            expression:
+            {
+                value: "",
+                validate: function(v)
+                {
+                    if (this.mode == "expression")
+                    {
+                        return (v.length > 0);
+                    }
+                    else
+                    {
+                        return true;
                     }
                 }
             },
@@ -338,6 +370,8 @@ SOFTWARE.
 
             let interval = $("#node-input-interval")
                             .spinner({min: 1, max: 59, step: 1, change: validateInput});
+            let expression = $("#node-input-expressionField")
+                            .typedInput({types: ["jsonata"]});
             let untilDate = $("#node-input-untilDate")
                             .datepicker({dateFormat: "yy-mm-dd",
                                          minDate: "2000-01-01",
@@ -383,12 +417,21 @@ SOFTWARE.
                     {
                         $("#form-row-simple").show();
                         $("#form-row-advanced").hide();
+                        $("#form-row-custom").hide();
                         break;
                     }
                     case "advanced":
                     {
                         $("#form-row-simple").hide();
                         $("#form-row-advanced").show();
+                        $("#form-row-custom").hide();
+                        break;
+                    }
+                    case "custom":
+                    {
+                        $("#form-row-simple").hide();
+                        $("#form-row-advanced").hide();
+                        $("#form-row-custom").show();
                         break;
                     }
                 }
@@ -422,10 +465,12 @@ SOFTWARE.
             }
 
             $("#node-input-mode").change();
+            expression.typedInput("value", $("#node-input-expression").val());
             until.typedInput("value", $("#node-input-untilValue").val());
         },
         oneditsave: function()
         {
+            $("#node-input-expression").val($("#node-input-expressionField").typedInput("value"));
             $("#node-input-untilValue").val($("#node-input-until").typedInput("value"));
         }
     });

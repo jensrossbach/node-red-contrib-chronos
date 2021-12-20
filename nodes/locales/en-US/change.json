@@ -56,8 +56,7 @@
         "error":
         {
             "noTasks":          "No rules configured",
-            "invalidProperty":  "Invalid property specified: __property__",
-            "notTime":          "Expression must result in time value (number or string)"
+            "invalidProperty":  "Invalid property specified: __property__"
         }
     }
 }
