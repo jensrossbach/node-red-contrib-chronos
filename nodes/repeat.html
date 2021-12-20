@@ -89,6 +89,10 @@ SOFTWARE.
         <input id="node-input-preserveCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-preserveCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.preserveCtrlProps"></label>
     </div>
+    <div class="form-row">
+        <input id="node-input-ignoreCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-ignoreCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.ignoreCtrlProps"></label>
+    </div>
 </script>
 
 <script type="text/javascript">
@@ -232,6 +236,10 @@ SOFTWARE.
                 value: "forward"
             },
             preserveCtrlProps:
+            {
+                value: false
+            },
+            ignoreCtrlProps:
             {
                 value: false
             }

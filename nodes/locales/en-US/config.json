@@ -17,7 +17,8 @@
             "offset":             "Offset",
             "random":             "randomized",
             "min":                "min.",
-            "preserveCtrlProps":  "Preserve control properties in messages"
+            "preserveCtrlProps":  "Preserve control properties in messages",
+            "ignoreCtrlProps":    "Ignore control properties in messages"
         },
         "list":
         {

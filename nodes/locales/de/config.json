@@ -17,7 +17,8 @@
             "offset":             "Versatz",
             "random":             "Zufällig",
             "min":                "min.",
-            "preserveCtrlProps":  "Steuereigenschaften in Nachrichten beibehalten"
+            "preserveCtrlProps":  "Steuereigenschaften in Nachrichten beibehalten",
+            "ignoreCtrlProps":    "Steuereigenschaften in Nachrichten ignorieren"
         },
         "list":
         {

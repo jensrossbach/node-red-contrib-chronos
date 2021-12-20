@@ -77,6 +77,7 @@ module.exports = function(RED)
             node.untilRandom = settings.untilRandom;
             node.msgIngress = settings.msgIngress;
             node.preserveCtrlProps = settings.preserveCtrlProps;
+            node.ignoreCtrlProps = settings.ignoreCtrlProps;
 
             node.sendTime = null;
 
@@ -119,7 +120,7 @@ module.exports = function(RED)
 
                         tearDownRepeatTimer();
 
-                        if ("stop" in msg)
+                        if (!node.ignoreCtrlProps && ("stop" in msg))
                         {
                             updateStatus();
                             done();
@@ -180,82 +181,89 @@ module.exports = function(RED)
             let untilRandom = node.untilRandom;
             let msgIngress = node.msgIngress;
 
-            if (hasIntervalOverride(msg.interval))
+            if (node.ignoreCtrlProps)
             {
-                node.debug("Input message has override property for interval");
-
-                mode = "simple";
-                interval = msg.interval.value;
-                intervalUnit = msg.interval.unit;
-
-                if (!node.preserveCtrlProps)
-                {
-                    delete msg.interval;
-                }
+                node.debug("Ignoring control properties");
             }
-
-            if (hasCrontabOverride(msg.crontab))
+            else
             {
-                node.debug("Input message has override property for cron table");
-
-                mode = "advanced";
-                crontab = msg.crontab;
-
-                if (!node.preserveCtrlProps)
+                if (hasIntervalOverride(msg.interval))
                 {
-                    delete msg.crontab;
-                }
-            }
+                    node.debug("Input message has override property for interval");
 
-            if (hasExpressionOverride(msg.expression))
-            {
-                node.debug("Input message has override property for expression");
+                    mode = "simple";
+                    interval = msg.interval.value;
+                    intervalUnit = msg.interval.unit;
 
-                mode = "custom";
-                expression = msg.expression;
-
-                if (!node.preserveCtrlProps)
-                {
-                    delete msg.expression;
-                }
-            }
-
-            if (hasUntilOverride(msg.until))
-            {
-                node.debug("Input message has override property for until time");
-
-                if (msg.until != null)
-                {
-                    untilType = msg.until.type;
-                    untilValue = msg.until.value;
-                    untilDate = msg.until.date;
-                    untilOffset = msg.until.offset;
-                    untilRandom = msg.until.random;
-                }
-                else
-                {
-                    untilType = "nextMsg";
-                    untilValue = "";
-                    untilDate = null;
-                    untilOffset = 0;
-                    untilRandom = false;
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.interval;
+                    }
                 }
 
-                if (!node.preserveCtrlProps)
+                if (hasCrontabOverride(msg.crontab))
                 {
-                    delete msg.until;
+                    node.debug("Input message has override property for cron table");
+
+                    mode = "advanced";
+                    crontab = msg.crontab;
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.crontab;
+                    }
                 }
-            }
 
-            if (hasIngressOverride(msg.ingress))
-            {
-                node.debug("Input message has override property for ingress behavior '" +  msg.ingress + "'");
-
-                msgIngress = msg.ingress;
-
-                if (!node.preserveCtrlProps)
+                if (hasExpressionOverride(msg.expression))
                 {
-                    delete msg.ingress;
+                    node.debug("Input message has override property for expression");
+
+                    mode = "custom";
+                    expression = msg.expression;
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.expression;
+                    }
+                }
+
+                if (hasUntilOverride(msg.until))
+                {
+                    node.debug("Input message has override property for until time");
+
+                    if (msg.until != null)
+                    {
+                        untilType = msg.until.type;
+                        untilValue = msg.until.value;
+                        untilDate = msg.until.date;
+                        untilOffset = msg.until.offset;
+                        untilRandom = msg.until.random;
+                    }
+                    else
+                    {
+                        untilType = "nextMsg";
+                        untilValue = "";
+                        untilDate = null;
+                        untilOffset = 0;
+                        untilRandom = false;
+                    }
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.until;
+                    }
+                }
+
+                if (hasIngressOverride(msg.ingress))
+                {
+                    node.debug("Input message has override property for ingress behavior '" +  msg.ingress + "'");
+
+                    msgIngress = msg.ingress;
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.ingress;
+                    }
                 }
             }
 
