@@ -48,8 +48,8 @@ SOFTWARE.
         </dd>
         <dt>Mode</dt>
         <dd>
-            The repetition mode which can be either simple (see "Interval" below)
-            or advanced (see "Cron Table" below).
+            The repetition mode which can be either simple (see "Interval" below),
+            advanced (see "Cron Table" below) or custom (see "Expression" below).
         </dd>
         <dt>Interval</dt>
         <dd>
@@ -58,9 +58,20 @@ SOFTWARE.
         </dd>
         <dt>Cron Table</dt>
         <dd>
-            For advanced mode, this specifies the cron-based schedule for message
+            In advanced mode, this specifies the cron-based schedule for message
             repetition which must be entered according to
             <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS expression syntax</a>.
+        </dd>
+        <dt>Expression</dt>
+        <dd>
+            In custom mode, this specifies a JSONata expression that is evaluated
+            on each iteration and must result in a time value for the next iteration.
+            The time value can either be a number containing the amount of
+            milliseconds until the next trigger or the amount of milliseconds elapsed
+            since the UNIX epoch representing the absolute time of the next trigger.
+            Or it is a valid datetime string representing the absolute time of the
+            next trigger. The string must be parseable according to
+            <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
         </dd>
         <dt>Until</dt>
         <dd>

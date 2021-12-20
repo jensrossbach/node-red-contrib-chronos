@@ -56,8 +56,7 @@
         "error":
         {
             "noTasks":          "Keine Regeln kongiguriert",
-            "invalidProperty":  "Ungültige Eigenschaft angegeben: __property__",
-            "notTime":          "Ausdruck muss ein Zeitwert (Zahl oder Zeichenkette) sein"
+            "invalidProperty":  "Ungültige Eigenschaft angegeben: __property__"
         }
     }
 }

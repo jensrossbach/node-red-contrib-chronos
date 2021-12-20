@@ -69,6 +69,7 @@ module.exports = function(RED)
             node.interval = settings.interval;
             node.intervalUnit = settings.intervalUnit;
             node.crontab = (typeof settings.crontab == "undefined") ? "" : settings.crontab;
+            node.expression = (typeof settings.expression == "undefined") ? "" : settings.expression;
             node.untilType = settings.untilType;
             node.untilValue = settings.untilValue;
             node.untilDate = settings.untilDate;
@@ -171,6 +172,7 @@ module.exports = function(RED)
             let interval = node.interval;
             let intervalUnit = node.intervalUnit;
             let crontab = node.crontab;
+            let expression = node.expression;
             let untilType = node.untilType;
             let untilValue = node.untilValue;
             let untilDate = node.untilDate;
@@ -202,6 +204,19 @@ module.exports = function(RED)
                 if (!node.preserveCtrlProps)
                 {
                     delete msg.crontab;
+                }
+            }
+
+            if (hasExpressionOverride(msg.expression))
+            {
+                node.debug("Input message has override property for expression");
+
+                mode = "custom";
+                expression = msg.expression;
+
+                if (!node.preserveCtrlProps)
+                {
+                    delete msg.expression;
                 }
             }
 
@@ -251,9 +266,13 @@ module.exports = function(RED)
             {
                 setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime);
             }
-            else
+            else if (mode == "advanced")
             {
                 setupAdvancedRepeatTimer(crontab, untilTime);
+            }
+            else
+            {
+                setupCustomRepeatTimer(now, expression, untilTime);
             }
 
             return (((msgIngress == "forward") && !untilTime.isExceededAt(now)) ||
@@ -304,7 +323,7 @@ module.exports = function(RED)
 
                 ret.print = function()
                 {
-                    return "expression evaluates to true";
+                    return "ending expression evaluates to true";
                 };
             }
             else if (type == "nextMsg")
@@ -417,6 +436,83 @@ module.exports = function(RED)
             updateStatus();
         }
 
+        function setupCustomRepeatTimer(now, expression, untilTime)
+        {
+            node.debug("Set up timer for trigger expression until " + untilTime.print());
+
+            let result = null;
+
+            try
+            {
+                let expr = chronos.getJSONataExpression(RED, node, expression);
+                result = RED.util.evaluateJSONataExpression(expr, node.message);
+            }
+            catch(e)
+            {
+                node.debug(e.code + ": " + e.message);
+                node.debug(e.stack);
+
+                const details = {expression: expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                if (e.value)
+                {
+                    details.value = e.value;
+                }
+
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+            }
+
+            if ((typeof result != "number") && (typeof result != "string"))
+            {
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                                            {expression: expression, result: result});
+            }
+
+            if ((typeof result == "string") || (result >= (now.valueOf() + 1000)))  // assumed to be absolute time of next trigger
+            {
+                node.sendTime = chronos.getTimeFrom(node, result);
+            }
+            else if ((result >= 1000) && (result <= 604800000))  // assumed to be a relative interval time
+            {
+                node.sendTime = now.clone().add(result, "milliseconds");
+            }
+            else
+            {
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                                            {expression: expression, result: result});
+            }
+
+            if (!node.sendTime.isValid())
+            {
+                node.sendTime = null;
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                                            {expression: expression, result: result});
+            }
+            if ((node.sendTime.diff(now) < 1000) || (node.sendTime.diff(now) > 604800000))
+            {
+                node.sendTime = null;
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                                            {expression: expression, result: result});
+            }
+
+            if (!untilTime.isExceededAt(node.sendTime))
+            {
+                node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss"));
+                node.repeatTimer = setTimeout(() =>
+                {
+                    delete node.repeatTimer;
+
+                    node.send(RED.util.cloneMessage(node.message));
+                    setupCustomRepeatTimer(chronos.getCurrentTime(node), expression, untilTime);
+                }, node.sendTime.diff(now));
+            }
+            else
+            {
+                node.sendTime = null;
+            }
+
+            updateStatus();
+        }
+
         function tearDownRepeatTimer()
         {
             if (node.repeatTimer)
@@ -467,6 +563,16 @@ module.exports = function(RED)
             }
 
             if (!cronosjs.validate(data))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function hasExpressionOverride(data)
+        {
+            if ((typeof data != "string") || !data)
             {
                 return false;
             }

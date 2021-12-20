@@ -9,6 +9,7 @@
             "mode":             "Mode",
             "interval":         "Interval",
             "crontab":          "Cron Table",
+            "expression":       "Expression",
             "until":            "Until",
             "date":             "Date",
             "datePlaceholder":  "YYYY-MM-DD",
@@ -20,7 +21,8 @@
             "mode":
             {
                 "simple":    "Simple",
-                "advanced":  "Advanced"
+                "advanced":  "Advanced",
+                "custom":    "Custom"
             },
             "interval":
             {

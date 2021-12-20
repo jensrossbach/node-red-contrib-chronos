@@ -116,16 +116,18 @@
         },
         "error":
         {
-            "noConfig":          "Keine Konfiguration ausgewählt",
-            "noConditions":      "Keine Bedingungen kongiguriert",
-            "invalidConfig":     "Konfiguration enthält ungültige Werte",
-            "invalidTime":       "Ungültige Uhrzeit angegeben",
-            "invalidBaseTime":   "Ungültige Basiszeit angegeben: __baseTime__",
-            "invalidCondition":  "Ungültige Bedingung",
-            "invalidName":       "Ungültiger benutzerdefinierter Sonnenstand angegeben",
-            "unavailableTime":   "Kein Zeitpunkt für Ereignis verfügbar",
-            "evaluationFailed":  "Fehler beim Auswerten des Ausdrucks",
-            "notBoolean":        "Ausdruck muss ein Wahrheitswert sein"
+            "noConfig":            "Keine Konfiguration ausgewählt",
+            "noConditions":        "Keine Bedingungen kongiguriert",
+            "invalidConfig":       "Konfiguration enthält ungültige Werte",
+            "invalidTime":         "Ungültige Uhrzeit angegeben",
+            "invalidBaseTime":     "Ungültige Basiszeit angegeben: __baseTime__",
+            "invalidCondition":    "Ungültige Bedingung",
+            "invalidName":         "Ungültiger benutzerdefinierter Sonnenstand angegeben",
+            "unavailableTime":     "Kein Zeitpunkt für Ereignis verfügbar",
+            "evaluationFailed":    "Fehler beim Auswerten des Ausdrucks",
+            "notBoolean":          "Ausdruck muss ein Wahrheitswert sein",
+            "notTime":             "Ausdruck muss ein gültiger Zeitwert (Zahl oder Zeichenkette) sein",
+            "intervalOutOfRange":  "Interval muss zwischen einer Sekunde und einer Woche liegen"
         }
     },
     "config":

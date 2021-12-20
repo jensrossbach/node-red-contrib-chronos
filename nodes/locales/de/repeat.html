@@ -50,7 +50,8 @@ SOFTWARE.
         <dt>Modus</dt>
         <dd>
             Der Wiederholungsmodus, der entweder einfach (siehe "Intervall"
-            unten) oder erweitert (siehe "Cron-Tabelle unten") sein kann.
+            unten), erweitert (siehe "Cron-Tabelle" unten) oder
+            benutzerdefiniert (siehe "Ausdruck" unten) sein kann.
         </dd>
         <dt>Intervall</dt>
         <dd>
@@ -62,6 +63,19 @@ SOFTWARE.
             Im erweiterten Modus wird hier ein Cron-Zeitplan angegeben, der der
             <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS Ausdruckssyntax</a>
             entsprechen muss.
+        </dd>
+        <dt>Ausdruck</dt>
+        <dd>
+            Im benutzerdefinierten Modus wird hier ein JSONata-Ausdruck angegeben,
+            der bei jeder Wiederholung ausgewertet wird und einen Zeitwert
+            zurückgeben muss. Der Zeitwert kann entweder eine Zahl sein, die
+            die Anzahl Millisekunden bis zur nächsten Wiederholung oder die Anzahl
+            Millisekunden seit Beginn der UNIX-Zeitzählung als absoluten Zeitpunkt
+            der nächsten Wiederholung enthält. Oder es handelt sich um eine
+            Zeichenkette mit einem Datum und einer Uhrzeit, die den absoluten
+            Zeitpunkt der nächsten Wiederholung darstellt. Die Zeichenkette muss
+            nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
+            geparst werden können.
         </dd>
         <dt>Bis</dt>
         <dd>

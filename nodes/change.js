@@ -187,7 +187,7 @@ module.exports = function(RED)
 
                                             if ((typeof result != "number") && (typeof result != "string"))
                                             {
-                                                throw new node.chronos.TimeError(RED._("change.error.notTime"),
+                                                throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
                                                                                  {rule: i+1, expression: rule.expression, result: result});
                                             }
 
