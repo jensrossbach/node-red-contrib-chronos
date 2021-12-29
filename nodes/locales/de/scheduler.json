@@ -23,6 +23,7 @@
         "error":
         {
             "noSchedule":       "Kein Zeitplan konfiguriert",
+            "notObject":        "Ausdruck muss ein Objekt sein",
             "invalidInput":     "Ungültige Eingangsnachricht",
             "invalidCtxEvent":  "Ungültiges Zeitereignis aus Kontextvariable: __event__",
             "invalidMsgEvent":  "Ungültiges Zeitereignis aus Nachrichteneigenschaft: __event__"

@@ -23,6 +23,7 @@
         "error":
         {
             "noSchedule":       "No schedule configured",
+            "notObject":        "Expression must result in an object value",
             "invalidInput":     "Invalid input message",
             "invalidCtxEvent":  "Invalid schedule event from context variable: __event__",
             "invalidMsgEvent":  "Invalid schedule event from message property: __event__"
