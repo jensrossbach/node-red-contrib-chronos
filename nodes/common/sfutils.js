@@ -389,9 +389,6 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
             }
             else
             {
-                node.debug(e.code + ": " + e.message);
-                node.debug(e.stack);
-
                 const details = {condition: id, expression: cond.expression, code: e.code, description: e.message, position: e.position, token: e.token};
                 if (e.value)
                 {
