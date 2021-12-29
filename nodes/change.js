@@ -173,9 +173,6 @@ module.exports = function(RED)
                                             }
                                             catch (e)
                                             {
-                                                node.debug(e.code + ": " + e.message);
-                                                node.debug(e.stack);
-
                                                 const details = {rule: i+1, expression: rule.expression, code: e.code, description: e.message, position: e.position, token: e.token};
                                                 if (e.value)
                                                 {

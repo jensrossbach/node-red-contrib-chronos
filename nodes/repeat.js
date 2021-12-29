@@ -308,9 +308,6 @@ module.exports = function(RED)
                     }
                     catch(e)
                     {
-                        node.debug(e.code + ": " + e.message);
-                        node.debug(e.stack);
-
                         const details = {expression: this.expression, code: e.code, description: e.message, position: e.position, token: e.token};
                         if (e.value)
                         {
@@ -457,9 +454,6 @@ module.exports = function(RED)
             }
             catch(e)
             {
-                node.debug(e.code + ": " + e.message);
-                node.debug(e.stack);
-
                 const details = {expression: expression, code: e.code, description: e.message, position: e.position, token: e.token};
                 if (e.value)
                 {

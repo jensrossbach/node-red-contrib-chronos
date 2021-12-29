@@ -111,9 +111,8 @@ module.exports = function(RED)
                 }
                 catch (e)
                 {
-                    node.debug(e.code + ": " + e.message);
-                    node.debug(e.stack);
-                    node.debug("Position: " + e.position + "  Token: " + e.token + "  Value: " + e.value);
+                    node.error(e.message);
+                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
 
                     valid = false;
                 }
@@ -223,9 +222,8 @@ module.exports = function(RED)
                                 {
                                     if (err)
                                     {
-                                        node.debug(err.code + ": " + err.message);
-                                        node.debug(err.stack);
-                                        node.debug("Position: " + err.position + "  Token: " + err.token);
+                                        node.error(err.message);
+                                        node.debug("JSONata code: " + err.code + "  position: " + err.position + "  token: " + err.token);
 
                                         done(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"));
                                     }
