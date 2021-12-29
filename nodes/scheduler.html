@@ -299,11 +299,11 @@ SOFTWARE.
                     outType._prevType = "global";
                     let propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
                                         .appendTo(outValueRow)
-                                        .typedInput({types: ["str", "num", "bool", "json", "bin", "date"]});
+                                        .typedInput({types: ["str", "num", "bool", "json", "jsonata", "bin", "date"]});
                     propValue.typedInput("width", "280px");
                     let msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
                                         .appendTo(outValueRow)
-                                        .typedInput({types: ["json"]});
+                                        .typedInput({types: ["json", "jsonata"]});
                     msgValue.typedInput("width", "280px");
 
                     triggerType.on("change", function()
@@ -376,6 +376,7 @@ SOFTWARE.
 
                     if (data.output.type == "fullMsg")
                     {
+                        msgValue.typedInput("type", data.output.contentType ? data.output.contentType : "json");
                         msgValue.typedInput("value", data.output.value);
                     }
                     else
@@ -428,6 +429,7 @@ SOFTWARE.
                 data.output.type = outType.typedInput("type");
                 if (data.output.type == "fullMsg")
                 {
+                    data.output.contentType = msgValue.typedInput("type");
                     data.output.value = msgValue.typedInput("value");
                 }
                 else

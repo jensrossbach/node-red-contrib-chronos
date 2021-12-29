@@ -32,6 +32,7 @@ module.exports = function(RED)
         let node = this;
         RED.nodes.createNode(node, settings);
 
+        node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
         node.locale = require("os-locale").sync();
 
@@ -86,62 +87,80 @@ module.exports = function(RED)
             let valid = true;
             for (let i=0; i<node.schedule.length; ++i)
             {
-                let event = node.schedule[i].config;
+                let data = node.schedule[i];
 
                 // check for presence of variable name
-                if (((event.trigger.type == "global") || (event.trigger.type == "flow")) && !event.trigger.value)
+                if (((data.config.trigger.type == "global") || (data.config.trigger.type == "flow")) && !data.config.trigger.value)
                 {
                     valid = false;
                     break;
                 }
 
                 // check for valid user time
-                if ((event.trigger.type == "time") && !chronos.isValidUserTime(event.trigger.value))
+                if ((data.config.trigger.type == "time") && !chronos.isValidUserTime(data.config.trigger.value))
                 {
                     valid = false;
                     break;
                 }
 
-                if ((event.trigger.type == "crontab") && !cronosjs.validate(event.trigger.value, {strict: true}))
+                if ((data.config.trigger.type == "crontab") && !cronosjs.validate(data.config.trigger.value, {strict: true}))
                 {
                     valid = false;
                     break;
                 }
 
-                if ("type" in event.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
+                if ("type" in data.config.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
                 {
                     // check for valid output and convert according to type
-                    if (event.output.type == "fullMsg")
+                    if (data.config.output.type == "fullMsg")
                     {
-                        try
+                        if (data.config.output.contentType === "jsonata")
                         {
-                            event.output.value = JSON.parse(event.output.value);
-                        }
-                        catch (e)
-                        {
-                            valid = false;
-                            break;
-                        }
+                            try
+                            {
+                                data.expression = chronos.getJSONataExpression(RED, node, data.config.output.value);
+                            }
+                            catch (e)
+                            {
+                                node.error(e.message);
+                                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
 
-                        if (typeof event.output.value != "object")
+                                valid = false;
+                                break;
+                            }
+                        }
+                        else
                         {
-                            valid = false;
-                            break;
+                            try
+                            {
+                                data.config.output.value = JSON.parse(data.config.output.value);
+                            }
+                            catch (e)
+                            {
+                                valid = false;
+                                break;
+                            }
+
+                            if (typeof data.config.output.value != "object")
+                            {
+                                valid = false;
+                                break;
+                            }
                         }
                     }
                     else
                     {
-                        if (!event.output.property.name)
+                        if (!data.config.output.property.name)
                         {
                             valid = false;
                             break;
                         }
 
-                        if (event.output.property.type == "num")
+                        if (data.config.output.property.type == "num")
                         {
-                            if (+event.output.property.value === +event.output.property.value)
+                            if (+data.config.output.property.value === +data.config.output.property.value)
                             {
-                                event.output.property.value = +event.output.property.value;
+                                data.config.output.property.value = +data.config.output.property.value;
                             }
                             else
                             {
@@ -149,11 +168,11 @@ module.exports = function(RED)
                                 break;
                             }
                         }
-                        else if (event.output.property.type == "bool")
+                        else if (data.config.output.property.type == "bool")
                         {
-                            if (/^(true|false)$/.test(event.output.property.value))
+                            if (/^(true|false)$/.test(data.config.output.property.value))
                             {
-                                event.output.property.value = (event.output.property.value == "true");
+                                data.config.output.property.value = (data.config.output.property.value == "true");
                             }
                             else
                             {
@@ -161,11 +180,11 @@ module.exports = function(RED)
                                 break;
                             }
                         }
-                        else if (event.output.property.type == "json")
+                        else if (data.config.output.property.type == "json")
                         {
                             try
                             {
-                                event.output.property.value = JSON.parse(event.output.property.value);
+                                data.config.output.property.value = JSON.parse(data.config.output.property.value);
                             }
                             catch (e)
                             {
@@ -173,11 +192,26 @@ module.exports = function(RED)
                                 break;
                             }
                         }
-                        else if (event.output.property.type == "bin")
+                        else if (data.config.output.property.type == "jsonata")
                         {
                             try
                             {
-                                event.output.property.value = Buffer.from(JSON.parse(event.output.property.value));
+                                data.expression = chronos.getJSONataExpression(RED, node, data.config.output.property.value);
+                            }
+                            catch (e)
+                            {
+                                node.error(e.message);
+                                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                                valid = false;
+                                break;
+                            }
+                        }
+                        else if (data.config.output.property.type == "bin")
+                        {
+                            try
+                            {
+                                data.config.output.property.value = Buffer.from(JSON.parse(data.config.output.property.value));
                             }
                             catch (e)
                             {
@@ -601,28 +635,75 @@ module.exports = function(RED)
                 delete data.timer;
             }
 
-            if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
+            try
             {
-                let ctx = RED.util.parseContextStore(data.config.output.property.name);
-                node.context()[data.config.output.type].set(ctx.key, data.config.output.property.value, ctx.store);
-            }
-            else if (data.config.output.type == "msg")
-            {
-                let msg = {};
-                if (data.config.output.property.type === "date")
+                if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
                 {
-                    RED.util.setMessageProperty(msg, data.config.output.property.name, Date.now(), true);
+                    let value = null;
+
+                    if (data.config.output.property.type === "jsonata")
+                    {
+                        value = getJSONataValue(data.expression, data.id, data.config.output.property.value);
+                    }
+                    else
+                    {
+                        value = data.config.output.property.value;
+                    }
+
+                    let ctx = RED.util.parseContextStore(data.config.output.property.name);
+                    node.context()[data.config.output.type].set(ctx.key, value, ctx.store);
+                }
+                else if (data.config.output.type == "msg")
+                {
+                    let msg = {};
+                    if (data.config.output.property.type === "date")
+                    {
+                        RED.util.setMessageProperty(msg, data.config.output.property.name, Date.now(), true);
+                    }
+                    else if (data.config.output.property.type === "jsonata")
+                    {
+                        let value = getJSONataValue(data.expression, data.id, data.config.output.property.value);
+                        RED.util.setMessageProperty(msg, data.config.output.property.name, value, true);
+                    }
+                    else
+                    {
+                        RED.util.setMessageProperty(msg, data.config.output.property.name, data.config.output.property.value, true);
+                    }
+
+                    sendMessage(data, msg);
+                }
+                else if (data.config.output.type == "fullMsg")
+                {
+                    let msg = null;
+
+                    if (data.config.output.contentType === "jsonata")
+                    {
+                        msg = getJSONataValue(data.expression, data.id, data.config.output.value);
+                        if (typeof msg != "object")
+                        {
+                            const details = {event: data.id, expression: data.config.output.value, result: msg};
+                            throw new chronos.TimeError(RED._("scheduler.error.notObject"), details);
+                        }
+                    }
+                    else
+                    {
+                        msg = data.config.output.value;
+                    }
+
+                    sendMessage(data, msg);
+                }
+            }
+            catch (e)
+            {
+                if (e instanceof chronos.TimeError)
+                {
+                    node.error(e.message, {errorDetails: e.details});
                 }
                 else
                 {
-                    RED.util.setMessageProperty(msg, data.config.output.property.name, data.config.output.property.value, true);
+                    node.error(e.message);
+                    node.debug(e.stack);
                 }
-
-                sendMessage(data, msg);
-            }
-            else if (data.config.output.type == "fullMsg")
-            {
-                sendMessage(data, data.config.output.value);
             }
 
             if (restartTimer)
@@ -631,17 +712,36 @@ module.exports = function(RED)
             }
         }
 
+        function getJSONataValue(expression, id, source)
+        {
+            try
+            {
+                return RED.util.evaluateJSONataExpression(expression, {name: node.name,
+                                                                       config: {name: node.config.name,
+                                                                                latitude: node.config.latitude,
+                                                                                longitude: node.config.longitude}});
+            }
+            catch (e)
+            {
+                const details = {event: id, expression: source, code: e.code, description: e.message, position: e.position, token: e.token};
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+            }
+        }
+
         function sendMessage(data, msg)
         {
-            if (node.multiPort)
+            if (msg)
             {
-                node.ports[data.port] = msg;
-                node.send(node.ports);
-                node.ports[data.port] = null;
-            }
-            else
-            {
-                node.send(msg);
+                if (node.multiPort)
+                {
+                    node.ports[data.port] = msg;
+                    node.send(node.ports);
+                    node.ports[data.port] = null;
+                }
+                else
+                {
+                    node.send(msg);
+                }
             }
         }
 
@@ -706,6 +806,11 @@ module.exports = function(RED)
                 return false;
             }
 
+            if ((data.output.type == "fullMsg") && (typeof data.output.contentType != "undefined"))
+            {
+                return false;
+            }
+
             if (data.output.type != "fullMsg")
             {
                 if ((typeof data.output.property != "object") || !data.output.property)
@@ -714,6 +819,11 @@ module.exports = function(RED)
                 }
 
                 if ((typeof data.output.property.name != "string") || !data.output.property.name)
+                {
+                    return false;
+                }
+
+                if ((typeof data.output.property.type != "undefined") && (data.output.property.type !== "date"))
                 {
                     return false;
                 }
