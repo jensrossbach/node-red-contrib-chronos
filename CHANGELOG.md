@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2022-01-08
+
+### Added
+- Scheduler node now shows the date and time of next event in the status.
+- Added possibility to specify repetition ending time as JSONata expression.
+- Added new custom mode for repeat node which allows to calculate interval times using a JSONata expression.
+- Added option to delay until and repeat node for ignoring control properties in input messages.
+- Scheduler node now supports JSONata based output (for message properties and context variables as well as full messages).
+
+### Changed
+- Optimized error output for JSONata evaluation
+
+### Fixed
+- Fixed invalid handling of non-existing message properties in time change node.
+- Fixed some help texts.
+
 ## [1.15.0] - 2021-11-23
 
 ### Added
