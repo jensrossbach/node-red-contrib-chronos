@@ -140,29 +140,34 @@ describe("scheduler node", function()
             sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
-        function testInvalidSchedule(title, flow, exp)
+        function testInvalidSchedule(title, flow, numCalls, exp)
         {
             it("should fail due to " + title, async function()
             {
                 await helper.load([configNode, schedulerNode], flow, credentials);
                 const sn1 = helper.getNode("sn1");
                 sn1.status.should.be.called();
-                sn1.error.should.be.calledOnce().and.calledWith(exp);
+                sn1.error.should.have.callCount(numCalls)
+                sn1.error.getCall(numCalls-1).calledWith(exp);
             });
         }
 
         const invalidConfig = "node-red-contrib-chronos/chronos-config:common.error.invalidConfig";
-        testInvalidSchedule("missing schedule", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: []}, cfgNode], "scheduler.error.noSchedule");
-        testInvalidSchedule("invalid schedule user time", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "", offset: 0, random: false}, output: {}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule cron table", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "crontab", value: "invalid", offset: 0, random: false}, output: {}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule context variable", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "flow", value: ""}, output: {}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "["}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule full message (no object)", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "true"}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("empty schedule property name", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: ""}}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule number property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "num", value: "invalid"}}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule boolean property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bool", value: "invalid"}}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule JSON property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "json", value: "invalid"}}}]}, cfgNode], invalidConfig);
-        testInvalidSchedule("invalid schedule binary buffer property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bin", value: "invalid"}}}]}, cfgNode], invalidConfig);
+        testInvalidSchedule("missing schedule", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: []}, cfgNode], 1, "scheduler.error.noSchedule");
+        testInvalidSchedule("invalid schedule user time", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "", offset: 0, random: false}, output: {}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule cron table", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "crontab", value: "invalid", offset: 0, random: false}, output: {}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule context variable", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "flow", value: ""}, output: {}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule old config full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "["}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule old config full message (no object)", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", value: "true"}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule JSON full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", contentType: "json", value: "["}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule JSON full message (no object)", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", contentType: "json", value: "true"}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule JSONata full message", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "fullMsg", contentType: "jsonata", value: "["}}]}, cfgNode], 2, invalidConfig);
+        testInvalidSchedule("empty schedule property name", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: ""}}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule number property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "num", value: "invalid"}}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule boolean property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bool", value: "invalid"}}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule JSON property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "json", value: "invalid"}}}]}, cfgNode], 1, invalidConfig);
+        testInvalidSchedule("invalid schedule JSONata property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "jsonata", value: "["}}}]}, cfgNode], 2, invalidConfig);
+        testInvalidSchedule("invalid schedule binary buffer property", [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "12:00", offset: 0, random: false}, output: {type: "msg", property: {name: "my_property", type: "bin", value: "invalid"}}}]}, cfgNode], 1, invalidConfig);
     });
 
     context("node timers (part 1)", function()
@@ -221,8 +226,10 @@ describe("scheduler node", function()
         }
 
         testTriggerAtTime("message property", {type: "msg", property: {name: "payload", type: "string", value: "test"}}, "payload", "test");
+        testTriggerAtTime("message JSONata property", {type: "msg", property: {name: "payload", type: "jsonata", value: "name & \" fired with config \" & config.name & \" (@\" & config.latitude & \"|\" & config.longitude & \")\""}}, "payload", "scheduler fired with config config (@50|10)");
         testTriggerAtTime("message timestamp property", {type: "msg", property: {name: "payload", type: "date"}}, "payload", 60000);
-        testTriggerAtTime("full message", {type: "fullMsg", value: "{\"payload\": \"test\"}"}, "payload", "test");
+        testTriggerAtTime("full message (JSON)", {type: "fullMsg", contentType: "json", value: "{\"payload\": \"test\"}"}, "payload", "test");
+        testTriggerAtTime("full message (JSONata)", {type: "fullMsg", contentType: "jsonata", value: "{\"payload\": name & \" fired with config \" & config.name & \" (@\" & config.latitude & \"|\" & config.longitude & \")\"}"}, "payload", "scheduler fired with config config (@50|10)");
 
         it("should trigger at specified time: to context variable", async function()
         {
@@ -245,6 +252,29 @@ describe("scheduler node", function()
             helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
             sn1.context.should.be.calledOnce();
             ctx.flow.set.should.be.calledWith("testKey", "test", "testStore");
+        });
+
+        it("should trigger at specified time: to context variable (JSONata expression)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "global", property: {name: "testVariable", type: "jsonata", value: "name & \" fired with config \" & config.name & \" (@\" & config.latitude & \"|\" & config.longitude & \")\""}}}], outputs: 1}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+
+            sinon.stub(sn1, "context").returns(ctx);
+            ctx.flow.set = sinon.spy();
+            ctx.global.set = sinon.spy();
+
+            sn1.receive({payload: true});
+            clock.tick(60000);  // advance clock by 1 min
+
+            helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+            sn1.context.should.be.calledOnce();
+            ctx.global.set.should.be.calledWith("testKey", "scheduler fired with config config (@50|10)", "testStore");
         });
 
         it("should trigger at specified time with offset", function(done)
@@ -476,6 +506,38 @@ describe("scheduler node", function()
             sn1.error.should.be.calledWith("error message");
         });
 
+        it("should handle time error during timeout handling (invalid JSONata expression)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "jsonata", value: "$invalFunc()"}}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            clock.tick(60000);  // advance clock by 1 min
+            sn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {errorDetails: {event: 1, expression: "$invalFunc()", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any}});
+        });
+
+        it("should handle time error during timeout handling (no object for full message)", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "fullMsg", contentType: "jsonata", value: "42"}}], outputs: 1}, cfgNode];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+            clock.tick(60000);  // advance clock by 1 min
+            sn1.error.should.be.calledWith("scheduler.error.notObject", {errorDetails: {event: 1, expression: "42", result: 42}});
+        });
+
+        it("should handle other error during timeout handling", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
+
+            sinon.stub(helper._RED.util, "setMessageProperty").throws("error", "error message");
+            await helper.load([configNode, schedulerNode], flow, credentials);
+            const sn1 = helper.getNode("sn1");
+
+            clock.tick(60000);  // advance clock by 1 min
+            sn1.error.should.be.calledWith("error message");
+        });
+
         function testValidContextVariable(title, ctxVar)
         {
             it("should trigger from context variable: " + title, async function()
@@ -503,7 +565,7 @@ describe("scheduler node", function()
         }
 
         testValidContextVariable("normal", {type: "time", value: "00:01", offset: 0, random: false});
-        testValidContextVariable("extended", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}});
+        testValidContextVariable("extended", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", value: "test"}}});
 
         function testInvalidContextVariable(title, ctxVar)
         {
@@ -551,13 +613,15 @@ describe("scheduler node", function()
         testInvalidContextVariable("trigger offset too large", {type: "time", value: "00:01", offset: 301, random: false});
         testInvalidContextVariable("trigger random wrong type", {type: "time", value: "00:01", offset: 0, random: "invalid"});
 
-        testInvalidContextVariable("output type no string", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: 5, property: {name: "payload", type: "string", value: "test"}}});
-        testInvalidContextVariable("output type wrong string", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "invalid", property: {name: "payload", type: "string", value: "test"}}});
+        testInvalidContextVariable("output type no string", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: 5, property: {name: "payload", value: "test"}}});
+        testInvalidContextVariable("output type wrong string", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "invalid", property: {name: "payload", value: "test"}}});
         testInvalidContextVariable("output property invalid type", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: "invalid"}});
         testInvalidContextVariable("output property null", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: null}});
-        testInvalidContextVariable("output property name invalid type", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: 5, type: "string", value: "test"}}});
-        testInvalidContextVariable("output property value missing", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string"}}});
+        testInvalidContextVariable("output property name invalid type", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: 5, value: "test"}}});
+        testInvalidContextVariable("output property value missing", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload"}}});
+        testInvalidContextVariable("output property type no date", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}});
         testInvalidContextVariable("output full message invalid type", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "fullMsg", value: "invalid"}});
+        testInvalidContextVariable("output full message with content type", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "fullMsg", contentType: "jsonata", value: {payload: "test"}}});
         testInvalidContextVariable("output full message null", {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "fullMsg", value: null}});
     });
 
@@ -1110,7 +1174,7 @@ describe("scheduler node", function()
         it("should override schedule event (trigger and output)", async function()
         {
             const orig = {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}};
-            const override = {trigger: {type: "time", value: "11:11", offset: 11, random: true}, output: {type: "flow", property: {name: "var1", type: "string", value: "overridden"}}};
+            const override = {trigger: {type: "time", value: "11:11", offset: 11, random: true}, output: {type: "flow", property: {name: "var1", value: "overridden"}}};
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [orig, {trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, cfgNode];
 
             await helper.load([configNode, schedulerNode], flow, credentials);

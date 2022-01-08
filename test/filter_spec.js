@@ -153,21 +153,22 @@ describe("time filter node", function()
             fn1.error.should.be.calledOnce();
         });
 
-        function testInvalidConfig(title, flow, exp)
+        function testInvalidConfig(title, flow, numCalls, exp)
         {
             it("should fail due to " + title, async function()
             {
                 await helper.load([configNode, filterNode], flow, credentials);
                 const fn1 = helper.getNode("fn1");
                 fn1.status.should.be.called();
-                fn1.error.should.be.calledOnce().and.calledWith(exp);
+                fn1.error.should.have.callCount(numCalls);
+                fn1.error.getCall(numCalls-1).should.be.calledWith(exp);
             });
         }
 
         const invalidConfig = "node-red-contrib-chronos/chronos-config:common.error.invalidConfig";
-        testInvalidConfig("invalid basetime", [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msg", baseTime: "", evaluation: "", evaluationType: "or", conditions: [{}]}, cfgNode], invalidConfig);
-        testInvalidConfig("missing conditions", [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "", evaluationType: "or", conditions: []}, cfgNode], "node-red-contrib-chronos/chronos-config:common.error.noConditions");
-        testInvalidConfig("invalid JSONata expression", [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, cfgNode], invalidConfig);
+        testInvalidConfig("invalid basetime", [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msg", baseTime: "", evaluation: "", evaluationType: "or", conditions: [{}]}, cfgNode], 1, invalidConfig);
+        testInvalidConfig("missing conditions", [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "", evaluationType: "or", conditions: []}, cfgNode], 1, "node-red-contrib-chronos/chronos-config:common.error.noConditions");
+        testInvalidConfig("invalid JSONata expression", [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, cfgNode], 2, invalidConfig);
     });
 
     context("message filtering", function()
@@ -287,7 +288,8 @@ describe("time filter node", function()
             helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
             fn1.receive({payload: "test"});
             fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
-            fn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed");
+            fn1.error.should.be.calledTwice();
+            fn1.error.getCall(1).should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed");
         });
 
         it("should handle no boolean error during JSONata evaluation", async function()

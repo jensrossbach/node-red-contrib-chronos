@@ -349,6 +349,25 @@ describe("delay until node", function()
             });
         });
 
+        it("should ignore drop property", async function()
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", whenType: "time", whenValue: "00:01", offset: 0, random: false, preserveCtrlProps: true, ignoreCtrlProps: true}, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            await helper.load([configNode, delayNode], flow, credentials);
+            const dn1 = helper.getNode("dn1");
+
+            dn1.receive({payload: "test1"});
+            clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+            dn1.msgQueue.should.have.length(1);
+            dn1.receive({payload: "test2"});
+            clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+            dn1.msgQueue.should.have.length(2);
+            dn1.receive({drop: true});
+            clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+            dn1.msgQueue.should.have.length(3);
+        });
+
         it("should flush messages", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], whenType: "time", whenValue: "00:01", offset: 0, random: false, preserveCtrlProps: true}, hlpNode, cfgNode];
@@ -501,6 +520,25 @@ describe("delay until node", function()
             });
         });
 
+        it("should ignore flush property", async function()
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", whenType: "time", whenValue: "00:01", offset: 0, random: false, preserveCtrlProps: true, ignoreCtrlProps: true}, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            await helper.load([configNode, delayNode], flow, credentials);
+            const dn1 = helper.getNode("dn1");
+
+            dn1.receive({payload: "test1"});
+            clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+            dn1.msgQueue.should.have.length(1);
+            dn1.receive({payload: "test2"});
+            clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+            dn1.msgQueue.should.have.length(2);
+            dn1.receive({flush: true});
+            clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+            dn1.msgQueue.should.have.length(3);
+        });
+
         it("should handle time error during setup of timer", async function()
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", whenType: "sun", whenValue: "sunset", offset: 2, random: true, preserveCtrlProps: true}, cfgNode];
@@ -618,6 +656,57 @@ describe("delay until node", function()
                     clock.setTimeout.should.be.calledWith(sinon.match.any, 120000);
                     dn1.msgQueue.should.have.length(2);
                     clock.tick(120000);  // advance clock by 2 mins
+                    dn1.msgQueue.should.have.length(0);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should ignore override property", function(done)
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], whenType: "time", whenValue: "00:01", offset: 0, random: false, preserveCtrlProps: true, ignoreCtrlProps: true}, hlpNode, cfgNode];
+            sinon.spy(clock, "setTimeout");
+
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                try
+                {
+                    const dn1 = helper.getNode("dn1");
+                    const hn1 = helper.getNode("hn1");
+                    let msgCount = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msgCount++;
+                            if (msgCount == 1)
+                            {
+                                msg.should.have.property("payload", "no override");
+                            }
+                            else if (msgCount == 2)
+                            {
+                                msg.should.have.property("payload", "with override");
+                                msg.should.have.property("when", {type: "time", value: "00:02", offset: 0, random: false});
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    dn1.receive({payload: "no override"});
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+                    dn1.msgQueue.should.have.length(1);
+                    dn1.receive({payload: "with override", when: {type: "time", value: "00:02", offset: 0, random: false}});
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+                    dn1.msgQueue.should.have.length(2);
+                    clock.tick(60000);  // advance clock by 1 min
                     dn1.msgQueue.should.have.length(0);
                 }
                 catch (e)

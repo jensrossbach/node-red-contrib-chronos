@@ -232,7 +232,7 @@ describe("time change node", function()
             const chn1 = helper.getNode("chn1");
 
             chn1.receive({payload: "test"});
-            chn1.error.should.be.calledWith("change.error.notTime", {_msgid: sinon.match.any, payload: "test", errorDetails: {rule: 1, expression: "my expression", result: true}});
+            chn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {_msgid: sinon.match.any, payload: "test", errorDetails: {rule: 1, expression: "my expression", result: true}});
             chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
             assign.should.be.calledWith("target", "test");
             registerFunction.should.have.callCount(5);
@@ -395,6 +395,40 @@ describe("time change node", function()
                     chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
                     assign.should.be.calledWith("target", "test");
                     registerFunction.should.have.callCount(5);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should handle undefined target correctly", function(done)
+        {
+            const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", wires: [["hn1"]], rules: [{action: "set", target: {type: "msg", name: "non.existing"}, type: "jsonata", expression: "$exists($target) ? 0 : 1"}]}, hlpNode, cfgNode];
+
+            helper.load([configNode, changeNode], flow, credentials, function()
+            {
+                try
+                {
+                    const chn1 = helper.getNode("chn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("non");
+                            msg.non.should.have.property("existing", 1);
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    chn1.receive({payload: "test"});
                 }
                 catch (e)
                 {
