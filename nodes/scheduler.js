@@ -584,6 +584,12 @@ module.exports = function(RED)
                         else
                         {
                             data.triggerTime = chronos.getTime(RED, node, data.triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
+
+                            if (data.config.trigger.offset != 0)
+                            {
+                                let offset = data.config.trigger.random ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
+                                data.triggerTime.add(offset, "minutes");
+                            }
                         }
                     }
 
