@@ -114,6 +114,15 @@ SOFTWARE.
             will always be created as it is not known at configuration time, if
             the event will produce an output message or not.
         </dd>
+        <dt>
+        <dt>Output port for event times</dt>
+        <dd>
+            If selected, an additional output port will be added. This output
+            port emits a message whenever the date and time of any of the
+            schedule events is updated. The message contains the timestamp of
+            the next schedule event in <code>msg.payload</code> and an array
+            with timestamps from all schedule events in <code>msg.events</code>.
+        </dd>
         <dt>Start with disabled schedule</dt>
         <dd>
             If selected, the configured schedule will be initially disabled when

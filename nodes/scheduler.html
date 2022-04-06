@@ -42,6 +42,10 @@ SOFTWARE.
         <label for="node-input-multiPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.multiPort"></label>
     </div>
     <div class="form-row">
+        <input id="node-input-nextEventPort" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-nextEventPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.nextEventPort"></label>
+    </div>
+    <div class="form-row">
         <input id="node-input-disabled" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-disabled" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.disabled"></label>
     </div>
@@ -70,7 +74,35 @@ SOFTWARE.
         },
         outputLabels: function(index)
         {
-            return (this.schedule[index] ? this.schedule[index].label : this._("scheduler.status.noSchedule")) || this._("scheduler.label.outputPort");
+            if (this.multiPort)
+            {
+                if (this.nextEventPort)
+                {
+                    if (index == (this.outputs - 1))
+                    {
+                        return this._("scheduler.label.eventTimes");
+                    }
+                    else
+                    {
+                        return this.schedule[index] ? this.schedule[index].label : this._("scheduler.status.noSchedule");
+                    }
+                }
+                else
+                {
+                    return this.schedule[index] ? this.schedule[index].label : this._("scheduler.status.noSchedule");
+                }
+            }
+            else
+            {
+                if (this.nextEventPort)
+                {
+                    return (index == 0) ? this._("scheduler.label.outputPort") : this._("scheduler.label.eventTimes");
+                }
+                else
+                {
+                    return this._("scheduler.label.outputPort");
+                }
+            }
         },
         defaults:
         {
@@ -95,6 +127,10 @@ SOFTWARE.
                 }
             },
             multiPort:
+            {
+                value: false
+            },
+            nextEventPort:
             {
                 value: false
             },
@@ -402,6 +438,7 @@ SOFTWARE.
             let node = this;
             let scheduleList = $("#node-input-scheduleList").editableList("items");
             let multiPort = $("#node-input-multiPort").prop("checked");
+            let nextEventPort = $("#node-input-nextEventPort").prop("checked");
 
             node.schedule = [];
             node.outputs = 0;
@@ -482,6 +519,11 @@ SOFTWARE.
 
                 node.schedule.push(data);
             });
+
+            if (nextEventPort)
+            {
+                ++node.outputs;
+            }
         },
         oneditresize: function(size)
         {
