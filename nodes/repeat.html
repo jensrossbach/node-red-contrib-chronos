@@ -389,7 +389,7 @@ SOFTWARE.
             let until = $("#node-input-until")
                             .typedInput({types: [nextMsgInput, timeInput, sunTimeInput, moonTimeInput, customInput, "jsonata"], typeField: $("#node-input-untilType")});
             let untilOffset = $("#node-input-untilOffset")
-                            .spinner({min: -300, max: 300, step: 5, change: validateInput});
+                            .spinner({min: -300, max: 300, step: 1, change: validateInput});
 
             $("#node-input-intervalUnit").change(function()
             {
