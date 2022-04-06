@@ -56,7 +56,6 @@ module.exports = function(RED)
             node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
             node.status({});
 
-            node.multiPort = settings.multiPort;
             node.disabledSchedule = (typeof settings.disabled == "undefined") ? false : settings.disabled;
 
             node.schedule = [];
@@ -74,7 +73,7 @@ module.exports = function(RED)
                 }
             }
 
-            if (node.multiPort)
+            if (settings.multiPort)
             {
                 node.ports = [];
 
@@ -722,11 +721,15 @@ module.exports = function(RED)
         {
             if (msg)
             {
-                if (node.multiPort)
+                if (settings.multiPort)
                 {
                     node.ports[data.port] = msg;
                     node.send(node.ports);
                     node.ports[data.port] = null;
+                }
+                else if (settings.nextEventPort)
+                {
+                    node.send([msg, null]);
                 }
                 else
                 {
@@ -873,6 +876,43 @@ module.exports = function(RED)
                 else
                 {
                     node.status({fill: "yellow", shape: "dot", text: "scheduler.status.noTime"});
+                }
+
+                if (settings.nextEventPort)
+                {
+                    const msg = {events: []};
+
+                    node.schedule.forEach(data =>
+                    {
+                        if (data.triggerTime)
+                        {
+                            msg.events.push(data.triggerTime.valueOf());
+                        }
+                        else
+                        {
+                            msg.events.push(null);
+                        }
+                    });
+
+                    if (nextTrigger)
+                    {
+                        msg.payload = nextTrigger.valueOf();
+                    }
+                    else
+                    {
+                        msg.payload = null;
+                    }
+
+                    if (settings.multiPort)
+                    {
+                        node.ports[node.ports.length-1] = msg;
+                        node.send(node.ports);
+                        node.ports[node.ports.length-1] = null;
+                    }
+                    else
+                    {
+                        node.send([null, msg]);
+                    }
                 }
             }
         }

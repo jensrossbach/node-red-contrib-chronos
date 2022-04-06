@@ -3,15 +3,17 @@
     {
         "label":
         {
-            "node":         "scheduler",
-            "inputPort":    "enable/disable",
-            "outputPort":   "scheduled message",
-            "schedule":     "Schedule",
-            "output":       "Output",
-            "crontab":      "cron table",
-            "fullMessage":  "full message",
-            "multiPort":    "Dedicated output ports for schedule events",
-            "disabled":     "Start with disabled schedule"
+            "node":           "scheduler",
+            "inputPort":      "enable/disable",
+            "outputPort":     "scheduled message",
+            "eventTimes":     "event times",
+            "schedule":       "Schedule",
+            "output":         "Output",
+            "crontab":        "cron table",
+            "fullMessage":    "full message",
+            "multiPort":      "Dedicated output ports for schedule events",
+            "nextEventPort":  "Output port for event times",
+            "disabled":       "Start with disabled schedule"
         },
         "status":
         {

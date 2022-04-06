@@ -122,6 +122,15 @@ SOFTWARE.
             angelegt, da zur Konfigurationszeit nicht feststeht, ob das Zeitereignis
             eine Nachricht als Ausgabe erzeugt oder nicht.
         </dd>
+        <dt>Ausgabe-Port für Ereigniszeiten</dt>
+        <dd>
+            Wenn aktiviert, wird ein zusätzlicher Ausgabe-Port erzeugt. Dieser
+            Ausgabe-Port sendet eine Nachricht immer dann, wenn sich das Datum
+            und die Zeit eines beliebigen Zeitereignisses aktualisieren. Die
+            Nachricht enthält einen Zeitstempel für das nächste Zeitereignis in
+            <code>msg.payload</code> und ein Array mit Zeitstempeln aller
+            Zeitereignisse in <code>msg.events</code>.
+        </dd>
         <dt>Mit inaktivem Zeitplan starten</dt>
         <dd>
             Wenn aktiviert, wird der Zeitplan beim Starten des Knotens initial
