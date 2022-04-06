@@ -20,6 +20,10 @@
             "preserveCtrlProps":  "Steuereigenschaften in Nachrichten beibehalten",
             "ignoreCtrlProps":    "Steuereigenschaften in Nachrichten ignorieren"
         },
+        "tooltip":
+        {
+            "offset":  "Versatz (in Minuten)"
+        },
         "list":
         {
             "sun":
