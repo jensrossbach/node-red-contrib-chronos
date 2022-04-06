@@ -76,25 +76,9 @@ module.exports = function(RED)
                 {
                     if (msg)
                     {
-                        if (!send)  // Node-RED 0.x backward compatibility
+                        if (!send || !done)  // Node-RED 0.x not supported anymore
                         {
-                            send = () =>
-                            {
-                                node.send.apply(node, arguments);
-                            };
-                        }
-
-                        if (!done)  // Node-RED 0.x backward compatibility
-                        {
-                            done = () =>
-                            {
-                                var args = [...arguments];
-                                if (args.length > 0)
-                                {
-                                    args.push(msg);
-                                    node.error.apply(node, args);
-                                }
-                            };
+                            return;
                         }
 
                         if (!node.ignoreCtrlProps && ("drop" in msg))
