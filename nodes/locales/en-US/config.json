@@ -20,6 +20,10 @@
             "preserveCtrlProps":  "Preserve control properties in messages",
             "ignoreCtrlProps":    "Ignore control properties in messages"
         },
+        "tooltip":
+        {
+            "offset":  "Offset (in minutes)"
+        },
         "list":
         {
             "sun":
