@@ -43,6 +43,11 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
         }
+        else if (!node.chronos.validateTimeZone(node))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else if (settings.rules.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "change.status.noRules"});
@@ -50,7 +55,7 @@ module.exports = function(RED)
         }
         else
         {
-            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+            node.chronos.printNodeInfo(node);
             node.status({});
 
             node.rules = settings.rules;

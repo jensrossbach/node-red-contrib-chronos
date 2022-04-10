@@ -33,7 +33,9 @@ SOFTWARE.
         abhängigen Zeitpunkte benötigt. Aus Datenschutzgründen werden die
         Koordinaten als geschützte Zugangsdaten gespeichert und damit nicht
         zusammen mit Flows exportiert. Die Karte kann verwendet werden, um die
-        eingegebenen Koordinaten zu überprüfen.
+        eingegebenen Koordinaten zu überprüfen. Falls eine Zeitzone verwendet
+        werden soll, die von der Zeitzone des Node-RED Hosts abweicht, kann
+        diese auch angegeben werden.
         Zusätzlich bietet der Knoten die Möglichkeit, benutzerdefinierte
         Sonnenständig anzulegen, die ähnlich wie die vorgegebenen Sonnenstände
         in den anderen Nodes verwendet werden können.
@@ -55,6 +57,18 @@ SOFTWARE.
     <dt>Längengrad</dt>
     <dd>
         Der Längengrad als Dezimalzahl zwischen -180° und 180°.
+    </dd>
+    <dt>Zeitzone</dt>
+    <dd>
+        <p>
+            Der Name einer <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">internationalen Zeitzone</a>.
+            Wenn nicht angegeben, wird die konfigurierte Zeitzone des Hosts
+            verwendet, auf dem Node-RED ausgeführt wird.
+        </p>
+        <p>
+            <b>Hinweis:</b> Es findet keine automatische Berechnung der Zeitzone
+            aus den geografischen Koordinaten statt!
+        </p>
     </dd>
     <dt>Benutzerdefinierte Sonnenstände</dt>
     <dd>

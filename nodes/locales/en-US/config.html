@@ -32,7 +32,9 @@ SOFTWARE.
         and longitude. That is required for the calculation of times based on
         sun and moon position. For privacy protection reasons, the coordinates
         are stored as credentials and therefore are not exported with the flows.
-        The map can be used to validate the entered coordinates.
+        The map can be used to validate the entered coordinates. If a time zone
+        that differs from the time zone of the Node-RED host is required, this
+        can also be specified.
         Additionally custom sun positions can be defined in this node. They can
         be used in the other nodes in a similar way as the predefined sun
         positions.
@@ -53,6 +55,18 @@ SOFTWARE.
     <dt>Longitude</dt>
     <dd>
         The longitude as floating point value between -180° and 180°.
+    </dd>
+    <dt>Time Zone</dt>
+    <dd>
+        <p>
+            The name of a valid <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zone identifier</a>.
+            If omitted, the time zone configured on the host which runs Node-RED
+            is used.
+        </p>
+        <p>
+            <b>Note:</b> A programmatic calculation of the time zone from the
+            geographical coordinates is not performed!
+        </p>
     </dd>
     <dt>Custom Sun Positions</dt>
     <dd>

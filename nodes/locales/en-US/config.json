@@ -142,6 +142,8 @@
             "node":          "configuration",
             "latitude":      "Latitude",
             "longitude":     "Longitude",
+            "timezone":      "Time Zone",
+            "hostTZ":        "from system settings",
             "sunPositions":  "Custom Sun Positions",
             "angle":         "Angle",
             "riseName":      "Rise Name",

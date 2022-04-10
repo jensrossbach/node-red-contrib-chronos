@@ -55,6 +55,11 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
         }
+        else if (!chronos.validateTimeZone(node))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else if ((settings.mode == "advanced") && !cronosjs.validate(settings.crontab))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
@@ -62,7 +67,7 @@ module.exports = function(RED)
         }
         else
         {
-            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+            chronos.printNodeInfo(node);
             node.status({});
 
             node.mode = settings.mode;
@@ -343,7 +348,7 @@ module.exports = function(RED)
 
                 ret.print = function()
                 {
-                    return this.time.format("YYYY-MM-DD HH:mm:ss");
+                    return this.time.format("YYYY-MM-DD HH:mm:ss (Z)");
                 };
             }
 
@@ -357,7 +362,7 @@ module.exports = function(RED)
 
             if (!untilTime.isExceededAt(node.sendTime))
             {
-                node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss"));
+                node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                 node.repeatTimer = setTimeout(() =>
                 {
                     delete node.repeatTimer;
@@ -482,7 +487,7 @@ module.exports = function(RED)
 
             if (!untilTime.isExceededAt(node.sendTime))
             {
-                node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss"));
+                node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                 node.repeatTimer = setTimeout(() =>
                 {
                     delete node.repeatTimer;

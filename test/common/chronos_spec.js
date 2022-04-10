@@ -72,7 +72,7 @@ describe("chronos", function()
             // fake current time to be deterministic
             sinon.stub(Date, "now").returns(new Date("2000-01-01T00:00:00.000Z"));
 
-            const node = {locale: "en-US"};
+            const node = {locale: "en-US", config: {timezone: ""}};
             const res = chronos.getCurrentTime(node);
 
             res.valueOf().should.equal(946684800000);
@@ -83,7 +83,7 @@ describe("chronos", function()
     {
         it("should return time from string", function()
         {
-            const node = {locale: "en-US"};
+            const node = {locale: "en-US", config: {timezone: ""}};
             const res = chronos.getTimeFrom(node, "2000-01-01T00:00:00.000Z");
 
             res.valueOf().should.equal(946684800000);
@@ -91,7 +91,7 @@ describe("chronos", function()
 
         it("should return time from Unix epoch", function()
         {
-            const node = {locale: "en-US"};
+            const node = {locale: "en-US", config: {timezone: ""}};
             const res = chronos.getTimeFrom(node, 946684800000);
 
             res.valueOf().should.equal(946684800000);
@@ -103,7 +103,7 @@ describe("chronos", function()
         it("should return date from string", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US"};
+            const node = {locale: "en-US", config: {timezone: ""}};
             const res = chronos.getUserDate(RED, node, "2000-01-01");
 
             res.year().should.equal(2000);
