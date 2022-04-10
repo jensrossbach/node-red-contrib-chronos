@@ -46,6 +46,11 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
         }
+        else if (!chronos.validateTimeZone(node))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else if (settings.schedule.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "scheduler.status.noSchedule"});
@@ -53,7 +58,7 @@ module.exports = function(RED)
         }
         else
         {
-            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+            chronos.printNodeInfo(node);
             node.status({});
 
             node.disabledSchedule = (typeof settings.disabled == "undefined") ? false : settings.disabled;
@@ -576,7 +581,7 @@ module.exports = function(RED)
                         }
                     }
 
-                    node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss"));
+                    node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                     data.timer = setTimeout(handleTimeout, data.triggerTime.diff(now), data, true);
                 }
 

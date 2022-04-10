@@ -38,9 +38,27 @@ class TimeError extends Error
 }
 
 
-const moment = require("moment");
+const moment = require("moment-timezone");
 const sunCalc = require("suncalc");
 
+
+function getMoment()
+{
+    let ret = null;
+    let args = Array.prototype.slice.call(arguments, 1);
+
+    if (arguments[0].config.timezone)
+    {
+        args.push(arguments[0].config.timezone);
+        ret = moment.tz.apply(null, args);
+    }
+    else
+    {
+        ret = moment.apply(null, args);
+    }
+
+    return ret;
+}
 
 function initCustomTimes(times)
 {
@@ -53,9 +71,29 @@ function initCustomTimes(times)
     }
 }
 
+function validateTimeZone(node)
+{
+    if (node.config.timezone)
+    {
+        return (moment.tz.zone(node.config.timezone) != null);
+    }
+    else
+    {
+        return true;
+    }
+}
+
+function printNodeInfo(node)
+{
+    node.debug(
+            "Starting node with configuration '"
+            + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude
+            + (node.config.timezone ? ", timezone " + node.config.timezone + ")" : ")"));
+}
+
 function getCurrentTime(node)
 {
-    let ret = moment();
+    let ret = getMoment(node);
     ret.locale(node.locale);
 
     return ret;
@@ -63,7 +101,7 @@ function getCurrentTime(node)
 
 function getTimeFrom(node, source)
 {
-    let ret = moment(source);
+    let ret = getMoment(node, source);
     ret.locale(node.locale);
 
     return ret;
@@ -131,7 +169,7 @@ function getUserDate(RED, node, value)
 
     if (DATE_REGEX.test(value))
     {
-        ret = moment(value, "YYYY-MM-DD");
+        ret = getMoment(node, value, "YYYY-MM-DD");
         ret.locale(node.locale);
     }
 
@@ -173,6 +211,11 @@ function getSunTime(RED, node, day, type)
         }
         else
         {
+            if (node.config.timezone)
+            {
+                ret.tz(node.config.timezone, true);
+            }
+
             ret.locale(node.locale);
         }
     }
@@ -199,6 +242,11 @@ function getMoonTime(RED, node, day, type)
         }
         else
         {
+            if (node.config.timezone)
+            {
+                ret.tz(node.config.timezone, true);
+            }
+
             ret.locale(node.locale);
         }
     }
@@ -241,20 +289,20 @@ function getJSONataExpression(RED, node, expr)
 {
     const expression = RED.util.prepareJSONataExpression(expr, node);
 
-    expression.registerFunction("millisecond", ts => { return moment(ts).millisecond(); }, "<(sn):n>");
-    expression.registerFunction("second", ts => { return moment(ts).second(); }, "<(sn):n>");
-    expression.registerFunction("minute", ts => { return moment(ts).minute(); }, "<(sn):n>");
-    expression.registerFunction("hour", ts => { return moment(ts).hour(); }, "<(sn):n>");
-    expression.registerFunction("day", ts => { return moment(ts).date(); }, "<(sn):n>");
-    expression.registerFunction("dayOfWeek", ts => { return moment(ts).weekday() + 1; }, "<(sn):n>");
-    expression.registerFunction("dayOfYear", ts => { return moment(ts).dayOfYear(); }, "<(sn):n>");
-    expression.registerFunction("week", ts => { return moment(ts).week(); }, "<(sn):n>");
-    expression.registerFunction("month", ts => { return moment(ts).month() + 1; }, "<(sn):n>");
-    expression.registerFunction("quarter", ts => { return moment(ts).quarter(); }, "<(sn):n>");
-    expression.registerFunction("year", ts => { return moment(ts).year(); }, "<(sn):n>");
-    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(RED, node, moment(ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?b?:n>");
-    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, moment(ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
-    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, moment(ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
+    expression.registerFunction("millisecond", ts => { return getMoment(node, ts).millisecond(); }, "<(sn):n>");
+    expression.registerFunction("second", ts => { return getMoment(node, ts).second(); }, "<(sn):n>");
+    expression.registerFunction("minute", ts => { return getMoment(node, ts).minute(); }, "<(sn):n>");
+    expression.registerFunction("hour", ts => { return getMoment(node, ts).hour(); }, "<(sn):n>");
+    expression.registerFunction("day", ts => { return getMoment(node, ts).date(); }, "<(sn):n>");
+    expression.registerFunction("dayOfWeek", ts => { return getMoment(node, ts).weekday() + 1; }, "<(sn):n>");
+    expression.registerFunction("dayOfYear", ts => { return getMoment(node, ts).dayOfYear(); }, "<(sn):n>");
+    expression.registerFunction("week", ts => { return getMoment(node, ts).week(); }, "<(sn):n>");
+    expression.registerFunction("month", ts => { return getMoment(node, ts).month() + 1; }, "<(sn):n>");
+    expression.registerFunction("quarter", ts => { return getMoment(node, ts).quarter(); }, "<(sn):n>");
+    expression.registerFunction("year", ts => { return getMoment(node, ts).year(); }, "<(sn):n>");
+    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?b?:n>");
+    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
+    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
 
     return expression;
 }
@@ -263,6 +311,8 @@ function getJSONataExpression(RED, node, expr)
 module.exports =
 {
     initCustomTimes: initCustomTimes,
+    validateTimeZone: validateTimeZone,
+    printNodeInfo: printNodeInfo,
     getCurrentTime: getCurrentTime,
     getTimeFrom: getTimeFrom,
     getUserTime: getUserTime,

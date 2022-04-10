@@ -31,6 +31,7 @@ module.exports = function(RED)
         RED.nodes.createNode(this, config);
 
         this.name = config.name;
+        this.timezone = config.timezone;
         this.latitude = parseFloat(this.credentials.latitude);
         this.longitude = parseFloat(this.credentials.longitude);
 

@@ -33,7 +33,7 @@ require("should-sinon");
 describe("switch/filter utilities", function()
 {
     const RED = {"_": () => "", util: {}};
-    const node = {chronos: require("../../nodes/common/chronos.js"), debug: function() {}, locale: "UTC"};
+    const node = {chronos: require("../../nodes/common/chronos.js"), debug: function() {}, locale: "UTC", config: {timezone: ""}};
 
     afterEach(function()
     {

@@ -44,9 +44,14 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
         }
+        else if (!chronos.validateTimeZone(node))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else
         {
-            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+            chronos.printNodeInfo(node);
             node.status({});
 
             node.whenType = settings.whenType;
@@ -228,7 +233,7 @@ module.exports = function(RED)
                 }
             }
 
-            node.debug("Starting timer for delayed message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss"));
+            node.debug("Starting timer for delayed message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
             node.delayTimer = setTimeout(() =>
             {
                 delete node.delayTimer;

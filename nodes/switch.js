@@ -45,6 +45,11 @@ module.exports = function(RED)
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
         }
+        else if (!node.chronos.validateTimeZone(node))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+        }
         else if (settings.conditions.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConditions"});
@@ -52,7 +57,7 @@ module.exports = function(RED)
         }
         else
         {
-            node.debug("Starting node with configuration '" + node.config.name + "' (latitude " + node.config.latitude + ", longitude " + node.config.longitude + ")");
+            node.chronos.printNodeInfo(node);
             node.status({});
 
             node.baseTime = settings.baseTime;
@@ -122,7 +127,7 @@ module.exports = function(RED)
                         let baseTime = sfUtils.getBaseTime(RED, node, msg);
                         if (baseTime)
                         {
-                            node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss"));
+                            node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
 
                             let ports = [];
 

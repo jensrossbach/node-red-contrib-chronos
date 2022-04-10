@@ -415,7 +415,7 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
             targetTime.add(offset, "minutes");
         }
 
-        node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + targetTime.format("HH:mm:ss"));
+        node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
         result = (((cond.operator == "before") && baseTime.isBefore(targetTime)) ||
                   ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)));
     }
@@ -435,7 +435,7 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
             time2.add(offset, "minutes");
         }
 
-        node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + time1.format("HH:mm:ss") + " and " + time2.format("HH:mm:ss"));
+        node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss (Z))") + " and " + time2.format("YYYY-MM-DD HH:mm:ss (Z)"));
         if (time2.isSameOrBefore(time1))
         {
             result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2))) ||
