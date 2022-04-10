@@ -1,0 +1,151 @@
+[
+    {
+        "id": "4d39bd7ab87afe9a",
+        "type": "tab",
+        "label": "Scheduler with single output",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3407bac2b472b961",
+        "type": "comment",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "info": "# Scheduler with single output\nScheduler node that is configured for single output.\n\n## Events\n- Fixed time\n- Fixed time with random offset\n- Sun time\n- Custom sun time\n- Cron table",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "3ac8cc78ef81d61e",
+        "type": "chronos-scheduler",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "schedule": [
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "20:15",
+                    "offset": 0,
+                    "random": false
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "str",
+                        "value": "Test"
+                    }
+                }
+            },
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "10:00",
+                    "offset": 30,
+                    "random": true
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "num",
+                        "value": "42"
+                    }
+                }
+            },
+            {
+                "trigger": {
+                    "type": "sun",
+                    "value": "sunset",
+                    "offset": 0,
+                    "random": false
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "bool",
+                        "value": "true"
+                    }
+                }
+            },
+            {
+                "trigger": {
+                    "type": "custom",
+                    "value": "BlueHourDawn",
+                    "offset": 0,
+                    "random": false
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "date",
+                        "value": ""
+                    }
+                }
+            },
+            {
+                "trigger": {
+                    "type": "crontab",
+                    "value": "0 * * * *"
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "str",
+                        "value": "Chronos"
+                    }
+                }
+            }
+        ],
+        "multiPort": false,
+        "nextEventPort": false,
+        "disabled": false,
+        "outputs": 1,
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "16fc525479cdad28"
+            ]
+        ]
+    },
+    {
+        "id": "16fc525479cdad28",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 290,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

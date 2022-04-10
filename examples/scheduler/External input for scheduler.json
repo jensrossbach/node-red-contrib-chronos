@@ -1,0 +1,234 @@
+[
+    {
+        "id": "4d39bd7ab87afe9a",
+        "type": "tab",
+        "label": "External input",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3407bac2b472b961",
+        "type": "comment",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "info": "# External input\nFetch trigger and output from context variables or override via input message.\n\n## Events\n- fetch trigger from flow variable\n- fetch trigger and override output from global variable\n- override trigger via input message\n- override trigger and output via input message",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "3ac8cc78ef81d61e",
+        "type": "chronos-scheduler",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "schedule": [
+            {
+                "trigger": {
+                    "type": "flow",
+                    "value": "trigger"
+                },
+                "output": {
+                    "type": "fullMsg",
+                    "contentType": "json",
+                    "value": "{\"topic\": \"my/topic\", \"payload\": \"Test\"}"
+                }
+            },
+            {
+                "trigger": {
+                    "type": "global",
+                    "value": "override"
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "bool",
+                        "value": "true"
+                    }
+                }
+            },
+            {
+                "trigger": {
+                    "type": "crontab",
+                    "value": "0 * * * *"
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "str",
+                        "value": "Chronos"
+                    }
+                }
+            },
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "20:15",
+                    "offset": 0,
+                    "random": false
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "num",
+                        "value": "42"
+                    }
+                }
+            }
+        ],
+        "multiPort": false,
+        "nextEventPort": false,
+        "disabled": false,
+        "outputs": 1,
+        "x": 360,
+        "y": 180,
+        "wires": [
+            [
+                "16fc525479cdad28"
+            ]
+        ]
+    },
+    {
+        "id": "16fc525479cdad28",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 530,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "35f6576b95517032",
+        "type": "inject",
+        "z": "4d39bd7ab87afe9a",
+        "name": "override trigger",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "[{\"type\":\"moon\",\"value\":\"rise\",\"offset\":0,\"random\":false},null,null,null]",
+        "payloadType": "json",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "3ac8cc78ef81d61e"
+            ]
+        ]
+    },
+    {
+        "id": "6595994a7e3c86c3",
+        "type": "inject",
+        "z": "4d39bd7ab87afe9a",
+        "name": "override event",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "[null,{\"trigger\":{\"type\":\"crontab\",\"value\":\"0 2 * * * *\"},\"output\":{\"type\":\"flow\",\"property\":{\"name\":\"var1\",\"value\":\"my variable\"}}}]",
+        "payloadType": "json",
+        "x": 150,
+        "y": 220,
+        "wires": [
+            [
+                "3ac8cc78ef81d61e"
+            ]
+        ]
+    },
+    {
+        "id": "c5d839de721175be",
+        "type": "inject",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 300,
+        "wires": [
+            [
+                "5191d9d43ebfe1c8"
+            ]
+        ]
+    },
+    {
+        "id": "5191d9d43ebfe1c8",
+        "type": "change",
+        "z": "4d39bd7ab87afe9a",
+        "name": "set env variables",
+        "rules": [
+            {
+                "t": "set",
+                "p": "trigger",
+                "pt": "flow",
+                "to": "{\"type\":\"time\",\"value\":\"13:05\",\"offset\":20,\"random\":true}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "override",
+                "pt": "global",
+                "to": "{\"trigger\":{\"type\":\"sun\",\"value\":\"sunrise\",\"offset\":30,\"random\":false},\"output\":{\"type\":\"msg\",\"property\":{\"name\":\"payload\",\"value\":true}}}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 390,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

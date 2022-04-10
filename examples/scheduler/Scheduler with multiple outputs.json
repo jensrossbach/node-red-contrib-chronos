@@ -1,0 +1,163 @@
+[
+    {
+        "id": "4d39bd7ab87afe9a",
+        "type": "tab",
+        "label": "Scheduler with multiple outputs",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3407bac2b472b961",
+        "type": "comment",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "info": "# Scheduler with multiple outputs\nScheduler node that is configured for dedicated outputs per schedule event.\n\n## Events\n- Fixed time\n- Sun time\n- Cron table",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "3ac8cc78ef81d61e",
+        "type": "chronos-scheduler",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "schedule": [
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "20:15",
+                    "offset": 0,
+                    "random": false
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "str",
+                        "value": "Test"
+                    }
+                },
+                "port": 0,
+                "label": "20:15"
+            },
+            {
+                "trigger": {
+                    "type": "sun",
+                    "value": "sunset",
+                    "offset": 0,
+                    "random": false
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "bool",
+                        "value": "true"
+                    }
+                },
+                "port": 1,
+                "label": "Sunset (end)"
+            },
+            {
+                "trigger": {
+                    "type": "crontab",
+                    "value": "0 * * * *"
+                },
+                "output": {
+                    "type": "msg",
+                    "property": {
+                        "name": "payload",
+                        "type": "str",
+                        "value": "Chronos"
+                    }
+                },
+                "port": 2,
+                "label": "0 * * * * - NaN min."
+            }
+        ],
+        "multiPort": true,
+        "nextEventPort": false,
+        "disabled": false,
+        "outputs": 3,
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "16fc525479cdad28"
+            ],
+            [
+                "bda23117d01ce88b"
+            ],
+            [
+                "cd90770e054926b1"
+            ]
+        ]
+    },
+    {
+        "id": "16fc525479cdad28",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "bda23117d01ce88b",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "cd90770e054926b1",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
