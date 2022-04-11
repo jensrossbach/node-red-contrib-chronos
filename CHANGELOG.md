@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2022-04-11
+
+### Added
+- Added possibility to activate dedicated output port for capturing schedule times of events.
+- Added support for user specified time zones per configuration node.
+- Added example flows for scheduler node (more will follow in future).
+
+### Changed
+- Improved tooltip texts for offset input.
+- Updated versions of dependencies where possible.
+- Dropped support for Node-RED versions older than 1.0.0.
+
+### Fixed
+- Fixed offset not being applied for sun/moon times when scheduled for next day.
+- Fixed offset being applied only if dividable by 5.
+
 ## [1.16.0] - 2022-01-08
 
 ### Added
