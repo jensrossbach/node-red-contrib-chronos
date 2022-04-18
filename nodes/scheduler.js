@@ -88,6 +88,12 @@ module.exports = function(RED)
                 }
             }
 
+            if (settings.nextEventPort)
+            {
+                node.nextEventMsg = {payload: null};
+                node.nextEventMsg.events = Array(node.schedule.length).fill(null);
+            }
+
             let valid = true;
             for (let i=0; i<node.schedule.length; ++i)
             {
@@ -840,6 +846,12 @@ module.exports = function(RED)
             if (node.disabledSchedule)
             {
                 node.status({fill: "grey", shape: "dot", text: "scheduler.status.disabledSchedule"});
+
+                if (settings.nextEventPort)
+                {
+                    node.nextEventMsg.payload = null;
+                    node.nextEventMsg.events.fill(null);
+                }
             }
             else
             {
@@ -877,46 +889,62 @@ module.exports = function(RED)
                     });
 
                     node.status({fill: "green", shape: "dot", text: RED._("scheduler.status.nextEvent") + " " + when});
+
+                    if (settings.nextEventPort)
+                    {
+                        let changed = false;
+
+                        for (let i=0; i<node.schedule.length; ++i)
+                        {
+                            let data = node.schedule[i];
+
+                            if (data.triggerTime)
+                            {
+                                let ts = data.triggerTime.valueOf();
+
+                                if (node.nextEventMsg.events[i] !== ts)
+                                {
+                                    node.nextEventMsg.events[i] = ts;
+                                    changed = true;
+                                }
+                            }
+                            else if (node.nextEventMsg.events[i] !== null)
+                            {
+                                node.nextEventMsg.events[i] = null;
+                                changed = true;
+                            }
+                        }
+
+                        let ts = nextTrigger.valueOf();
+                        if (node.nextEventMsg.payload !== ts)
+                        {
+                            node.nextEventMsg.payload = ts;
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            if (settings.multiPort)
+                            {
+                                node.ports[node.ports.length-1] = node.nextEventMsg;
+                                node.send(node.ports);
+                                node.ports[node.ports.length-1] = null;
+                            }
+                            else
+                            {
+                                node.send([null, node.nextEventMsg]);
+                            }
+                        }
+                    }
                 }
                 else
                 {
                     node.status({fill: "yellow", shape: "dot", text: "scheduler.status.noTime"});
-                }
 
-                if (settings.nextEventPort)
-                {
-                    const msg = {events: []};
-
-                    node.schedule.forEach(data =>
+                    if (settings.nextEventPort)
                     {
-                        if (data.triggerTime)
-                        {
-                            msg.events.push(data.triggerTime.valueOf());
-                        }
-                        else
-                        {
-                            msg.events.push(null);
-                        }
-                    });
-
-                    if (nextTrigger)
-                    {
-                        msg.payload = nextTrigger.valueOf();
-                    }
-                    else
-                    {
-                        msg.payload = null;
-                    }
-
-                    if (settings.multiPort)
-                    {
-                        node.ports[node.ports.length-1] = msg;
-                        node.send(node.ports);
-                        node.ports[node.ports.length-1] = null;
-                    }
-                    else
-                    {
-                        node.send([null, msg]);
+                        node.nextEventMsg.payload = null;
+                        node.nextEventMsg.events.fill(null);
                     }
                 }
             }
