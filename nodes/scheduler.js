@@ -36,6 +36,9 @@ module.exports = function(RED)
         node.config = RED.nodes.getNode(settings.config);
         node.locale = require("os-locale").sync();
 
+        node.initializing = true;
+        node.eventTimesPending = false;
+
         if (!node.config)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
@@ -242,6 +245,17 @@ module.exports = function(RED)
             {
                 updateStatus();
 
+                RED.events.on("flows:started", () =>
+                {
+                    if (node.eventTimesPending)
+                    {
+                        notifyEventTimes();
+                        node.eventTimesPending = false;
+                    }
+
+                    node.initializing = false;
+                });
+
                 node.on("close", () =>
                 {
                     stopTimers();
@@ -278,6 +292,7 @@ module.exports = function(RED)
                         }
                         else if (msg.payload == "reload")
                         {
+                            resetNextEventMsg();
                             reloadTimers();
                         }
                         else if (msg.payload == "trigger")
@@ -316,6 +331,7 @@ module.exports = function(RED)
                                 }
                                 else if (msg.payload[i] == "reload")
                                 {
+                                    resetNextEventMsg(i);
                                     reloadTimer(node.schedule[i]);
                                 }
                                 else if (msg.payload[i] == "trigger")
@@ -841,17 +857,28 @@ module.exports = function(RED)
             return true;
         }
 
+        function resetNextEventMsg(index)
+        {
+            if (settings.nextEventPort)
+            {
+                if (typeof index == "number")
+                {
+                    node.nextEventMsg.events[index] = null;
+                }
+                else
+                {
+                    node.nextEventMsg.payload = null;
+                    node.nextEventMsg.events.fill(null);
+                }
+            }
+        }
+
         function updateStatus()
         {
             if (node.disabledSchedule)
             {
                 node.status({fill: "grey", shape: "dot", text: "scheduler.status.disabledSchedule"});
-
-                if (settings.nextEventPort)
-                {
-                    node.nextEventMsg.payload = null;
-                    node.nextEventMsg.events.fill(null);
-                }
+                resetNextEventMsg();
             }
             else
             {
@@ -924,15 +951,13 @@ module.exports = function(RED)
 
                         if (changed)
                         {
-                            if (settings.multiPort)
+                            if (node.initializing)
                             {
-                                node.ports[node.ports.length-1] = node.nextEventMsg;
-                                node.send(node.ports);
-                                node.ports[node.ports.length-1] = null;
+                                node.eventTimesPending = true;
                             }
                             else
                             {
-                                node.send([null, node.nextEventMsg]);
+                                notifyEventTimes();
                             }
                         }
                     }
@@ -940,13 +965,22 @@ module.exports = function(RED)
                 else
                 {
                     node.status({fill: "yellow", shape: "dot", text: "scheduler.status.noTime"});
-
-                    if (settings.nextEventPort)
-                    {
-                        node.nextEventMsg.payload = null;
-                        node.nextEventMsg.events.fill(null);
-                    }
+                    resetNextEventMsg();
                 }
+            }
+        }
+
+        function notifyEventTimes()
+        {
+            if (settings.multiPort)
+            {
+                node.ports[node.ports.length-1] = node.nextEventMsg;
+                node.send(node.ports);
+                node.ports[node.ports.length-1] = null;
+            }
+            else
+            {
+                node.send([null, node.nextEventMsg]);
             }
         }
     }
