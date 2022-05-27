@@ -1,0 +1,189 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Multiple Conditions",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Multiple Conditions\nTime filter node with various conditions being OR'ed for filtering the input message.\n\n## Conditions\n- before start of sunset\n- after 8:00\n- between 15:00 and Nadir\n- outside 11:00 and 11:30\n- last workday of the month\n- weekdays Monday, Wednesday and Friday\n- months January, February, March, October, November and December",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Filter me!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "12dbcbe90c02fd14"
+            ]
+        ]
+    },
+    {
+        "id": "12dbcbe90c02fd14",
+        "type": "chronos-filter",
+        "z": "671609705841dfab",
+        "name": "multiple conditions",
+        "config": "5e581578.25c88c",
+        "baseTime": "",
+        "baseTimeType": "msgIngress",
+        "evaluation": "",
+        "evaluationType": "or",
+        "conditions": [
+            {
+                "operator": "before",
+                "operands": {
+                    "type": "sun",
+                    "value": "sunsetStart",
+                    "offset": 0,
+                    "random": false
+                }
+            },
+            {
+                "operator": "after",
+                "operands": {
+                    "type": "time",
+                    "value": "8:00",
+                    "offset": 30,
+                    "random": true
+                }
+            },
+            {
+                "operator": "between",
+                "operands": [
+                    {
+                        "type": "time",
+                        "value": "15:00",
+                        "offset": 0,
+                        "random": false
+                    },
+                    {
+                        "type": "sun",
+                        "value": "nadir",
+                        "offset": 0,
+                        "random": false
+                    }
+                ]
+            },
+            {
+                "operator": "outside",
+                "operands": [
+                    {
+                        "type": "time",
+                        "value": "11:00",
+                        "offset": 0,
+                        "random": false
+                    },
+                    {
+                        "type": "time",
+                        "value": "11:30",
+                        "offset": 0,
+                        "random": false
+                    }
+                ]
+            },
+            {
+                "operator": "days",
+                "operands": {
+                    "type": "last",
+                    "day": "workday",
+                    "exclude": false
+                }
+            },
+            {
+                "operator": "weekdays",
+                "operands": [
+                    false,
+                    true,
+                    false,
+                    true,
+                    false,
+                    true,
+                    false
+                ]
+            },
+            {
+                "operator": "months",
+                "operands": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    true,
+                    true
+                ]
+            }
+        ],
+        "x": 410,
+        "y": 140,
+        "wires": [
+            [
+                "1ae9c7a084478411"
+            ]
+        ]
+    },
+    {
+        "id": "1ae9c7a084478411",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "filtered output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
