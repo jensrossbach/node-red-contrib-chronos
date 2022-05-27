@@ -1,0 +1,181 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Context condition",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Context Condition\nFetch a condition from a global context variable.\n\n## Conditions\n- (from context variable `global.condition`) between end of sunset minus 15 minutes (randomized) and 22:30\n- otherwise",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Look at the context!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "39e5e2f296f8045e"
+            ]
+        ]
+    },
+    {
+        "id": "39e5e2f296f8045e",
+        "type": "chronos-switch",
+        "z": "671609705841dfab",
+        "name": "from context",
+        "config": "5e581578.25c88c",
+        "baseTime": "",
+        "baseTimeType": "msgIngress",
+        "conditions": [
+            {
+                "operator": "context",
+                "label": "global.condition (default)",
+                "context": {
+                    "value": "condition",
+                    "type": "global"
+                }
+            },
+            {
+                "operator": "otherwise",
+                "label": "otherwise"
+            }
+        ],
+        "stopOnFirstMatch": false,
+        "outputs": 2,
+        "x": 390,
+        "y": 140,
+        "wires": [
+            [
+                "1ae9c7a084478411"
+            ],
+            [
+                "a9ce2170cd256dec"
+            ]
+        ]
+    },
+    {
+        "id": "1ae9c7a084478411",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "between Sunset (end) - ~15 minutes and 22:30",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "a9ce2170cd256dec",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "otherwise",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "f240c12ac9543c3a",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 240,
+        "wires": [
+            [
+                "4f6fc5f90c03abaa"
+            ]
+        ]
+    },
+    {
+        "id": "4f6fc5f90c03abaa",
+        "type": "change",
+        "z": "671609705841dfab",
+        "name": "set env variable",
+        "rules": [
+            {
+                "t": "set",
+                "p": "condition",
+                "pt": "global",
+                "to": "{\"operator\":\"between\",\"operands\":[{\"type\":\"sun\",\"value\":\"sunset\",\"offset\":-15,\"random\":true},{\"type\":\"time\",\"value\":\"22:30\",\"offset\":0,\"random\":false}]}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 360,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
