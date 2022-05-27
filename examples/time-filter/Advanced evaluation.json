@@ -1,0 +1,158 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Advanced Evaluation",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Advanced Evaluation\nTime filter node with an expression based evaluation of the conditions.\n\n## Conditions\n- Monday to Friday\n- from 8:00 to 17:00\n- Saturday\n- from 10:00 to 16:00",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Let's go for work!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "12dbcbe90c02fd14"
+            ]
+        ]
+    },
+    {
+        "id": "12dbcbe90c02fd14",
+        "type": "chronos-filter",
+        "z": "671609705841dfab",
+        "name": "advanced evaluation",
+        "config": "5e581578.25c88c",
+        "baseTime": "",
+        "baseTimeType": "msgIngress",
+        "evaluation": "($condition[0] and $condition[1]) or ($condition[2] and $condition[3])",
+        "evaluationType": "jsonata",
+        "conditions": [
+            {
+                "operator": "weekdays",
+                "operands": [
+                    false,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    false
+                ]
+            },
+            {
+                "operator": "between",
+                "operands": [
+                    {
+                        "type": "time",
+                        "value": "8:00",
+                        "offset": 0,
+                        "random": false
+                    },
+                    {
+                        "type": "time",
+                        "value": "17:00",
+                        "offset": 0,
+                        "random": false
+                    }
+                ]
+            },
+            {
+                "operator": "weekdays",
+                "operands": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ]
+            },
+            {
+                "operator": "between",
+                "operands": [
+                    {
+                        "type": "time",
+                        "value": "10:00",
+                        "offset": 0,
+                        "random": false
+                    },
+                    {
+                        "type": "time",
+                        "value": "16:00",
+                        "offset": 0,
+                        "random": false
+                    }
+                ]
+            }
+        ],
+        "x": 420,
+        "y": 140,
+        "wires": [
+            [
+                "1ae9c7a084478411"
+            ]
+        ]
+    },
+    {
+        "id": "1ae9c7a084478411",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "work hours only",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
