@@ -1,0 +1,145 @@
+[
+    {
+        "id": "4d39bd7ab87afe9a",
+        "type": "tab",
+        "label": "Base time from message property",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3407bac2b472b961",
+        "type": "comment",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "info": "# Base Time from Message Property\nTime switch node which takes the base time from a message property instead of using the message ingress time (which is the default).\n\n## Conditions\n- before 20:00\n- after 22:00",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "35f6576b95517032",
+        "type": "inject",
+        "z": "4d39bd7ab87afe9a",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "anotherTime",
+                "v": "1577901600000",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "I have my own base time!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "a4bdbfab33e1a426"
+            ]
+        ]
+    },
+    {
+        "id": "a4bdbfab33e1a426",
+        "type": "chronos-switch",
+        "z": "4d39bd7ab87afe9a",
+        "name": "other base time",
+        "config": "5e581578.25c88c",
+        "baseTime": "anotherTime",
+        "baseTimeType": "msg",
+        "conditions": [
+            {
+                "operator": "before",
+                "label": "before 20:00",
+                "operands": {
+                    "type": "time",
+                    "value": "20:00",
+                    "offset": 0,
+                    "random": false
+                }
+            },
+            {
+                "operator": "after",
+                "label": "after 22:00",
+                "operands": {
+                    "type": "time",
+                    "value": "22:00",
+                    "offset": 0,
+                    "random": false
+                }
+            }
+        ],
+        "stopOnFirstMatch": false,
+        "outputs": 2,
+        "x": 390,
+        "y": 140,
+        "wires": [
+            [
+                "775e08f96d6b87d0"
+            ],
+            [
+                "6fdd3fe11af919d2"
+            ]
+        ]
+    },
+    {
+        "id": "775e08f96d6b87d0",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "before 20:00",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "6fdd3fe11af919d2",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "after 22:00",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

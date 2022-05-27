@@ -1,0 +1,129 @@
+[
+    {
+        "id": "4d39bd7ab87afe9a",
+        "type": "tab",
+        "label": "Expression",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3407bac2b472b961",
+        "type": "comment",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "info": "# Expression\nTime switch node with an _expression_ condition that evaluates to true for working hours which are:\n- Monday to Friday from 8:00 to 17:00, and\n- Saturday from 10:00 to 16:00\n\nThe _otherwise_ condition defines the route for the non-working hours.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "35f6576b95517032",
+        "type": "inject",
+        "z": "4d39bd7ab87afe9a",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Let's go for work!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "a4bdbfab33e1a426"
+            ]
+        ]
+    },
+    {
+        "id": "a4bdbfab33e1a426",
+        "type": "chronos-switch",
+        "z": "4d39bd7ab87afe9a",
+        "name": "expression",
+        "config": "5e581578.25c88c",
+        "baseTime": "",
+        "baseTimeType": "msgIngress",
+        "conditions": [
+            {
+                "operator": "expression",
+                "label": "($matchesWeekdays(\t   $baseTime,\t   {\t       \"mon...",
+                "expression": "($matchesWeekdays(\t   $baseTime,\t   {\t       \"monday\": true,\t       \"tuesday\": true,\t       \"wednesday\": true,\t       \"thursday\": true,\t       \"friday\": true\t   }) and $isBetween(\t       $baseTime,\t       \"time\",\t       \"8:00\",\t       0,\t       false,\t       \"time\",\t       \"17:00\",\t       0,\t       false\t   )\t) or (\t   $matchesWeekdays($baseTime, {\"saturday\": true}) and $isBetween(\t       $baseTime,\t       \"time\",\t       \"10:00\",\t       0,\t       false,\t       \"time\",\t       \"16:00\",\t       0,\t       false\t   )\t)"
+            },
+            {
+                "operator": "otherwise",
+                "label": "otherwise"
+            }
+        ],
+        "stopOnFirstMatch": false,
+        "outputs": 2,
+        "x": 390,
+        "y": 140,
+        "wires": [
+            [
+                "775e08f96d6b87d0"
+            ],
+            [
+                "6fdd3fe11af919d2"
+            ]
+        ]
+    },
+    {
+        "id": "775e08f96d6b87d0",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "working hours",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "6fdd3fe11af919d2",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "non-working hours",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

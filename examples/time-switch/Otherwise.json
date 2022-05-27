@@ -1,0 +1,164 @@
+[
+    {
+        "id": "4d39bd7ab87afe9a",
+        "type": "tab",
+        "label": "Otherwise",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3407bac2b472b961",
+        "type": "comment",
+        "z": "4d39bd7ab87afe9a",
+        "name": "",
+        "info": "# Otherwise\nTime switch node with _otherwise_ operator taking the message if all other conditions evaluate to `false`.\n\n## Conditions\n- before end of sunrise\n- after start of sunset\n- otherwise",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "35f6576b95517032",
+        "type": "inject",
+        "z": "4d39bd7ab87afe9a",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "I go this way, otherwise I go that way...",
+        "payloadType": "str",
+        "x": 160,
+        "y": 160,
+        "wires": [
+            [
+                "a4bdbfab33e1a426"
+            ]
+        ]
+    },
+    {
+        "id": "a4bdbfab33e1a426",
+        "type": "chronos-switch",
+        "z": "4d39bd7ab87afe9a",
+        "name": "otherwise",
+        "config": "5e581578.25c88c",
+        "baseTime": "",
+        "baseTimeType": "msgIngress",
+        "conditions": [
+            {
+                "operator": "before",
+                "label": "before Sunrise (end)",
+                "operands": {
+                    "type": "sun",
+                    "value": "sunriseEnd",
+                    "offset": 0,
+                    "random": false
+                }
+            },
+            {
+                "operator": "after",
+                "label": "after Sunset (start)",
+                "operands": {
+                    "type": "sun",
+                    "value": "sunsetStart",
+                    "offset": 0,
+                    "random": false
+                }
+            },
+            {
+                "operator": "otherwise",
+                "label": "otherwise"
+            }
+        ],
+        "stopOnFirstMatch": false,
+        "outputs": 3,
+        "x": 380,
+        "y": 160,
+        "wires": [
+            [
+                "775e08f96d6b87d0"
+            ],
+            [
+                "ca073f92491f994e"
+            ],
+            [
+                "6fdd3fe11af919d2"
+            ]
+        ]
+    },
+    {
+        "id": "775e08f96d6b87d0",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "before Sunrise (start)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "ca073f92491f994e",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "after Sunset (end)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "6fdd3fe11af919d2",
+        "type": "debug",
+        "z": "4d39bd7ab87afe9a",
+        "name": "otherwise",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

@@ -706,6 +706,40 @@ describe("scheduler node", function()
                 }
             });
         });
+
+        /* it("should trigger at specified sun time on next day with offset", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "sun", value: "sunrise", offset: 10, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, hlpNode, cfgNode];
+
+            sinon.stub(chronos, "getTime").returns(moment.utc(1800000));
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    clock.tick(85200000);  // advance clock by 23h and 40 mins
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        }); */
     });
 
 
