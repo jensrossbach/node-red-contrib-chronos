@@ -32,12 +32,49 @@ SOFTWARE.
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
     <div class="form-row" style="padding-top: 4px;">
+        <label for="node-input-delayType"><i class="fa fa-sliders"></i> <span data-i18n="delay.label.delayType"></span></label>
+        <select id="node-input-delayType" style="width: auto;">
+            <option value="fixedDuration" data-i18n="delay.list.delayType.fixedDuration"></option>
+            <option value="randomDuration" data-i18n="delay.list.delayType.randomDuration"></option>
+            <option value="pointInTime" data-i18n="delay.list.delayType.pointInTime"></option>
+            <option value="custom" data-i18n="delay.list.delayType.custom"></option>
+        </select>
+    </div>
+    <div id="form-row-fixedDuration" class="form-row">
+        <label for="node-input-fixedDuration"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.duration"></span></label>
+        <input id="node-input-fixedDuration" style="width: 50px !important; float: left;" value="1">
+        <select id="node-input-fixedDurationUnit" style="margin-left: 4px; width: auto;">
+            <option value="milliseconds" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds"></option>
+            <option value="seconds" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.seconds"></option>
+            <option value="minutes" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.minutes"></option>
+            <option value="hours" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.hours"></option>
+            <option value="days" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.days"></option>
+        </select>
+    </div>
+    <div id="form-row-randomDuration" class="form-row">
+        <label for="node-input-randomDuration1"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.duration"></span></label>
+        <input id="node-input-randomDuration1" style="width: 50px !important; float: left;" value="1">
+        &nbsp;<span>-</span>&nbsp;
+        <input id="node-input-randomDuration2" style="width: 50px !important; float: left;" value="1">
+        <select id="node-input-randomDurationUnit" style="margin-left: 4px; width: auto;">
+            <option value="milliseconds" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds"></option>
+            <option value="seconds" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.seconds"></option>
+            <option value="minutes" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.minutes"></option>
+            <option value="hours" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.hours"></option>
+            <option value="days" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.days"></option>
+        </select>
+    </div>
+    <div id="form-row-randomizerGranularity" class="form-row">
+        <input id="node-input-randomizerMillis" type="checkbox" style="margin-left: 104px; margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-randomizerMillis" style="margin-bottom: 0px; width: auto;" data-i18n="delay.label.randomizerMillis"></label>
+    </div>
+    <div id="form-row-when" class="form-row">
         <label for="node-input-when"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.when"></span></label>
         <input type="text" id="node-input-when" style="width: 70%;">
         <input id="node-input-whenType" type="hidden">
         <input id="node-input-whenValue" type="hidden">
     </div>
-    <div class="form-row">
+    <div id="form-row-offset" class="form-row">
         <label for="node-input-offset"><i class="fa fa-arrows-h"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
         <input id="node-input-offset" style="width: 60px !important;">
         <span style="padding-left: 10px;">
@@ -45,8 +82,13 @@ SOFTWARE.
             <label for="node-input-random" style="width: auto; margin-bottom: 0px;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.random"></label>
         </span>
     </div>
+    <div id="form-row-custom" class="form-row">
+        <label for="node-input-expressionField"><i class="fa fa-code"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.expression"></span></label>
+        <input type="text" id="node-input-expressionField" style="width: 70%;">
+        <input id="node-input-expression" type="hidden">
+    </div>
     <div class="form-row" style="padding-top: 10px">
-        <input id="node-input-preserveCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <input id="node-input-randomizerMillis" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-preserveCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.preserveCtrlProps"></label>
     </div>
     <div class="form-row">
@@ -63,40 +105,82 @@ SOFTWARE.
         icon:         "chronos_delay.svg",
         inputs:       1,
         outputs:      1,
-        paletteLabel: "delay until",
+        paletteLabel: "delay",
         label: function()
         {
-            let label = this._("delay.label.node");
+            let label = "";
 
             if (this.name)
             {
                 label = this.name;
             }
-            else if (this.whenType && this.whenValue)
+            else
             {
-                if ((this.whenType == "time") || (this.whenType == "custom"))
+                if (this.delayType == "fixedDuration")
                 {
-                    label = this.whenValue;
+                    label = this.fixedDuration + " " + this._("node-red-contrib-chronos/chronos-config:common.list.unit." + this.fixedDurationUnit);
                 }
-                else
+                else if (this.delayType == "randomDuration")
                 {
-                    label = this._("node-red-contrib-chronos/chronos-config:common.list." + this.whenType + "." + this.whenValue);
-                }
-
-                if (this.offset != 0)
-                {
-                    label += ((this.offset > 0) ? " + " : " - ");
-
-                    if (this.random)
+                    if (this.randomDuration1 == this.randomDuration2)
                     {
-                        label += "~";
+                        label = this.randomDuration1;
+                    }
+                    else if (this.randomDuration2 > this.randomDuration1)
+                    {
+                        label = this.randomDuration1
+                              + " - "
+                              + this.randomDuration2;
+                    }
+                    else
+                    {
+                        label = this.randomDuration2
+                              + " - "
+                              + this.randomDuration1;
                     }
 
-                    label += Math.abs(this.offset) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
+                    label += " " + this._("node-red-contrib-chronos/chronos-config:common.list.unit." + this.randomDurationUnit);
+                }
+                else if (this.delayType == "pointInTime")
+                {
+                    if (this.whenType && this.whenValue)
+                    {
+                        if ((this.whenType == "time") || (this.whenType == "custom"))
+                        {
+                            label = this.whenValue;
+                        }
+                        else
+                        {
+                            label = this._("node-red-contrib-chronos/chronos-config:common.list." + this.whenType + "." + this.whenValue);
+                        }
+
+                        if (this.offset != 0)
+                        {
+                            label += ((this.offset > 0) ? " + " : " - ");
+
+                            if (this.random)
+                            {
+                                label += "~";
+                            }
+
+                            label += Math.abs(this.offset) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
+                        }
+                    }
+                }
+                else if (this.delayType == "custom")
+                {
+                    if (this.expression.length <= 50)
+                    {
+                        label = this.expression;
+                    }
+                    else
+                    {
+                        label = this.expression.substring(0, 49) + "...";
+                    }
                 }
             }
 
-            return label;
+            return label || this._("delay.label.node");
         },
         labelStyle: function()
         {
@@ -122,6 +206,37 @@ SOFTWARE.
                 type:     "chronos-config",
                 required: true
             },
+            delayType:
+            {
+                value: "fixedDuration"
+            },
+            fixedDuration:
+            {
+                value:    "1",
+                required: true
+            },
+            fixedDurationUnit:
+            {
+                value: "seconds"
+            },
+            randomDuration1:
+            {
+                value:    "1",
+                required: true
+            },
+            randomDuration2:
+            {
+                value:    "5",
+                required: true
+            },
+            randomDurationUnit:
+            {
+                value: "seconds"
+            },
+            randomizerMillis:
+            {
+                value: false
+            },
             whenType:
             {
                 value: "time"
@@ -132,11 +247,26 @@ SOFTWARE.
             },
             offset:
             {
-                value: 0
+                value: "0"
             },
             random:
             {
                 value: false
+            },
+            expression:
+            {
+                value: "",
+                validate: function(v)
+                {
+                    if (this.type == "custom")
+                    {
+                        return (v.length > 0);
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
             },
             preserveCtrlProps:
             {
@@ -257,38 +387,164 @@ SOFTWARE.
                 validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
             };
 
-            const offsetInput =
+            const validateInput = function(event, ui)
             {
-                min: -300,
-                max: 300,
-                step: 1,
-                change: function(event, ui)
+                var value = parseInt($(this).spinner("value"), 10);
+                var min = $(this).spinner("option", "min");
+                var max = $(this).spinner("option", "max");
+                if (isNaN(value) || (value < min))
                 {
-                    var value = parseInt($(this).spinner("value"), 10);
-                    var min = $(this).spinner("option", "min");
-                    var max = $(this).spinner("option", "max");
-                    if (isNaN(value) ||
-                        (value < min))
-                    {
-                        $(this).spinner("value", min);
-                    }
-                    else if (value > max)
-                    {
-                        $(this).spinner("value", max);
-                    }
+                    $(this).spinner("value", min);
+                }
+                else if (value > max)
+                {
+                    $(this).spinner("value", max);
                 }
             };
 
+            const applyLimits = function(elements)
+            {
+                let value = $(this).val();
+                switch (value)
+                {
+                    case "milliseconds":
+                    {
+                        for (elem of elements)
+                        {
+                            elem.spinner("option", "max", 60000);
+                        }
+
+                        break;
+                    }
+                    case "seconds":
+                    {
+                        for (elem of elements)
+                        {
+                            elem.spinner("option", "max", 3600);
+                        }
+
+                        break;
+                    }
+                    case "minutes":
+                    {
+                        for (elem of elements)
+                        {
+                            elem.spinner("option", "max", 1440);
+                        }
+
+                        break;
+                    }
+                    case "hours":
+                    {
+                        for (elem of elements)
+                        {
+                            elem.spinner("option", "max", 168);
+                        }
+
+                        break;
+                    }
+                    case "days":
+                    {
+                        for (elem of elements)
+                        {
+                            elem.spinner("option", "max", 7);
+                        }
+
+                        break;
+                    }
+                }
+
+                for (elem of elements)
+                {
+                    validateInput.call(elem);
+                }
+            };
+
+            let fixedDuration = $("#node-input-fixedDuration")
+                            .spinner({min: 1, max: 3600, step: 1, change: validateInput});
+            let randomDuration1 = $("#node-input-randomDuration1")
+                            .spinner({min: 1, max: 3600, step: 1, change: validateInput});
+            let randomDuration2 = $("#node-input-randomDuration2")
+                            .spinner({min: 1, max: 3600, step: 1, change: validateInput});
             let when = $("#node-input-when")
                             .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput], typeField: $("#node-input-whenType")});
             let offset = $("#node-input-offset")
-                            .spinner(offsetInput);
+                            .spinner({min: -300, max: 300, step: 1, change: validateInput});
+            let expression = $("#node-input-expressionField")
+                            .typedInput({types: ["jsonata"]});
 
+            $("#node-input-delayType").change(function()
+            {
+                $("#form-row-fixedDuration").hide();
+                $("#form-row-randomDuration").hide();
+                $("#form-row-randomizerGranularity").hide();
+                $("#form-row-when").hide();
+                $("#form-row-offset").hide();
+                $("#form-row-custom").hide();
+
+                let value = $(this).val();
+                switch (value)
+                {
+                    case "fixedDuration":
+                    {
+                        $("#form-row-fixedDuration").show();
+                        break;
+                    }
+                    case "randomDuration":
+                    {
+                        $("#form-row-randomDuration").show();
+                        $("#form-row-randomizerGranularity").show();
+                        break;
+                    }
+                    case "pointInTime":
+                    {
+                        $("#form-row-when").show();
+                        $("#form-row-offset").show();
+                        break;
+                    }
+                    case "custom":
+                    {
+                        $("#form-row-custom").show();
+                        break;
+                    }
+                }
+            });
+
+            $("#node-input-fixedDurationUnit").change(applyLimits.bind($("#node-input-fixedDurationUnit"), [fixedDuration]));
+            $("#node-input-randomDurationUnit").change(applyLimits.bind($("#node-input-randomDurationUnit"), [randomDuration1, randomDuration2]));
+
+            // backward compatibility to v1.17.x and earlier
+            if (typeof node.delayType == "undefined")
+            {
+                node.delayType = "pointInTime";
+                $("#node-input-delayType").val(node.delayType);
+
+                node.fixedDuration = "1";
+                $("#node-input-fixedDuration").val(node.fixedDuration);
+                node.fixedDurationUnit = "seconds";
+                $("#node-input-fixedDurationUnit").val(node.fixedDurationUnit);
+
+                node.randomDuration1 = "1";
+                $("#node-input-randomDuration1").val(node.randomDuration1);
+                node.randomDuration2 = "5";
+                $("#node-input-randomDuration2").val(node.randomDuration2);
+                node.randomDurationUnit = "seconds";
+                $("#node-input-randomDurationUnit").val(node.randomDurationUnit);
+                node.randomizerMillis = false;
+                $("#node-input-randomizerMillis").val(node.randomizerMillis);
+
+                node.expression = "";
+                $("#node-input-expression").val(node.expression);
+            }
+
+            $("#node-input-delayType").change();
             when.typedInput("value", $("#node-input-whenValue").val());
+            expression.typedInput("value", $("#node-input-expression").val());
         },
         oneditsave: function()
         {
             $("#node-input-whenValue").val($("#node-input-when").typedInput("value"));
+            $("#node-input-expression").val($("#node-input-expressionField").typedInput("value"));
         }
     });
 </script>

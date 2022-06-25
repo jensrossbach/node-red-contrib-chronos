@@ -15,6 +15,7 @@
             "custom":             "custom sun position",
             "exclude":            "exclude",
             "offset":             "Offset",
+            "expression":         "Expression",
             "random":             "randomized",
             "min":                "min.",
             "preserveCtrlProps":  "Preserve control properties in messages",
@@ -111,6 +112,28 @@
                 "november":   "NOV",
                 "december":   "DEC",
                 "any":        "any"
+            },
+            "unit":
+            {
+                "year":          "year",
+                "years":         "year(s)",
+                "quarter":       "quarter",
+                "quarters":      "quarter(s)",
+                "month":         "month",
+                "months":        "month(s)",
+                "week":          "week",
+                "weeks":         "week(s)",
+                "weekday":       "day of week",
+                "day":           "day",
+                "days":          "day(s)",
+                "hour":          "hour",
+                "hours":         "hour(s)",
+                "minute":        "minute",
+                "minutes":       "minute(s)",
+                "second":        "second",
+                "seconds":       "second(s)",
+                "millisecond":   "millisecond",
+                "milliseconds":  "millisecond(s)"
             }
         },
         "status":

@@ -25,28 +25,6 @@
                 "startOf":   "Start of",
                 "endOf":     "End of",
                 "toString":  "Convert"
-            },
-            "unit":
-            {
-                "year":          "year",
-                "years":         "year(s)",
-                "quarter":       "quarter",
-                "quarters":      "quarter(s)",
-                "month":         "month",
-                "months":        "month(s)",
-                "week":          "week",
-                "weeks":         "week(s)",
-                "weekday":       "day of week",
-                "day":           "day",
-                "days":          "day(s)",
-                "hour":          "hour",
-                "hours":         "hour(s)",
-                "minute":        "minute",
-                "minutes":       "minute(s)",
-                "second":        "second",
-                "seconds":       "second(s)",
-                "millisecond":   "millisecond",
-                "milliseconds":  "millisecond(s)"
             }
         },
         "status":

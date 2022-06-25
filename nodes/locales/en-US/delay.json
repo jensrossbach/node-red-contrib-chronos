@@ -3,14 +3,28 @@
     {
         "label":
         {
-            "node":        "delay until",
-            "outputPort":  "delayed message",
-            "when":        "When"
+            "node":              "delay",
+            "outputPort":        "delayed message",
+            "delayType":         "Delay Type",
+            "duration":          "Duration",
+            "when":              "When",
+            "randomizerMillis":  "Random value always in milliseconds granularity"
+        },
+        "list":
+        {
+            "delayType":
+            {
+                "fixedDuration":   "Fixed Duration",
+                "randomDuration":  "Random Duration",
+                "pointInTime":     "Point in Time",
+                "custom":          "Custom"
+            }
         },
         "status":
         {
-            "queued":  "queued until",
-            "error":   "error"
+            "queuedFor":    "queued for",
+            "queuedUntil":  "queued until",
+            "error":        "error"
         }
     }
 }

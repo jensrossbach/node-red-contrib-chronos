@@ -3,14 +3,28 @@
     {
         "label":
         {
-            "node":        "Verzögerung",
-            "outputPort":  "Verzögerte Nachricht",
-            "when":        "Wann"
+            "node":              "Verzögerung",
+            "outputPort":        "Verzögerte Nachricht",
+            "delayType":         "Verzög.-Art",
+            "duration":          "Dauer",
+            "when":              "Wann",
+            "randomizerMillis":  "Zufallswert immer in Millisekundenauflösung"
+        },
+        "list":
+        {
+            "delayType":
+            {
+                "fixedDuration":   "Feste Dauer",
+                "randomDuration":  "Zufällige Dauer",
+                "pointInTime":     "Zeitpunkt",
+                "custom":          "Benutzerdefiniert"
+            }
         },
         "status":
         {
-            "queued":  "wartend bis",
-            "error":   "Fehler"
+            "queuedFor":    "wartend für",
+            "queuedUntil":  "wartend bis",
+            "error":        "Fehler"
         }
     }
 }

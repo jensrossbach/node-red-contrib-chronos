@@ -9,7 +9,6 @@
             "mode":             "Mode",
             "interval":         "Interval",
             "crontab":          "Cron Table",
-            "expression":       "Expression",
             "until":            "Until",
             "date":             "Date",
             "datePlaceholder":  "YYYY-MM-DD",
@@ -23,12 +22,6 @@
                 "simple":    "Simple",
                 "advanced":  "Advanced",
                 "custom":    "Custom"
-            },
-            "interval":
-            {
-                "seconds":  "second(s)",
-                "minutes":  "minute(s)",
-                "hours":    "hour(s)"
             },
             "msgIngress":
             {
