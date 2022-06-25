@@ -26,6 +26,9 @@ module.exports = function(RED)
 {
     function ChronosRepeatNode(settings)
     {
+        const MS_PER_SECOND = 1000;
+        const MS_PER_WEEK   = MS_PER_SECOND * 60 * 60 * 24 * 7;
+
         const chronos = require("./common/chronos.js");
         const cronosjs = require("cronosjs");
 
@@ -458,11 +461,11 @@ module.exports = function(RED)
                                             {expression: expression, result: result});
             }
 
-            if ((typeof result == "string") || (result >= (now.valueOf() + 1000)))  // assumed to be absolute time of next trigger
+            if ((typeof result == "string") || (result >= (now.valueOf() + MS_PER_SECOND)))  // assumed to be absolute time of next trigger
             {
                 node.sendTime = chronos.getTimeFrom(node, result);
             }
-            else if ((result >= 1000) && (result <= 604800000))  // assumed to be a relative interval time
+            else if ((result >= MS_PER_SECOND) && (result <= MS_PER_WEEK))  // assumed to be a relative interval time
             {
                 node.sendTime = now.clone().add(result, "milliseconds");
             }
@@ -478,7 +481,7 @@ module.exports = function(RED)
                 throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
                                             {expression: expression, result: result});
             }
-            if ((node.sendTime.diff(now) < 1000) || (node.sendTime.diff(now) > 604800000))
+            if ((node.sendTime.diff(now) < MS_PER_SECOND) || (node.sendTime.diff(now) > MS_PER_WEEK))
             {
                 node.sendTime = null;
                 throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
