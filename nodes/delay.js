@@ -26,6 +26,17 @@ module.exports = function(RED)
 {
     function ChronosDelayNode(settings)
     {
+        const DAYS_PER_WEEK      =    7;
+        const HOURS_PER_DAY      =   24;
+        const MINUTES_PER_HOUR   =   60;
+        const SECONDS_PER_MINUTE =   60;
+        const MS_PER_SECOND      = 1000;
+
+        const MS_PER_MINUTE      = MS_PER_SECOND * SECONDS_PER_MINUTE;
+        const MS_PER_HOUR        = MS_PER_MINUTE * MINUTES_PER_HOUR;
+        const MS_PER_DAY         = MS_PER_HOUR   * HOURS_PER_DAY;
+        const MS_PER_WEEK        = MS_PER_DAY    * DAYS_PER_WEEK;
+
         const chronos = require("./common/chronos.js");
 
         let node = this;
@@ -54,16 +65,25 @@ module.exports = function(RED)
             chronos.printNodeInfo(node);
             node.status({});
 
+            node.delayType = (typeof settings.delayType == "undefined") ? "pointInTime" : settings.delayType;
+            node.fixedDuration = (typeof settings.fixedDuration == "undefined") ? 1 : parseInt(settings.fixedDuration);
+            node.randomDuration1 = (typeof settings.randomDuration1 == "undefined") ? 1 : parseInt(settings.randomDuration1);
+            node.randomDuration2 = (typeof settings.randomDuration2 == "undefined") ? 5 : parseInt(settings.randomDuration2);
+            node.fixedDurationUnit = (typeof settings.fixedDurationUnit == "undefined") ? "seconds" : settings.fixedDurationUnit;
+            node.randomDurationUnit = (typeof settings.randomDurationUnit == "undefined") ? "seconds" : settings.randomDurationUnit;
+            node.randomizerMillis = (settings.randomizerMillis === true);
             node.whenType = settings.whenType;
             node.whenValue = settings.whenValue;
-            node.offset = settings.offset;
+            node.offset = parseInt(settings.offset);
             node.random = settings.random;
+            node.expression = (typeof settings.expression == "undefined") ? "" : settings.expression;
             node.preserveCtrlProps = settings.preserveCtrlProps;
             node.ignoreCtrlProps = settings.ignoreCtrlProps;
 
+            node.queueDuration = -1;
             node.sendTime = null;
 
-            if ((node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
+            if ((node.delayType == "pointInTime") && (node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
             {
                 node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
                 node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -86,51 +106,70 @@ module.exports = function(RED)
                             return;
                         }
 
-                        if (!node.ignoreCtrlProps && ("drop" in msg))
+                        try
                         {
-                            tearDownDelayTimer();
-                            dropQueue();
-
-                            if ("enqueue" in msg)
+                            if (!node.ignoreCtrlProps && ("drop" in msg))
                             {
-                                if (!node.preserveCtrlProps)
-                                {
-                                    delete msg.drop;
-                                    delete msg.enqueue;
-                                }
+                                tearDownDelayTimer();
+                                dropQueue();
 
-                                enqueueMessage(msg, done);
+                                if ("enqueue" in msg)
+                                {
+                                    if (!node.preserveCtrlProps)
+                                    {
+                                        delete msg.drop;
+                                        delete msg.enqueue;
+                                    }
+
+                                    enqueueMessage(msg, done);
+                                }
+                                else
+                                {
+                                    // we're done with the message as it gets discarded
+                                    done();
+                                }
+                            }
+                            else if (!node.ignoreCtrlProps && ("flush" in msg))
+                            {
+                                tearDownDelayTimer();
+                                flushQueue();
+
+                                if ("enqueue" in msg)
+                                {
+                                    if (!node.preserveCtrlProps)
+                                    {
+                                        delete msg.flush;
+                                        delete msg.enqueue;
+                                    }
+
+                                    enqueueMessage(msg, done);
+                                }
+                                else
+                                {
+                                    // we're done with the message as it gets discarded
+                                    done();
+                                }
                             }
                             else
                             {
-                                // we're done with the message as it gets discarded
-                                done();
+                                enqueueMessage(msg, done);
                             }
                         }
-                        else if (!node.ignoreCtrlProps && ("flush" in msg))
+                        catch (e)
                         {
-                            tearDownDelayTimer();
-                            flushQueue();
-
-                            if ("enqueue" in msg)
+                            if (e instanceof chronos.TimeError)
                             {
-                                if (!node.preserveCtrlProps)
-                                {
-                                    delete msg.flush;
-                                    delete msg.enqueue;
-                                }
-
-                                enqueueMessage(msg, done);
+                                node.error(e.message, {errorDetails: e.details});
+                                node.status({fill: "red", shape: "dot", text: "delay.status.error"});
                             }
                             else
                             {
-                                // we're done with the message as it gets discarded
-                                done();
+                                node.error(e.message);
+                                node.debug(e.stack);
                             }
-                        }
-                        else
-                        {
-                            enqueueMessage(msg, done);
+
+                            // we're done with the message as we do not enqueue it
+                            done();
                         }
                     }
                 });
@@ -139,44 +178,115 @@ module.exports = function(RED)
 
         function enqueueMessage(msg, done)
         {
-            try
+            let delayType = node.delayType;
+            let fixedDuration = node.fixedDuration;
+            let fixedDurationUnit = node.fixedDurationUnit;
+            let randomDuration1 = node.randomDuration1;
+            let randomDuration2 = node.randomDuration2;
+            let randomDurationUnit = node.randomDurationUnit;
+            let randomizerMillis = node.randomizerMillis;
+            let whenType = node.whenType;
+            let whenValue = node.whenValue;
+            let whenOffset = node.offset;
+            let whenRandom = node.random;
+            let expression = node.expression;
+
+            if (node.ignoreCtrlProps)
             {
-                if (!node.ignoreCtrlProps && hasOverride(msg.when))
+                node.debug("Ignoring control properties");
+            }
+            else
+            {
+                if (hasFixedDurationOverride(msg.fixedDuration))
                 {
-                    node.debug("Input message has override property");
+                    node.debug("Input message has override property for fixed duration");
 
                     tearDownDelayTimer();
-                    setupDelayTimer(msg.when.type, msg.when.value, msg.when.offset, msg.when.random);
+
+                    delayType = "fixedDuration";
+                    fixedDuration = msg.fixedDuration.value;
+                    fixedDurationUnit = msg.fixedDuration.unit;
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.fixedDuration;
+                    }
+                }
+
+                if (hasRandomDurationOverride(msg.randomDuration))
+                {
+                    node.debug("Input message has override property for random duration");
+
+                    tearDownDelayTimer();
+
+                    delayType = "randomDuration";
+                    randomDuration1 = msg.randomDuration.value1;
+                    randomDuration2 = msg.randomDuration.value2;
+                    randomDurationUnit = msg.randomDuration.unit;
+                    randomizerMillis = (msg.randomDuration.randomizerMillis === true);
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.randomDuration;
+                    }
+                }
+
+                if (hasWhenOverride(msg.when))
+                {
+                    node.debug("Input message has override property for point in time");
+
+                    tearDownDelayTimer();
+
+                    delayType = "pointInTime";
+                    whenType = msg.when.type;
+                    whenValue = msg.when.value;
+                    whenOffset = (typeof msg.when.offset == "number") ? msg.when.offset : 0;
+                    whenRandom = (msg.when.random === true);
 
                     if (!node.preserveCtrlProps)
                     {
                         delete msg.when;
                     }
                 }
-                else if (!node.delayTimer)
-                {
-                    setupDelayTimer();
-                }
 
-                node.msgQueue.push({msg: msg, done: done});
-                updateStatus();
-            }
-            catch (e)
-            {
-                if (e instanceof chronos.TimeError)
+                if (hasExpressionOverride(msg.expression))
                 {
-                    node.error(e.message, {errorDetails: e.details});
-                    node.status({fill: "red", shape: "dot", text: "delay.status.error"});
+                    node.debug("Input message has override property for expression");
+
+                    tearDownDelayTimer();
+
+                    delayType = "custom";
+                    expression = msg.expression;
+
+                    if (!node.preserveCtrlProps)
+                    {
+                        delete msg.expression;
+                    }
+                }
+            }
+
+            if (!node.delayTimer)
+            {
+                if (delayType == "fixedDuration")
+                {
+                    setupFixedDurationDelayTimer(fixedDuration, fixedDurationUnit);
+                }
+                else if (delayType == "randomDuration")
+                {
+                    setupRandomDurationDelayTimer(randomDuration1, randomDuration2, randomDurationUnit, randomizerMillis);
+                }
+                else if (delayType == "pointInTime")
+                {
+                    setupMomentDelayTimer(whenType, whenValue, whenOffset, whenRandom);
                 }
                 else
                 {
-                    node.error(e.message);
-                    node.debug(e.stack);
+                    setupCustomDelayTimer(expression, msg);
                 }
-
-                // we're done with the message as we do not enqueue it
-                done();
             }
+
+            node.msgQueue.push({msg: msg, done: done});
+            updateStatus();
         }
 
         function dropQueue()
@@ -207,9 +317,62 @@ module.exports = function(RED)
             updateStatus();
         }
 
-        function setupDelayTimer(type = node.whenType, value = node.whenValue, offset = node.offset, random = node.random)
+        function setupFixedDurationDelayTimer(value, unit)
         {
-            node.debug("Set up timer for type '" + type + "', value '" + value + "'");
+            node.debug("Set up fixed duration timer for value " + value + ", unit " + unit);
+
+            node.queueDuration = getDurationMillis(value, unit);
+
+            node.debug("Starting timer for delayed message in " + node.queueDuration + " milliseconds");
+            node.delayTimer = setTimeout(() =>
+            {
+                delete node.delayTimer;
+                flushQueue();
+            }, node.queueDuration);
+        }
+
+        function setupRandomDurationDelayTimer(value1, value2, unit, randomizerMillis)
+        {
+            node.debug("Set up random duration timer for first value " + value1 + ", second value " + value2 + ", unit " + unit);
+
+            if (value1 == value2)
+            {
+                node.queueDuration = getDurationMillis(value1, unit);
+            }
+            else if (randomizerMillis)
+            {
+                const duration1 = getDurationMillis(value1, unit);
+                const duration2 = getDurationMillis(value2, unit);
+
+                if (duration2 > duration1)
+                {
+                    node.queueDuration = Math.round(Math.random() * (duration2 - duration1)) + duration1;
+                }
+                else
+                {
+                    node.queueDuration = Math.round(Math.random() * (duration1 - duration2)) + duration2;
+                }
+            }
+            else if (value2 > value1)
+            {
+                node.queueDuration = getDurationMillis(Math.round(Math.random() * (value2 - value1)) + value1, unit);
+            }
+            else
+            {
+                node.queueDuration = getDurationMillis(Math.round(Math.random() * (value1 - value2)) + value2, unit);
+            }
+
+            node.debug("Starting timer for delayed message in " + node.queueDuration + " milliseconds");
+            node.delayTimer = setTimeout(() =>
+            {
+                delete node.delayTimer;
+                flushQueue();
+            }, node.queueDuration);
+        }
+
+        function setupMomentDelayTimer(type, value, offset, random)
+        {
+            node.debug("Set up time point timer for type '" + type + "', value '" + value + "'");
 
             const now = chronos.getCurrentTime(node);
             node.sendTime = chronos.getTime(RED, node, now.clone(), type, value);
@@ -241,6 +404,91 @@ module.exports = function(RED)
             }, node.sendTime.diff(now));
         }
 
+        function setupCustomDelayTimer(expression, msg)
+        {
+            node.debug("Set up custom timer for delayed message with expression " + expression);
+
+            const now = chronos.getCurrentTime(node);
+            let result = null;
+
+            try
+            {
+                let expr = chronos.getJSONataExpression(RED, node, expression);
+                result = RED.util.evaluateJSONataExpression(expr, msg);
+            }
+            catch(e)
+            {
+                const details = {expression: expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                if (e.value)
+                {
+                    details.value = e.value;
+                }
+
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+            }
+
+            if ((typeof result != "number") && (typeof result != "string"))
+            {
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                                            {expression: expression, result: result});
+            }
+
+            if ((typeof result == "string") || (result > now.valueOf()))  // assumed to be absolute send time
+            {
+                node.sendTime = chronos.getTimeFrom(node, result);
+            }
+            else if ((result >= 1) && (result <= MS_PER_WEEK))  // assumed to be a relative queueing duration
+            {
+                node.queueDuration = result;
+            }
+            else
+            {
+                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                                            {expression: expression, result: result});
+            }
+
+            if (node.queueDuration >= 0)
+            {
+                if ((node.queueDuration < 1) || (node.queueDuration > MS_PER_WEEK))
+                {
+                    node.queueDuration = -1;
+                    throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                                                {expression: expression, result: result});
+                }
+
+                node.debug("Starting timer for delayed message in " + node.queueDuration + " milliseconds");
+                node.delayTimer = setTimeout(() =>
+                {
+                    delete node.delayTimer;
+                    flushQueue();
+                }, node.queueDuration);
+            }
+            else if (node.sendTime)
+            {
+                if (!node.sendTime.isValid())
+                {
+                    node.sendTime = null;
+                    throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                                                {expression: expression, result: result});
+                }
+                if ((node.sendTime.diff(now) < 1) || (node.sendTime.diff(now) > MS_PER_WEEK))
+                {
+                    node.sendTime = null;
+                    throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                                                {expression: expression, result: result});
+                }
+
+                node.debug("Starting timer for delayed message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                node.delayTimer = setTimeout(() =>
+                {
+                    delete node.delayTimer;
+                    flushQueue();
+                }, node.sendTime.diff(now));
+            }
+
+            updateStatus();
+        }
+
         function tearDownDelayTimer()
         {
             if (node.delayTimer)
@@ -250,11 +498,72 @@ module.exports = function(RED)
                 clearTimeout(node.delayTimer);
                 delete node.delayTimer;
 
+                node.queueDuration = -1;
                 node.sendTime = null;
             }
         }
 
-        function hasOverride(data)
+        function getDurationMillis(value, unit)
+        {
+            const UNIT_MULTIPLIER =
+            {
+                "milliseconds": 1,
+                "seconds":      MS_PER_SECOND,
+                "minutes":      MS_PER_MINUTE,
+                "hours":        MS_PER_HOUR,
+                "days":         MS_PER_DAY
+            };
+
+            return value * UNIT_MULTIPLIER[unit];
+        }
+
+        function hasFixedDurationOverride(data)
+        {
+            if ((typeof data != "object") || !data)
+            {
+                return false;
+            }
+
+            if ((typeof data.value != "number") || (data.value <= 0))
+            {
+                return false;
+            }
+
+            if ((typeof data.unit != "string") || !/^(days|hours|minutes|seconds|milliseconds)$/.test(data.unit))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function hasRandomDurationOverride(data)
+        {
+            if ((typeof data != "object") || !data)
+            {
+                return false;
+            }
+
+            if ((typeof data.value1 != "number") || (data.value1 <= 0) ||
+                (typeof data.value2 != "number") || (data.value2 <= 0))
+            {
+                return false;
+            }
+
+            if ((typeof data.unit != "string") || !/^(days|hours|minutes|seconds|milliseconds)$/.test(data.unit))
+            {
+                return false;
+            }
+
+            if ((typeof data.randomizerMillis != "undefined") && (typeof data.randomizerMillis != "boolean"))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function hasWhenOverride(data)
         {
             if ((typeof data != "object") || !data)
             {
@@ -274,12 +583,27 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300))
+            if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
             {
                 return false;
             }
 
-            if (typeof data.random != "boolean")
+            if ((typeof data.offset == "number") && ((data.offset < -300) || (data.offset > 300)))
+            {
+                return false;
+            }
+
+            if ((typeof data.random != "undefined") && (typeof data.random != "boolean"))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function hasExpressionOverride(data)
+        {
+            if ((typeof data != "string") || !data)
             {
                 return false;
             }
@@ -289,21 +613,65 @@ module.exports = function(RED)
 
         function updateStatus()
         {
-            if ((node.msgQueue.length > 0) && node.sendTime)
+            if (node.msgQueue.length > 0)
             {
-                let when = node.sendTime.calendar(
+                if (node.queueDuration >= 0)
                 {
-                    sameDay: function()
-                    {
-                        return "LT" + ((this.second() > 0) ? "S" : "");
-                    },
-                    nextDay: function()
-                    {
-                        return "l LT" + ((this.second() > 0) ? "S" : "");
-                    }
-                });
+                    let statusText = node.msgQueue.length + " " + RED._("delay.status.queuedFor") + " ";
 
-                node.status({fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queued") + " " + when});
+                    // days
+                    let value = Math.floor(node.queueDuration / MS_PER_DAY);
+                    if (value > 0)
+                    {
+                        statusText += value + "d ";
+                    }
+
+                    // hours
+                    value = Math.floor((node.queueDuration / MS_PER_HOUR) % HOURS_PER_DAY);
+                    if (value > 0)
+                    {
+                        statusText += value + "h ";
+                    }
+
+                    // minutes
+                    value = Math.floor((node.queueDuration / MS_PER_MINUTE) % MINUTES_PER_HOUR);
+                    if (value > 0)
+                    {
+                        statusText += value + "m ";
+                    }
+
+                    // seconds
+                    value = Math.floor((node.queueDuration / MS_PER_SECOND) % SECONDS_PER_MINUTE);
+                    if (value > 0)
+                    {
+                        statusText += value + "s ";
+                    }
+
+                    // milliseconds
+                    value = Math.floor(node.queueDuration % MS_PER_SECOND);
+                    if (value > 0)
+                    {
+                        statusText += value + "ms ";
+                    }
+
+                    node.status({fill: "blue", shape: "dot", text: statusText});
+                }
+                else if (node.sendTime)
+                {
+                    let when = node.sendTime.calendar(
+                    {
+                        sameDay: function()
+                        {
+                            return "LT" + ((this.second() > 0) ? "S" : "");
+                        },
+                        nextDay: function()
+                        {
+                            return "l LT" + ((this.second() > 0) ? "S" : "");
+                        }
+                    });
+
+                    node.status({fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queuedUntil") + " " + when});
+                }
             }
             else
             {

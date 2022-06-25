@@ -19,10 +19,10 @@ Repeats each message passing through the node based on a configurable interval.
 
 ![Repeat](images/repeat.png)
 
-#### Delay Until
-Delays each message passing through the node until a configurable time is reached.
+#### Delay
+Delays each message passing through the node for a configurable amount of time or until a specific point in time is reached.
 
-![Delay Until](images/delay.png)
+![Delay](images/delay.png)
 
 #### Time Switch
 Routes messages based on a specific time.

@@ -24,16 +24,20 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-delay">
     <p>
-        Delays each message passing through the node until a specific time
-        is reached.
+        Delays each message passing through the node for a configurable amount
+        of time or until a specific point in time is reached.
     </p>
     <h3>Details</h3>
     <p>
-        This node queues incoming messages until a specific time is reached,
-        which can be either manually entered or based on sun or moon position.
-        When that time has been reached, all messages in the queue are forwarded
-        to the output of the node.
+        This node queues incoming messages either for a configurable (and
+        optionally random) amount of time or until a specific point in time is
+        reached. The point in time can be either manually entered or based on
+        sun or moon position.
     </p>
+    <p>
+        When the time span has passed or the configured moment in time has
+        been reached, all messages in the queue are forwarded to the output
+        of the node.
     <p>
         For more information, please refer to the detailed documentation in the
         <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Delay-Until-Node">repository wiki</a>.
@@ -45,6 +49,40 @@ SOFTWARE.
         <dt>Configuration</dt>
         <dd>
             A reference to the configuration node to be used.
+        </dd>
+        <dt>Delay Type</dt>
+        <dd>
+            The type of delay which can be specified as follows:
+            <ul>
+                <li>
+                    <i>Fixed Duration</i>: The delay is configured by a fixed
+                    time span.
+                </li>
+                <li>
+                    <i>Random Duration</i>: The delay is configured by a time
+                    span range from which a random duration is choosen.
+                </li>
+                <li>
+                    <i>Point in Time</i>: The delay is configured by a point
+                    in time at which it ends.
+                </li>
+                <li>
+                    <i>Custom</i>: The delay is specified by a user-defined
+                    JSONata expression.
+                </li>
+            </ul>
+        </dd>
+        <dt>Duration</dt>
+        <dd>
+            Either the fixed duration expressed in milliseconds, seconds,
+            minutes, hours or days, after which queued messages should be
+            forwarded, or a duration range in milliseconds, seconds,
+            minutes, hours or days. In the latter case, the duration will
+            be a random value within that range. If <i>Random value always
+            in milliseconds granularity</i> is activated, the random value
+            will always have milliseconds granularity, independent from
+            the choosen time unit. Otherwise the granularity of the random
+            value will follow the time unit.
         </dd>
         <dt>When</dt>
         <dd>
@@ -79,6 +117,15 @@ SOFTWARE.
         <dd>
             When selected, the offset will be randomized between 0 and the
             specified value.
+        </dd>
+        <dt>Expression</dt>
+        <dd>
+            Specifies a JSONata expression that must result in a time value for
+            the delay. The time value can be a number either containing the
+            duration in milliseconds or the amount of milliseconds elapsed
+            since the UNIX epoch representing the point in time when the delay
+            ends. The latter can also be expressed as a datetime string which
+            must be parseable according to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
         </dd>
         <dt>Preserve control properties in messages</dt>
         <dd>
@@ -115,11 +162,54 @@ SOFTWARE.
             Can be combined with either of the above properties. If present,
             this message will be enqueued after dropping/flushing.
         </dd>
+        <dt class="optional">fixedDuration<span class="property-type">object</span></dt>
+        <dd>
+            Overrides the fixed duration after which queued messages should be
+            forwarded, see below for details.
+        </dd>
+        <dt class="optional">randomDuration<span class="property-type">object</span></dt>
+        <dd>
+            Overrides the random duration after which queued messages should be
+            forwarded, see below for details.
+        </dd>
         <dt class="optional">when<span class="property-type">object</span></dt>
         <dd>
             Overrides the target time when queued messages should be forwarded,
             see below for details.
         </dd>
+        <dt class="optional">expression<span class="property-type">string</span></dt>
+        <dd>
+            Overrides the JSONata expression which evaluates when queued messages
+            should be forwarded.
+        </dd>
+    </dl>
+    <p>
+        If a property called <code>fixedDuration</code> is present in the input
+        message, the fixed duration until forwarding all currently and later
+        enqueued messages is overridden. The property must have the following
+        content:
+    </p>
+    <dl class="message-properties">
+        <dt>value<span class="property-type">number</span></dt>
+        <dd>The duration of the delay</dd>
+        <dt>unit<span class="property-type">string</span></dt>
+        <dd>The unit for the duration, one of "milliseconds", "seconds", "minutes", "hours" or "days"</dd>
+    </dl>
+    <p>
+        If a property called <code>randomDuration</code> is present in the input
+        message, the random duration until forwarding all currently and later
+        enqueued messages is overridden. The property must have the following
+        content:
+    </p>
+    <dl class="message-properties">
+        <dt>value1<span class="property-type">number</span></dt>
+        <dd>The lower bound of the duration range</dd>
+        <dt>value2<span class="property-type">number</span></dt>
+        <dd>The upper bound of the duration range</dd>
+        <dt>unit<span class="property-type">string</span></dt>
+        <dd>The unit for the duration range, one of "milliseconds", "seconds", "minutes", "hours" or "days"</dd>
+        <dt class="optional">randomizerMillis<span class="property-type">boolean</span></dt>
+        <dd>Random value always in milliseconds granularity</dd>
     </dl>
     <p>
         If a property called <code>when</code> is present in the input message,
@@ -131,9 +221,9 @@ SOFTWARE.
         <dd>Target time type; one of "time", "sun", "moon" or "custom"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Target time value; content is depending on target time type</dd>
-        <dt>offset<span class="property-type">number</span></dt>
+        <dt class="optional">offset<span class="property-type">number</span></dt>
         <dd>Offset to the target time</dd>
-        <dt>random<span class="property-type">boolean</span></dt>
+        <dt class="optional">random<span class="property-type">boolean</span></dt>
         <dd>Randomized offset</dd>
     </dl>
     <h3>Outputs</h3>

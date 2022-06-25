@@ -25,28 +25,6 @@
                 "startOf":   "Anfang von",
                 "endOf":     "Ende von",
                 "toString":  "Konvertieren"
-            },
-            "unit":
-            {
-                "year":          "Jahr",
-                "years":         "Jahr(e)",
-                "quarter":       "Quartal",
-                "quarters":      "Quartal(e)",
-                "month":         "Monat",
-                "months":        "Monat(e)",
-                "week":          "Woche",
-                "weeks":         "Woche(n)",
-                "weekday":       "Wochentag",
-                "day":           "Tag",
-                "days":          "Tag(e)",
-                "hour":          "Stunde",
-                "hours":         "Stunde(n)",
-                "minute":        "Minute",
-                "minutes":       "Minute(n)",
-                "second":        "Sekunde",
-                "seconds":       "Sekunde(n)",
-                "millisecond":   "Millisekunde",
-                "milliseconds":  "Millisekunde(n)"
             }
         },
         "status":

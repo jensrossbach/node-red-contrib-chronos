@@ -24,16 +24,19 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-delay">
     <p>
-        Verzögert eintreffende Nachrichten beim Durchlaufen des Knotens bis eine
-        bestimmte Uhrzeit erreicht ist.
+        Verzögert eintreffende Nachrichten beim Durchlaufen des Knotens für eine
+        konfigurierbare Zeitspanne oder bis eine bestimmte Uhrzeit erreicht ist.
     </p>
     <h3>Details</h3>
     <p>
-        Dieser Knoten puffert alle eintreffenden Nachrichten, bis eine bestimmte
-        Uhrzeit erreicht worden ist. Der Zeitpunkt kann entweder direkt
-        eingegeben oder anhand von Sonnen- oder Mondständen berechnet werden.
-        Sobald der Zielzeitpunkt erreicht wurde, werden alle gepufferten
-        Nachrichten an den Ausgabe-Port des Knotens geleitet.
+        Dieser Knoten puffert alle eintreffenden Nachrichten für eine konfigurierbare
+        (und optional zufällige) Zeitspanne oder bis eine bestimmte Uhrzeit erreicht
+        worden ist. Der Zeitpunkt kann entweder direkt eingegeben oder anhand von
+        Sonnen- oder Mondständen berechnet werden.
+    </p>
+    <p>
+        Sobald die Zeit verstrichen ist oder der Zielzeitpunkt erreicht wurde,
+        werden alle gepufferten Nachrichten an den Ausgabe-Port des Knotens geleitet.
     </p>
     <p>
         Für weitere Informationen bitte die ausführliche Dokumentation im
@@ -47,6 +50,41 @@ SOFTWARE.
         <dt>Konfiguration</dt>
         <dd>
             Ein Verweis auf den zu verwendenden Konfigurationsknoten.
+        </dd>
+        <dt>Verzög.-Art</dt>
+        <dd>
+            Die Art der Verzögerung kann wie folgt festgelegt werden:
+            <ul>
+                <li>
+                    <i>Feste Dauer</i>: Die Verzögerung wird als feste
+                    Zeitspanne konfiguriert.
+                </li>
+                <li>
+                    <i>Zufällige Dauer</i>: Die Verzögerung wird als
+                    Zeitspannenbereich konfiguriert, aus dem eine
+                    zufällige Dauer gewählt wird.
+                </li>
+                <li>
+                    <i>Zeitpunkt</i>: Die Verzögerung wird als Zeitpunkt
+                    konfiguriert zu dem diese endet.
+                </li>
+                <li>
+                    <i>Benutzerdefiniert</i>: Die Verzögerung wird als
+                    benutzerdefinierter JSONata-Ausdruck spezifiziert.
+                </li>
+            </ul>
+        </dd>
+        <dt>Dauer</dt>
+        <dd>
+            Entweder die feste Zeitspanne in Millisekunden, Sekunden, Minuten,
+            Stunden oder Tagen, nach der gepufferte Nachrichten weitergeleitet
+            werden, oder ein Zeitspannenbereich in Millisekunden, Sekunden,
+            Minuten, Stunden oder Tagen. In letzterem Fall ist die Zeitspanne
+            ein Zufallswert innerhalb dieses Bereichs.
+            Wenn <i>Zufallswert immer in Millisekundenauflösung</i> aktiviert
+            ist, wird der Zufallswert immer Millisekundenauflösung haben,
+            unabhängig von der gewählten Zeiteinheit. Andernfalls richtet sich
+            die Auflösung des Zufallswerts nach der Zeiteinheit.
         </dd>
         <dt>Wann</dt>
         <dd>
@@ -82,6 +120,16 @@ SOFTWARE.
         <dd>
             Wenn aktiviert, wird der Versatz im Bereich zwischen 0 und dem
             angegeben Wert zufällig ausgewählt.
+        </dd>
+        <dt>Ausdruck</dt>
+        <dd>
+            Ein JSONata-Ausdruck, der einen Zeitwert für die Verzögerung zurückgeben
+            muss. Der Zeitwert kann eine Zahl sein, die entweder die Zeitspanne in
+            Millisekunden enthält oder die Anzahl Millisekunden seit Beginn der
+            UNIX-Zeitzählung als absoluten Zeitpunkt zu dem die Verzögerung endet.
+            Letzteres kann auch als Zeichenkette mit Datum und Uhrzeit, die nach
+            den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
+            geparst werden kann, zurückgegeben werden.
         </dd>
         <dt>Steuereigenschaften in Nachrichten beibehalten</dt>
         <dd>
@@ -122,11 +170,54 @@ SOFTWARE.
             vorhanden, wird diese Nachricht gepuffert, nachdem alle vorherigen
             Nachrichten verworfen/weitergeleitet wurden.
         </dd>
+        <dt class="optional">fixedDuration<span class="property-type">object</span></dt>
+        <dd>
+            Überschreibt die feste Zeitspanne, nach der gepufferte Nachrichten
+            weitergeleitet werden sollen, siehe unten für weitere Informationen.
+        </dd>
+        <dt class="optional">randomDuration<span class="property-type">object</span></dt>
+        <dd>
+            Überschreibt die zufällige Zeitspanne, nach der gepufferte Nachrichten
+            weitergeleitet werden sollen, siehe unten für weitere Informationen.
+        </dd>
         <dt class="optional">when<span class="property-type">object</span></dt>
         <dd>
             Überschreibt den Zielzeitpunkt, zu dem gepufferte Nachrichten
             weitergeleitet werden sollen, siehe unten für weitere Informationen.
         </dd>
+        <dt class="optional">expression<span class="property-type">string</span></dt>
+        <dd>
+            Überschreibt den JSONata-Ausdruck, der bestimmt, wann gepuffert Nachrichten
+            weitergeleitet werden sollen.
+        </dd>
+    </dl>
+    <p>
+        Wenn eine Eigenschaft mit dem Namen <code>fixedDuration</code> in der
+        Eingangsnachricht vorhanden ist, wird die feste Verzögerungszeitspanne für
+        alle momentan und zukünftig gepufferten Nachrichten überschrieben. Die
+        Eigenschaft muss den folgenden Inhalt haben:
+    </p>
+    <dl class="message-properties">
+        <dt>value<span class="property-type">number</span></dt>
+        <dd>The Zeitspanne der Verzögerung</dd>
+        <dt>unit<span class="property-type">string</span></dt>
+        <dd>Die Einheit der Verzögerungszeitspanne, entweder "milliseconds", "seconds", "minutes", "hours" oder "days"</dd>
+    </dl>
+    <p>
+        Wenn eine Eigenschaft mit dem Namen <code>randomDuration</code> in der
+        Eingangsnachricht vorhanden ist, wird die zufällige Verzögerungszeitspanne für
+        alle momentan und zukünftig gepufferten Nachrichten überschrieben. Die
+        Eigenschaft muss den folgenden Inhalt haben:
+    </p>
+    <dl class="message-properties">
+        <dt>value1<span class="property-type">number</span></dt>
+        <dd>Die untere Grenze des Zeitspannenbereichs</dd>
+        <dt>value2<span class="property-type">number</span></dt>
+        <dd>Die obere Grenze des Zeitspannenbereichs</dd>
+        <dt>unit<span class="property-type">string</span></dt>
+        <dd>Die Einheit des Zeitspannenbereichs, entweder "milliseconds", "seconds", "minutes", "hours" oder "days"</dd>
+        <dt class="optional">randomizerMillis<span class="property-type">boolean</span></dt>
+        <dd>Zufallswert immer in Millisekundenauflösung</dd>
     </dl>
     <p>
         Wenn eine Eigenschaft mit dem Namen <code>when</code> in der Eingangsnachricht
@@ -139,9 +230,9 @@ SOFTWARE.
         <dd>Art des Zielzeitpunkts; entweder "time", "sun", "moon" oder "custom"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Zielzeitpunkt; der Inhalt ist abhängig von der Art des Zielzeitpunkts</dd>
-        <dt>offset<span class="property-type">number</span></dt>
+        <dt class="optional">offset<span class="property-type">number</span></dt>
         <dd>Zeitlicher Versatz zum Zielzeitpunkt</dd>
-        <dt>random<span class="property-type">boolean</span></dt>
+        <dt class="optional">random<span class="property-type">boolean</span></dt>
         <dd>Zufälliger Zeitversatz</dd>
     </dl>
     <h3>Ausgaben</h3>
