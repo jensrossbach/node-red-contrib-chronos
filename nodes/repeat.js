@@ -228,8 +228,8 @@ module.exports = function(RED)
                         untilType = msg.until.type;
                         untilValue = msg.until.value;
                         untilDate = msg.until.date;
-                        untilOffset = msg.until.offset;
-                        untilRandom = msg.until.random;
+                        untilOffset = (typeof msg.until.offset == "number") ? msg.until.offset : 0;
+                        untilRandom = (msg.until.random === true);
                     }
                     else
                     {
@@ -606,12 +606,17 @@ module.exports = function(RED)
                     return false;
                 }
 
-                if ((data.type != "jsonata") && ((typeof data.offset != "number") || (data.offset < -300) || (data.offset > 300)))
+                if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
                 {
                     return false;
                 }
 
-                if ((data.type != "jsonata") && (typeof data.random != "boolean"))
+                if ((typeof data.offset == "number") && ((data.offset < -300) || (data.offset > 300)))
+                {
+                    return false;
+                }
+
+                if ((typeof data.random != "undefined") && (typeof data.random != "boolean"))
                 {
                     return false;
                 }

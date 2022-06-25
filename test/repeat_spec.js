@@ -1350,8 +1350,6 @@ describe("repeat until node", function()
 
         testInvalidUntilOverride("no type", {value: "00:01", offset: 0, random: false});
         testInvalidUntilOverride("no value", {type: "time", offset: 0, random: false});
-        testInvalidUntilOverride("no offset", {type: "time", value: "00:01", random: false});
-        testInvalidUntilOverride("no random", {type: "time", value: "00:01", offset: 0});
 
         testInvalidUntilOverride("override type no string", {type: 5, value: "00:01", offset: 0, random: false});
         testInvalidUntilOverride("override type wrong string", {type: "invalid", value: "00:01", offset: 0, random: false});
