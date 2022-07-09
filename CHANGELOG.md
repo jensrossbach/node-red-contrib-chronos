@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 2022-07-09
+
+### Added
+- Delay node (formerly called delay-until node) now supports duration based delays.
+- Delays can now additionally be specified via JSONata expressions (as duration or ending time) in delay nodes.
+
+### Changed
+- Changed HTML code from "text/x-red" to "text/html".
+- Properties `offset` and `random` are now optional in time overrides of delay, repeat and scheduler nodes.
+- Increased unit test coverage to cover new functionality from this and recent releases.
+
+### Fixed
+- Fixed expression validation in repeat node UI.
+
 ## [1.17.3] - 2022-05-28
 
 ### Added
