@@ -35,6 +35,7 @@ const cronosjs = require("cronosjs");
 require("should-sinon");
 
 const cfgNode = {id: "cn1", type: "chronos-config", name: "config"};
+const cfgNodeInvalidTZ = {id: "cn1", type: "chronos-config", name: "config", timezone: "invalid"};
 const hlpNode = {id: "hn1", type: "helper"};
 const credentials = {"cn1": {latitude: "50", longitude: "10"}};
 
@@ -135,6 +136,16 @@ describe("scheduler node", function()
             const invalidCredentials = {"cn1": {latitude: "50", longitude: ""}};
 
             await helper.load([configNode, schedulerNode], flow, invalidCredentials);
+            const sn1 = helper.getNode("sn1");
+            sn1.status.should.be.calledOnce();
+            sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
+        });
+
+        it("should fail due to invalid time zone", async function()
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1"}, cfgNodeInvalidTZ];
+
+            await helper.load([configNode, schedulerNode], flow, credentials);
             const sn1 = helper.getNode("sn1");
             sn1.status.should.be.calledOnce();
             sn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
@@ -677,7 +688,11 @@ describe("scheduler node", function()
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "sun", value: "sunrise", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, hlpNode, cfgNode];
 
-            sinon.stub(chronos, "getTime").returns(moment.utc(1800000));
+            sinon.stub(chronos, "getTime")
+                        .onFirstCall()
+                        .returns(moment.utc(1800000))
+                        .onSecondCall()
+                        .returns(moment.utc(88200000));
 
             helper.load([configNode, schedulerNode], flow, credentials, function()
             {
@@ -707,11 +722,15 @@ describe("scheduler node", function()
             });
         });
 
-        /* it("should trigger at specified sun time on next day with offset", function(done)
+        it("should trigger at specified sun time on next day with offset", function(done)
         {
             const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "sun", value: "sunrise", offset: 10, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, hlpNode, cfgNode];
 
-            sinon.stub(chronos, "getTime").returns(moment.utc(1800000));
+            sinon.stub(chronos, "getTime")
+                        .onFirstCall()
+                        .returns(moment.utc(1800000))
+                        .onSecondCall()
+                        .returns(moment.utc(88200000));
 
             helper.load([configNode, schedulerNode], flow, credentials, function()
             {
@@ -739,9 +758,345 @@ describe("scheduler node", function()
                     done(e);
                 }
             });
-        }); */
+        });
+
+        it("should trigger at specified sun time on next day with random offset", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"]], schedule: [{trigger: {type: "sun", value: "sunrise", offset: 20, random: true}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], outputs: 1}, hlpNode, cfgNode];
+
+            sinon.stub(chronos, "getTime")
+                        .onFirstCall()
+                        .returns(moment.utc(1800000))
+                        .onSecondCall()
+                        .returns(moment.utc(88200000));
+            sinon.stub(Math, "random").returns(0.5);
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    clock.tick(85200000);  // advance clock by 23h and 40 mins
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
     });
 
+    context("next event port", function()
+    {
+        let clock = null;
+        let curTime = 0;
+
+        beforeEach(function()
+        {
+            curTime = 0;
+            clock = sinon.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+            sinon.stub(chronos, "getCurrentTime").callsFake(function() { return moment.utc(curTime); });
+        });
+
+        afterEach(function()
+        {
+            helper.unload();
+            sinon.restore();
+        });
+
+        it("should emit message on next event port", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [[], ["hn1"]], schedule: [{trigger: {type: "time", value: "00:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "01:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], nextEventPort: true, outputs: 2}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", 1800000);
+                            msg.should.have.property("events");
+                            msg.events.should.be.an.Array().and.have.length(2);
+                            msg.events[0].should.equal(1800000);
+                            msg.events[1].should.equal(5400000);
+
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should emit message on next event port with unavailable trigger time", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [[], ["hn1"]], schedule: [{trigger: {type: "time", value: "00:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "crontab", value: "* * * * * * 1960"}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], nextEventPort: true, outputs: 2}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", 1800000);
+                            msg.should.have.property("events");
+                            msg.events.should.be.an.Array().and.have.length(2);
+                            msg.events[0].should.equal(1800000);
+                            should(msg.events[1]).be.null();
+
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should emit message on next event port after reset", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [[], ["hn1"]], schedule: [{trigger: {type: "time", value: "00:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}, {trigger: {type: "time", value: "01:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], nextEventPort: true, outputs: 2}, hlpNode, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const sn1 = helper.getNode("sn1");
+                    const hn1 = helper.getNode("hn1");
+                    numReceived = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", 1800000);
+                            msg.should.have.property("events");
+                            msg.events.should.be.an.Array().and.have.length(2);
+                            msg.events[0].should.equal(1800000);
+                            msg.events[1].should.equal(5400000);
+                            ++numReceived;
+
+                            if (numReceived == 1)
+                            {
+                                sn1.receive({payload: "reload"});
+                            }
+                            else if (numReceived == 2)
+                            {
+                                sn1.receive({payload: ["reload", "reload"]});
+                            }
+                            else if (numReceived == 3)
+                            {
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should emit message scheduled message and information on next event port", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"], ["hn2"]], schedule: [{trigger: {type: "time", value: "00:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}}, {trigger: {type: "time", value: "01:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}}], nextEventPort: true, outputs: 2}, hlpNode, {id: "hn2", type: "helper"}, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+                    const hn2 = helper.getNode("hn2");
+                    numReceived = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test1");
+                            ++numReceived;
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    hn2.on("input", function(msg)
+                    {
+                        try
+                        {
+                            if (numReceived == 0)
+                            {
+                                msg.should.have.property("payload", 1800000);
+                                msg.should.have.property("events");
+                                msg.events.should.be.an.Array().and.have.length(2);
+                                msg.events[0].should.equal(1800000);
+                                msg.events[1].should.equal(5400000);
+                                ++numReceived;
+
+                                curTime += 1800000;
+                                clock.tick(1800000);  // advance clock by 30 mins
+                            }
+                            else
+                            {
+                                msg.should.have.property("payload", 5400000);
+                                msg.should.have.property("events");
+                                msg.events.should.be.an.Array().and.have.length(2);
+                                msg.events[0].should.equal(88200000);
+                                msg.events[1].should.equal(5400000);
+                                ++numReceived;
+
+                                numReceived.should.equal(3);
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should emit message scheduled message and information on next event port (multi port)", function(done)
+        {
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", wires: [["hn1"], ["hn2"], ["hn3"]], schedule: [{trigger: {type: "time", value: "00:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test1"}}, port: 0}, {trigger: {type: "time", value: "01:30", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test2"}}, port: 1}], multiPort: true, nextEventPort: true, outputs: 3}, hlpNode, {id: "hn2", type: "helper"}, {id: "hn3", type: "helper"}, cfgNode];
+
+            helper.load([configNode, schedulerNode], flow, credentials, function()
+            {
+                try
+                {
+                    const hn1 = helper.getNode("hn1");
+                    const hn2 = helper.getNode("hn2");
+                    const hn3 = helper.getNode("hn3");
+                    numReceived = 0;
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test1");
+                            ++numReceived;
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    hn2.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test2");
+                            ++numReceived;
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    hn3.on("input", function(msg)
+                    {
+                        try
+                        {
+                            if (numReceived == 0)
+                            {
+                                msg.should.have.property("payload", 1800000);
+                                msg.should.have.property("events");
+                                msg.events.should.be.an.Array().and.have.length(2);
+                                msg.events[0].should.equal(1800000);
+                                msg.events[1].should.equal(5400000);
+                                ++numReceived;
+
+                                curTime += 1800000;
+                                clock.tick(1800000);  // advance clock by 30 mins
+                            }
+                            else if (numReceived == 2)
+                            {
+                                msg.should.have.property("payload", 5400000);
+                                msg.should.have.property("events");
+                                msg.events.should.be.an.Array().and.have.length(2);
+                                msg.events[0].should.equal(88200000);
+                                msg.events[1].should.equal(5400000);
+                                ++numReceived;
+
+                                curTime += 3600000;
+                                clock.tick(3600000);  // advance clock by 1 hour
+                            }
+                            else if (numReceived == 4)
+                            {
+                                msg.should.have.property("payload", 88200000);
+                                msg.should.have.property("events");
+                                msg.events.should.be.an.Array().and.have.length(2);
+                                msg.events[0].should.equal(88200000);
+                                msg.events[1].should.equal(91800000);
+                                ++numReceived;
+
+                                numReceived.should.equal(5);
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+    });
 
     context("node input", function()
     {
@@ -760,7 +1115,7 @@ describe("scheduler node", function()
 
         it("should switch on schedule", async function()
         {
-            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test"}}}], disabled: true, outputs: 1}, cfgNode];
+            const flow = [{id: "sn1", type: "chronos-scheduler", name: "scheduler", config: "cn1", schedule: [{trigger: {type: "time", value: "00:01", offset: 0, random: false}, output: {type: "msg", property: {name: "payload", type: "string", value: "test ni"}}}], disabled: true, outputs: 1}, cfgNode];
 
             await helper.load([configNode, schedulerNode], flow, credentials);
             const sn1 = helper.getNode("sn1");

@@ -93,8 +93,8 @@ module.exports = function(RED)
 
             if (settings.nextEventPort)
             {
-                node.nextEventMsg = {payload: null};
-                node.nextEventMsg.events = Array(node.schedule.length).fill(null);
+                node.nextEventMsg = {payload: undefined};
+                node.nextEventMsg.events = Array(node.schedule.length).fill(undefined);
             }
 
             let valid = true;
@@ -868,12 +868,12 @@ module.exports = function(RED)
             {
                 if (typeof index == "number")
                 {
-                    node.nextEventMsg.events[index] = null;
+                    node.nextEventMsg.events[index] = undefined;
                 }
                 else
                 {
-                    node.nextEventMsg.payload = null;
-                    node.nextEventMsg.events.fill(null);
+                    node.nextEventMsg.payload = undefined;
+                    node.nextEventMsg.events.fill(undefined);
                 }
             }
         }

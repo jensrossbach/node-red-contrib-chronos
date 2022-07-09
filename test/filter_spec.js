@@ -27,6 +27,7 @@ const sinon = require("sinon");
 
 const helper = require("node-red-node-test-helper");
 const configNode = require("../nodes/config.js");
+const cfgNodeInvalidTZ = {id: "cn1", type: "chronos-config", name: "config", timezone: "invalid"};
 const filterNode = require("../nodes/filter.js");
 const chronos = require("../nodes/common/chronos.js");
 const sfUtils = require("../nodes/common/sfutils.js");
@@ -137,6 +138,16 @@ describe("time filter node", function()
             const invalidCredentials = {"cn1": {latitude: "50", longitude: ""}};
 
             await helper.load([configNode, filterNode], flow, invalidCredentials);
+            const fn1 = helper.getNode("fn1");
+            fn1.status.should.be.calledOnce();
+            fn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
+        });
+
+        it("should fail due to invalid time zone", async function()
+        {
+            const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1"}, cfgNodeInvalidTZ];
+
+            await helper.load([configNode, filterNode], flow, credentials);
             const fn1 = helper.getNode("fn1");
             fn1.status.should.be.calledOnce();
             fn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");

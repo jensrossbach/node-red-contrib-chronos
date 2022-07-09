@@ -36,6 +36,7 @@ const { mock } = require("sinon");
 require("should-sinon");
 
 const cfgNode = {id: "cn1", type: "chronos-config", name: "config"};
+const cfgNodeInvalidTZ = {id: "cn1", type: "chronos-config", name: "config", timezone: "invalid"};
 const hlpNode = {id: "hn1", type: "helper"};
 const credentials = {"cn1": {latitude: "50", longitude: "10"}};
 
@@ -96,6 +97,16 @@ describe("time change node", function()
             const invalidCredentials = {"cn1": {latitude: "50", longitude: ""}};
 
             await helper.load([configNode, changeNode], flow, invalidCredentials);
+            const chn1 = helper.getNode("chn1");
+            chn1.status.should.be.calledOnce();
+            chn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
+        });
+
+        it("should fail due to invalid time zone", async function()
+        {
+            const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1"}, cfgNodeInvalidTZ];
+
+            await helper.load([configNode, changeNode], flow, credentials);
             const chn1 = helper.getNode("chn1");
             chn1.status.should.be.calledOnce();
             chn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
