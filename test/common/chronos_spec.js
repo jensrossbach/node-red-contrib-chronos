@@ -89,6 +89,14 @@ describe("chronos", function()
             res.valueOf().should.equal(946684800000);
         });
 
+        it("should return current time from string with custom time zone", function()
+        {
+            const node = {locale: "de-DE", config: {timezone: "Europe/Berlin"}};
+            const res = chronos.getTimeFrom(node, "2000-01-01T01:00:00.000");
+
+            res.valueOf().should.equal(946684800000);
+        });
+
         it("should return time from Unix epoch", function()
         {
             const node = {locale: "en-US", config: {timezone: ""}};
@@ -268,12 +276,29 @@ describe("chronos", function()
             sinon.stub(sunCalc, "getTimes").returns({"sunrise": new Date("2000-01-01T08:00:00.000Z")});
 
             let res = chronos.getTime(RED, node, moment(), "sun", "sunrise");
-            res.utc().year().should.equal(2000);
-            res.utc().month().should.equal(0);
-            res.utc().date().should.equal(1);
-            res.utc().hour().should.equal(8);
-            res.utc().minute().should.equal(0);
-            res.utc().second().should.equal(0);
+            res.utc();
+            res.year().should.equal(2000);
+            res.month().should.equal(0);
+            res.date().should.equal(1);
+            res.hour().should.equal(8);
+            res.minute().should.equal(0);
+            res.second().should.equal(0);
+        });
+
+        it("should return sun time with custom time zone", function()
+        {
+            const RED = {"_": () => ""};
+            const node = {locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
+            sinon.stub(sunCalc, "getTimes").returns({"sunrise": new Date("2000-01-01T08:00:00.000Z")});
+
+            let res = chronos.getTime(RED, node, moment(), "sun", "sunrise");
+            res.utcOffset().should.equal(240);  // +4h
+            res.utc();
+            res.year().should.equal(2000);
+            res.month().should.equal(0);
+            res.date().should.equal(1);
+            res.minute().should.equal(0);
+            res.second().should.equal(0);
         });
 
         it("should return custom sun time", function()
@@ -283,12 +308,13 @@ describe("chronos", function()
             sinon.stub(sunCalc, "getTimes").returns({"__cust_test": new Date("2000-01-01T08:00:00.000Z")});
 
             let res = chronos.getTime(RED, node, moment(), "custom", "test");
-            res.utc().year().should.equal(2000);
-            res.utc().month().should.equal(0);
-            res.utc().date().should.equal(1);
-            res.utc().hour().should.equal(8);
-            res.utc().minute().should.equal(0);
-            res.utc().second().should.equal(0);
+            res.utc();
+            res.year().should.equal(2000);
+            res.month().should.equal(0);
+            res.date().should.equal(1);
+            res.hour().should.equal(8);
+            res.minute().should.equal(0);
+            res.second().should.equal(0);
         });
 
         it("should fail due to invalid sun time", function()
@@ -321,12 +347,30 @@ describe("chronos", function()
             sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T22:00:00.000Z")});
 
             let res = chronos.getTime(RED, node, moment(), "moon", "rise");
-            res.utc().year().should.equal(2000);
-            res.utc().month().should.equal(0);
-            res.utc().date().should.equal(1);
-            res.utc().hour().should.equal(22);
-            res.utc().minute().should.equal(0);
-            res.utc().second().should.equal(0);
+            res.utc();
+            res.year().should.equal(2000);
+            res.month().should.equal(0);
+            res.date().should.equal(1);
+            res.hour().should.equal(22);
+            res.minute().should.equal(0);
+            res.second().should.equal(0);
+        });
+
+        it("should return moon time with custom time zone", function()
+        {
+            const RED = {"_": () => ""};
+            const node = {locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
+            sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T22:00:00.000Z")});
+
+            let res = chronos.getTime(RED, node, moment(), "moon", "rise");
+            console.log(res.format());
+            res.utcOffset().should.equal(240);  // +4h
+            res.utc();
+            res.year().should.equal(2000);
+            res.month().should.equal(0);
+            res.date().should.equal(1);
+            res.minute().should.equal(0);
+            res.second().should.equal(0);
         });
 
         it("should fail due to invalid moon time", function()

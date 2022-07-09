@@ -277,7 +277,7 @@ module.exports = function(RED)
                 }
                 else if (delayType == "pointInTime")
                 {
-                    setupMomentDelayTimer(whenType, whenValue, whenOffset, whenRandom);
+                    setupTimePointDelayTimer(whenType, whenValue, whenOffset, whenRandom);
                 }
                 else
                 {
@@ -370,7 +370,7 @@ module.exports = function(RED)
             }, node.queueDuration);
         }
 
-        function setupMomentDelayTimer(type, value, offset, random)
+        function setupTimePointDelayTimer(type, value, offset, random)
         {
             node.debug("Set up time point timer for type '" + type + "', value '" + value + "'");
 
@@ -449,13 +449,6 @@ module.exports = function(RED)
 
             if (node.queueDuration >= 0)
             {
-                if ((node.queueDuration < 1) || (node.queueDuration > MS_PER_WEEK))
-                {
-                    node.queueDuration = -1;
-                    throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
-                                                {expression: expression, result: result});
-                }
-
                 node.debug("Starting timer for delayed message in " + node.queueDuration + " milliseconds");
                 node.delayTimer = setTimeout(() =>
                 {
