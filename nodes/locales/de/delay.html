@@ -237,10 +237,11 @@ SOFTWARE.
     </dl>
     <h3>Ausgaben</h3>
     <p>
-        Verzögerte Nachrichten werden zum Ausgabe-Port gesendet, sobald die
-        konfigurierte Zeit erreicht wurde oder wenn eine Nachricht mit der
-        <code>flush</code> Eigenschaft empfangen wurde. Wird eine Nachricht mit
-        der <code>drop</code> Eigenschaft empfangen, werden alle Nachrichten
+        Abhängig von der Art der Verzögerung werden verzögerte Nachrichten zum
+        Ausgabe-Port gesendet, sobald die Dauer überschritten oder die
+        konfigurierte Zeit erreicht wurde und zusätzlich wenn eine Nachricht mit
+        der <code>flush</code> Eigenschaft empfangen wurde. Wird eine Nachricht
+        mit der <code>drop</code> Eigenschaft empfangen, werden alle Nachrichten
         verworfen.
     </p>
 </script>
