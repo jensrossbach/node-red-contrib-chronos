@@ -112,7 +112,7 @@ SOFTWARE.
             }
             else if ((this.mode == "simple") && this.interval && this.intervalUnit)
             {
-                return this._("repeat.label.every") + " " + this.interval + " " + this._("repeat.list.interval." + this.intervalUnit);
+                return this._("repeat.label.every") + " " + this.interval + " " + this._("node-red-contrib-chronos/chronos-config:common.list.unit." + this.intervalUnit);
             }
             else if ((this.mode == "advanced") && this.crontab)
             {
