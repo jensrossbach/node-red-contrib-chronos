@@ -1,0 +1,108 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Custom Delay",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Custom delay\nDelay node which delays each incoming message for 2.5 seconds in case the property `msg.firstName` equals \"John\" and otherwise for the amount of time stored in flow variable `delay`.\n\nPlease note that the JSONata evaluation is only executed for the first message being enqueued, i.e. subsequent messages that arrive before the delay of the first message exceeded will be additionally enqueued and sent out together with the first message at the same time.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Delay me!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "de4cf16a6fdb2dcd",
+        "type": "chronos-delay",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "delayType": "custom",
+        "fixedDuration": "1",
+        "fixedDurationUnit": "seconds",
+        "randomDuration1": "1",
+        "randomDuration2": "5",
+        "randomDurationUnit": "seconds",
+        "randomizerMillis": false,
+        "whenType": "time",
+        "whenValue": "",
+        "offset": "0",
+        "random": false,
+        "expression": "(firstName = \"John\") ? 2500 : $flowContext(\"delay\")\t",
+        "preserveCtrlProps": false,
+        "ignoreCtrlProps": false,
+        "x": 470,
+        "y": 140,
+        "wires": [
+            [
+                "5d54cb26a50d326f"
+            ]
+        ]
+    },
+    {
+        "id": "5d54cb26a50d326f",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "delayed message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

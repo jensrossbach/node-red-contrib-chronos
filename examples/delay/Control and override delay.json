@@ -1,0 +1,223 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Control/Override Delay",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Control and override delay\nDelay node which delays each incoming message for 2 minutes. Delay can be dynamically influenced by several available control/override messages:\n- Drop all enqueued messages.\n- Flush all enqueued messages.\n- Flush all enqueued messages and immediately enqueue the message that triggered the flush.\n- Override the delay type and specification to random delay for 10 - 20 seconds.\n\n**Note:** The control properties (`drop`, `flush` and `enqueue`) do not need to be of boolean type but can be any type with any content.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Delay me!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "8ecdeaa3c294650e",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "drop messages",
+        "props": [
+            {
+                "p": "drop",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 200,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "cf71d6d196554cdb",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "flush messages",
+        "props": [
+            {
+                "p": "flush",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 260,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "de38b7cae6a12284",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "flush & enqueue",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "flush",
+                "v": "true",
+                "vt": "bool"
+            },
+            {
+                "p": "enqueue",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "I want to be delayed!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 320,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "cb4ef1cdacae8a59",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "override delay",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "randomDuration",
+                "v": "{\"value1\":10,\"value2\":20,\"unit\":\"seconds\",\"randomizerMillis\":false}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "I want to be delayed for 10 - 20 seconds",
+        "payloadType": "str",
+        "x": 170,
+        "y": 380,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "de4cf16a6fdb2dcd",
+        "type": "chronos-delay",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "delayType": "fixedDuration",
+        "fixedDuration": "2",
+        "fixedDurationUnit": "minutes",
+        "randomDuration1": "1",
+        "randomDuration2": "5",
+        "randomDurationUnit": "seconds",
+        "randomizerMillis": false,
+        "whenType": "time",
+        "whenValue": "",
+        "offset": "0",
+        "random": false,
+        "expression": "",
+        "preserveCtrlProps": false,
+        "ignoreCtrlProps": false,
+        "x": 430,
+        "y": 140,
+        "wires": [
+            [
+                "5d54cb26a50d326f"
+            ]
+        ]
+    },
+    {
+        "id": "5d54cb26a50d326f",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "delayed message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
