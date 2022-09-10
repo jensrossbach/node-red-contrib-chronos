@@ -1,0 +1,108 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Fixed Delay",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Delay for a fixed amount of time\nDelay node which delays each incoming message for 30 seconds.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Delay me!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "de4cf16a6fdb2dcd",
+        "type": "chronos-delay",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "delayType": "fixedDuration",
+        "fixedDuration": "30",
+        "fixedDurationUnit": "seconds",
+        "randomDuration1": "1",
+        "randomDuration2": "5",
+        "randomDurationUnit": "seconds",
+        "randomizerMillis": false,
+        "whenType": "time",
+        "whenValue": "",
+        "offset": "0",
+        "random": false,
+        "expression": "",
+        "preserveCtrlProps": false,
+        "ignoreCtrlProps": false,
+        "x": 350,
+        "y": 140,
+        "wires": [
+            [
+                "5d54cb26a50d326f"
+            ]
+        ]
+    },
+    {
+        "id": "5d54cb26a50d326f",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "delayed message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

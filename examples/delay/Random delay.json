@@ -1,0 +1,108 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Random Delay",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Delay for a random amount of time\nDelay node which delays each incoming message for a random amount of time between 3 and 8 minutes. The delay is in milliseconds granularity, i.e. it is not necessarily full minutes.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Delay me randomly!",
+        "payloadType": "str",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "de4cf16a6fdb2dcd"
+            ]
+        ]
+    },
+    {
+        "id": "de4cf16a6fdb2dcd",
+        "type": "chronos-delay",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "delayType": "randomDuration",
+        "fixedDuration": "1",
+        "fixedDurationUnit": "seconds",
+        "randomDuration1": "3",
+        "randomDuration2": "8",
+        "randomDurationUnit": "minutes",
+        "randomizerMillis": true,
+        "whenType": "time",
+        "whenValue": "",
+        "offset": "0",
+        "random": false,
+        "expression": "",
+        "preserveCtrlProps": false,
+        "ignoreCtrlProps": false,
+        "x": 360,
+        "y": 140,
+        "wires": [
+            [
+                "5d54cb26a50d326f"
+            ]
+        ]
+    },
+    {
+        "id": "5d54cb26a50d326f",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "delayed message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 570,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
