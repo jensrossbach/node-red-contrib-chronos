@@ -1,0 +1,207 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Control/Override Repetition",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Control and override repetition\nRepeat incoming message every 30 seconds. Repetition can be dynamically influenced by several available control/override messages:\n- Stop repeating messages.\n- Override repetition mode and interval specification.\n- Override end time to be 18:30 plus a random offset between 0 and 20 minutes.\n- Override ending condition to be next message only.\n\n**Note:** The control property (`stop`) does not need to be of boolean type but can be any type with any content.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Repeat me!",
+        "payloadType": "str",
+        "x": 180,
+        "y": 140,
+        "wires": [
+            [
+                "74acc50dfc65cda1"
+            ]
+        ]
+    },
+    {
+        "id": "d4eea88b8b397cde",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "stop repeating",
+        "props": [
+            {
+                "p": "stop",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 190,
+        "y": 200,
+        "wires": [
+            [
+                "74acc50dfc65cda1"
+            ]
+        ]
+    },
+    {
+        "id": "93542f106fa3d38c",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "override interval",
+        "props": [
+            {
+                "p": "interval",
+                "v": "{\"value\":5,\"unit\":\"minutes\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 180,
+        "y": 260,
+        "wires": [
+            [
+                "74acc50dfc65cda1"
+            ]
+        ]
+    },
+    {
+        "id": "670f53741e66042f",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "until ~18:30",
+        "props": [
+            {
+                "p": "until",
+                "v": "{\"type\":\"time\",\"value\":\"18:30\",\"offset\":20,\"random\":true}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 190,
+        "y": 320,
+        "wires": [
+            [
+                "74acc50dfc65cda1"
+            ]
+        ]
+    },
+    {
+        "id": "a52fb8f86f1082a0",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "until next message",
+        "props": [
+            {
+                "p": "until",
+                "v": "null",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 380,
+        "wires": [
+            [
+                "74acc50dfc65cda1"
+            ]
+        ]
+    },
+    {
+        "id": "74acc50dfc65cda1",
+        "type": "chronos-repeat",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "mode": "advanced",
+        "interval": "1",
+        "intervalUnit": "minutes",
+        "crontab": "*/30 * * * * *",
+        "expression": "",
+        "untilType": "nextMsg",
+        "untilValue": "",
+        "untilDate": "",
+        "untilOffset": 0,
+        "untilRandom": false,
+        "msgIngress": "forward",
+        "preserveCtrlProps": false,
+        "ignoreCtrlProps": false,
+        "x": 450,
+        "y": 140,
+        "wires": [
+            [
+                "b7863be942c1cd6c"
+            ]
+        ]
+    },
+    {
+        "id": "b7863be942c1cd6c",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "repeated message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
