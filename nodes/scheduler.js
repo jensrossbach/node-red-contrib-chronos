@@ -245,7 +245,7 @@ module.exports = function(RED)
             {
                 updateStatus();
 
-                RED.events.on("flows:started", () =>
+                const lazyInit = () =>
                 {
                     if (node.eventTimesPending)
                     {
@@ -254,11 +254,14 @@ module.exports = function(RED)
                     }
 
                     node.initializing = false;
-                });
+                };
+
+                RED.events.on("flows:started", lazyInit);
 
                 node.on("close", () =>
                 {
                     stopTimers();
+                    RED.events.removeListener("flows:started", lazyInit);
                 });
 
                 node.on("input", (msg, send, done) =>
