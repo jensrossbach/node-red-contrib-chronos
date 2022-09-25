@@ -1,0 +1,133 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Change message property",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Change message propery\nChanges property `msg.payload` several times before sending it to the output by chaining the following change rules:\n1. Sets property to current date and time (numerical timestamp).\n2. Adds one month to the property.\n3. Subtracts three days from the property.\n4. Converts the property from a numerical timestamp to a human readable date-time string.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "806dd38711a1c66b",
+        "type": "inject",
+        "z": "671609705841dfab",
+        "name": "input message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Change me!",
+        "payloadType": "str",
+        "x": 180,
+        "y": 140,
+        "wires": [
+            [
+                "4f4d3bfdbe4e8ace"
+            ]
+        ]
+    },
+    {
+        "id": "4f4d3bfdbe4e8ace",
+        "type": "chronos-change",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "rules": [
+            {
+                "action": "set",
+                "target": {
+                    "type": "msg",
+                    "name": "payload"
+                },
+                "type": "now"
+            },
+            {
+                "action": "change",
+                "target": {
+                    "type": "msg",
+                    "name": "payload"
+                },
+                "type": "add",
+                "value": 1,
+                "unit": "months"
+            },
+            {
+                "action": "change",
+                "target": {
+                    "type": "msg",
+                    "name": "payload"
+                },
+                "type": "subtract",
+                "value": 3,
+                "unit": "days"
+            },
+            {
+                "action": "change",
+                "target": {
+                    "type": "msg",
+                    "name": "payload"
+                },
+                "type": "toString",
+                "format": "YYYY-MM-DD HH:mm:ss"
+            }
+        ],
+        "x": 360,
+        "y": 140,
+        "wires": [
+            [
+                "ff49410550fef9fa"
+            ]
+        ]
+    },
+    {
+        "id": "ff49410550fef9fa",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "changed message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
