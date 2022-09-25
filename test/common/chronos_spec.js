@@ -363,7 +363,6 @@ describe("chronos", function()
             sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T22:00:00.000Z")});
 
             let res = chronos.getTime(RED, node, moment(), "moon", "rise");
-            console.log(res.format());
             res.utcOffset().should.equal(240);  // +4h
             res.utc();
             res.year().should.equal(2000);
