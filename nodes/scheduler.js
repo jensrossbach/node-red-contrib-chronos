@@ -245,23 +245,42 @@ module.exports = function(RED)
             {
                 updateStatus();
 
-                const lazyInit = () =>
+                let lazyInit = null;
+                if (settings.nextEventPort)
                 {
-                    if (node.eventTimesPending)
+                    lazyInit = () =>
                     {
-                        notifyEventTimes();
-                        node.eventTimesPending = false;
-                    }
+                        if (node.eventTimesPending)
+                        {
+                            notifyEventTimes();
+                            node.eventTimesPending = false;
+                        }
 
+                        node.initializing = false;
+
+                        if (lazyInit)
+                        {
+                            RED.events.removeListener("flows:started", lazyInit);
+                            lazyInit = null;
+                        }
+                    };
+
+                    RED.events.on("flows:started", lazyInit);
+                }
+                else
+                {
                     node.initializing = false;
-                };
-
-                RED.events.on("flows:started", lazyInit);
+                }
 
                 node.on("close", () =>
                 {
                     stopTimers();
-                    RED.events.removeListener("flows:started", lazyInit);
+
+                    if (lazyInit)
+                    {
+                        RED.events.removeListener("flows:started", lazyInit);
+                        lazyInit = null;
+                    }
                 });
 
                 node.on("input", (msg, send, done) =>
