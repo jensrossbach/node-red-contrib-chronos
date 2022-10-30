@@ -293,10 +293,10 @@ describe("chronos", function()
 
             let res = chronos.getTime(RED, node, moment(), "sun", "sunrise");
             res.utcOffset().should.equal(240);  // +4h
-            res.utc();
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
+            res.hour().should.equal(12);
             res.minute().should.equal(0);
             res.second().should.equal(0);
         });
@@ -360,14 +360,14 @@ describe("chronos", function()
         {
             const RED = {"_": () => ""};
             const node = {locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
-            sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T22:00:00.000Z")});
+            sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T18:00:00.000Z")});
 
             let res = chronos.getTime(RED, node, moment(), "moon", "rise");
             res.utcOffset().should.equal(240);  // +4h
-            res.utc();
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
+            res.hour().should.equal(22);
             res.minute().should.equal(0);
             res.second().should.equal(0);
         });

@@ -213,7 +213,7 @@ function getSunTime(RED, node, day, type)
         {
             if (node.config.timezone)
             {
-                ret.tz(node.config.timezone, true);
+                ret.tz(node.config.timezone);
             }
 
             ret.locale(node.locale);
@@ -244,7 +244,7 @@ function getMoonTime(RED, node, day, type)
         {
             if (node.config.timezone)
             {
-                ret.tz(node.config.timezone, true);
+                ret.tz(node.config.timezone);
             }
 
             ret.locale(node.locale);
