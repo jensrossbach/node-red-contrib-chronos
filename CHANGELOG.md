@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.3] - 2022-10-30
+
+### Changed
+- Updated versions of some development dependencies (used for unit testing).
+
+### Fixed
+- Fixed non-working time zone shift for sun/moon time calculation.
+- Listeners for flows-started events in scheduler node are now only registered if next event time option is activated and immediately unregistered upon receiving event.
+
 ## [1.18.2] - 2022-09-25
 
 ### Added
