@@ -152,7 +152,7 @@ SOFTWARE.
                 }
             };
 
-            const validateCoords = function(event, ui)
+            const validateInput = function(event, ui)
             {
                 if (/^(\+|-)?\d+(\.\d+)?$/.test($(this).spinner("value")))
                 {
@@ -183,7 +183,7 @@ SOFTWARE.
                 max: 90,
                 step: 1,
                 numberFormat: "n",
-                change: validateCoords
+                change: validateInput
             };
 
             const longitudeInput =
@@ -192,16 +192,16 @@ SOFTWARE.
                 max: 180,
                 step: 1,
                 numberFormat: "n",
-                change: validateCoords
+                change: validateInput
             };
 
             const sunAngleInput =
             {
                 min: -90,
                 max: 90,
-                step: 1,
+                step: 0.001,
                 numberFormat: "n",
-                change: validateCoords
+                change: validateInput
             };
 
             $("#node-config-input-latitude").spinner(latitudeInput);
@@ -217,10 +217,9 @@ SOFTWARE.
                     let fragment = document.createDocumentFragment();
 
                     let angleLabel = $("<label/>", {style: "width: auto; margin-left: 5px; margin-bottom: 0px;"})
-                                        //.html("<i class='fa fa-sun-o' aria-hidden='true'></i> " + node._("config.label.angle") + " ")
                                         .text(node._("config.label.angle") + " ")
                                         .appendTo(fragment);
-                    let angle = $("<input/>", {class: "node-input-angle", style: "width: 60px; margin-left: 4px;"})
+                    let angle = $("<input/>", {class: "node-input-angle", style: "width: 60px !important; margin-left: 4px;"})
                                         .appendTo(angleLabel)
                                         .spinner(sunAngleInput);
                     let riseLabel = $("<label/>", {title: node._("config.label.riseName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
