@@ -43,9 +43,30 @@ module.exports = function(RED)
         {
             settings.mode = "simple";
         }
+        if (typeof settings.crontab == "undefined")
+        {
+            settings.crontab = "";
+        }
         if (typeof settings.msgIngress == "undefined")
         {
             settings.msgIngress = "forward:forced";
+        }
+
+        // backward compatibility to v1.18.x and earlier
+        if (typeof settings.customRepetitionType == "undefined")
+        {
+            settings.customRepetitionType = "jsonata";
+        }
+        if (typeof settings.customRepetitionValue == "undefined")
+        {
+            if (typeof settings.expression != "undefined")
+            {
+                settings.customRepetitionValue = settings.expression;
+            }
+            else
+            {
+                settings.customRepetitionValue = "";
+            }
         }
 
         if (!node.config)
@@ -76,8 +97,9 @@ module.exports = function(RED)
             node.mode = settings.mode;
             node.interval = settings.interval;
             node.intervalUnit = settings.intervalUnit;
-            node.crontab = (typeof settings.crontab == "undefined") ? "" : settings.crontab;
-            node.expression = (typeof settings.expression == "undefined") ? "" : settings.expression;
+            node.crontab = settings.crontab;
+            node.customRepetitionType = settings.customRepetitionType;
+            node.customRepetitionValue = settings.customRepetitionValue;
             node.untilType = settings.untilType;
             node.untilValue = settings.untilValue;
             node.untilDate = settings.untilDate;
@@ -89,7 +111,43 @@ module.exports = function(RED)
 
             node.sendTime = null;
 
-            if ((node.untilType == "time") && !chronos.isValidUserTime(node.untilValue))
+            let valid = true;
+            if ((node.mode == "custom") && (node.customRepetitionType == "jsonata"))
+            {
+                try
+                {
+                    node.expression = chronos.getJSONataExpression(RED, node, node.customRepetitionValue);
+                }
+                catch(e)
+                {
+                    node.error(e.message);
+                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                    valid = false;
+                }
+            }
+
+            if (valid && (node.untilType == "jsonata"))
+            {
+                try
+                {
+                    node.untilExpression = chronos.getJSONataExpression(RED, node, node.untilValue);
+                }
+                catch(e)
+                {
+                    node.error(e.message);
+                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                    valid = false;
+                }
+            }
+
+            if (!valid)
+            {
+                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+            }
+            else if ((node.untilType == "time") && !chronos.isValidUserTime(node.untilValue))
             {
                 node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
                 node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -165,7 +223,6 @@ module.exports = function(RED)
             let interval = node.interval;
             let intervalUnit = node.intervalUnit;
             let crontab = node.crontab;
-            let expression = node.expression;
             let untilType = node.untilType;
             let untilValue = node.untilValue;
             let untilDate = node.untilDate;
@@ -179,7 +236,7 @@ module.exports = function(RED)
             }
             else
             {
-                if (hasIntervalOverride(msg.interval))
+                if (isValidInterval(msg.interval))
                 {
                     node.debug("Input message has override property for interval");
 
@@ -193,7 +250,7 @@ module.exports = function(RED)
                     }
                 }
 
-                if (hasCrontabOverride(msg.crontab))
+                if (isValidCrontab(msg.crontab))
                 {
                     node.debug("Input message has override property for cron table");
 
@@ -206,24 +263,11 @@ module.exports = function(RED)
                     }
                 }
 
-                if (hasExpressionOverride(msg.expression))
-                {
-                    node.debug("Input message has override property for expression");
-
-                    mode = "custom";
-                    expression = msg.expression;
-
-                    if (!node.preserveCtrlProps)
-                    {
-                        delete msg.expression;
-                    }
-                }
-
-                if (hasUntilOverride(msg.until))
+                if (isValidUntilTime(msg.until))
                 {
                     node.debug("Input message has override property for until time");
 
-                    if (msg.until != null)
+                    if (msg.until)
                     {
                         untilType = msg.until.type;
                         untilValue = msg.until.value;
@@ -248,7 +292,7 @@ module.exports = function(RED)
 
                 if (hasIngressOverride(msg.ingress))
                 {
-                    node.debug("Input message has override property for ingress behavior '" +  msg.ingress + "'");
+                    node.debug("Input message has override property for ingress behavior '" + msg.ingress + "'");
 
                     msgIngress = msg.ingress;
 
@@ -261,7 +305,39 @@ module.exports = function(RED)
 
             node.message = msg;
 
-            const untilTime = getUntilTime(untilDate ? chronos.getUserDate(RED, node, untilDate) : now, untilType, untilValue, untilOffset, untilRandom);
+            if ((mode == "custom") && (node.customRepetitionType != "jsonata"))
+            {
+                let ctx = RED.util.parseContextStore(node.customRepetitionValue);
+                let ctxData = node.context()[node.customRepetitionType].get(ctx.key, ctx.store);
+
+                if (isValidInterval(ctxData))
+                {
+                    mode = "simple";
+                    interval = ctxData.value;
+                    intervalUnit = ctxData.unit;
+                }
+                else if (isValidCrontab(ctxData))
+                {
+                    mode = "advanced";
+                    crontab = ctxData;
+                }
+                else
+                {
+                    throw new chronos.TimeError(
+                                RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
+                                {store: ctx.store, key: ctx.key, value: ctxData});
+                }
+            }
+
+            const untilTime = getUntilTime(
+                                untilDate
+                                    ? chronos.getUserDate(RED, node, untilDate)
+                                    : now,
+                                untilType,
+                                untilValue,
+                                untilOffset,
+                                untilRandom);
+
             if (mode == "simple")
             {
                 setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime);
@@ -272,7 +348,7 @@ module.exports = function(RED)
             }
             else
             {
-                setupCustomRepeatTimer(now, expression, untilTime);
+                setupCustomRepeatTimer(now, untilTime);
             }
 
             return (((msgIngress == "forward") && !untilTime.isExceededAt(now)) ||
@@ -283,9 +359,41 @@ module.exports = function(RED)
         {
             let ret = {};
 
-            if (type == "jsonata")
+            if ((type == "global") || (type == "flow"))
             {
-                ret.expression = value;
+                let ctx = RED.util.parseContextStore(value);
+                let ctxData = node.context()[type].get(ctx.key, ctx.store);
+
+                if (isValidUntilTime(ctxData))
+                {
+                    if (ctxData)
+                    {
+                        return getUntilTime(
+                                    ctxData.date
+                                        ? chronos.getUserDate(RED, node, ctxData.date)
+                                        : now,
+                                    ctxData.type,
+                                    ctxData.value,
+                                    (typeof ctxData.offset == "number")
+                                        ? ctxData.offset
+                                        : 0,
+                                    ctxData.random === true);
+                    }
+                    else
+                    {
+                        return getUntilTime(null, "nextMsg", "", 0, false);
+                    }
+                }
+                else
+                {
+                    throw new chronos.TimeError(
+                                RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
+                                {store: ctx.store, key: ctx.key, value: ctxData});
+                }
+            }
+            else if (type == "jsonata")
+            {
+                ret.expression = node.untilExpression;
 
                 ret.isExceededAt = function(next)
                 {
@@ -293,26 +401,35 @@ module.exports = function(RED)
 
                     try
                     {
-                        let expression = chronos.getJSONataExpression(RED, node, this.expression);
-                        expression.assign("next", next.valueOf());
-
-                        result = RED.util.evaluateJSONataExpression(expression, node.message);
+                        this.expression.assign("next", next.valueOf());
+                        result = RED.util.evaluateJSONataExpression(this.expression, node.message);
                     }
                     catch(e)
                     {
-                        const details = {expression: this.expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                        const details =
+                        {
+                            expression: value,
+                            code: e.code,
+                            description: e.message,
+                            position: e.position,
+                            token: e.token
+                        };
+
                         if (e.value)
                         {
                             details.value = e.value;
                         }
 
-                        throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+                        throw new chronos.TimeError(
+                                    RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"),
+                                    details);
                     }
 
                     if (typeof result != "boolean")
                     {
-                        throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"),
-                                                    {expression: this.expression, result: result});
+                        throw new chronos.TimeError(
+                                    RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"),
+                                    {expression: value, result: result});
                     }
 
                     return result;
@@ -433,7 +550,7 @@ module.exports = function(RED)
             updateStatus();
         }
 
-        function setupCustomRepeatTimer(now, expression, untilTime)
+        function setupCustomRepeatTimer(now, untilTime)
         {
             node.debug("Set up timer for trigger expression until " + untilTime.print());
 
@@ -441,24 +558,26 @@ module.exports = function(RED)
 
             try
             {
-                let expr = chronos.getJSONataExpression(RED, node, expression);
-                result = RED.util.evaluateJSONataExpression(expr, node.message);
+                result = RED.util.evaluateJSONataExpression(node.expression, node.message);
             }
             catch(e)
             {
-                const details = {expression: expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                const details = {expression: node.customRepetitionValue, code: e.code, description: e.message, position: e.position, token: e.token};
                 if (e.value)
                 {
                     details.value = e.value;
                 }
 
-                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+                throw new chronos.TimeError(
+                            RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"),
+                            details);
             }
 
             if ((typeof result != "number") && (typeof result != "string"))
             {
-                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
-                                            {expression: expression, result: result});
+                throw new chronos.TimeError(
+                            RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                            {expression: node.customRepetitionValue, result: result});
             }
 
             if ((typeof result == "string") || (result >= (now.valueOf() + MS_PER_SECOND)))  // assumed to be absolute time of next trigger
@@ -471,21 +590,24 @@ module.exports = function(RED)
             }
             else
             {
-                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
-                                            {expression: expression, result: result});
+                throw new chronos.TimeError(
+                            RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                            {expression: node.customRepetitionValue, result: result});
             }
 
             if (!node.sendTime.isValid())
             {
                 node.sendTime = null;
-                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
-                                            {expression: expression, result: result});
+                throw new chronos.TimeError(
+                            RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                            {expression: node.customRepetitionValue, result: result});
             }
             if ((node.sendTime.diff(now) < MS_PER_SECOND) || (node.sendTime.diff(now) > MS_PER_WEEK))
             {
                 node.sendTime = null;
-                throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
-                                            {expression: expression, result: result});
+                throw new chronos.TimeError(
+                            RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
+                            {expression: node.customRepetitionValue, result: result});
             }
 
             if (!untilTime.isExceededAt(node.sendTime))
@@ -496,7 +618,7 @@ module.exports = function(RED)
                     delete node.repeatTimer;
 
                     node.send(RED.util.cloneMessage(node.message));
-                    setupCustomRepeatTimer(chronos.getCurrentTime(node), expression, untilTime);
+                    setupCustomRepeatTimer(chronos.getCurrentTime(node), untilTime);
                 }, node.sendTime.diff(now));
             }
             else
@@ -527,7 +649,7 @@ module.exports = function(RED)
             }
         }
 
-        function hasIntervalOverride(data)
+        function isValidInterval(data)
         {
             if ((typeof data != "object") || !data)
             {
@@ -549,7 +671,7 @@ module.exports = function(RED)
             return true;
         }
 
-        function hasCrontabOverride(data)
+        function isValidCrontab(data)
         {
             if ((typeof data != "string") || !data)
             {
@@ -564,26 +686,16 @@ module.exports = function(RED)
             return true;
         }
 
-        function hasExpressionOverride(data)
-        {
-            if ((typeof data != "string") || !data)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        function hasUntilOverride(data)
+        function isValidUntilTime(data)
         {
             if (typeof data != "object")
             {
                 return false;
             }
 
-            if (data != null)
+            if (data)
             {
-                if (!/^(time|sun|moon|custom|jsonata)$/.test(data.type))
+                if (!/^(time|sun|moon|custom)$/.test(data.type))
                 {
                     return false;
                 }

@@ -8,6 +8,7 @@
             "delayType":         "Verzög.-Art",
             "duration":          "Dauer",
             "when":              "Wann",
+            "delay":             "Verzögerung",
             "randomizerMillis":  "Zufallswert immer in Millisekundenauflösung"
         },
         "list":

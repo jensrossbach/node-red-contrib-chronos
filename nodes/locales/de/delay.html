@@ -70,7 +70,8 @@ SOFTWARE.
                 </li>
                 <li>
                     <i>Benutzerdefiniert</i>: Die Verzögerung wird als
-                    benutzerdefinierter JSONata-Ausdruck spezifiziert.
+                    benutzerdefinierter JSONata-Ausdruck spezifiziert
+                    oder aus einer Kontextvariablen geladen.
                 </li>
             </ul>
         </dd>
@@ -121,26 +122,31 @@ SOFTWARE.
             Wenn aktiviert, wird der Versatz im Bereich zwischen 0 und dem
             angegeben Wert zufällig ausgewählt.
         </dd>
-        <dt>Ausdruck</dt>
+        <dt>Verzögerung</dt>
         <dd>
-            Ein JSONata-Ausdruck, der einen Zeitwert für die Verzögerung zurückgeben
-            muss. Der Zeitwert kann eine Zahl sein, die entweder die Zeitspanne in
-            Millisekunden enthält oder die Anzahl Millisekunden seit Beginn der
-            UNIX-Zeitzählung als absoluten Zeitpunkt zu dem die Verzögerung endet.
-            Letzteres kann auch als Zeichenkette mit Datum und Uhrzeit, die nach
-            den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-            geparst werden kann, zurückgegeben werden.
+            Wenn <i>JSONata</i> ausgewählt wurde, ein JSONata-Ausdruck, der
+            einen Zeitwert für die Verzögerung zurückgeben muss. Der Zeitwert
+            kann eine Zahl sein, die entweder die Zeitspanne in Millisekunden
+            enthält oder die Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung
+            als absoluten Zeitpunkt zu dem die Verzögerung endet. Letzteres
+            kann auch als Zeichenkette mit Datum und Uhrzeit, die nach den Regeln
+            von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
+            geparst werden kann, zurückgegeben werden. Im Fall von <i>global</i>
+            oder <i>flow</i> wird die Verzögerung aus der angegebenen Kontextvariablen
+            geladen. Siehe Abschnitt <i>Input</i> weiter unten für eine Beschreibung
+            des Variablenformats (Eigenschaften <code>fixedDuration</code>,
+            <code>randomDuration</code> und <code>when</code>).
         </dd>
         <dt>Steuereigenschaften in Nachrichten beibehalten</dt>
         <dd>
-            Wenn aktiviert, werden Steuereigenschaften, wie unten in Kapitel
+            Wenn aktiviert, werden Steuereigenschaften, wie unten in Abschnitt
             <i>Eingabe</i> beschrieben, nicht aus den Eingangsnachrichten gelöscht
             und sind beim Senden an den Ausgabe-Port noch in den Nachrichten
             vorhanden.
         </dd>
         <dt>Steuereigenschaften in Nachrichten ignorieren</dt>
         <dd>
-            Wenn aktiviert, werden Steuereigenschaften, wie unten in Kapitel
+            Wenn aktiviert, werden Steuereigenschaften, wie unten in Abschnitt
             <i>Eingabe</i> beschrieben, ignoriert. Das ist sinnvoll falls
             zu verzögernde Eingabenachrichten Eigenschaften mit denselben
             Namen wie die Steuereigenschaften enthalten und verhindert somit
@@ -184,11 +190,6 @@ SOFTWARE.
         <dd>
             Überschreibt den Zielzeitpunkt, zu dem gepufferte Nachrichten
             weitergeleitet werden sollen, siehe unten für weitere Informationen.
-        </dd>
-        <dt class="optional">expression<span class="property-type">string</span></dt>
-        <dd>
-            Überschreibt den JSONata-Ausdruck, der bestimmt, wann gepuffert Nachrichten
-            weitergeleitet werden sollen.
         </dd>
     </dl>
     <p>

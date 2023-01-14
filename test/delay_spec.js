@@ -60,7 +60,7 @@ describe("delay node", function()
 
         it("should correctly load", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "randomDuration", fixedDuration: 13, randomDuration1: 42, randomDuration2: 76, fixedDurationUnit: "days", randomDurationUnit: "minutes", randomizerMillis: true, whenType: "time", whenValue: "12:00", offset: 0, random: false, expression: "myExpression", preserveCtrlProps: true, ignoreCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "randomDuration", fixedDuration: 13, randomDuration1: 42, randomDuration2: 76, fixedDurationUnit: "days", randomDurationUnit: "minutes", randomizerMillis: true, whenType: "time", whenValue: "12:00", offset: 0, random: false, customDelayType: "flow", customDelayValue: "myVar", preserveCtrlProps: true, ignoreCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -77,14 +77,15 @@ describe("delay node", function()
             dn1.should.have.property("whenValue", "12:00");
             dn1.should.have.property("offset", 0);
             dn1.should.have.property("random", false);
-            dn1.should.have.property("expression", "myExpression");
+            dn1.should.have.property("customDelayType", "flow");
+            dn1.should.have.property("customDelayValue", "myVar");
             dn1.should.have.property("preserveCtrlProps", true);
             dn1.should.have.property("ignoreCtrlProps", true);
         });
 
-        it("should backward compatibly load", async function()
+        it("should preserve backward compatibility", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", whenType: "time", whenValue: "12:00", offset: 0, random: false, preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", whenType: "time", whenValue: "12:00", offset: 0, random: false, expression: "myExpression", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -101,7 +102,8 @@ describe("delay node", function()
             dn1.should.have.property("whenValue", "12:00");
             dn1.should.have.property("offset", 0);
             dn1.should.have.property("random", false);
-            dn1.should.have.property("expression", "");
+            dn1.should.have.property("customDelayType", "jsonata");
+            dn1.should.have.property("customDelayValue", "myExpression");
             dn1.should.have.property("preserveCtrlProps", true);
             dn1.should.have.property("ignoreCtrlProps", undefined);
         });
@@ -156,6 +158,18 @@ describe("delay node", function()
             const dn1 = helper.getNode("dn1");
             dn1.status.should.be.calledTwice();
             dn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
+        });
+
+        it("should fail due to invalid expression", async function()
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "invalid[", preserveCtrlProps: true}, cfgNode];
+
+            await helper.load([configNode, delayNode], flow, credentials);
+            const dn1 = helper.getNode("dn1");
+            dn1.status.should.be.calledTwice();
+            dn1.error.should.be.calledTwice();
+            dn1.error.getCall(0).should.be.calledWith("Expected \"]\" before end of expression");
+            dn1.error.getCall(1).should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
     });
 
@@ -665,7 +679,7 @@ describe("delay node", function()
 
         beforeEach(function()
         {
-            clock = sinon.useFakeTimers({now: 1000000000, toFake: ["Date", "setTimeout", "clearTimeout"]});
+            clock = sinon.useFakeTimers({now: 1000000000 /* Mon Jan 12 1970 13:46:40 UTC */, toFake: ["Date", "setTimeout", "clearTimeout"]});
             sinon.stub(chronos, "getCurrentTime").returns(moment().utc());
             sinon.stub(chronos, "getTimeFrom").callsFake(function(node, source) { return moment.utc(source); });
         });
@@ -678,7 +692,7 @@ describe("delay node", function()
 
         it("should delay message for custom duration", function(done)
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", expression: "3000", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", customDelayType: "jsonata", customDelayValue: "3000", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, delayNode], flow, credentials, function()
@@ -716,7 +730,7 @@ describe("delay node", function()
 
         it("should delay message until custom time point (numeric)", function(done)
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", expression: "1000003000", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", customDelayType: "jsonata", customDelayValue: "1000003000", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, delayNode], flow, credentials, function()
@@ -754,7 +768,7 @@ describe("delay node", function()
 
         it("should delay message until custom time point (string)", function(done)
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", expression: "'1970-01-12T13:46:43'", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", customDelayType: "jsonata", customDelayValue: "'1970-01-12T13:46:43'", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
 
             helper.load([configNode, delayNode], flow, credentials, function()
@@ -790,20 +804,160 @@ describe("delay node", function()
             });
         });
 
-        it("should handle time error due to invalid expression (parsing)", async function()
+        it("should delay message for fixed duration from context variable", function(done)
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "[4}", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", fixedDuration: 1, fixedDurationUnit: "seconds", customDelayType: "flow", customDelayValue: "testVariable", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {errorDetails: {expression: "[4}", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any, value: sinon.match.any}});
-            dn1.msgQueue.should.have.length(0);
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                try
+                {
+                    const dn1 = helper.getNode("dn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    sinon.stub(dn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns({value: 3, unit: "days"});
+                    ctx.global.get = sinon.fake.returns(undefined);
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    dn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    dn1.context.should.be.calledOnce();
+                    ctx.flow.get.should.be.calledWith("testKey", "testStore");
+
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 259200000);
+                    dn1.msgQueue.should.have.length(1);
+                    clock.tick(259200000);  // advance clock by 3 days
+                    dn1.msgQueue.should.have.length(0);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
         });
 
-        it("should handle time error due to invalid expression (evaluating)", async function()
+        it("should delay message for random duration from context variable", function(done)
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "$nonExistingFunc()", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", randomDuration1: 6, randomDuration2: 10, randomDurationUnit: "minutes", randomizerMillis: false, customDelayType: "global", customDelayValue: "testVariable", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(Math, "random").returns(0.5);
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                try
+                {
+                    const dn1 = helper.getNode("dn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    sinon.stub(dn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns(undefined);
+                    ctx.global.get = sinon.fake.returns({value1: 1, value2: 6, unit: "seconds"});
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    dn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    dn1.context.should.be.calledOnce();
+                    ctx.global.get.should.be.calledWith("testKey", "testStore");
+
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 4000);
+                    dn1.msgQueue.should.have.length(1);
+                    clock.tick(4000);  // advance clock by 4 seconds
+                    dn1.msgQueue.should.have.length(0);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should delay message until specific time from context variable", function(done)
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", whenType: "sun", whenValue: "sunset", offset: 10, random: false, customDelayType: "flow", customDelayValue: "testVariable", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                try
+                {
+                    const dn1 = helper.getNode("dn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    sinon.stub(dn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns({type: "time", value: "13:47:40", offset: 0, random: false});
+                    ctx.global.get = sinon.fake.returns(undefined);
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                            done();
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    dn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    dn1.context.should.be.calledOnce();
+                    ctx.flow.get.should.be.calledWith("testKey", "testStore");
+
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 60000);
+                    dn1.msgQueue.should.have.length(1);
+                    clock.tick(60000);  // advance clock by 1 min
+                    dn1.msgQueue.should.have.length(0);
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should handle time error due to invalid expression", async function()
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "$nonExistingFunc()", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -812,9 +966,9 @@ describe("delay node", function()
             dn1.msgQueue.should.have.length(0);
         });
 
-        it("should handle time error due to invalid expression (evaluating)", async function()
+        it("should handle time error due to invalid return value", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "true", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "true", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -825,7 +979,7 @@ describe("delay node", function()
 
         it("should handle time error due to invalid relative numeric time (< 1)", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "0", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "0", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -836,7 +990,7 @@ describe("delay node", function()
 
         it("should handle time error due to invalid relative numeric time (> 604.800.000)", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "1604801000", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "1604801000", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -847,7 +1001,7 @@ describe("delay node", function()
 
         it("should handle time error due to invalid absolute numeric time (diff < 1)", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "1000000000", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "1000000000", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -858,7 +1012,7 @@ describe("delay node", function()
 
         it("should handle time error due to invalid absolute numeric time (diff > 604.800.000)", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "1604801000", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "1604801000", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -869,7 +1023,7 @@ describe("delay node", function()
 
         it("should handle time error due to invalid string time (diff < 1)", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "'1970-01-12T13:46:40'", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "'1970-01-12T13:46:40'", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -880,7 +1034,7 @@ describe("delay node", function()
 
         it("should handle time error due to invalid string time (diff > 604.800.000))", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "'1970-01-19T13:46:41'", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "'1970-01-19T13:46:41'", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
@@ -891,12 +1045,31 @@ describe("delay node", function()
 
         it("should handle time error due to invalid string time (no time))", async function()
         {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", expression: "'invalid'", preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "'invalid'", preserveCtrlProps: true}, cfgNode];
 
             await helper.load([configNode, delayNode], flow, credentials);
             const dn1 = helper.getNode("dn1");
             dn1.receive({payload: "test"});
             dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {errorDetails: {expression: "'invalid'", result: 'invalid'}});
+            dn1.msgQueue.should.have.length(0);
+        });
+
+        it("should handle time error due to invalid context variable", async function()
+        {
+            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "flow", customDelayValue: "invalidVariable", preserveCtrlProps: true}, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            await helper.load([configNode, delayNode], flow, credentials);
+            const dn1 = helper.getNode("dn1");
+
+            sinon.stub(dn1, "context").returns(ctx);
+            ctx.flow.get = sinon.fake.returns(false);
+            ctx.global.get = sinon.fake.returns(undefined);
+
+            dn1.receive({payload: "test"});
+            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {errorDetails: {store: "testStore", key: "testKey", value: false}});
             dn1.msgQueue.should.have.length(0);
         });
     });
@@ -1518,108 +1691,6 @@ describe("delay node", function()
             });
         });
 
-        it("should override expression", function(done)
-        {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", expression: "180000", preserveCtrlProps: true}, hlpNode, cfgNode];
-            sinon.spy(clock, "setTimeout");
-
-            helper.load([configNode, delayNode], flow, credentials, function()
-            {
-                try
-                {
-                    const dn1 = helper.getNode("dn1");
-                    const hn1 = helper.getNode("hn1");
-                    let msgCount = 0;
-
-                    hn1.on("input", function(msg)
-                    {
-                        try
-                        {
-                            msgCount++;
-                            if (msgCount == 1)
-                            {
-                                msg.should.have.property("payload", "no override");
-                            }
-                            else if (msgCount == 2)
-                            {
-                                msg.should.have.property("payload", "with override");
-                                msg.should.have.property("expression", "10000");
-                                done();
-                            }
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    dn1.receive({payload: "no override"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 180000);
-                    dn1.msgQueue.should.have.length(1);
-                    dn1.receive({payload: "with override", expression: "10000"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 10000);
-                    dn1.msgQueue.should.have.length(2);
-                    clock.tick(10000);  // advance clock by 10 secs
-                    dn1.msgQueue.should.have.length(0);
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
-        });
-
-        it("should override expression and not preserve", function(done)
-        {
-            const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", expression: "180000", preserveCtrlProps: false}, hlpNode, cfgNode];
-            sinon.spy(clock, "setTimeout");
-
-            helper.load([configNode, delayNode], flow, credentials, function()
-            {
-                try
-                {
-                    const dn1 = helper.getNode("dn1");
-                    const hn1 = helper.getNode("hn1");
-                    let msgCount = 0;
-
-                    hn1.on("input", function(msg)
-                    {
-                        try
-                        {
-                            msgCount++;
-                            if (msgCount == 1)
-                            {
-                                msg.should.have.property("payload", "no override");
-                            }
-                            else if (msgCount == 2)
-                            {
-                                msg.should.have.property("payload", "with override");
-                                msg.should.not.have.property("expression");
-                                done();
-                            }
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    dn1.receive({payload: "no override"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 180000);
-                    dn1.msgQueue.should.have.length(1);
-                    dn1.receive({payload: "with override", expression: "10000"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 10000);
-                    dn1.msgQueue.should.have.length(2);
-                    clock.tick(10000);  // advance clock by 10 secs
-                    dn1.msgQueue.should.have.length(0);
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
-        });
-
         it("should ignore override property", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "pointInTime", whenType: "time", whenValue: "00:01", offset: 0, random: false, preserveCtrlProps: true, ignoreCtrlProps: true}, hlpNode, cfgNode];
@@ -1835,50 +1906,5 @@ describe("delay node", function()
         testInvalidWhenOverride("override offset too small", {type: "time", value: "00:01", offset: -301, random: false});
         testInvalidWhenOverride("override offset too large", {type: "time", value: "00:01", offset: 301, random: false});
         testInvalidWhenOverride("override random wrong type", {type: "time", value: "00:01", offset: 0, random: "invalid"});
-
-        function testInvalidExpressionOverride(title, override)
-        {
-            it("should fall back to configured expression: " + title, function(done)
-            {
-                const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", wires: [["hn1"]], delayType: "custom", expression: "180000", preserveCtrlProps: true}, hlpNode, cfgNode];
-                sinon.spy(clock, "setTimeout");
-
-                helper.load([configNode, delayNode], flow, credentials, function()
-                {
-                    try
-                    {
-                        const dn1 = helper.getNode("dn1");
-                        const hn1 = helper.getNode("hn1");
-
-                        hn1.on("input", function(msg)
-                        {
-                            try
-                            {
-                                msg.should.have.property("payload", "test");
-                                msg.should.have.property("expression", override);
-                                done();
-                            }
-                            catch (e)
-                            {
-                                done(e);
-                            }
-                        });
-
-                        dn1.receive({payload: "test", expression: override});
-                        clock.setTimeout.should.be.calledWith(sinon.match.any, 180000);
-                        dn1.msgQueue.should.have.length(1);
-                        clock.tick(180000);  // advance clock by 3 mins
-                        dn1.msgQueue.should.have.length(0);
-                    }
-                    catch (e)
-                    {
-                        done(e);
-                    }
-                });
-            });
-        }
-
-        testInvalidExpressionOverride("invalid override", true);
-        testInvalidExpressionOverride("null override", null);
     });
 });

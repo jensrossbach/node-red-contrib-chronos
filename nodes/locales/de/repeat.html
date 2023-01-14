@@ -64,18 +64,22 @@ SOFTWARE.
             <a href="https://github.com/jaclarke/cronosjs#supported-expression-syntax">CronosJS Ausdruckssyntax</a>
             entsprechen muss.
         </dd>
-        <dt>Ausdruck</dt>
+        <dt>Iteration</dt>
         <dd>
-            Im benutzerdefinierten Modus wird hier ein JSONata-Ausdruck angegeben,
-            der bei jeder Wiederholung ausgewertet wird und einen Zeitwert
-            zurückgeben muss. Der Zeitwert kann entweder eine Zahl sein, die
-            die Anzahl Millisekunden bis zur nächsten Wiederholung oder die Anzahl
-            Millisekunden seit Beginn der UNIX-Zeitzählung als absoluten Zeitpunkt
-            der nächsten Wiederholung enthält. Oder es handelt sich um eine
-            Zeichenkette mit einem Datum und einer Uhrzeit, die den absoluten
-            Zeitpunkt der nächsten Wiederholung darstellt. Die Zeichenkette muss
-            nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-            geparst werden können.
+            Im benutzerdefinierten Modus, wenn <i>JSONata</i> ausgewählt wurde,
+            wird hier ein JSONata-Ausdruck angegeben, der bei jeder Wiederholung
+            ausgewertet wird und einen Zeitwert zurückgeben muss. Der Zeitwert
+            kann entweder eine Zahl sein, die die Anzahl Millisekunden bis zur
+            nächsten Wiederholung oder die Anzahl Millisekunden seit Beginn der
+            UNIX-Zeitzählung als absoluten Zeitpunkt der nächsten Wiederholung
+            enthält. Oder es handelt sich um eine Zeichenkette mit einem Datum
+            und einer Uhrzeit, die den absoluten Zeitpunkt der nächsten Wiederholung
+            darstellt. Die Zeichenkette muss nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
+            geparst werden können. Im Fall von <i>global</i> oder <i>flow</i>
+            wird die Wiederholung aus der angegebenen Kontextvariablen geladen.
+            Siehe Abschnitt <i>Input</i> weiter unten für eine Beschreibung
+            des Variablenformats (Eigenschaften <code>interval</code> und
+            <code>crontab</code>).
         </dd>
         <dt>Bis</dt>
         <dd>
@@ -111,6 +115,18 @@ SOFTWARE.
                     erreicht) ergibt, kann eingegeben werden. Der Zeitpunkt des nächsten
                     Sendens der Nachricht kann über die Variable <code>$next</code>
                     abgefragt werden.
+                </li>
+                <li>
+                    <i>global</i>: Die Ende-Bedingung wird aus der angegebenen
+                    globalen Kontextvariablen geladen, siehe Abschnitt <i>Eingabe</i>
+                    (Eigenschaft <code>until</code>) für eine Beschreibung des
+                    Variablenformats.
+                </li>
+                <li>
+                    <i>flow</i>: Die Ende-Bedingung wird aus der angegebenen
+                    Flow-Kontextvariablen geladen, siehe Abschnitt <i>Eingabe</i>
+                    (Eigenschaft <code>until</code>) für eine Beschreibung des
+                    Variablenformats.
                 </li>
             </ul>
         </dd>

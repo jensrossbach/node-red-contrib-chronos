@@ -68,7 +68,7 @@ SOFTWARE.
                 </li>
                 <li>
                     <i>Custom</i>: The delay is specified by a user-defined
-                    JSONata expression.
+                    JSONata expression or taken from a context variable.
                 </li>
             </ul>
         </dd>
@@ -118,24 +118,29 @@ SOFTWARE.
             When selected, the offset will be randomized between 0 and the
             specified value.
         </dd>
-        <dt>Expression</dt>
+        <dt>Delay</dt>
         <dd>
-            Specifies a JSONata expression that must result in a time value for
-            the delay. The time value can be a number either containing the
-            duration in milliseconds or the amount of milliseconds elapsed
-            since the UNIX epoch representing the point in time when the delay
-            ends. The latter can also be expressed as a datetime string which
-            must be parseable according to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
+            If <i>expression</i> is selected, specifies a JSONata expression
+            that must result in a time value for the delay. The time value
+            can be a number either containing the duration in milliseconds or
+            the amount of milliseconds elapsed since the UNIX epoch representing
+            the point in time when the delay ends. The latter can also be
+            expressed as a datetime string which must be parseable according
+            to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
+            When selecting <i>global</i> or <i>flow</i>, the delay is taken
+            from the specified context variable. See section <i>Input</i> below
+            for a description of the format (properties <code>fixedDuration</code>,
+            <code>randomDuration</code> and <code>when</code>).
         </dd>
         <dt>Preserve control properties in messages</dt>
         <dd>
-            If selected, control properties as described below in chapter
+            If selected, control properties as described below in section
             <i>Input</i> are not deleted from input messages and hence still
             be present in the messages when they are sent to the output port.
         </dd>
         <dt>Ignore control properties in messages</dt>
         <dd>
-            If selected, control properties as described below in chapter
+            If selected, control properties as described below in section
             <i>Input</i> are ignored. This is useful if messages to be delayed
             contain properties with the same names as the control properties
             and hence prevents their misinterpretation.
@@ -176,11 +181,6 @@ SOFTWARE.
         <dd>
             Overrides the target time when queued messages should be forwarded,
             see below for details.
-        </dd>
-        <dt class="optional">expression<span class="property-type">string</span></dt>
-        <dd>
-            Overrides the JSONata expression which evaluates when queued messages
-            should be forwarded.
         </dd>
     </dl>
     <p>

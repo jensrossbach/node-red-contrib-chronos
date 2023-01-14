@@ -8,6 +8,7 @@
             "delayType":         "Delay Type",
             "duration":          "Duration",
             "when":              "When",
+            "delay":             "Delay",
             "randomizerMillis":  "Random value always in milliseconds granularity"
         },
         "list":
