@@ -147,13 +147,13 @@ SOFTWARE.
         </dd>
         <dt>Preserve control properties in messages</dt>
         <dd>
-            If selected, control properties as described below in chapter
+            If selected, control properties as described below in section
             <i>Input</i> are not deleted from input messages and hence are still
             present in the messages when they are sent to the output port.
         </dd>
         <dt>Ignore control properties in messages</dt>
         <dd>
-            If selected, control properties as described below in chapter
+            If selected, control properties as described below in section
             <i>Input</i> are ignored. This is useful if messages to be repeated
             contain properties with the same names as the control properties
             and hence prevents their misinterpretation.
@@ -175,6 +175,10 @@ SOFTWARE.
         <dd>
             Overrides the interval for message sending repetition, see below
             for details.
+        </dd>
+        <dt class="optional">crontab<span class="property-type">string</span></dt>
+        <dd>
+            Overrides the cron table for message sending repetition.
         </dd>
         <dt class="optional">until<span class="property-type">object</span></dt>
         <dd>
