@@ -41,7 +41,7 @@ SOFTWARE.
         </select>
     </div>
     <div id="form-row-fixedDuration" class="form-row">
-        <label for="node-input-fixedDuration"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.duration"></span></label>
+        <label for="node-input-fixedDuration"><i class="fa fa-hourglass-end"></i> <span data-i18n="delay.label.duration"></span></label>
         <input id="node-input-fixedDuration" style="width: 50px !important; float: left;" value="1">
         <select id="node-input-fixedDurationUnit" style="margin-left: 4px; width: auto;">
             <option value="milliseconds" data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds"></option>
@@ -52,7 +52,7 @@ SOFTWARE.
         </select>
     </div>
     <div id="form-row-randomDuration" class="form-row">
-        <label for="node-input-randomDuration1"><i class="fa fa-clock-o"></i> <span data-i18n="delay.label.duration"></span></label>
+        <label for="node-input-randomDuration1"><i class="fa fa-hourglass-end"></i> <span data-i18n="delay.label.duration"></span></label>
         <input id="node-input-randomDuration1" style="width: 50px !important; float: left;" value="1">
         &nbsp;<span>-</span>&nbsp;
         <input id="node-input-randomDuration2" style="width: 50px !important; float: left;" value="1">
@@ -83,9 +83,10 @@ SOFTWARE.
         </span>
     </div>
     <div id="form-row-custom" class="form-row">
-        <label for="node-input-expressionField"><i class="fa fa-code"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.expression"></span></label>
-        <input type="text" id="node-input-expressionField" style="width: 70%;">
-        <input id="node-input-expression" type="hidden">
+        <label for="node-input-customDelay"><i class="fa fa-hourglass-end"></i> <span data-i18n="delay.label.delay"></span></label>
+        <input type="text" id="node-input-customDelay" style="width: 70%;">
+        <input id="node-input-customDelayType" type="hidden">
+        <input id="node-input-customDelayValue" type="hidden">
     </div>
     <div class="form-row" style="padding-top: 10px">
         <input id="node-input-randomizerMillis" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
@@ -129,14 +130,14 @@ SOFTWARE.
                     else if (this.randomDuration2 > this.randomDuration1)
                     {
                         label = this.randomDuration1
-                              + " - "
-                              + this.randomDuration2;
+                                + " - "
+                                + this.randomDuration2;
                     }
                     else
                     {
                         label = this.randomDuration2
-                              + " - "
-                              + this.randomDuration1;
+                                + " - "
+                                + this.randomDuration1;
                     }
 
                     label += " " + this._("node-red-contrib-chronos/chronos-config:common.list.unit." + this.randomDurationUnit);
@@ -169,13 +170,31 @@ SOFTWARE.
                 }
                 else if (this.delayType == "custom")
                 {
-                    if (this.expression.length <= 50)
+                    if (typeof this.expression == "string")  // backward compatibility to v1.18.x and earlier
                     {
-                        label = this.expression;
+                        if (this.expression.length <= 50)
+                        {
+                            label = this.expression;
+                        }
+                        else
+                        {
+                            label = this.expression.substring(0, 49) + "...";
+                        }
+                    }
+                    else if (this.customDelayType == "jsonata")
+                    {
+                        if (this.customDelayValue.length <= 50)
+                        {
+                            label = this.customDelayValue;
+                        }
+                        else
+                        {
+                            label = this.customDelayValue.substring(0, 49) + "...";
+                        }
                     }
                     else
                     {
-                        label = this.expression.substring(0, 49) + "...";
+                        label = this.customDelayType + "." + this.customDelayValue;
                     }
                 }
             }
@@ -253,7 +272,11 @@ SOFTWARE.
             {
                 value: false
             },
-            expression:
+            customDelayType:
+            {
+                value: "jsonata"
+            },
+            customDelayValue:
             {
                 value: "",
                 validate: function(v)
@@ -467,11 +490,22 @@ SOFTWARE.
             let randomDuration2 = $("#node-input-randomDuration2")
                             .spinner({min: 1, max: 3600, step: 1, change: validateInput});
             let when = $("#node-input-when")
-                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput], typeField: $("#node-input-whenType")});
+                            .typedInput({
+                                types: [
+                                    timeInput,
+                                    sunTimeInput,
+                                    moonTimeInput,
+                                    customInput],
+                                typeField: $("#node-input-whenType")});
             let offset = $("#node-input-offset")
                             .spinner({min: -300, max: 300, step: 1, change: validateInput});
-            let expression = $("#node-input-expressionField")
-                            .typedInput({types: ["jsonata"]});
+            let customDelay = $("#node-input-customDelay")
+                            .typedInput({
+                                types: [
+                                    "jsonata",
+                                    "global",
+                                    "flow"],
+                                typeField: $("#node-input-customDelayType")});
 
             $("#node-input-delayType").change(function()
             {
@@ -533,18 +567,27 @@ SOFTWARE.
                 node.randomizerMillis = false;
                 $("#node-input-randomizerMillis").val(node.randomizerMillis);
 
-                node.expression = "";
-                $("#node-input-expression").val(node.expression);
+                node.customDelayValue = "";
+                $("#node-input-customDelay").val(node.customDelayValue);
+            }
+
+            // backward compatibility to v1.18.x and earlier
+            if (typeof node.customDelayType == "undefined")
+            {
+                node.customDelayType = "jsonata";
+                $("#node-input-customDelayType").val(node.customDelayType);
+                node.customDelayValue = node.expression;
+                $("#node-input-customDelayValue").val(node.customDelayValue);
             }
 
             $("#node-input-delayType").change();
             when.typedInput("value", $("#node-input-whenValue").val());
-            expression.typedInput("value", $("#node-input-expression").val());
+            customDelay.typedInput("value", $("#node-input-customDelayValue").val());
         },
         oneditsave: function()
         {
             $("#node-input-whenValue").val($("#node-input-when").typedInput("value"));
-            $("#node-input-expression").val($("#node-input-expressionField").typedInput("value"));
+            $("#node-input-customDelayValue").val($("#node-input-customDelay").typedInput("value"));
         }
     });
 </script>

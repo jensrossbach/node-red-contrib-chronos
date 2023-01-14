@@ -45,6 +45,53 @@ module.exports = function(RED)
         node.config = RED.nodes.getNode(settings.config);
         node.locale = require("os-locale").sync();
 
+        // backward compatibility to v1.17.x and earlier
+        if (typeof settings.delayType == "undefined")
+        {
+            settings.delayType = "pointInTime";
+        }
+        if (typeof settings.fixedDuration == "undefined")
+        {
+            settings.fixedDuration = 1;
+        }
+        if (typeof settings.randomDuration1 == "undefined")
+        {
+            settings.randomDuration1 = 1;
+        }
+        if (typeof settings.randomDuration2 == "undefined")
+        {
+            settings.randomDuration2 = 5;
+        }
+        if (typeof settings.fixedDurationUnit == "undefined")
+        {
+            settings.fixedDurationUnit = "seconds";
+        }
+        if (typeof settings.randomDurationUnit == "undefined")
+        {
+            settings.randomDurationUnit = "seconds";
+        }
+        if (typeof settings.randomizerMillis == "undefined")
+        {
+            settings.randomizerMillis = false;
+        }
+
+        // backward compatibility to v1.18.x and earlier
+        if (typeof settings.customDelayType == "undefined")
+        {
+            settings.customDelayType = "jsonata";
+        }
+        if (typeof settings.customDelayValue == "undefined")
+        {
+            if (typeof settings.expression != "undefined")
+            {
+                settings.customDelayValue = settings.expression;
+            }
+            else
+            {
+                settings.customDelayValue = "";
+            }
+        }
+
         if (!node.config)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
@@ -65,25 +112,47 @@ module.exports = function(RED)
             chronos.printNodeInfo(node);
             node.status({});
 
-            node.delayType = (typeof settings.delayType == "undefined") ? "pointInTime" : settings.delayType;
-            node.fixedDuration = (typeof settings.fixedDuration == "undefined") ? 1 : parseInt(settings.fixedDuration);
-            node.randomDuration1 = (typeof settings.randomDuration1 == "undefined") ? 1 : parseInt(settings.randomDuration1);
-            node.randomDuration2 = (typeof settings.randomDuration2 == "undefined") ? 5 : parseInt(settings.randomDuration2);
-            node.fixedDurationUnit = (typeof settings.fixedDurationUnit == "undefined") ? "seconds" : settings.fixedDurationUnit;
-            node.randomDurationUnit = (typeof settings.randomDurationUnit == "undefined") ? "seconds" : settings.randomDurationUnit;
-            node.randomizerMillis = (settings.randomizerMillis === true);
+            node.delayType = settings.delayType;
+            node.fixedDuration = parseInt(settings.fixedDuration);
+            node.randomDuration1 = parseInt(settings.randomDuration1);
+            node.randomDuration2 = parseInt(settings.randomDuration2);
+            node.fixedDurationUnit = settings.fixedDurationUnit;
+            node.randomDurationUnit = settings.randomDurationUnit;
+            node.randomizerMillis = settings.randomizerMillis;
             node.whenType = settings.whenType;
             node.whenValue = settings.whenValue;
             node.offset = parseInt(settings.offset);
             node.random = settings.random;
-            node.expression = (typeof settings.expression == "undefined") ? "" : settings.expression;
+            node.customDelayType = settings.customDelayType;
+            node.customDelayValue = settings.customDelayValue;
             node.preserveCtrlProps = settings.preserveCtrlProps;
             node.ignoreCtrlProps = settings.ignoreCtrlProps;
 
             node.queueDuration = -1;
             node.sendTime = null;
 
-            if ((node.delayType == "pointInTime") && (node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
+            let valid = true;
+            if ((node.delayType == "custom") && (node.customDelayType == "jsonata"))
+            {
+                try
+                {
+                    node.expression = chronos.getJSONataExpression(RED, node, node.customDelayValue);
+                }
+                catch(e)
+                {
+                    node.error(e.message);
+                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                    valid = false;
+                }
+            }
+
+            if (!valid)
+            {
+                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+            }
+            else if ((node.delayType == "pointInTime") && (node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
             {
                 node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
                 node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -189,7 +258,6 @@ module.exports = function(RED)
             let whenValue = node.whenValue;
             let whenOffset = node.offset;
             let whenRandom = node.random;
-            let expression = node.expression;
 
             if (node.ignoreCtrlProps)
             {
@@ -197,7 +265,7 @@ module.exports = function(RED)
             }
             else
             {
-                if (hasFixedDurationOverride(msg.fixedDuration))
+                if (isValidFixedDuration(msg.fixedDuration))
                 {
                     node.debug("Input message has override property for fixed duration");
 
@@ -213,7 +281,7 @@ module.exports = function(RED)
                     }
                 }
 
-                if (hasRandomDurationOverride(msg.randomDuration))
+                if (isValidRandomDuration(msg.randomDuration))
                 {
                     node.debug("Input message has override property for random duration");
 
@@ -231,7 +299,7 @@ module.exports = function(RED)
                     }
                 }
 
-                if (hasWhenOverride(msg.when))
+                if (isValidWhenTime(msg.when))
                 {
                     node.debug("Input message has override property for point in time");
 
@@ -248,25 +316,45 @@ module.exports = function(RED)
                         delete msg.when;
                     }
                 }
-
-                if (hasExpressionOverride(msg.expression))
-                {
-                    node.debug("Input message has override property for expression");
-
-                    tearDownDelayTimer();
-
-                    delayType = "custom";
-                    expression = msg.expression;
-
-                    if (!node.preserveCtrlProps)
-                    {
-                        delete msg.expression;
-                    }
-                }
             }
 
             if (!node.delayTimer)
             {
+                if ((delayType == "custom") && (node.customDelayType != "jsonata"))
+                {
+                    let ctx = RED.util.parseContextStore(node.customDelayValue);
+                    let ctxData = node.context()[node.customDelayType].get(ctx.key, ctx.store);
+
+                    if (isValidFixedDuration(ctxData))
+                    {
+                        delayType = "fixedDuration";
+                        fixedDuration = ctxData.value;
+                        fixedDurationUnit = ctxData.unit;
+                    }
+                    else if (isValidRandomDuration(ctxData))
+                    {
+                        delayType = "randomDuration";
+                        randomDuration1 = ctxData.value1;
+                        randomDuration2 = ctxData.value2;
+                        randomDurationUnit = ctxData.unit;
+                        randomizerMillis = (ctxData.randomizerMillis === true);
+                    }
+                    else if (isValidWhenTime(ctxData))
+                    {
+                        delayType = "pointInTime";
+                        whenType = ctxData.type;
+                        whenValue = ctxData.value;
+                        whenOffset = (typeof ctxData.offset == "number") ? ctxData.offset : 0;
+                        whenRandom = (ctxData.random === true);
+                    }
+                    else
+                    {
+                        throw new chronos.TimeError(
+                                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
+                                    {store: ctx.store, key: ctx.key, value: ctxData});
+                    }
+                }
+
                 if (delayType == "fixedDuration")
                 {
                     setupFixedDurationDelayTimer(fixedDuration, fixedDurationUnit);
@@ -281,7 +369,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    setupCustomDelayTimer(expression, msg);
+                    setupCustomDelayTimer(msg);
                 }
             }
 
@@ -404,21 +492,20 @@ module.exports = function(RED)
             }, node.sendTime.diff(now));
         }
 
-        function setupCustomDelayTimer(expression, msg)
+        function setupCustomDelayTimer(msg)
         {
-            node.debug("Set up custom timer for delayed message with expression " + expression);
+            node.debug("Set up custom timer for delayed message with expression " + node.customDelayValue);
 
             const now = chronos.getCurrentTime(node);
             let result = null;
 
             try
             {
-                let expr = chronos.getJSONataExpression(RED, node, expression);
-                result = RED.util.evaluateJSONataExpression(expr, msg);
+                result = RED.util.evaluateJSONataExpression(node.expression, msg);
             }
             catch(e)
             {
-                const details = {expression: expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                const details = {expression: node.customDelayValue, code: e.code, description: e.message, position: e.position, token: e.token};
                 if (e.value)
                 {
                     details.value = e.value;
@@ -430,7 +517,7 @@ module.exports = function(RED)
             if ((typeof result != "number") && (typeof result != "string"))
             {
                 throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
-                                            {expression: expression, result: result});
+                                            {expression: node.customDelayValue, result: result});
             }
 
             if ((typeof result == "string") || (result > now.valueOf()))  // assumed to be absolute send time
@@ -444,7 +531,7 @@ module.exports = function(RED)
             else
             {
                 throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
-                                            {expression: expression, result: result});
+                                            {expression: node.customDelayValue, result: result});
             }
 
             if (node.queueDuration >= 0)
@@ -462,13 +549,13 @@ module.exports = function(RED)
                 {
                     node.sendTime = null;
                     throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
-                                                {expression: expression, result: result});
+                                                {expression: node.customDelayValue, result: result});
                 }
                 if ((node.sendTime.diff(now) < 1) || (node.sendTime.diff(now) > MS_PER_WEEK))
                 {
                     node.sendTime = null;
                     throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange"),
-                                                {expression: expression, result: result});
+                                                {expression: node.customDelayValue, result: result});
                 }
 
                 node.debug("Starting timer for delayed message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
@@ -510,7 +597,7 @@ module.exports = function(RED)
             return value * UNIT_MULTIPLIER[unit];
         }
 
-        function hasFixedDurationOverride(data)
+        function isValidFixedDuration(data)
         {
             if ((typeof data != "object") || !data)
             {
@@ -530,7 +617,7 @@ module.exports = function(RED)
             return true;
         }
 
-        function hasRandomDurationOverride(data)
+        function isValidRandomDuration(data)
         {
             if ((typeof data != "object") || !data)
             {
@@ -556,7 +643,7 @@ module.exports = function(RED)
             return true;
         }
 
-        function hasWhenOverride(data)
+        function isValidWhenTime(data)
         {
             if ((typeof data != "object") || !data)
             {
@@ -587,16 +674,6 @@ module.exports = function(RED)
             }
 
             if ((typeof data.random != "undefined") && (typeof data.random != "boolean"))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        function hasExpressionOverride(data)
-        {
-            if ((typeof data != "string") || !data)
             {
                 return false;
             }

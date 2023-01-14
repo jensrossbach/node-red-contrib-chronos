@@ -9,6 +9,7 @@
             "mode":             "Mode",
             "interval":         "Interval",
             "crontab":          "Cron Table",
+            "repetition":       "Repetition",
             "until":            "Until",
             "date":             "Date",
             "datePlaceholder":  "YYYY-MM-DD",

@@ -61,19 +61,48 @@ describe("repeat until node", function()
 
         it("should correctly load", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", interval: 1, intervalUnit: "seconds", untilType: "time", untilValue: "12:00", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "*/5 * * * * *", customRepetitionType: "flow", customRepetitionValue: "myVar", untilType: "time", untilValue: "12:00", untilOffset: 0, untilRandom: false, preserveCtrlProps: true, ignoreCtrlProps: true, msgIngress: "forward"}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
             rn1.status.should.be.calledOnce();
             rn1.should.have.property("name", "repeat");
+            rn1.should.have.property("mode", "simple");
             rn1.should.have.property("interval", 1);
             rn1.should.have.property("intervalUnit", "seconds");
+            rn1.should.have.property("crontab", "*/5 * * * * *");
+            rn1.should.have.property("customRepetitionType", "flow");
+            rn1.should.have.property("customRepetitionValue", "myVar");
             rn1.should.have.property("untilType", "time");
             rn1.should.have.property("untilValue", "12:00");
             rn1.should.have.property("untilOffset", 0);
             rn1.should.have.property("untilRandom", false);
             rn1.should.have.property("preserveCtrlProps", true);
+            rn1.should.have.property("ignoreCtrlProps", true);
+            rn1.should.have.property("msgIngress", "forward");
+        });
+
+        it("should preserve backward compatibility", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", interval: 1, intervalUnit: "seconds", expression: "myExpression", untilType: "time", untilValue: "12:00", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+            rn1.status.should.be.calledOnce();
+            rn1.should.have.property("name", "repeat");
+            rn1.should.have.property("mode", "simple");
+            rn1.should.have.property("interval", 1);
+            rn1.should.have.property("intervalUnit", "seconds");
+            rn1.should.have.property("crontab", "");
+            rn1.should.have.property("customRepetitionType", "jsonata");
+            rn1.should.have.property("customRepetitionValue", "myExpression");
+            rn1.should.have.property("untilValue", "12:00");
+            rn1.should.have.property("untilType", "time");
+            rn1.should.have.property("untilValue", "12:00");
+            rn1.should.have.property("untilOffset", 0);
+            rn1.should.have.property("untilRandom", false);
+            rn1.should.have.property("preserveCtrlProps", true);
+            rn1.should.have.property("msgIngress", "forward:forced");
         });
 
         it("should fail due to missing configuration", async function()
@@ -128,6 +157,18 @@ describe("repeat until node", function()
             rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
+        it("should fail due to invalid expression", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "invalid[", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            rn1.receive({payload: "test"});
+            rn1.error.getCall(0).should.be.calledWith("Expected \"]\" before end of expression");
+            rn1.error.getCall(1).should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
+        });
+
         it("should fail due to invalid until time", async function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "invalid", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
@@ -138,15 +179,16 @@ describe("repeat until node", function()
             rn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
 
-        it("should preserve backward compatibility to v1.14.x and earlier", async function()
+        it("should fail due to invalid until expression", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", interval: 1, intervalUnit: "seconds", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, preserveCtrlProps: true}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "jsonata", untilValue: "invalid[", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
-            rn1.mode.should.equal("simple");
-            rn1.crontab.should.equal("");
-            rn1.msgIngress.should.equal("forward:forced");
+
+            rn1.receive({payload: "test"});
+            rn1.error.getCall(0).should.be.calledWith("Expected \"]\" before end of expression");
+            rn1.error.getCall(1).should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidConfig");
         });
     });
 
@@ -849,18 +891,7 @@ describe("repeat until node", function()
             rn1.error.should.be.calledWith("error message");
         });
 
-        it("should handle time error caused by ending time (invalid JSONata expression 1)", async function()
-        {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "jsonata", untilValue: "invalid[", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
-
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
-
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "invalid[", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any, value: sinon.match.any}});
-        });
-
-        it("should handle time error caused by ending time (invalid JSONata expression 2)", async function()
+        it("should handle time error caused by ending time (invalid JSONata expression)", async function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "jsonata", untilValue: "$invalFunc()", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
@@ -880,6 +911,24 @@ describe("repeat until node", function()
 
             rn1.receive({payload: "test"});
             rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notBoolean", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "42", result: 42}});
+        });
+
+        it("should handle time error caused by invalid ending time from context variable", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "flow", untilValue: "invalidVariable", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            sinon.stub(rn1, "context").returns(ctx);
+            ctx.flow.get = sinon.fake.returns("42");
+            ctx.global.get = sinon.fake.returns(undefined);
+
+            rn1.receive({payload: "test"});
+            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {payload: "test", _msgid: sinon.match.any, errorDetails: {store: "testStore", key: "testKey", value: "42"}});
         });
     });
 
@@ -1130,6 +1179,202 @@ describe("repeat until node", function()
                     curTime += 60000;
                     clock.tick(60000);
                     clock.setTimeout.should.be.calledWith(sinon.match.any, 60000).and.have.callCount(2);
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should repeat message until ending time from context variable is reached", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "flow", untilValue: "testVariable", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    sinon.stub(rn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns({type: "time", value: "00:00:03", offset: 0, random: false});
+                    ctx.global.get = sinon.fake.returns(undefined);
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    rn1.context.should.be.calledOnce();
+                    ctx.flow.get.should.be.calledWith("testKey", "testStore");
+
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(3);
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should repeat message until ending date and time from context variable is reached", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 24, intervalUnit: "hours", crontab: "", untilType: "global", untilValue: "testVariable", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+            curTime = 946684800000;  // 2000-01-01 00:00:00
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    sinon.stub(rn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns(undefined);
+                    ctx.global.get = sinon.fake.returns({type: "time", value: "00:05:00", date: "2000-01-03", offset: 0, random: false});
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    rn1.context.should.be.calledOnce();
+                    ctx.global.get.should.be.calledWith("testKey", "testStore");
+
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    curTime += 86400000;
+                    clock.tick(86400000);
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 86400000).and.have.callCount(2);
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should repeat message until next message via context variable", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "flow", untilValue: "testVariable", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+                    let count = 0;
+
+                    sinon.stub(rn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns(null);
+                    ctx.global.get = sinon.fake.returns(undefined);
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            count++;
+                            msg.should.have.property("payload", "test" + ((count <= 7) ? 1 : 2));
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test1"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    rn1.context.should.be.calledOnce();
+                    ctx.flow.get.should.be.calledWith("testKey", "testStore");
+
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(7);
+                    clock.setTimeout.resetHistory();
+                    curTime = 0;
+                    rn1.receive({payload: "test2"});
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    curTime += 1000;
+                    clock.tick(1000);
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(7);
                     done();
                 }
                 catch (e)
@@ -1729,7 +1974,7 @@ describe("repeat until node", function()
 
         it("should repeat with relative next time", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
 
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").returns(2000);
             helper.load([configNode, repeatNode], flow, credentials, function()
@@ -1776,7 +2021,7 @@ describe("repeat until node", function()
 
         it("should repeat with absolute next time", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
 
             sinon.stub(helper._RED.util, "evaluateJSONataExpression")
                         .onCall(0).returns(1002000)
@@ -1828,7 +2073,7 @@ describe("repeat until node", function()
 
         it("should repeat with string-based absolute next time", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
 
             sinon.stub(helper._RED.util, "evaluateJSONataExpression")
                         .onCall(0).returns("1970-01-01T00:16:42.000+0000")
@@ -1880,7 +2125,7 @@ describe("repeat until node", function()
 
         it("should repeat only once due to exceeded end time", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "60000", untilType: "time", untilValue: "00:01", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "60000", untilType: "time", untilValue: "00:01", untilOffset: 0, untilRandom: false, msgIngress: "noop", preserveCtrlProps: true}, hlpNode, cfgNode];
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
@@ -1915,9 +2160,13 @@ describe("repeat until node", function()
             });
         });
 
-        it("should override expression", function(done)
+        it("should repeat according to interval from context variable", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "2000", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 5, intervalUnit: "minutes", crontab: "", customRepetitionType: "flow", customRepetitionValue: "testVariable", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.spy(clock, "setTimeout");
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
@@ -1926,6 +2175,60 @@ describe("repeat until node", function()
                     const rn1 = helper.getNode("rn1");
                     const hn1 = helper.getNode("hn1");
 
+                    sinon.stub(rn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns({value: 1, unit: "seconds"});
+                    ctx.global.get = sinon.fake.returns(undefined);
+
+                    hn1.on("input", function(msg)
+                    {
+                        try
+                        {
+                            msg.should.have.property("payload", "test");
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    rn1.context.should.be.calledOnce();
+                    ctx.flow.get.should.be.calledWith("testKey", "testStore");
+
+                    clock.tick(1000);
+                    clock.tick(1000);
+                    clock.tick(1000);
+                    clock.tick(1000);
+                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(5);
+                    done();
+                }
+                catch (e)
+                {
+                    done(e);
+                }
+            });
+        });
+
+        it("should repeat according to cron table from context variable", function(done)
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "*/5 * * * *", customRepetitionType: "global", customRepetitionValue: "testVariable", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                try
+                {
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+
+                    sinon.stub(rn1, "context").returns(ctx);
+                    ctx.flow.get = sinon.fake.returns(undefined);
+                    ctx.global.get = sinon.fake.returns("*/2 * * * * *");
+
                     let numOutMsgs = 0;
                     hn1.on("input", function(msg)
                     {
@@ -1933,7 +2236,6 @@ describe("repeat until node", function()
                         {
                             numOutMsgs++;
                             msg.should.have.property("payload", "test");
-                            msg.should.have.property("expression", "4000");
 
                             if (numOutMsgs == 4)
                             {
@@ -1946,10 +2248,15 @@ describe("repeat until node", function()
                         }
                     });
 
-                    rn1.receive({payload: "test", expression: "4000"});
-                    clock.tick(4000);
-                    clock.tick(4000);
-                    clock.tick(4000);
+                    rn1.receive({payload: "test"});
+
+                    helper._RED.util.parseContextStore.should.be.calledWith("testVariable");
+                    rn1.context.should.be.calledOnce();
+                    ctx.global.get.should.be.calledWith("testKey", "testStore");
+
+                    clock.tick(2000);
+                    clock.tick(2000);
+                    clock.tick(2000);
                 }
                 catch (e)
                 {
@@ -1958,113 +2265,9 @@ describe("repeat until node", function()
             });
         });
 
-        it("should override expression and not preserve", function(done)
+        it("should handle time error caused by JSONata expression (invalid expression)", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "2000", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, hlpNode, cfgNode];
-
-            helper.load([configNode, repeatNode], flow, credentials, function()
-            {
-                try
-                {
-                    const rn1 = helper.getNode("rn1");
-                    const hn1 = helper.getNode("hn1");
-
-                    let numOutMsgs = 0;
-                    hn1.on("input", function(msg)
-                    {
-                        try
-                        {
-                            numOutMsgs++;
-                            msg.should.have.property("payload", "test");
-                            msg.should.not.have.property("expression");
-
-                            if (numOutMsgs == 4)
-                            {
-                                done();
-                            }
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    rn1.receive({payload: "test", expression: "4000"});
-                    clock.tick(4000);
-                    clock.tick(4000);
-                    clock.tick(4000);
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
-        });
-
-        function testInvalidExpressionOverride(title, override)
-        {
-            it("should fall back to configured expression: " + title, function(done)
-            {
-                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "2000", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
-
-                helper.load([configNode, repeatNode], flow, credentials, function()
-                {
-                    try
-                    {
-                        const rn1 = helper.getNode("rn1");
-                        const hn1 = helper.getNode("hn1");
-
-                        let numOutMsgs = 0;
-                        hn1.on("input", function(msg)
-                        {
-                            try
-                            {
-                                numOutMsgs++;
-                                msg.should.have.property("payload", "test");
-                                msg.should.have.property("expression", override);
-
-                                if (numOutMsgs == 4)
-                                {
-                                    done();
-                                }
-                            }
-                            catch (e)
-                            {
-                                done(e);
-                            }
-                        });
-
-                        rn1.receive({payload: "test", expression: override});
-                        clock.tick(2000);
-                        clock.tick(2000);
-                        clock.tick(2000);
-                    }
-                    catch (e)
-                    {
-                        done(e);
-                    }
-                });
-            });
-        }
-
-        testInvalidExpressionOverride("null override", null);
-        testInvalidExpressionOverride("empty override", "");
-        testInvalidExpressionOverride("invalid override", 42);
-
-        it("should handle time error caused by JSONata expression (invalid expression 1)", async function()
-        {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "invalid[", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
-
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
-
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "invalid[", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any, value: sinon.match.any}});
-        });
-
-        it("should handle time error caused by JSONata expression (invalid expression 2)", async function()
-        {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "$invalFunc()", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "$invalFunc()", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
@@ -2075,7 +2278,7 @@ describe("repeat until node", function()
 
         it("should handle time error caused by JSONata expression (not time value)", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "true", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
@@ -2086,7 +2289,7 @@ describe("repeat until node", function()
 
         it("should handle time error caused by JSONata expression (interval too small)", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "999", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "999", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
@@ -2097,7 +2300,7 @@ describe("repeat until node", function()
 
         it("should handle time error caused by JSONata expression (interval too large)", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "604800001", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "604800001", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
@@ -2108,13 +2311,31 @@ describe("repeat until node", function()
 
         it("should handle time error caused by JSONata expression (invalid time)", async function()
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", expression: "\"invalid\"", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "\"invalid\"", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
             await helper.load([configNode, repeatNode], flow, credentials);
             const rn1 = helper.getNode("rn1");
 
             rn1.receive({payload: "test"});
             rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "\"invalid\"", result: "invalid"}});
+        });
+
+        it("should handle time error caused by invalid context variable", async function()
+        {
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "flow", customRepetitionValue: "invalidVariable", untilType: "nextMsg", untilValue: "", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
+            const ctx = {flow: {}, global: {}};
+
+            sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
+
+            await helper.load([configNode, repeatNode], flow, credentials);
+            const rn1 = helper.getNode("rn1");
+
+            sinon.stub(rn1, "context").returns(ctx);
+            ctx.flow.get = sinon.fake.returns(false);
+            ctx.global.get = sinon.fake.returns(undefined);
+
+            rn1.receive({payload: "test"});
+            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {payload: "test", _msgid: sinon.match.any, errorDetails: {store: "testStore", key: "testKey", value: false}});
         });
     });
 });

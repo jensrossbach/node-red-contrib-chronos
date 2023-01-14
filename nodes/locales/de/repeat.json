@@ -9,6 +9,7 @@
             "mode":             "Modus",
             "interval":         "Intervall",
             "crontab":          "Cron-Tabelle",
+            "repetition":       "Iteration",
             "until":            "Bis",
             "date":             "Datum",
             "datePlaceholder":  "JJJJ-MM-TT",
