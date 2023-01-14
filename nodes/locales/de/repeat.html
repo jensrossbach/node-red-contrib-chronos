@@ -155,14 +155,14 @@ SOFTWARE.
         </dd>
         <dt>Steuereigenschaften in Nachrichten beibehalten</dt>
         <dd>
-            Wenn aktiviert, werden Steuereigenschaften, wie unten in Kapitel
+            Wenn aktiviert, werden Steuereigenschaften, wie unten in Abschnitt
             <i>Eingabe</i> beschrieben, nicht aus den Eingangsnachrichten gelöscht
             und sind beim Senden an den Ausgabe-Port noch in den Nachrichten
             vorhanden.
         </dd>
         <dt>Steuereigenschaften in Nachrichten ignorieren</dt>
         <dd>
-            Wenn aktiviert, werden Steuereigenschaften, wie unten in Kapitel
+            Wenn aktiviert, werden Steuereigenschaften, wie unten in Abschnitt
             <i>Eingabe</i> beschrieben, ignoriert. Das ist sinnvoll falls
             zu wiederholende Eingabenachrichten Eigenschaften mit denselben
             Namen wie die Steuereigenschaften enthalten und verhindert somit
@@ -185,6 +185,10 @@ SOFTWARE.
         <dd>
             Überschreibt das Intervall zum Wiederholen der Nachricht, siehe unten
             für weitere Informationen.
+        </dd>
+        <dt class="optional">crontab<span class="property-type">string</span></dt>
+        <dd>
+            Überschreibt die Cron-Tabelle zum Wiederholen der Nachricht.
         </dd>
         <dt class="optional">until<span class="property-type">object</span></dt>
         <dd>
