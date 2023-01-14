@@ -45,7 +45,7 @@ The detailed documentation of each node is available in the wiki of the GitHub r
 **&rarr; [Documentation](https://github.com/jensrossbach/node-red-contrib-chronos/wiki)**
 
 ## License
-Copyright (c) 2022 Jens-Uwe Rossbach
+Copyright (c) 2023 Jens-Uwe Rossbach
 
 This code is licensed under the MIT License.
 
