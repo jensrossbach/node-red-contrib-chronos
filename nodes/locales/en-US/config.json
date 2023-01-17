@@ -162,15 +162,16 @@
     {
         "label":
         {
-            "node":          "configuration",
-            "latitude":      "Latitude",
-            "longitude":     "Longitude",
-            "timezone":      "Time Zone",
-            "hostTZ":        "from system settings",
-            "sunPositions":  "Custom Sun Positions",
-            "angle":         "Angle",
-            "riseName":      "Rise Name",
-            "setName":       "Set Name"
+            "node":               "configuration",
+            "latitude":           "Latitude",
+            "longitude":          "Longitude",
+            "locationDetection":  "Auto detect location",
+            "timezone":           "Time Zone",
+            "hostTZ":             "from system settings",
+            "sunPositions":       "Custom Sun Positions",
+            "angle":              "Angle",
+            "riseName":           "Rise Name",
+            "setName":            "Set Name"
         }
     }
 }

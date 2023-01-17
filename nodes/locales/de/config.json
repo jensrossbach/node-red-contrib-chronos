@@ -162,15 +162,16 @@
     {
         "label":
         {
-            "node":          "Konfiguration",
-            "latitude":      "Breitengrad",
-            "longitude":     "Längengrad",
-            "timezone":      "Zeitzone",
-            "hostTZ":        "aus System-Einstellungen",
-            "sunPositions":  "Benutzerdefinierte Sonnenstände",
-            "angle":         "Winkel",
-            "riseName":      "Name (aufgehend)",
-            "setName":       "Name (untergehend)"
+            "node":              "Konfiguration",
+            "latitude":          "Breitengrad",
+            "longitude":         "Längengrad",
+            "locationDetection": "Position automatisch ermitteln",
+            "timezone":          "Zeitzone",
+            "hostTZ":            "aus System-Einstellungen",
+            "sunPositions":      "Benutzerdefinierte Sonnenstände",
+            "angle":             "Winkel",
+            "riseName":          "Name (aufgehend)",
+            "setName":           "Name (untergehend)"
         }
     }
 }
