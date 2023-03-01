@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] - 2023-03-01
+
+### Added
+- Added support for dynamic repetition data and until times from context variables in repeat node.
+- Added support for dynamic durations and until times from context variables in delay node.
+- Added button for auto detection of location to configuration node.
+
+### Fixed
+- Fixed status update with 'disabled' information when enabling schedules in scheduler node.
+- Optimized updating of scheduler node status to prevent multiple updates with the same status.
+
 ## [1.18.4] - 2022-12-12
 
 ### Fixed
