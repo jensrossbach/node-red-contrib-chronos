@@ -411,6 +411,7 @@ module.exports = function(RED)
                 if (!node.disabledSchedule)
                 {
                     startTimers();
+                    updateStatus();
                 }
             }
         }
@@ -490,8 +491,8 @@ module.exports = function(RED)
                     data.config.trigger = ctxData.trigger;
                     data.config.output = ctxData.output;
                 }
-                else if (("type" in data.config.output) &&  // backward compatibility, v1.8.x configurations have empty output or only port property under output
-                         validateContextData(ctxData))
+                else if (("type" in data.config.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
+                            && validateContextData(ctxData))
                 {
                     data.orig = {trigger: data.config.trigger};
                     data.config.trigger = ctxData;
@@ -629,7 +630,10 @@ module.exports = function(RED)
                     data.timer = setTimeout(handleTimeout, data.triggerTime.diff(now), data, true);
                 }
 
-                updateStatus();
+                if (repeat)
+                {
+                    updateStatus();
+                }
             }
             catch (e)
             {
@@ -754,10 +758,13 @@ module.exports = function(RED)
         {
             try
             {
-                return RED.util.evaluateJSONataExpression(expression, {name: node.name,
-                                                                       config: {name: node.config.name,
-                                                                                latitude: node.config.latitude,
-                                                                                longitude: node.config.longitude}});
+                return RED.util.evaluateJSONataExpression(
+                                    expression, {
+                                        name: node.name,
+                                        config: {
+                                            name: node.config.name,
+                                            latitude: node.config.latitude,
+                                            longitude: node.config.longitude}});
             }
             catch (e)
             {
