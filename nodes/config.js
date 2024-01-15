@@ -32,8 +32,32 @@ module.exports = function(RED)
 
         this.name = config.name;
         this.timezone = config.timezone;
-        this.latitude = parseFloat(this.credentials.latitude);
-        this.longitude = parseFloat(this.credentials.longitude);
+
+        if (config.latitudeType === "env")
+        {
+            this.latitude = parseFloat(
+                                RED.util.evaluateNodeProperty(
+                                            this.credentials.latitude,
+                                            config.latitudeType,
+                                            this));
+        }
+        else
+        {
+            this.latitude = parseFloat(this.credentials.latitude);
+        }
+
+        if (config.longitudeType === "env")
+        {
+            this.longitude = parseFloat(
+                                RED.util.evaluateNodeProperty(
+                                            this.credentials.longitude,
+                                            config.longitudeType,
+                                            this));
+        }
+        else
+        {
+            this.longitude = parseFloat(this.credentials.longitude);
+        }
 
         if (validateCustomTimes(config.sunPositions))
         {

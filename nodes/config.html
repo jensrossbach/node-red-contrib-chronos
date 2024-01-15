@@ -31,11 +31,13 @@ SOFTWARE.
         <div style="display: inline-block; width: auto; vertical-align: middle;">
             <div>
                 <label for="node-config-input-latitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.latitude"></span></label>
-                <input id="node-config-input-latitude" data-i18n="[placeholder]config.label.latitude">
+                <input type="text" id="node-config-input-latitude" style="width: 60%;">
+                <input id="node-config-input-latitudeType" type="hidden">
             </div>
             <div style="margin-top: 12px;">
                 <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
-                <input id="node-config-input-longitude" data-i18n="[placeholder]config.label.longitude">
+                <input type="text" id="node-config-input-longitude" style="width: 60%;">
+                <input id="node-config-input-longitudeType" type="hidden">
             </div>
         </div>
         <div style="display: inline-block; width: auto; margin-left: 10px;">
@@ -71,6 +73,14 @@ SOFTWARE.
             name:
             {
                 value: ""
+            },
+            latitudeType:
+            {
+                value: "num"
+            },
+            longitudeType:
+            {
+                value: "num"
             },
             timezone:
             {
@@ -143,19 +153,23 @@ SOFTWARE.
 
             const updateMap = function()
             {
-                let latitude = parseFloat($("#node-config-input-latitude").spinner("value"));
-                let longitude = parseFloat($("#node-config-input-longitude").spinner("value"));
-
-                if (!Number.isNaN(latitude) && !Number.isNaN(longitude))
+                if (($("#node-config-input-latitude").typedInput("type") == "num") &&
+                    ($("#node-config-input-longitude").typedInput("type") == "num"))
                 {
-                    $("#node-config-input-map").attr("src", "https://www.openstreetmap.org/export/embed.html?bbox="
-                                                            + (longitude - 0.001) + ","
-                                                            + (latitude - 0.001) + ","
-                                                            + (longitude + 0.001) + ","
-                                                            + (latitude + 0.001)
-                                                            + "&layer=mapnik&marker="
-                                                            + latitude + ","
-                                                            + longitude);
+                    let latitude = parseFloat($("#node-config-input-latitude").typedInput("value"));
+                    let longitude = parseFloat($("#node-config-input-longitude").typedInput("value"));
+
+                    if (!Number.isNaN(latitude) && !Number.isNaN(longitude))
+                    {
+                        $("#node-config-input-map").attr("src", "https://www.openstreetmap.org/export/embed.html?bbox="
+                                                                + (longitude - 0.001) + ","
+                                                                + (latitude - 0.001) + ","
+                                                                + (longitude + 0.001) + ","
+                                                                + (latitude + 0.001)
+                                                                + "&layer=mapnik&marker="
+                                                                + latitude + ","
+                                                                + longitude);
+                    }
                 }
             };
 
@@ -184,24 +198,6 @@ SOFTWARE.
                 updateMap();
             };
 
-            const latitudeInput =
-            {
-                min: -90,
-                max: 90,
-                step: 0.000001,
-                numberFormat: "n",
-                change: validateInput
-            };
-
-            const longitudeInput =
-            {
-                min: -180,
-                max: 180,
-                step: 0.000001,
-                numberFormat: "n",
-                change: validateInput
-            };
-
             const sunAngleInput =
             {
                 min: -90,
@@ -217,8 +213,11 @@ SOFTWARE.
                 {
                     navigator.geolocation.getCurrentPosition(pos =>
                     {
-                        $("#node-config-input-latitude").spinner("value", pos.coords.latitude);
-                        $("#node-config-input-longitude").spinner("value", pos.coords.longitude);
+                        $("#node-config-input-latitude").typedInput("value", pos.coords.latitude);
+                        $("#node-config-input-longitude").typedInput("value", pos.coords.longitude);
+                        $("#node-config-input-latitude").typedInput("type", "num");
+                        $("#node-config-input-longitude").typedInput("type", "num");
+
                         updateMap();
                     });
                 });
@@ -228,8 +227,11 @@ SOFTWARE.
                 $("#node-config-input-locationDetection").hide();
             }
 
-            $("#node-config-input-latitude").spinner(latitudeInput);
-            $("#node-config-input-longitude").spinner(longitudeInput);
+            let latitude = $("#node-config-input-latitude")
+                            .typedInput({types: ["num", "env"], typeField: "#node-config-input-latitudeType"});
+            let longitude = $("#node-config-input-longitude")
+                            .typedInput({types: ["num", "env"], typeField: "#node-config-input-longitudeType"});
+
             updateMap();
 
             let sunPositionList = $("#node-input-sunPositionList").css("min-width", "500px").css("min-height", "150px").editableList(
@@ -267,6 +269,32 @@ SOFTWARE.
                     setName.val(data.setName);
 
                     item[0].appendChild(fragment);
+                }
+            });
+
+            latitude.on("change", function(event, type, value)
+            {
+                if ((type == "num") && (longitude.typedInput("type") == "num"))
+                {
+                    updateMap();
+                    $("#node-config-input-map").show();
+                }
+                else if (type == "env")
+                {
+                    $("#node-config-input-map").hide();
+                }
+            });
+
+            longitude.on("change", function(event, type, value)
+            {
+                if ((type == "num") && (latitude.typedInput("type") == "num"))
+                {
+                    updateMap();
+                    $("#node-config-input-map").show();
+                }
+                else if (type == "env")
+                {
+                    $("#node-config-input-map").hide();
                 }
             });
 
