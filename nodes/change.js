@@ -78,7 +78,11 @@ module.exports = function(RED)
                         break;
                     }
                 }
-                else if ((rule.action == "change") && (rule.type == "toString") && !rule.format)
+                else if (
+                    (rule.action == "change") &&
+                    (rule.type == "toString") &&
+                    ((rule.formatType == "custom") || !rule.formatType) &&
+                    !rule.format)
                 {
                     valid = false;
                     break;
@@ -247,7 +251,20 @@ module.exports = function(RED)
                                             }
                                             case "toString":
                                             {
-                                                output = input.format(rule.format);
+                                                if ((rule.formatType == "custom") ||
+                                                    !rule.formatType)  // backward compatibility to v1.19.1 and below
+                                                {
+                                                    output = input.format(rule.format);
+                                                }
+                                                else if (rule.formatType == "iso8601")
+                                                {
+                                                    output = input.toISOString(true);
+                                                }
+                                                else if (rule.formatType == "iso8601utc")
+                                                {
+                                                    output = input.toISOString();
+                                                }
+
                                                 break;
                                             }
                                         }
