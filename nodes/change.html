@@ -230,18 +230,32 @@ SOFTWARE.
                     {
                         value: "custom",
                         label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
-                        icon: "fa fa-wrench",
+                        icon: "fa fa-user-o",
                         hasValue: true,
                         validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
                     };
 
-                    const formatInput =
+                    const customFormatInput =
                     {
-                        value: "format",
-                        label: node._("change.label.format"),
-                        icon: "fa fa-gears",
+                        value: "custom",
+                        label: node._("change.label.customFormat"),
+                        icon: "fa fa-user-o",
                         hasValue: true,
                         validate: /^.+$/
+                    };
+
+                    const iso8601FormatInput =
+                    {
+                        value: "iso8601",
+                        label: node._("change.label.iso8601Format"),
+                        hasValue: false
+                    };
+
+                    const iso8601UTCFormatInput =
+                    {
+                        value: "iso8601utc",
+                        label: node._("change.label.iso8601UTCFormat"),
+                        hasValue: false
                     };
 
                     const partInput =
@@ -350,9 +364,9 @@ SOFTWARE.
                                         .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
                                         .appendTo(startEndOfBox);
 
-                    let stringFormat = $("<input/>", {type: "text", class: "node-input-stringFormat", title: node._("change.label.format"), placeholder: "YYYY-MM-DD HH:mm:ss"})
+                    let stringFormat = $("<input/>", {type: "text", class: "node-input-stringFormat", title: node._("change.label.format"), placeholder: node._("change.label.formatPlaceholder")})
                                         .appendTo(toStringBox)
-                                        .typedInput({types: [formatInput]});
+                                        .typedInput({types: [customFormatInput, iso8601FormatInput, iso8601UTCFormatInput]});
                     stringFormat.typedInput("width", "280px");
 
                     action.change(function()
@@ -546,6 +560,11 @@ SOFTWARE.
                         }
                         else if (data.type == "toString")
                         {
+                            if (data.formatType)
+                            {
+                                stringFormat.typedInput("type", data.formatType);
+                            }
+
                             stringFormat.typedInput("value", data.format);
                         }
                         changeType.val(data.type);
@@ -626,6 +645,7 @@ SOFTWARE.
                     }
                     else if (data.type == "toString")
                     {
+                        data.formatType = stringFormat.typedInput("type");
                         data.format = stringFormat.typedInput("value");
                     }
                 }
