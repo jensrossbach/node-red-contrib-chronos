@@ -3,12 +3,16 @@
     {
         "label":
         {
-            "node":    "time change",
-            "rules":   "Change Rules",
-            "to":      "to",
-            "now":     "current time",
-            "date":    "date & time",
-            "format":  "Format"
+            "node":               "time change",
+            "rules":              "Change Rules",
+            "to":                 "to",
+            "now":                "current time",
+            "date":               "date & time",
+            "format":             "Format",
+            "customFormat":       "custom format",
+            "iso8601Format":      "ISO-8601 string",
+            "iso8601UTCFormat":   "ISO-8601 string (UTC)",
+            "formatPlaceholder":  "e.g.: YYYY-MM-DD HH:mm:ss"
         },
         "list":
         {
