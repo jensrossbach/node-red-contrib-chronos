@@ -283,7 +283,7 @@ module.exports = function(RED)
                     }
                 });
 
-                node.on("input", (msg, send, done) =>
+                node.on("input", async(msg, send, done) =>
                 {
                     if (!send || !done)  // Node-RED 0.x not supported anymore
                     {
@@ -319,11 +319,11 @@ module.exports = function(RED)
                         }
                         else if (msg.payload == "trigger")
                         {
-                            triggerEvents(false);
+                            await triggerEvents(false);
                         }
                         else if (msg.payload == "trigger:forced")
                         {
-                            triggerEvents(true);
+                            await triggerEvents(true);
                         }
 
                         updateStatus();
@@ -358,11 +358,11 @@ module.exports = function(RED)
                                 }
                                 else if (msg.payload[i] == "trigger")
                                 {
-                                    triggerEvent(node.schedule[i], false);
+                                    await triggerEvent(node.schedule[i], false);
                                 }
                                 else if (msg.payload[i] == "trigger:forced")
                                 {
-                                    triggerEvent(node.schedule[i], true);
+                                    await triggerEvent(node.schedule[i], true);
                                 }
                             }
                             else if ((typeof msg.payload[i] == "object") && (msg.payload[i] != null))
@@ -464,14 +464,14 @@ module.exports = function(RED)
             });
         }
 
-        function triggerEvents(forced)
+        async function triggerEvents(forced)
         {
             node.debug("Triggering events" + (forced ? " (forced)" : ""));
 
-            node.schedule.forEach(data =>
+            for (const data of node.schedule)
             {
-                triggerEvent(data, forced);
-            });
+                await triggerEvent(data, forced);
+            }
         }
 
         function startTimer(data, keepOrig = false)
@@ -550,11 +550,11 @@ module.exports = function(RED)
             }
         }
 
-        function triggerEvent(data, forced)
+        async function triggerEvent(data, forced)
         {
             if (("timer" in data) || forced)
             {
-                handleTimeout(data, false);
+                await handleTimeout(data, false);
             }
         }
 
@@ -575,9 +575,9 @@ module.exports = function(RED)
                         data.triggerTime = chronos.getTimeFrom(node, firstTrigger);
                         data.timer = new cronosjs.CronosTask(expression);
 
-                        data.timer.on("run", () =>
+                        data.timer.on("run", async() =>
                         {
-                            handleTimeout(data, false);
+                            await handleTimeout(data, false);
 
                             let nextTrigger = expression.nextDate();
                             if (nextTrigger)
@@ -668,7 +668,7 @@ module.exports = function(RED)
             delete data.triggerTime;
         }
 
-        function handleTimeout(data, restartTimer)
+        async function handleTimeout(data, restartTimer)
         {
             node.debug("[Timer:" + data.id + "] Timer expired");
 
@@ -685,7 +685,7 @@ module.exports = function(RED)
 
                     if (data.config.output.property.type === "jsonata")
                     {
-                        value = getJSONataValue(data.expression, data.id, data.config.output.property.value);
+                        value = await getJSONataValue(data.expression, data.id, data.config.output.property.value);
                     }
                     else
                     {
@@ -704,7 +704,7 @@ module.exports = function(RED)
                     }
                     else if (data.config.output.property.type === "jsonata")
                     {
-                        let value = getJSONataValue(data.expression, data.id, data.config.output.property.value);
+                        let value = await getJSONataValue(data.expression, data.id, data.config.output.property.value);
                         RED.util.setMessageProperty(msg, data.config.output.property.name, value, true);
                     }
                     else
@@ -720,7 +720,7 @@ module.exports = function(RED)
 
                     if (data.config.output.contentType === "jsonata")
                     {
-                        msg = getJSONataValue(data.expression, data.id, data.config.output.value);
+                        msg = await getJSONataValue(data.expression, data.id, data.config.output.value);
                         if (typeof msg != "object")
                         {
                             const details = {event: data.id, expression: data.config.output.value, result: msg};
@@ -754,17 +754,18 @@ module.exports = function(RED)
             }
         }
 
-        function getJSONataValue(expression, id, source)
+        async function getJSONataValue(expression, id, source)
         {
             try
             {
-                return RED.util.evaluateJSONataExpression(
-                                    expression, {
-                                        name: node.name,
-                                        config: {
-                                            name: node.config.name,
-                                            latitude: node.config.latitude,
-                                            longitude: node.config.longitude}});
+                return await chronos.evaluateJSONataExpression(
+                                            RED,
+                                            expression, {
+                                                name: node.name,
+                                                config: {
+                                                    name: node.config.name,
+                                                    latitude: node.config.latitude,
+                                                    longitude: node.config.longitude}});
             }
             catch (e)
             {

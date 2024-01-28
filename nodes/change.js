@@ -92,7 +92,7 @@ module.exports = function(RED)
             }
             else
             {
-                node.on("input", (msg, send, done) =>
+                node.on("input", async(msg, send, done) =>
                 {
                     if (msg)
                     {
@@ -118,7 +118,18 @@ module.exports = function(RED)
                                         }
                                         case "date":
                                         {
-                                            setTarget(msg, rule.target, node.chronos.getTime(RED, node, node.chronos.getUserDate(RED, node, rule.date), rule.time.type, rule.time.value).valueOf());
+                                            setTarget(
+                                                msg,
+                                                rule.target,
+                                                node.chronos.getTime(
+                                                        RED,
+                                                        node,
+                                                        node.chronos.getUserDate(
+                                                                RED,
+                                                                node,
+                                                                rule.date),
+                                                        rule.time.type,
+                                                        rule.time.value).valueOf());
                                             break;
                                         }
                                         case "jsonata":
@@ -158,7 +169,7 @@ module.exports = function(RED)
                                                     return node.chronos.getTimeFrom(node, ts).endOf(arg).valueOf();
                                                 }, "<(sn)s:n>");
 
-                                                result = RED.util.evaluateJSONataExpression(expression, msg);
+                                                result = await node.chronos.evaluateJSONataExpression(RED, expression, msg);
                                             }
                                             catch (e)
                                             {
@@ -168,13 +179,16 @@ module.exports = function(RED)
                                                     details.value = e.value;
                                                 }
 
-                                                throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"), details);
+                                                throw new node.chronos.TimeError(
+                                                            RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"),
+                                                            details);
                                             }
 
                                             if ((typeof result != "number") && (typeof result != "string"))
                                             {
-                                                throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
-                                                                                 {rule: i+1, expression: rule.expression, result: result});
+                                                throw new node.chronos.TimeError(
+                                                            RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                                                            {rule: i+1, expression: rule.expression, result: result});
                                             }
 
                                             setTarget(msg, rule.target, result);
