@@ -1,7 +1,7 @@
 # Action for quality assurance (checking code with ESLint and running unit tests)
 name: Quality Assurance
 
-# Trigger workflow on pushes to master including Javascript files and any pull requests for master
+# Trigger workflow on pushes to main including Javascript files and any pull requests for main
 on:
   push:
     branches: [ main ]
