@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-chronos",
-    "version": "1.19.0",
+    "version": "1.19.1",
     "description": "Time-based Node-RED scheduling, repeating, queueing, routing, filtering and manipulating nodes",
     "author": {
         "name": "Jens-Uwe Rossbach",
