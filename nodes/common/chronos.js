@@ -307,6 +307,24 @@ function getJSONataExpression(RED, node, expr)
     return expression;
 }
 
+function evaluateJSONataExpression(RED, expr, msg)
+{
+    return new Promise((resolve, reject) =>
+    {
+        RED.util.evaluateJSONataExpression(expr, msg, (error, result) =>
+        {
+            if (error)
+            {
+                reject(error);
+            }
+            else
+            {
+                resolve(result);
+            }
+        });
+    });
+}
+
 
 module.exports =
 {
@@ -323,5 +341,6 @@ module.exports =
     isValidUserTime: isValidUserTime,
     isValidUserDate: isValidUserDate,
     getJSONataExpression: getJSONataExpression,
+    evaluateJSONataExpression: evaluateJSONataExpression,
     TimeError: TimeError
 };

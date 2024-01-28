@@ -115,7 +115,7 @@ module.exports = function(RED)
             }
             else
             {
-                node.on("input", (msg, send, done) =>
+                node.on("input", async(msg, send, done) =>
                 {
                     if (msg)
                     {
@@ -149,7 +149,7 @@ module.exports = function(RED)
                                         node.debug("[Condition:" + (i+1) + "] Otherwise");
                                         otherwiseIndex = i;
                                     }
-                                    else if (sfUtils.evaluateCondition(RED, node, msg, baseTime, cond, i+1))
+                                    else if (await sfUtils.evaluateCondition(RED, node, msg, baseTime, cond, i+1))
                                     {
                                         ports[i] = true;
                                         numMatches++;

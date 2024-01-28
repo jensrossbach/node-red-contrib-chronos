@@ -166,7 +166,7 @@ module.exports = function(RED)
                     tearDownDelayTimer();
                 });
 
-                node.on("input", (msg, send, done) =>
+                node.on("input", async(msg, send, done) =>
                 {
                     if (msg)
                     {
@@ -190,7 +190,7 @@ module.exports = function(RED)
                                         delete msg.enqueue;
                                     }
 
-                                    enqueueMessage(msg, done);
+                                    await enqueueMessage(msg, done);
                                 }
                                 else
                                 {
@@ -211,7 +211,7 @@ module.exports = function(RED)
                                         delete msg.enqueue;
                                     }
 
-                                    enqueueMessage(msg, done);
+                                    await enqueueMessage(msg, done);
                                 }
                                 else
                                 {
@@ -221,7 +221,7 @@ module.exports = function(RED)
                             }
                             else
                             {
-                                enqueueMessage(msg, done);
+                                await enqueueMessage(msg, done);
                             }
                         }
                         catch (e)
@@ -245,7 +245,7 @@ module.exports = function(RED)
             }
         }
 
-        function enqueueMessage(msg, done)
+        async function enqueueMessage(msg, done)
         {
             let delayType = node.delayType;
             let fixedDuration = node.fixedDuration;
@@ -369,7 +369,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    setupCustomDelayTimer(msg);
+                    await setupCustomDelayTimer(msg);
                 }
             }
 
@@ -492,7 +492,7 @@ module.exports = function(RED)
             }, node.sendTime.diff(now));
         }
 
-        function setupCustomDelayTimer(msg)
+        async function setupCustomDelayTimer(msg)
         {
             node.debug("Set up custom timer for delayed message with expression " + node.customDelayValue);
 
@@ -501,7 +501,7 @@ module.exports = function(RED)
 
             try
             {
-                result = RED.util.evaluateJSONataExpression(node.expression, msg);
+                result = await chronos.evaluateJSONataExpression(RED, node.expression, msg);
             }
             catch(e)
             {

@@ -58,12 +58,16 @@ function convertCondition(RED, node, cond, num)
 {
     if ((typeof cond != "object") || !cond)
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Condition: Not an object or null"});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Condition: Not an object or null"});
     }
 
     if (!/^(before|after|between|outside|days|weekdays|months|otherwise)$/.test(cond.operator))
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operator: Invalid value", value: cond.operator});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operator: Invalid value", value: cond.operator});
     }
 
     if ((cond.operator == "before") || (cond.operator == "after"))
@@ -75,7 +79,9 @@ function convertCondition(RED, node, cond, num)
     {
         if (!cond.operands || !Array.isArray(cond.operands) || (cond.operands.length != 2))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Not an array, invalid number of elements or null"});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Not an array, invalid number of elements or null"});
         }
 
         validateOperand(RED, node, cond.operands[0], num);
@@ -86,37 +92,49 @@ function convertCondition(RED, node, cond, num)
     {
         if ((typeof cond.operands != "object") || !cond.operands)
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Not an object or null"});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Not an object or null"});
         }
 
         if (!/^(first|second|third|fourth|fifth|last|even|specific)$/.test(cond.operands.type))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid type", value: cond.operands.type});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid type", value: cond.operands.type});
         }
 
         if (((cond.operands.type == "first") || (cond.operands.type == "last")) &&
             !/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|day|workday|weekend)$/.test(cond.operands.day))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid day", value: cond.operands.day});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid day", value: cond.operands.day});
         }
 
         if (((cond.operands.type == "second") || (cond.operands.type == "third") || (cond.operands.type == "fourth") || (cond.operands.type == "fifth")) &&
             !/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|day)$/.test(cond.operands.day))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid day", value: cond.operands.day});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid day", value: cond.operands.day});
         }
 
-        if ((cond.operands.type == "specific") &&
-            ((typeof cond.operands.day != "number") || (cond.operands.day < 1) || (cond.operands.day > 31) ||
-             ((typeof cond.operands.month != "undefined") && (typeof cond.operands.month != "number") &&
-              !/^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(cond.operands.month))))
+        if ((cond.operands.type == "specific")
+            && ((typeof cond.operands.day != "number") || (cond.operands.day < 1) || (cond.operands.day > 31)
+            || ((typeof cond.operands.month != "undefined") && (typeof cond.operands.month != "number")
+            && !/^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(cond.operands.month))))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid day or month"});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid day or month"});
         }
 
         if (typeof cond.operands.exclude != "boolean")
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid exclude", value: cond.operands.exclude});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid exclude", value: cond.operands.exclude});
         }
     }
 
@@ -124,7 +142,9 @@ function convertCondition(RED, node, cond, num)
     {
         if ((typeof cond.operands != "object") || !cond.operands)
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Not an object or null"});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Not an object or null"});
         }
 
         if ((("sunday" in cond.operands) && (typeof cond.operands.sunday != "boolean")) ||
@@ -135,7 +155,9 @@ function convertCondition(RED, node, cond, num)
             (("friday" in cond.operands) && (typeof cond.operands.friday != "boolean")) ||
             (("saturday" in cond.operands) && (typeof cond.operands.saturday != "boolean")))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid weekday property", value: cond.operands});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid weekday property", value: cond.operands});
         }
     }
 
@@ -143,7 +165,9 @@ function convertCondition(RED, node, cond, num)
     {
         if ((typeof cond.operands != "object") || !cond.operands)
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Not an object or null"});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Not an object or null"});
         }
 
         if ((("january" in cond.operands) && (typeof cond.operands.january != "boolean")) ||
@@ -159,7 +183,9 @@ function convertCondition(RED, node, cond, num)
             (("november" in cond.operands) && (typeof cond.operands.november != "boolean")) ||
             (("december" in cond.operands) && (typeof cond.operands.december != "boolean")))
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid month property", value: cond.operands});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                        {condition: num, error: "Operand: Invalid month property", value: cond.operands});
         }
     }
 
@@ -223,45 +249,48 @@ function validateOperand(RED, node, operand, num)
 {
     if ((typeof operand != "object") || !operand)
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Not an object or null"});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operand: Not an object or null"});
     }
 
     if (!/^(time|sun|moon|custom)$/.test(operand.type))
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid type", value: operand.type});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operand: Invalid type", value: operand.type});
     }
 
-    if ((typeof operand.value != "string") ||
-        ((operand.type == "time") && !node.chronos.isValidUserTime(operand.value)) ||
-        ((operand.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(operand.value)) ||
-        ((operand.type == "moon") && !/^(rise|set)$/.test(operand.value)))
+    if ((typeof operand.value != "string")
+        || ((operand.type == "time") && !node.chronos.isValidUserTime(operand.value))
+        || ((operand.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(operand.value))
+        || ((operand.type == "moon") && !/^(rise|set)$/.test(operand.value)))
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid value", value: operand.value});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operand: Invalid value", value: operand.value});
     }
 
     if ((typeof operand.offset != "number") || (operand.offset < -300) || (operand.offset > 300))
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid offset", value: operand.offset});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operand: Invalid offset", value: operand.offset});
     }
 
     if (typeof operand.random != "boolean")
     {
-        throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"), {condition: num, error: "Operand: Invalid random flag", value: operand.random});
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operand: Invalid random flag", value: operand.random});
     }
 }
 
-function evaluateCondition(RED, node, msg, baseTime, cond, id)
+async function evaluateCondition(RED, node, msg, baseTime, cond, id)
 {
     let result = false;
 
-    if (cond.operator == "context")
-    {
-        let ctx = RED.util.parseContextStore(cond.context.value);
-        node.debug("[Condition:" + id + "] Load from context variable " + cond.context.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
-
-        result = evaluateCondition(RED, node, msg, baseTime, convertCondition(RED, node, node.context()[cond.context.type].get(ctx.key, ctx.store), id), id);
-    }
-    else if (cond.operator == "expression")
+    if (cond.operator == "expression")
     {
         let expression = null;
 
@@ -274,112 +303,278 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
 
             expression.registerFunction("isBefore", (ts, type, value, offset, random) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "before", operands: {type: type,
-                                                          value: value, offset: (typeof offset != "undefined") ? offset : 0,
-                                                          random: (typeof random != "undefined") ? random : false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "before",
+                                    operands: {
+                                        type: type,
+                                        value: value,
+                                        offset: (typeof offset != "undefined") ? offset : 0,
+                                        random: (typeof random != "undefined") ? random : false}},
+                                id),
+                            id);
             }, "<(sn)ssn?b?:b>");
 
-            expression.registerFunction("isAfter", (ts, type, value, offset, random) =>
+            expression.registerFunction("isAfter", async(ts, type, value, offset, random) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "after", operands: {type: type,
-                                                          value: value, offset: (typeof offset != "undefined") ? offset : 0,
-                                                          random: (typeof random != "undefined") ? random : false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "after",
+                                    operands: {
+                                        type: type,
+                                        value: value,
+                                        offset: (typeof offset != "undefined") ? offset : 0,
+                                        random: (typeof random != "undefined") ? random : false}},
+                                id),
+                            id);
             }, "<(sn)ssn?b?:b>");
 
             expression.registerFunction("isBetween", (ts, type1, value1, offset1, random1, type2, value2, offset2, random2) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "between", operands: [{type: type1,
-                                                          value: value1, offset: offset1, random: random1},{type: type2,
-                                                          value: value2, offset: offset2, random: random2}]}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "between",
+                                    operands: [{
+                                        type: type1,
+                                        value: value1,
+                                        offset: offset1,
+                                        random: random1}, {
+                                        type: type2,
+                                        value: value2,
+                                        offset: offset2,
+                                        random: random2}]},
+                                id),
+                            id);
             }, "<(sn)ssnbssnb:b>");
 
             expression.registerFunction("isOutside", (ts, type1, value1, offset1, random1, type2, value2, offset2, random2) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "outside", operands: [{type: type1,
-                                                          value: value1, offset: offset1, random: random1},{type: type2,
-                                                          value: value2, offset: offset2, random: random2}]}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "outside",
+                                    operands: [{
+                                        type: type1,
+                                        value: value1,
+                                        offset: offset1,
+                                        random: random1}, {
+                                        type: type2,
+                                        value: value2,
+                                        offset: offset2,
+                                        random: random2}]},
+                                id),
+                            id);
             }, "<(sn)ssnbssnb:b>");
 
             expression.registerFunction("isFirstDay", (ts, day) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "first",
-                                                          day: day ? day : "day", exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "first",
+                                        day: day ? day : "day",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)s?:b>");
 
             expression.registerFunction("isSecondDay", (ts, day) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "second",
-                                                          day: day ? day : "day", exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "second",
+                                        day: day ? day : "day",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)s?:b>");
 
             expression.registerFunction("isThirdDay", (ts, day) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "third",
-                                                          day: day ? day : "day", exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "third",
+                                        day: day ? day : "day",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)s?:b>");
 
             expression.registerFunction("isFourthDay", (ts, day) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "fourth",
-                                                          day: day ? day : "day", exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "fourth",
+                                        day: day ? day : "day",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)s?:b>");
 
             expression.registerFunction("isFifthDay", (ts, day) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "fifth",
-                                                          day: day ? day : "day", exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "fifth",
+                                        day: day ? day : "day",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)s?:b>");
 
             expression.registerFunction("isLastDay", (ts, day) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "last",
-                                                          day: day ? day : "day", exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "last",
+                                        day: day ? day : "day",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)s?:b>");
 
             expression.registerFunction("isEvenDay", (ts) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "even",
-                                                          exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "even",
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn):b>");
 
             expression.registerFunction("isSpecificDay", (ts, day, month) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "days", operands: {type: "specific",
-                                                          day: day, month: month, exclude: false}}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "days",
+                                    operands: {
+                                        type: "specific",
+                                        day: day,
+                                        month: month,
+                                        exclude: false}},
+                                id),
+                            id);
             }, "<(sn)n(sn)?:b>");
 
             expression.registerFunction("matchesWeekdays", (ts, days) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "weekdays", operands: days}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "weekdays",
+                                    operands: days},
+                                id),
+                            id);
             }, "<(sn)o:b>");
 
             expression.registerFunction("matchesMonths", (ts, months) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, {operator: "months", operands: months}, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "months",
+                                    operands: months},
+                                id),
+                            id);
             }, "<(sn)o:b>");
 
             expression.registerFunction("evaluateCondition", (ts, condition) =>
             {
-                return evaluateCondition(RED, node, msg, node.chronos.getTimeFrom(node, ts),
-                                         convertCondition(RED, node, condition, id), id);
+                return evalCondition(
+                            RED,
+                            node,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node,
+                                condition,
+                                id),
+                            id);
             }, "<(sn)o:b>");
 
             node.debug("[Condition:" + id + "] Check if '" + cond.expression + "' evaluates to true");
-            result = RED.util.evaluateJSONataExpression(expression, msg);
+            result = await node.chronos.evaluateJSONataExpression(RED, expression, msg);
         }
         catch (e)
         {
@@ -401,9 +596,37 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
 
         if (typeof result != "boolean")
         {
-            throw new node.chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"),
-                                             {condition: id, expression: cond.expression, result: result});
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"),
+                        {condition: id, expression: cond.expression, result: result});
         }
+    }
+    else
+    {
+        result = evalCondition(RED, node, baseTime, cond, id);
+    }
+
+    return result;
+}
+
+function evalCondition(RED, node, baseTime, cond, id)
+{
+    let result = false;
+
+    if (cond.operator == "context")
+    {
+        let ctx = RED.util.parseContextStore(cond.context.value);
+        node.debug("[Condition:" + id + "] Load from context variable " + cond.context.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
+
+        result = evalCondition(
+                    RED,
+                    node,
+                    baseTime,
+                    convertCondition(
+                        RED,
+                        node,
+                        node.context()[cond.context.type].get(ctx.key, ctx.store), id),
+                    id);
     }
     else if ((cond.operator == "before") || (cond.operator == "after"))
     {
@@ -416,8 +639,8 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
         }
 
         node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
-        result = (((cond.operator == "before") && baseTime.isBefore(targetTime)) ||
-                  ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)));
+        result = (((cond.operator == "before") && baseTime.isBefore(targetTime))
+                    || ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)));
     }
     else if ((cond.operator == "between") || (cond.operator == "outside"))
     {
@@ -438,13 +661,13 @@ function evaluateCondition(RED, node, msg, baseTime, cond, id)
         node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss (Z))") + " and " + time2.format("YYYY-MM-DD HH:mm:ss (Z)"));
         if (time2.isSameOrBefore(time1))
         {
-            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2))) ||
-                      ((cond.operator == "outside") && (baseTime.isBefore(time1) && baseTime.isAfter(time2))));
+            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2)))
+                        || ((cond.operator == "outside") && (baseTime.isBefore(time1) && baseTime.isAfter(time2))));
         }
         else
         {
-            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2))) ||
-                      ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2)))
+                        || ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
         }
     }
     else if ((cond.operator == "days"))

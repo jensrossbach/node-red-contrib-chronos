@@ -130,7 +130,7 @@ module.exports = function(RED)
             }
             else
             {
-                node.on("input", (msg, send, done) =>
+                node.on("input", async(msg, send, done) =>
                 {
                     if (msg)
                     {
@@ -151,7 +151,7 @@ module.exports = function(RED)
                             {
                                 try
                                 {
-                                    result = sfUtils.evaluateCondition(RED, node, msg, baseTime, node.conditions[i], i+1);
+                                    result = await sfUtils.evaluateCondition(RED, node, msg, baseTime, node.conditions[i], i+1);
                                 }
                                 catch (e)
                                 {
@@ -184,8 +184,8 @@ module.exports = function(RED)
                                 {
                                     condResults.push(result);
                                 }
-                                else if (((node.evaluationType == "and") && !result) ||
-                                         ((node.evaluationType == "or") && result))
+                                else if (((node.evaluationType == "and") && !result)
+                                            || ((node.evaluationType == "or") && result))
                                 {
                                     break;
                                 }
