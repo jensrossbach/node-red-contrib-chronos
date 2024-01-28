@@ -4,10 +4,10 @@ name: Quality Assurance
 # Trigger workflow on pushes to master including Javascript files and any pull requests for master
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:    [ "**.js" ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 # Workflow
 jobs:
