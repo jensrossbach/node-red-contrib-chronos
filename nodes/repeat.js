@@ -159,7 +159,7 @@ module.exports = function(RED)
                     tearDownRepeatTimer();
                 });
 
-                node.on("input", (msg, send, done) =>
+                node.on("input", async(msg, send, done) =>
                 {
                     if (msg)
                     {
@@ -179,7 +179,7 @@ module.exports = function(RED)
                         {
                             try
                             {
-                                if (scheduleMessage(msg))
+                                if (await scheduleMessage(msg))
                                 {
                                     send(node.message);
                                 }
@@ -215,7 +215,7 @@ module.exports = function(RED)
             }
         }
 
-        function scheduleMessage(msg)
+        async function scheduleMessage(msg)
         {
             const now = chronos.getCurrentTime(node);
 
@@ -340,18 +340,18 @@ module.exports = function(RED)
 
             if (mode == "simple")
             {
-                setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime);
+                await setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime);
             }
             else if (mode == "advanced")
             {
-                setupAdvancedRepeatTimer(crontab, untilTime);
+                await setupAdvancedRepeatTimer(crontab, untilTime);
             }
             else
             {
-                setupCustomRepeatTimer(now, untilTime);
+                await setupCustomRepeatTimer(now, untilTime);
             }
 
-            return (((msgIngress == "forward") && !untilTime.isExceededAt(now)) ||
+            return (((msgIngress == "forward") && !await untilTime.isExceededAt(now)) ||
                     (msgIngress == "forward:forced"));
         }
 
@@ -395,14 +395,14 @@ module.exports = function(RED)
             {
                 ret.expression = node.untilExpression;
 
-                ret.isExceededAt = function(next)
+                ret.isExceededAt = async function(next)
                 {
                     let result = false;
 
                     try
                     {
                         this.expression.assign("next", next.valueOf());
-                        result = RED.util.evaluateJSONataExpression(this.expression, node.message);
+                        result = await chronos.evaluateJSONataExpression(RED, this.expression, node.message);
                     }
                     catch(e)
                     {
@@ -442,7 +442,7 @@ module.exports = function(RED)
             }
             else if (type == "nextMsg")
             {
-                ret.isExceededAt = function()
+                ret.isExceededAt = async function()
                 {
                     return false;
                 };
@@ -461,7 +461,7 @@ module.exports = function(RED)
                     ret.time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
                 }
 
-                ret.isExceededAt = function(next)
+                ret.isExceededAt = async function(next)
                 {
                     return next.isAfter(this.time);
                 };
@@ -475,12 +475,12 @@ module.exports = function(RED)
             return ret;
         }
 
-        function setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime)
+        async function setupSimpleRepeatTimer(now, interval, intervalUnit, untilTime)
         {
             node.debug("Set up timer for interval " + interval + " " + intervalUnit + " until " + untilTime.print());
             node.sendTime = now.clone().add(interval, intervalUnit);
 
-            if (!untilTime.isExceededAt(node.sendTime))
+            if (!await untilTime.isExceededAt(node.sendTime))
             {
                 node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                 node.repeatTimer = setTimeout(() =>
@@ -499,7 +499,7 @@ module.exports = function(RED)
             updateStatus();
         }
 
-        function setupAdvancedRepeatTimer(crontab, untilTime)
+        async function setupAdvancedRepeatTimer(crontab, untilTime)
         {
             node.debug("Set up timer for cron table '" + crontab + "' until " + untilTime.print());
 
@@ -510,11 +510,11 @@ module.exports = function(RED)
             {
                 node.sendTime = chronos.getTimeFrom(node, firstTrigger);
 
-                if (!untilTime.isExceededAt(node.sendTime))
+                if (!await untilTime.isExceededAt(node.sendTime))
                 {
                     node.repeatTimer = new cronosjs.CronosTask(expression);
 
-                    node.repeatTimer.on("run", () =>
+                    node.repeatTimer.on("run", async() =>
                     {
                         node.send(RED.util.cloneMessage(node.message));
 
@@ -522,7 +522,7 @@ module.exports = function(RED)
                         if (nextTrigger)
                         {
                             node.sendTime = chronos.getTimeFrom(node, nextTrigger);
-                            if (untilTime.isExceededAt(node.sendTime))
+                            if (await untilTime.isExceededAt(node.sendTime))
                             {
                                 node.repeatTimer.stop();
 
@@ -550,7 +550,7 @@ module.exports = function(RED)
             updateStatus();
         }
 
-        function setupCustomRepeatTimer(now, untilTime)
+        async function setupCustomRepeatTimer(now, untilTime)
         {
             node.debug("Set up timer for trigger expression until " + untilTime.print());
 
@@ -558,7 +558,7 @@ module.exports = function(RED)
 
             try
             {
-                result = RED.util.evaluateJSONataExpression(node.expression, node.message);
+                result = await chronos.evaluateJSONataExpression(RED, node.expression, node.message);
             }
             catch(e)
             {
@@ -610,7 +610,7 @@ module.exports = function(RED)
                             {expression: node.customRepetitionValue, result: result});
             }
 
-            if (!untilTime.isExceededAt(node.sendTime))
+            if (!await untilTime.isExceededAt(node.sendTime))
             {
                 node.debug("Starting timer for repeated message at " + node.sendTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                 node.repeatTimer = setTimeout(() =>
