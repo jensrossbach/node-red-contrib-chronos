@@ -874,7 +874,7 @@ function getBaseTime(RED, node, msg)
             }
         }
 
-        if (typeof value == "number")
+        if ((typeof value == "number") || (typeof value == "string"))
         {
             ret = node.chronos.getTimeFrom(node, value);
         }
