@@ -685,7 +685,7 @@ module.exports = function(RED)
 
                     if (data.config.output.property.type === "jsonata")
                     {
-                        value = await getJSONataValue(data.expression, data.id, data.config.output.property.value);
+                        value = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.property.value);
                     }
                     else
                     {
@@ -704,7 +704,7 @@ module.exports = function(RED)
                     }
                     else if (data.config.output.property.type === "jsonata")
                     {
-                        let value = await getJSONataValue(data.expression, data.id, data.config.output.property.value);
+                        let value = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.property.value);
                         RED.util.setMessageProperty(msg, data.config.output.property.name, value, true);
                     }
                     else
@@ -720,7 +720,7 @@ module.exports = function(RED)
 
                     if (data.config.output.contentType === "jsonata")
                     {
-                        msg = await getJSONataValue(data.expression, data.id, data.config.output.value);
+                        msg = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.value);
                         if (typeof msg != "object")
                         {
                             const details = {event: data.id, expression: data.config.output.value, result: msg};
@@ -754,7 +754,7 @@ module.exports = function(RED)
             }
         }
 
-        async function getJSONataValue(expression, id, source)
+        async function getJSONataValue(expression, id, trigger, source)
         {
             try
             {
@@ -765,7 +765,11 @@ module.exports = function(RED)
                                                 config: {
                                                     name: node.config.name,
                                                     latitude: node.config.latitude,
-                                                    longitude: node.config.longitude}});
+                                                    longitude: node.config.longitude,
+                                                    timezone: node.config.timezone},
+                                                schedule: {
+                                                    id: id,
+                                                    trigger: trigger}});
             }
             catch (e)
             {
