@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] - 2024-02-03
+### Added
+- Added possibility to retrieve location coordinates (latitude and longitude) in configuration from environment variables.
+- Added possibility to specify basetimes for time switch/filter nodes from context variables or message properties as datetime strings additionally to Unix epoch timestamps.
+- Added dropdown menu to convert rule of time change node that allows to easily create ISO-8601 strings.
+- Added more properties accessible to JSONata expressions of scheduler node output configurations.
+
+### Changed
+- Changed icons for custom / user defined data from wrench to user symbol.
+- Updated versions of dependencies where possible.
+
+### Fixed
+- Fixed references to old default branch name.
+
 ## [1.19.1] - 2024-01-28
 ### Changed
 - Replaced usage of deprecated synchronous variant of `RED.util.evaluateJSONataExpression` by asynchronous variant as synchronous variant will not work anymore starting with Node-RED 4.0.
