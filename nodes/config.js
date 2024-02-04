@@ -24,6 +24,15 @@
 
 module.exports = function(RED)
 {
+    RED.httpAdmin.get("/chronos_config", RED.auth.needsPermission("chronos.read"), function(req, res)
+    {
+        if (req.query.command === "getenv")
+        {
+            let value = process.env[req.query.varname];
+            res.json((typeof value == "undefined") ? "not found" : value);
+        }
+    });
+
     function ChronosConfigNode(config)
     {
         const chronos = require("./common/chronos.js");

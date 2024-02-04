@@ -150,26 +150,87 @@ SOFTWARE.
         oneditprepare: function()
         {
             let node = this;
+            let latitude = undefined;
+            let longitude = undefined;
+            let noMapUpdate = false;
+
+            let latitudeInput = $("#node-config-input-latitude")
+                                    .typedInput({types: ["num", "env"], typeField: "#node-config-input-latitudeType"});
+            let longitudeInput = $("#node-config-input-longitude")
+                                    .typedInput({types: ["num", "env"], typeField: "#node-config-input-longitudeType"});
 
             const updateMap = function()
             {
-                if (($("#node-config-input-latitude").typedInput("type") == "num") &&
-                    ($("#node-config-input-longitude").typedInput("type") == "num"))
-                {
-                    let latitude = parseFloat($("#node-config-input-latitude").typedInput("value"));
-                    let longitude = parseFloat($("#node-config-input-longitude").typedInput("value"));
+                let prevLatitude = latitude;
+                let prevLongitude = longitude;
 
-                    if (!Number.isNaN(latitude) && !Number.isNaN(longitude))
+                if (latitudeInput.typedInput("type") == "num")
+                {
+                    latitude = parseFloat(latitudeInput.typedInput("value"));
+                }
+                else
+                {
+                    $.getJSON(
+                        "chronos_config", {
+                            command: "getenv",
+                            varname: latitudeInput.typedInput("value")})
+                            .done(result =>
                     {
-                        $("#node-config-input-map").attr("src", "https://www.openstreetmap.org/export/embed.html?bbox="
-                                                                + (longitude - 0.001) + ","
-                                                                + (latitude - 0.001) + ","
-                                                                + (longitude + 0.001) + ","
-                                                                + (latitude + 0.001)
-                                                                + "&layer=mapnik&marker="
-                                                                + latitude + ","
-                                                                + longitude);
-                    }
+                        latitude = parseFloat(result);
+
+                        if ((latitude != prevLatitude) || (longitude != prevLongitude))
+                        {
+                            relocateMap();
+                        }
+                    });
+                }
+
+                if (longitudeInput.typedInput("type") == "num")
+                {
+                    longitude = parseFloat(longitudeInput.typedInput("value"));
+                }
+                else
+                {
+                    $.getJSON(
+                        "chronos_config", {
+                            command: "getenv",
+                            varname: longitudeInput.typedInput("value")})
+                            .done(result =>
+                    {
+                        longitude = parseFloat(result);
+
+                        if ((latitude != prevLatitude) || (longitude != prevLongitude))
+                        {
+                            relocateMap();
+                        }
+                    });
+                }
+
+                if ((latitude != prevLatitude) || (longitude != prevLongitude))
+                {
+                    relocateMap();
+                }
+            };
+
+            const relocateMap = function()
+            {
+                let map = $("#node-config-input-map");
+
+                if (!Number.isNaN(latitude) && !Number.isNaN(longitude))
+                {
+                    map.attr("src", "https://www.openstreetmap.org/export/embed.html?bbox="
+                                        + (longitude - 0.001) + ","
+                                        + (latitude - 0.001) + ","
+                                        + (longitude + 0.001) + ","
+                                        + (latitude + 0.001)
+                                        + "&layer=mapnik&marker="
+                                        + latitude + ","
+                                        + longitude);
+                    map.show();
+                }
+                else
+                {
+                    map.hide();
                 }
             };
 
@@ -194,8 +255,6 @@ SOFTWARE.
                 {
                     $(this).spinner("value", 0);
                 }
-
-                updateMap();
             };
 
             const sunAngleInput =
@@ -213,10 +272,12 @@ SOFTWARE.
                 {
                     navigator.geolocation.getCurrentPosition(pos =>
                     {
-                        $("#node-config-input-latitude").typedInput("value", pos.coords.latitude);
-                        $("#node-config-input-longitude").typedInput("value", pos.coords.longitude);
-                        $("#node-config-input-latitude").typedInput("type", "num");
-                        $("#node-config-input-longitude").typedInput("type", "num");
+                        noMapUpdate = true;
+                        latitudeInput.typedInput("value", pos.coords.latitude);
+                        longitudeInput.typedInput("value", pos.coords.longitude);
+                        latitudeInput.typedInput("type", "num");
+                        longitudeInput.typedInput("type", "num");
+                        noMapUpdate = false;
 
                         updateMap();
                     });
@@ -226,11 +287,6 @@ SOFTWARE.
             {
                 $("#node-config-input-locationDetection").hide();
             }
-
-            let latitude = $("#node-config-input-latitude")
-                            .typedInput({types: ["num", "env"], typeField: "#node-config-input-latitudeType"});
-            let longitude = $("#node-config-input-longitude")
-                            .typedInput({types: ["num", "env"], typeField: "#node-config-input-longitudeType"});
 
             updateMap();
 
@@ -272,29 +328,19 @@ SOFTWARE.
                 }
             });
 
-            latitude.on("change", function(event, type, value)
+            latitudeInput.on("change", function(event, type, value)
             {
-                if ((type == "num") && (longitude.typedInput("type") == "num"))
+                if (!noMapUpdate)
                 {
                     updateMap();
-                    $("#node-config-input-map").show();
-                }
-                else if (type == "env")
-                {
-                    $("#node-config-input-map").hide();
                 }
             });
 
-            longitude.on("change", function(event, type, value)
+            longitudeInput.on("change", function(event, type, value)
             {
-                if ((type == "num") && (latitude.typedInput("type") == "num"))
+                if (!noMapUpdate)
                 {
                     updateMap();
-                    $("#node-config-input-map").show();
-                }
-                else if (type == "env")
-                {
-                    $("#node-config-input-map").hide();
                 }
             });
 
