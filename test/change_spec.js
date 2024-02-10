@@ -203,14 +203,14 @@ describe("time change node", function()
             helper._RED.util.evaluateJSONataExpression.should.not.be.called();
         });
 
-        it("should fail due to invalid expression (evaluation error)", async function()
+        it("should fail due to invalid expression (evaluation error)", function(done)
         {
             const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "jsonata", expression: "my expression"}]}, cfgNode];
 
             let assign = sinon.spy();
             let registerFunction = sinon.spy();
             sinon.stub(chronos, "getJSONataExpression").returns({assign: assign, registerFunction: registerFunction});
-            sinon.stub(helper._RED.util, "evaluateJSONataExpression").throws(function()
+            sinon.stub(chronos, "evaluateJSONataExpression").throws(function()
             {
                 let e = new Error("some error");
                 e.code = 42;
@@ -219,35 +219,61 @@ describe("time change node", function()
                 return e;
             });
 
-            await helper.load([configNode, changeNode], flow, credentials);
-            const chn1 = helper.getNode("chn1");
+            helper.load([configNode, changeNode], flow, credentials, function()
+            {
+                const chn1 = helper.getNode("chn1");
 
-            chn1.receive({payload: "test"});
-            chn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {_msgid: sinon.match.any, payload: "test", errorDetails: {rule: 1, expression: "my expression", code: 42, description: "some error", position: "abc", token: "xyz"}});
-            chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
-            assign.should.be.calledWith("target", "test");
-            registerFunction.should.have.callCount(5);
-            helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test"});
+                chn1.receive({payload: "test"});
+                chn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {_msgid: sinon.match.any, payload: "test", errorDetails: {rule: 1, expression: "my expression", code: 42, description: "some error", position: "abc", token: "xyz"}});
+                        chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
+                        assign.should.be.calledWith("target", "test");
+                        registerFunction.should.have.callCount(5);
+                        chronos.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, {_msgid: sinon.match.any, payload: "test"});
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should fail due to invalid expression (not integer or string result)", async function()
+        it("should fail due to invalid expression (not integer or string result)", function(done)
         {
             const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "jsonata", expression: "my expression"}]}, cfgNode];
 
             let assign = sinon.spy();
             let registerFunction = sinon.spy();
             sinon.stub(chronos, "getJSONataExpression").returns({assign: assign, registerFunction: registerFunction});
-            sinon.stub(helper._RED.util, "evaluateJSONataExpression").returns(true);
+            sinon.stub(chronos, "evaluateJSONataExpression").returns(true);
 
-            await helper.load([configNode, changeNode], flow, credentials);
-            const chn1 = helper.getNode("chn1");
+            helper.load([configNode, changeNode], flow, credentials, function()
+            {
+                const chn1 = helper.getNode("chn1");
 
-            chn1.receive({payload: "test"});
-            chn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {_msgid: sinon.match.any, payload: "test", errorDetails: {rule: 1, expression: "my expression", result: true}});
-            chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
-            assign.should.be.calledWith("target", "test");
-            registerFunction.should.have.callCount(5);
-            helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test"});
+                chn1.receive({payload: "test"});
+                chn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {_msgid: sinon.match.any, payload: "test", errorDetails: {rule: 1, expression: "my expression", result: true}});
+                        chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
+                        assign.should.be.calledWith("target", "test");
+                        registerFunction.should.have.callCount(5);
+                        chronos.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, {_msgid: sinon.match.any, payload: "test"});
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
     });
 
@@ -375,8 +401,9 @@ describe("time change node", function()
             const flow = [{id: "chn1", type: "chronos-change", name: "change", config: "cn1", wires: [["hn1"]], rules: [{action: "set", target: {type: "msg", name: "payload"}, type: "jsonata", expression: "my expression"}]}, hlpNode, cfgNode];
             let assign = sinon.spy();
             let registerFunction = sinon.spy();
-            sinon.stub(chronos, "getJSONataExpression").returns({assign: assign, registerFunction: registerFunction});
-            const mock = sinon.mock(helper._RED.util);  // need to use a mock instead of a stub as the expected argument mutates
+            const mock = sinon.mock(chronos);  // need to use a mock instead of a stub as the expected argument mutates
+            mock.expects("getJSONataExpression").returns({assign: assign, registerFunction: registerFunction})
+                .withArgs(sinon.match.any, sinon.match.any, "my expression");
 
             helper.load([configNode, changeNode], flow, credentials, function()
             {
@@ -399,11 +426,10 @@ describe("time change node", function()
                     });
 
                     mock.expects("evaluateJSONataExpression").returns(1638444720000)
-                        .withArgs(sinon.match.any, {payload: "test", _msgid: sinon.match.any});
+                        .withArgs(sinon.match.any, sinon.match.any, {payload: "test", _msgid: sinon.match.any});
 
                     chn1.receive({payload: "test"});
                     mock.verify();
-                    chronos.getJSONataExpression.should.be.calledWith(sinon.match.any, sinon.match.any, "my expression");
                     assign.should.be.calledWith("target", "test");
                     registerFunction.should.have.callCount(5);
                 }
