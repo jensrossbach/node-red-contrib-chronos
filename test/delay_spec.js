@@ -554,28 +554,54 @@ describe("delay node", function()
             });
         });
 
-        it("should handle time error during setup of timer", async function()
+        it("should handle time error during setup of timer", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "pointInTime", whenType: "sun", whenValue: "sunset", offset: 2, random: true, preserveCtrlProps: true}, cfgNode];
 
             sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", {type: "sun", value: "sunset"}); });
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("time error", {errorDetails: {type: "sun", value: "sunset"}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", call =>
+                {
+                    try
+                    {
+                        call.should.be.calledWith("time error", {errorDetails: {type: "sun", value: "sunset"}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle other error during setup of timer", async function()
+        it("should handle other error during setup of timer", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "pointInTime", whenType: "sun", whenValue: "sunset", offset: 2, random: true, preserveCtrlProps: true}, cfgNode];
 
             sinon.stub(chronos, "getTime").throws("error", "error message");
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("error message");
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("error message");
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
     });
 
@@ -697,34 +723,39 @@ describe("delay node", function()
 
             helper.load([configNode, delayNode], flow, credentials, function()
             {
-                try
-                {
-                    const dn1 = helper.getNode("dn1");
-                    const hn1 = helper.getNode("hn1");
+                const dn1 = helper.getNode("dn1");
+                const hn1 = helper.getNode("hn1");
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
-                        {
-                            msg.should.have.property("payload", "test");
-                            done();
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
+                        msg.should.have.property("payload", "test");
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
 
-                    dn1.receive({payload: "test"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
-                    dn1.msgQueue.should.have.length(1);
-                    clock.tick(3000);  // advance clock by 3 seconds
-                    dn1.msgQueue.should.have.length(0);
-                }
-                catch (e)
+                dn1.receive({payload: "test"});
+                dn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        dn1.removeAllListeners("call:status");
+                        status.should.be.calledWith({fill: "blue", shape: "dot", text: "1 delay.status.queuedFor 3s "});
+                        clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
+                        dn1.msgQueue.should.have.length(1);
+                        clock.tick(3000);  // advance clock by 3 seconds
+                        dn1.msgQueue.should.have.length(0);
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -735,34 +766,39 @@ describe("delay node", function()
 
             helper.load([configNode, delayNode], flow, credentials, function()
             {
-                try
-                {
-                    const dn1 = helper.getNode("dn1");
-                    const hn1 = helper.getNode("hn1");
+                const dn1 = helper.getNode("dn1");
+                const hn1 = helper.getNode("hn1");
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
-                        {
-                            msg.should.have.property("payload", "test");
-                            done();
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
+                        msg.should.have.property("payload", "test");
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
 
-                    dn1.receive({payload: "test"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
-                    dn1.msgQueue.should.have.length(1);
-                    clock.tick(3000);  // advance clock by 3 seconds
-                    dn1.msgQueue.should.have.length(0);
-                }
-                catch (e)
+                dn1.receive({payload: "test"});
+                dn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        dn1.removeAllListeners("call:status");
+                        status.should.be.calledWith({fill: "blue", shape: "dot", text: "1 delay.status.queuedUntil 1:46:43 PM"});
+                        clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
+                        dn1.msgQueue.should.have.length(1);
+                        clock.tick(3000);  // advance clock by 3 seconds
+                        dn1.msgQueue.should.have.length(0);
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -773,34 +809,39 @@ describe("delay node", function()
 
             helper.load([configNode, delayNode], flow, credentials, function()
             {
-                try
-                {
-                    const dn1 = helper.getNode("dn1");
-                    const hn1 = helper.getNode("hn1");
+                const dn1 = helper.getNode("dn1");
+                const hn1 = helper.getNode("hn1");
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
-                        {
-                            msg.should.have.property("payload", "test");
-                            done();
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
+                        msg.should.have.property("payload", "test");
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
 
-                    dn1.receive({payload: "test"});
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
-                    dn1.msgQueue.should.have.length(1);
-                    clock.tick(3000);  // advance clock by 3 seconds
-                    dn1.msgQueue.should.have.length(0);
-                }
-                catch (e)
+                dn1.receive({payload: "test"});
+                dn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        dn1.removeAllListeners("call:status");
+                        status.should.be.calledWith({fill: "blue", shape: "dot", text: "1 delay.status.queuedUntil 1:46:43 PM"});
+                        clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
+                        dn1.msgQueue.should.have.length(1);
+                        clock.tick(3000);  // advance clock by 3 seconds
+                        dn1.msgQueue.should.have.length(0);
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -955,122 +996,252 @@ describe("delay node", function()
             });
         });
 
-        it("should handle time error due to invalid expression", async function()
+        it("should handle time error due to invalid expression", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "$nonExistingFunc()", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {errorDetails: {expression: "$nonExistingFunc()", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {errorDetails: {expression: "$nonExistingFunc()", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid return value", async function()
+        it("should handle time error due to invalid return value", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "true", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {errorDetails: {expression: "true", result: true}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {errorDetails: {expression: "true", result: true}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid relative numeric time (< 1)", async function()
+        it("should handle time error due to invalid relative numeric time (< 1)", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "0", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "0", result: 0}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "0", result: 0}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid relative numeric time (> 604.800.000)", async function()
+        it("should handle time error due to invalid relative numeric time (> 604.800.000)", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "1604801000", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "1604801000", result: 1604801000}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "1604801000", result: 1604801000}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid absolute numeric time (diff < 1)", async function()
+        it("should handle time error due to invalid absolute numeric time (diff < 1)", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "1000000000", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "1000000000", result: 1000000000}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "1000000000", result: 1000000000}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid absolute numeric time (diff > 604.800.000)", async function()
+        it("should handle time error due to invalid absolute numeric time (diff > 604.800.000)", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "1604801000", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "1604801000", result: 1604801000}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "1604801000", result: 1604801000}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid string time (diff < 1)", async function()
+        it("should handle time error due to invalid string time (diff < 1)", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "'1970-01-12T13:46:40'", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "'1970-01-12T13:46:40'", result: '1970-01-12T13:46:40'}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "'1970-01-12T13:46:40'", result: '1970-01-12T13:46:40'}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid string time (diff > 604.800.000))", async function()
+        it("should handle time error due to invalid string time (diff > 604.800.000))", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "'1970-01-19T13:46:41'", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "'1970-01-19T13:46:41'", result: '1970-01-19T13:46:41'}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.intervalOutOfRange", {errorDetails: {expression: "'1970-01-19T13:46:41'", result: '1970-01-19T13:46:41'}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid string time (no time))", async function()
+        it("should handle time error due to invalid string time (no time))", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "jsonata", customDelayValue: "'invalid'", preserveCtrlProps: true}, cfgNode];
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {errorDetails: {expression: "'invalid'", result: 'invalid'}});
-            dn1.msgQueue.should.have.length(0);
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notTime", {errorDetails: {expression: "'invalid'", result: 'invalid'}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error due to invalid context variable", async function()
+        it("should handle time error due to invalid context variable", function(done)
         {
             const flow = [{id: "dn1", type: "chronos-delay", name: "delay", config: "cn1", delayType: "custom", customDelayType: "flow", customDelayValue: "invalidVariable", preserveCtrlProps: true}, cfgNode];
             const ctx = {flow: {}, global: {}};
 
             sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
-            await helper.load([configNode, delayNode], flow, credentials);
-            const dn1 = helper.getNode("dn1");
+            helper.load([configNode, delayNode], flow, credentials, function()
+            {
+                const dn1 = helper.getNode("dn1");
 
-            sinon.stub(dn1, "context").returns(ctx);
-            ctx.flow.get = sinon.fake.returns(false);
-            ctx.global.get = sinon.fake.returns(undefined);
+                sinon.stub(dn1, "context").returns(ctx);
+                ctx.flow.get = sinon.fake.returns(false);
+                ctx.global.get = sinon.fake.returns(undefined);
 
-            dn1.receive({payload: "test"});
-            dn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {errorDetails: {store: "testStore", key: "testKey", value: false}});
-            dn1.msgQueue.should.have.length(0);
+                dn1.receive({payload: "test"});
+                dn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {errorDetails: {store: "testStore", key: "testKey", value: false}});
+                        dn1.msgQueue.should.have.length(0);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
     });
 

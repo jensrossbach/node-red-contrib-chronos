@@ -111,8 +111,8 @@ describe("chronos", function()
         it("should return date from string", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {timezone: ""}};
-            const res = chronos.getUserDate(RED, node, "2000-01-01");
+            const node = {RED: RED, locale: "en-US", config: {timezone: ""}};
+            const res = chronos.getUserDate(node, "2000-01-01");
 
             res.year().should.equal(2000);
             res.month().should.equal(0);
@@ -122,9 +122,9 @@ describe("chronos", function()
         it("should fail due to invalid date string", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US"};
+            const node = {RED: RED, locale: "en-US"};
 
-            (() => chronos.getUserDate(RED, node, "2000/01-01")).should.throw(chronos.TimeError);
+            (() => chronos.getUserDate(node, "2000/01-01")).should.throw(chronos.TimeError);
         });
     });
 
@@ -190,9 +190,9 @@ describe("chronos", function()
             sinon.stub(Date, "now").returns(new Date("2000-01-01T11:22:33.444Z"));
 
             const RED = {"_": () => ""};
-            const node = {};
+            const node = {RED: RED};
 
-            let res = chronos.getTime(RED, node, moment(), "time", "16:20");
+            let res = chronos.getTime(node, moment(), "time", "16:20");
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -201,7 +201,7 @@ describe("chronos", function()
             res.second().should.equal(0);
             res.millisecond().should.equal(0);
 
-            res = chronos.getTime(RED, node, moment(), "time", "8:15:30");
+            res = chronos.getTime(node, moment(), "time", "8:15:30");
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -210,7 +210,7 @@ describe("chronos", function()
             res.second().should.equal(30);
             res.millisecond().should.equal(0);
 
-            res = chronos.getTime(RED, node, moment(), "time", "8:20 AM");
+            res = chronos.getTime(node, moment(), "time", "8:20 AM");
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -219,7 +219,7 @@ describe("chronos", function()
             res.second().should.equal(0);
             res.millisecond().should.equal(0);
 
-            res = chronos.getTime(RED, node, moment(), "time", "14:20 AM");
+            res = chronos.getTime(node, moment(), "time", "14:20 AM");
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -228,7 +228,7 @@ describe("chronos", function()
             res.second().should.equal(0);
             res.millisecond().should.equal(0);
 
-            res = chronos.getTime(RED, node, moment(), "time", "9:30 PM");
+            res = chronos.getTime(node, moment(), "time", "9:30 PM");
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -237,7 +237,7 @@ describe("chronos", function()
             res.second().should.equal(0);
             res.millisecond().should.equal(0);
 
-            res = chronos.getTime(RED, node, moment(), "time", "15:30 PM");
+            res = chronos.getTime(node, moment(), "time", "15:30 PM");
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -246,7 +246,7 @@ describe("chronos", function()
             res.second().should.equal(0);
             res.millisecond().should.equal(0);
 
-            res = chronos.getTime(RED, node, moment(), "time", 59100000);
+            res = chronos.getTime(node, moment(), "time", 59100000);
             res.year().should.equal(2000);
             res.month().should.equal(0);
             res.date().should.equal(1);
@@ -262,20 +262,20 @@ describe("chronos", function()
             sinon.stub(Date, "now").returns(new Date("2000-01-01T00:00:00.000Z"));
 
             const RED = {"_": () => ""};
-            const node = {};
+            const node = {RED: RED};
 
-            (() => chronos.getTime(RED, node, moment(), "time", "25:20")).should.throw(chronos.TimeError);
-            (() => chronos.getTime(RED, node, moment(), "time", "12.20:10")).should.throw(chronos.TimeError);
-            (() => chronos.getTime(RED, node, moment(), "time", true)).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "time", "25:20")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "time", "12.20:10")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "time", true)).should.throw(chronos.TimeError);
         });
 
         it("should return sun time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getTimes").returns({"sunrise": new Date("2000-01-01T08:00:00.000Z")});
 
-            let res = chronos.getTime(RED, node, moment(), "sun", "sunrise");
+            let res = chronos.getTime(node, moment(), "sun", "sunrise");
             res.utc();
             res.year().should.equal(2000);
             res.month().should.equal(0);
@@ -288,10 +288,10 @@ describe("chronos", function()
         it("should return sun time with custom time zone", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
             sinon.stub(sunCalc, "getTimes").returns({"sunrise": new Date("2000-01-01T08:00:00.000Z")});
 
-            let res = chronos.getTime(RED, node, moment(), "sun", "sunrise");
+            let res = chronos.getTime(node, moment(), "sun", "sunrise");
             res.utcOffset().should.equal(240);  // +4h
             res.year().should.equal(2000);
             res.month().should.equal(0);
@@ -304,10 +304,10 @@ describe("chronos", function()
         it("should return custom sun time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getTimes").returns({"__cust_test": new Date("2000-01-01T08:00:00.000Z")});
 
-            let res = chronos.getTime(RED, node, moment(), "custom", "test");
+            let res = chronos.getTime(node, moment(), "custom", "test");
             res.utc();
             res.year().should.equal(2000);
             res.month().should.equal(0);
@@ -320,33 +320,33 @@ describe("chronos", function()
         it("should fail due to invalid sun time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getTimes")
                     .onFirstCall()
                     .returns({"sunrise": new Date("2000-01-01T08:00:00.000Z")})
                     .onSecondCall()
                     .returns({"sunrise": [2010, 12]});
 
-            (() => chronos.getTime(RED, node, moment(), "sun", "invalid")).should.throw(chronos.TimeError);
-            (() => chronos.getTime(RED, node, moment(), "sun", "sunrise")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "sun", "invalid")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "sun", "sunrise")).should.throw(chronos.TimeError);
         });
 
         it("should fail due to unavailable sun time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getTimes").returns({"sunrise": null});
 
-            (() => chronos.getTime(RED, node, moment(), "sun", "sunrise")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "sun", "sunrise")).should.throw(chronos.TimeError);
         });
 
         it("should return moon time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T22:00:00.000Z")});
 
-            let res = chronos.getTime(RED, node, moment(), "moon", "rise");
+            let res = chronos.getTime(node, moment(), "moon", "rise");
             res.utc();
             res.year().should.equal(2000);
             res.month().should.equal(0);
@@ -359,10 +359,10 @@ describe("chronos", function()
         it("should return moon time with custom time zone", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0, timezone: "Asia/Dubai"}};
             sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T18:00:00.000Z")});
 
-            let res = chronos.getTime(RED, node, moment(), "moon", "rise");
+            let res = chronos.getTime(node, moment(), "moon", "rise");
             res.utcOffset().should.equal(240);  // +4h
             res.year().should.equal(2000);
             res.month().should.equal(0);
@@ -375,32 +375,32 @@ describe("chronos", function()
         it("should fail due to invalid moon time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getMoonTimes")
                     .onFirstCall()
                     .returns({"rise": new Date("2000-01-01T22:00:00.000Z")})
                     .onSecondCall()
                     .returns({"rise": [2010, 12]});
 
-            (() => chronos.getTime(RED, node, moment(), "moon", "invalid")).should.throw(chronos.TimeError);
-            (() => chronos.getTime(RED, node, moment(), "moon", "rise")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "moon", "invalid")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "moon", "rise")).should.throw(chronos.TimeError);
         });
 
         it("should fail due to unavailable moon time", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             sinon.stub(sunCalc, "getMoonTimes").returns({"rise": null, alwaysUp: false, alwaysDown: true});
 
-            (() => chronos.getTime(RED, node, moment(), "moon", "rise")).should.throw(chronos.TimeError);
+            (() => chronos.getTime(node, moment(), "moon", "rise")).should.throw(chronos.TimeError);
         });
 
         it("should do nothing due to invalid type", function()
         {
             const RED = {"_": () => ""};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
 
-            chronos.getTime(RED, node, moment(), "invalid", "abc");
+            chronos.getTime(node, moment(), "invalid", "abc");
 
             // TODO: how to validate best?
         });
@@ -412,9 +412,9 @@ describe("chronos", function()
         {
             const jsnExpr = {testToken: "chronos", registerFunction: sinon.stub()};
             const RED = {util: {prepareJSONataExpression: sinon.stub().returns(jsnExpr)}};
-            const node = "fake";
+            const node = {RED: RED};
 
-            let expr = chronos.getJSONataExpression(RED, node, "my expression");
+            let expr = chronos.getJSONataExpression(node, "my expression");
             expr.should.have.property("testToken", "chronos");
             RED.util.prepareJSONataExpression.should.be.calledWith("my expression", node);
             jsnExpr.registerFunction.should.have.callCount(14);
@@ -426,112 +426,112 @@ describe("chronos", function()
             {
                 return jsonata(expr);
             }}};
-            const node = {locale: "en-US", config: {latitude: 0, longitude: 0}};
+            const node = {RED: RED, locale: "en-US", config: {latitude: 0, longitude: 0}};
             const ts = chronos.getTimeFrom(node, "2021-12-02T12:34:56.789").valueOf();
 
-            let expr = chronos.getJSONataExpression(RED, node, "$millisecond($ts)");
+            let expr = chronos.getJSONataExpression(node, "$millisecond($ts)");
             expr.assign("ts", ts);
             let result = expr.evaluate({});
             result.should.equal(789);
 
-            expr = chronos.getJSONataExpression(RED, node, "$second($ts)");
+            expr = chronos.getJSONataExpression(node, "$second($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(56);
 
-            expr = chronos.getJSONataExpression(RED, node, "$minute($ts)");
+            expr = chronos.getJSONataExpression(node, "$minute($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(34);
 
-            expr = chronos.getJSONataExpression(RED, node, "$hour($ts)");
+            expr = chronos.getJSONataExpression(node, "$hour($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(12);
 
-            expr = chronos.getJSONataExpression(RED, node, "$day($ts)");
+            expr = chronos.getJSONataExpression(node, "$day($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(2);
 
-            expr = chronos.getJSONataExpression(RED, node, "$dayOfWeek($ts)");
+            expr = chronos.getJSONataExpression(node, "$dayOfWeek($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(5);
 
-            expr = chronos.getJSONataExpression(RED, node, "$dayOfYear($ts)");
+            expr = chronos.getJSONataExpression(node, "$dayOfYear($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(336);
 
-            expr = chronos.getJSONataExpression(RED, node, "$week($ts)");
+            expr = chronos.getJSONataExpression(node, "$week($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(49);
 
-            expr = chronos.getJSONataExpression(RED, node, "$month($ts)");
+            expr = chronos.getJSONataExpression(node, "$month($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(12);
 
-            expr = chronos.getJSONataExpression(RED, node, "$quarter($ts)");
+            expr = chronos.getJSONataExpression(node, "$quarter($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(4);
 
-            expr = chronos.getJSONataExpression(RED, node, "$year($ts)");
+            expr = chronos.getJSONataExpression(node, "$year($ts)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             result.should.equal(2021);
 
-            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22')");
+            expr = chronos.getJSONataExpression(node, "$time($ts, '11:22')");
             expr.assign("ts", ts);
             result = moment(expr.evaluate({}));
             result.add(result.utcOffset(), "minutes");
             result.valueOf().should.equal(1638444120000);
 
-            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 0, false)");
+            expr = chronos.getJSONataExpression(node, "$time($ts, '11:22', 0, false)");
             expr.assign("ts", ts);
             result = moment(expr.evaluate({}));
             result.add(result.utcOffset(), "minutes");
             result.valueOf().should.equal(1638444120000);
 
-            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 10, false)");
+            expr = chronos.getJSONataExpression(node, "$time($ts, '11:22', 10, false)");
             expr.assign("ts", ts);
             result = moment(expr.evaluate({}));
             result.add(result.utcOffset(), "minutes");
             result.valueOf().should.equal(1638444720000);
 
             sinon.stub(Math, "random").returns(0.5);
-            expr = chronos.getJSONataExpression(RED, node, "$time($ts, '11:22', 20, true)");
+            expr = chronos.getJSONataExpression(node, "$time($ts, '11:22', 20, true)");
             expr.assign("ts", ts);
             result = moment(expr.evaluate({}));
             result.add(result.utcOffset(), "minutes");
             result.valueOf().should.equal(1638444720000);
 
             sinon.stub(sunCalc, "getTimes").returns({"sunset": new Date("2000-01-01T11:22:33.444Z")});
-            expr = chronos.getJSONataExpression(RED, node, "$sunTime($ts, 'sunset', 0, false)");
+            expr = chronos.getJSONataExpression(node, "$sunTime($ts, 'sunset', 0, false)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             sunCalc.getTimes.should.be.calledOnce();
             result.should.equal(946725753444);
 
             sunCalc.getTimes.resetHistory();
-            expr = chronos.getJSONataExpression(RED, node, "$sunTime($ts, 'sunset')");
+            expr = chronos.getJSONataExpression(node, "$sunTime($ts, 'sunset')");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             sunCalc.getTimes.should.be.calledOnce();
             result.should.equal(946725753444);
 
             sinon.stub(sunCalc, "getMoonTimes").returns({"rise": new Date("2000-01-01T11:22:33.444Z")});
-            expr = chronos.getJSONataExpression(RED, node, "$moonTime($ts, 'rise', 0, false)");
+            expr = chronos.getJSONataExpression(node, "$moonTime($ts, 'rise', 0, false)");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             sunCalc.getTimes.should.be.calledOnce();
             result.should.equal(946725753444);
 
             sunCalc.getMoonTimes.resetHistory();
-            expr = chronos.getJSONataExpression(RED, node, "$moonTime($ts, 'rise')");
+            expr = chronos.getJSONataExpression(node, "$moonTime($ts, 'rise')");
             expr.assign("ts", ts);
             result = expr.evaluate({});
             sunCalc.getTimes.should.be.calledOnce();
