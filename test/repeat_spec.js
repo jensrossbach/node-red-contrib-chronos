@@ -39,7 +39,7 @@ const cfgNode = {id: "cn1", type: "chronos-config", name: "config"};
 const hlpNode = {id: "hn1", type: "helper"};
 const credentials = {"cn1": {latitude: "50", longitude: "10"}};
 
-describe("repeat until node", function()
+describe("repeat node", function()
 {
     before(function(done)
     {
@@ -509,34 +509,52 @@ describe("repeat until node", function()
 
                 helper.load([configNode, repeatNode], flow, credentials, function()
                 {
-                    try
-                    {
-                        const rn1 = helper.getNode("rn1");
-                        const hn1 = helper.getNode("hn1");
+                    const rn1 = helper.getNode("rn1");
+                    const hn1 = helper.getNode("hn1");
+                    let statusCount = 0;
+                    let inputCount = 0;
 
-                        hn1.on("input", function(msg)
+                    hn1.on("input", function(msg)
+                    {
+                        try
                         {
-                            try
-                            {
-                                msg.should.have.property("payload", "test");
-                            }
-                            catch (e)
-                            {
-                                done(e);
-                            }
-                        });
+                            inputCount++;
+                            msg.should.have.property("payload", "test");
 
-                        rn1.receive({payload: "test"});
-                        clock.tick(intvMs);
-                        clock.tick(intvMs);
-                        clock.tick(intvMs);
-                        clock.setTimeout.should.be.calledWith(sinon.match.any, intvMs).and.have.callCount(4);
-                        done();
-                    }
-                    catch (e)
+                            if (inputCount == 4)  // 1 message after receive + 3 messages after 3 intervals
+                            {
+                                done();
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+
+                    rn1.receive({payload: "test"});
+                    rn1.on("call:status", status =>
                     {
-                        done(e);
-                    }
+                        try
+                        {
+                            statusCount++;
+
+                            if (statusCount > 1)  // first status is inital empty one
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, intvMs);
+
+                                if (statusCount < 5)
+                                {
+                                    clock.tick(intvMs);  // advance clock 3 times
+                                }
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
                 });
             });
         }
@@ -552,38 +570,60 @@ describe("repeat until node", function()
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
-                try
-                {
-                    const rn1 = helper.getNode("rn1");
-                    const hn1 = helper.getNode("hn1");
-                    let count = 0;
+                const rn1 = helper.getNode("rn1");
+                const hn1 = helper.getNode("hn1");
+                let statusCount = 0;
+                let inputCount = 0;
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
-                        {
-                            count++;
-                            msg.should.have.property("payload", "test" + ((count <= 3) ? 1 : 2));
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
+                        inputCount++;
+                        msg.should.have.property("payload", "test" + ((inputCount <= 3) ? 1 : 2));
 
-                    rn1.receive({payload: "test1"});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    rn1.receive({payload: "test2"});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(6);
-                    done();
-                }
-                catch (e)
+                        if (inputCount == 6)  // 2 messages after 2 receives + 4 messages after 4 intervals
+                        {
+                            done();
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+
+                rn1.receive({payload: "test1"});
+                rn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        statusCount++;
+
+                        if (statusCount > 1)  // first status is inital empty one
+                        {
+                            status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                            clock.setTimeout.should.be.calledWith(sinon.match.any, 1000);
+
+                            if (statusCount < 4)
+                            {
+                                clock.tick(1000);  // advance clock 2 times
+                            }
+                            else if (statusCount == 4)
+                            {
+                                rn1.receive({payload: "test2"});
+                            }
+                            else if (statusCount < 7)
+                            {
+                                clock.tick(1000);  // advance clock 2 times
+                            }
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -591,50 +631,70 @@ describe("repeat until node", function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
-                try
-                {
-                    const rn1 = helper.getNode("rn1");
-                    const hn1 = helper.getNode("hn1");
-                    let count = 0;
+                const rn1 = helper.getNode("rn1");
+                const hn1 = helper.getNode("hn1");
+                let statusCount = 0;
+                let inputCount = 0;
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
+                        inputCount++;
+                        if (inputCount <= 3)  // 1 message after receive + 2 messages after 2 intervals
                         {
-                            count++;
-                            if (count <= 3)
-                            {
-                                msg.should.have.property("payload", "test");
-                            }
-                            else
-                            {
-                                done("unexpected message received");
-                            }
+                            msg.should.have.property("payload", "test");
                         }
-                        catch (e)
+                        else
                         {
-                            done(e);
+                            done("unexpected message received");
                         }
-                    });
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
 
-                    rn1.receive({payload: "test"});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(3);
-                    clock.setTimeout.resetHistory()
-                    rn1.receive({stop: true});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.not.be.called();
-                    done();
-                }
-                catch (e)
+                rn1.receive({payload: "test"});
+                rn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        statusCount++;
+
+                        if (statusCount > 1)  // first status is inital empty one
+                        {
+                            if (statusCount < 4)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.tick(1000);  // advance clock 2 times
+                            }
+                            else if (statusCount == 4)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(3);
+                                clock.setTimeout.resetHistory()
+                                rn1.receive({stop: true});
+                            }
+                            else if (statusCount == 5)
+                            {
+                                status.should.be.calledWith({});
+                                clock.clearTimeout.should.be.called();
+                                should(rn1.sendTime).be.null();
+                                done();
+                            }
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -645,47 +705,63 @@ describe("repeat until node", function()
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
-                try
-                {
-                    const rn1 = helper.getNode("rn1");
-                    const hn1 = helper.getNode("hn1");
-                    let count = 0;
+                const rn1 = helper.getNode("rn1");
+                const hn1 = helper.getNode("hn1");
+                let statusCount = 0;
+                let inputCount = 0;
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
-                        {
-                            count++;
-                            msg.should.have.property("payload", "test" + ((count <= 3) ? 1 : 2));
-                            msg.should.have.property("interval", {value: ((count <= 3) ? 2 : 3), unit: "seconds"});
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
+                        inputCount++;
+                        msg.should.have.property("payload", "test" + ((inputCount <= 3) ? 1 : 2));
+                        msg.should.have.property("interval", {value: ((inputCount <= 3) ? 2 : 3), unit: "seconds"});
 
-                    rn1.receive({payload: "test1", interval: {value: 2, unit: "seconds"}});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 2000).and.have.callCount(3);
-                    clock.setTimeout.resetHistory();
-                    rn1.receive({payload: "test2", interval: {value: 3, unit: "seconds"}});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 3000).and.have.callCount(3);
-                    done();
-                }
-                catch (e)
+                        if (inputCount == 6)  // 2 messages after 2 receives + 4 messages after 4 intervals
+                        {
+                            done();
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+
+                rn1.receive({payload: "test1", interval: {value: 2, unit: "seconds"}});
+                rn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        statusCount++;
+
+                        if (statusCount > 1)  // first status is inital empty one
+                        {
+                            if (statusCount < 4)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, 2000);
+                                clock.tick(2000);  // advance clock 2 times
+                            }
+                            else if (statusCount == 4)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                rn1.receive({payload: "test2", interval: {value: 3, unit: "seconds"}});
+                            }
+                            else if (statusCount < 7)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
+                                clock.tick(3000);  // advance clock 2 times
+                            }
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -696,19 +772,92 @@ describe("repeat until node", function()
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
-                try
+                const rn1 = helper.getNode("rn1");
+                const hn1 = helper.getNode("hn1");
+                let statusCount = 0;
+                let inputCount = 0;
+
+                hn1.on("input", function(msg)
+                {
+                    try
+                    {
+                        inputCount++;
+                        msg.should.have.property("payload", "test" + ((inputCount <= 3) ? 1 : 2));
+                        msg.should.not.have.property("interval");
+
+                        if (inputCount == 6)  // 2 messages after 2 receives + 4 messages after 4 intervals
+                        {
+                            done();
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+
+                rn1.receive({payload: "test1", interval: {value: 2, unit: "seconds"}});
+                rn1.on("call:status", status =>
+                {
+                    try
+                    {
+                        statusCount++;
+
+                        if (statusCount > 1)  // first status is inital empty one
+                        {
+                            if (statusCount < 4)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, 2000);
+                                clock.tick(2000);  // advance clock 2 times
+                            }
+                            else if (statusCount == 4)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                rn1.receive({payload: "test2", interval: {value: 3, unit: "seconds"}});
+                            }
+                            else if (statusCount < 7)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, 3000);
+                                clock.tick(3000);  // advance clock 2 times
+                            }
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
+        });
+
+        function testIgnoredIntervalOverride(title, override, ignore = false)
+        {
+            it("should fall back to configured interval: " + title, function(done)
+            {
+                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true, ignoreCtrlProps: ignore}, hlpNode, cfgNode];
+                sinon.spy(clock, "setTimeout");
+
+                helper.load([configNode, repeatNode], flow, credentials, function()
                 {
                     const rn1 = helper.getNode("rn1");
                     const hn1 = helper.getNode("hn1");
-                    let count = 0;
+                    let statusCount = 0;
+                    let inputCount = 0;
 
                     hn1.on("input", function(msg)
                     {
                         try
                         {
-                            count++;
-                            msg.should.have.property("payload", "test" + ((count <= 3) ? 1 : 2));
-                            msg.should.not.have.property("interval");
+                            inputCount++;
+                            msg.should.have.property("payload", "test");
+                            msg.should.have.property("interval", override);
+
+                            if (inputCount == 5)  // 1 messages after receive + 4 messages after 4 intervals
+                            {
+                                done();
+                            }
                         }
                         catch (e)
                         {
@@ -716,63 +865,75 @@ describe("repeat until node", function()
                         }
                     });
 
-                    rn1.receive({payload: "test1", interval: {value: 2, unit: "seconds"}});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 2000).and.have.callCount(3);
-                    clock.setTimeout.resetHistory();
-                    rn1.receive({payload: "test2", interval: {value: 3, unit: "seconds"}});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 3000).and.have.callCount(3);
-                    done();
-                }
-                catch (e)
-                {
-                    done(e);
-                }
+                    rn1.receive({payload: "test", interval: override});
+                    rn1.on("call:status", status =>
+                    {
+                        try
+                        {
+                            statusCount++;
+
+                            if (statusCount > 1)  // first status is inital empty one
+                            {
+                                if (statusCount < 6)
+                                {
+                                    status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000);
+                                    clock.tick(2000);  // advance clock 4 times
+                                }
+                                else if (statusCount > 6)
+                                {
+                                    done("Too many status calls");
+                                }
+                            }
+                        }
+                        catch (e)
+                        {
+                            done(e);
+                        }
+                    });
+                });
             });
-        });
+        }
 
-        function testInvalidIntervalOverride(title, override)
+        testIgnoredIntervalOverride("invalid override", "invalid");
+        testIgnoredIntervalOverride("null override", null);
+        testIgnoredIntervalOverride("empty override", {});
+
+        testIgnoredIntervalOverride("no value", {unit: "hours"});
+        testIgnoredIntervalOverride("no uniot", {value: 4});
+
+        testIgnoredIntervalOverride("invalid unit", {value: 4, unit: "invalid"});
+        testIgnoredIntervalOverride("invalid value", {value: "invalid", unit: "seconds"});
+        testIgnoredIntervalOverride("value too small for seconds", {value: 0, unit: "seconds"});
+        testIgnoredIntervalOverride("value too large for seconds", {value: 60, unit: "seconds"});
+        testIgnoredIntervalOverride("value too small for minutes", {value: 0, unit: "minutes"});
+        testIgnoredIntervalOverride("value too large for minutes", {value: 60, unit: "minutes"});
+        testIgnoredIntervalOverride("value too small for hours", {value: 0, unit: "hours"});
+        testIgnoredIntervalOverride("value too large for hours", {value: 25, unit: "hours"});
+
+        testIgnoredIntervalOverride("ignore control commands", 4000, true);
+
+        function testErrorHandling(done, msg, errorArg1, errorArg2)
         {
-            it("should fall back to configured interval: " + title, function(done)
-            {
-                const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
-                sinon.spy(clock, "setTimeout");
+            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
-                helper.load([configNode, repeatNode], flow, credentials, function()
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                const rn1 = helper.getNode("rn1");
+
+                rn1.receive(msg);
+                rn1.on("call:error", error =>
                 {
                     try
                     {
-                        const rn1 = helper.getNode("rn1");
-                        const hn1 = helper.getNode("hn1");
-
-                        hn1.on("input", function(msg)
+                        if (errorArg2)
                         {
-                            try
-                            {
-                                msg.should.have.property("payload", "test");
-                                msg.should.have.property("interval", override);
-                            }
-                            catch (e)
-                            {
-                                done(e);
-                            }
-                        });
-
-                        rn1.receive({payload: "test", interval: override});
-                        clock.tick(1000);
-                        clock.tick(1000);
-                        clock.tick(1000);
-                        clock.tick(1000);
-                        clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(5);
+                            error.should.be.calledWith(errorArg1, errorArg2);
+                        }
+                        else
+                        {
+                            error.should.be.calledWith(errorArg1);
+                        }
                         done();
                     }
                     catch (e)
@@ -783,152 +944,107 @@ describe("repeat until node", function()
             });
         }
 
-        testInvalidIntervalOverride("invalid override", "invalid");
-        testInvalidIntervalOverride("null override", null);
-        testInvalidIntervalOverride("empty override", {});
-
-        testInvalidIntervalOverride("no value", {unit: "hours"});
-        testInvalidIntervalOverride("no uniot", {value: 4});
-
-        testInvalidIntervalOverride("invalid unit", {value: 4, unit: "invalid"});
-        testInvalidIntervalOverride("invalid value", {value: "invalid", unit: "seconds"});
-        testInvalidIntervalOverride("value too small for seconds", {value: 0, unit: "seconds"});
-        testInvalidIntervalOverride("value too large for seconds", {value: 60, unit: "seconds"});
-        testInvalidIntervalOverride("value too small for minutes", {value: 0, unit: "minutes"});
-        testInvalidIntervalOverride("value too large for minutes", {value: 60, unit: "minutes"});
-        testInvalidIntervalOverride("value too small for hours", {value: 0, unit: "hours"});
-        testInvalidIntervalOverride("value too large for hours", {value: 25, unit: "hours"});
-
-        it("should ignore overridden interval", function(done)
+        it("should handle time error", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true, ignoreCtrlProps: true}, hlpNode, cfgNode];
-            sinon.spy(clock, "setTimeout");
-
-            helper.load([configNode, repeatNode], flow, credentials, function()
-            {
-                try
-                {
-                    const rn1 = helper.getNode("rn1");
-                    const hn1 = helper.getNode("hn1");
-
-                    hn1.on("input", function(msg)
-                    {
-                        try
-                        {
-                            msg.should.have.property("payload", "test");
-                            msg.should.have.property("interval", 4000);
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
-
-                    rn1.receive({payload: "test", interval: 4000});
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(5);
-                    done();
-                }
-                catch (e)
-                {
-                    done(e);
-                }
-            });
-        });
-
-        it("should handle time error", async function()
-        {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
-
             sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", {type: "sun", value: "sunset"}); });
-
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
-
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("time error", {_msgid: sinon.match.any, payload: "test", errorDetails: {type: "sun", value: "sunset"}});
+            testErrorHandling(done, {payload: "test"}, "time error", {_msgid: sinon.match.any, payload: "test", errorDetails: {type: "sun", value: "sunset"}});
         });
 
-        it("should handle time error (rename errorDetails)", async function()
+        it("should handle time error (rename errorDetails)", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
-
             sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", {type: "sun", value: "sunset"}); });
-
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
-
-            rn1.receive({payload: "test", errorDetails: "details"});
-            rn1.error.should.be.calledWith("time error", {_msgid: sinon.match.any, payload: "test", _errorDetails: "details", errorDetails: {type: "sun", value: "sunset"}});
+            testErrorHandling(done, {payload: "test", errorDetails: "details"}, "time error", {_msgid: sinon.match.any, payload: "test", _errorDetails: "details", errorDetails: {type: "sun", value: "sunset"}});
         });
 
-        it("should handle time error (no details)", async function()
+        it("should handle time error (no details)", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
-
             sinon.stub(chronos, "getTime").throws(function() { return new chronos.TimeError("time error", null); });
-
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
-
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("time error", {_msgid: sinon.match.any, payload: "test"});
+            testErrorHandling(done, {payload: "test"}, "time error", {_msgid: sinon.match.any, payload: "test"});
         });
 
-        it("should handle other error", async function()
+        it("should handle other error", function(done)
         {
-            const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
-
             sinon.stub(chronos, "getTime").throws("error", "error message");
-
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
-
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("error message");
+            testErrorHandling(done, {payload: "test"}, "error message");
         });
 
-        it("should handle time error caused by ending time (invalid JSONata expression)", async function()
+        it("should handle time error caused by ending time (invalid JSONata expression)", function(done)
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "jsonata", untilValue: "$invalFunc()", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                const rn1 = helper.getNode("rn1");
 
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "$invalFunc()", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any}});
+                rn1.receive({payload: "test"});
+                rn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "$invalFunc()", code: sinon.match.any, description: sinon.match.any, position: sinon.match.any, token: sinon.match.any}});
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error caused by ending time (not boolean)", async function()
+        it("should handle time error caused by ending time (not boolean)", function(done)
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "jsonata", untilValue: "42", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
 
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                const rn1 = helper.getNode("rn1");
 
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notBoolean", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "42", result: 42}});
+                rn1.receive({payload: "test"});
+                rn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notBoolean", {payload: "test", _msgid: sinon.match.any, errorDetails: {expression: "42", result: 42}});
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle time error caused by invalid ending time from context variable", async function()
+        it("should handle time error caused by invalid ending time from context variable", function(done)
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "flow", untilValue: "invalidVariable", untilDate: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: false}, cfgNode];
             const ctx = {flow: {}, global: {}};
 
             sinon.stub(helper._RED.util, "parseContextStore").returns({key: "testKey", store: "testStore"});
 
-            await helper.load([configNode, repeatNode], flow, credentials);
-            const rn1 = helper.getNode("rn1");
+            helper.load([configNode, repeatNode], flow, credentials, function()
+            {
+                const rn1 = helper.getNode("rn1");
 
-            sinon.stub(rn1, "context").returns(ctx);
-            ctx.flow.get = sinon.fake.returns("42");
-            ctx.global.get = sinon.fake.returns(undefined);
+                sinon.stub(rn1, "context").returns(ctx);
+                ctx.flow.get = sinon.fake.returns("42");
+                ctx.global.get = sinon.fake.returns(undefined);
 
-            rn1.receive({payload: "test"});
-            rn1.error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {payload: "test", _msgid: sinon.match.any, errorDetails: {store: "testStore", key: "testKey", value: "42"}});
+                rn1.receive({payload: "test"});
+                rn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.invalidContext", {payload: "test", _msgid: sinon.match.any, errorDetails: {store: "testStore", key: "testKey", value: "42"}});
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
     });
 
@@ -955,46 +1071,65 @@ describe("repeat until node", function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "simple", interval: 1, intervalUnit: "seconds", crontab: "", untilType: "time", untilValue: "00:00:03", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
             sinon.spy(clock, "setTimeout");
+            sinon.spy(clock, "clearTimeout");
 
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
-                try
-                {
-                    const rn1 = helper.getNode("rn1");
-                    const hn1 = helper.getNode("hn1");
+                const rn1 = helper.getNode("rn1");
+                const hn1 = helper.getNode("hn1");
+                let statusCount = 0;
+                let inputCount = 0;
 
-                    hn1.on("input", function(msg)
+                hn1.on("input", function(msg)
+                {
+                    try
                     {
-                        try
-                        {
-                            msg.should.have.property("payload", "test");
-                        }
-                        catch (e)
-                        {
-                            done(e);
-                        }
-                    });
+                        inputCount++;
+                        msg.should.have.property("payload", "test");
 
-                    rn1.receive({payload: "test"});
-                    curTime += 1000;
-                    clock.tick(1000);
-                    curTime += 1000;
-                    clock.tick(1000);
-                    curTime += 1000;
-                    clock.tick(1000);
-                    curTime += 1000;
-                    clock.tick(1000);
-                    curTime += 1000;
-                    clock.tick(1000);
-                    curTime += 1000;
-                    clock.tick(1000);
-                    clock.setTimeout.should.be.calledWith(sinon.match.any, 1000).and.have.callCount(3);
-                    done();
-                }
-                catch (e)
+                        if (inputCount > 4)  // 1 messages after receive + 3 messages after 3 intervals
+                        {
+                            done("Too many messages received");
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+
+                rn1.receive({payload: "test"});
+                rn1.on("call:status", status =>
                 {
-                    done(e);
-                }
+                    try
+                    {
+                        statusCount++;
+
+                        if (statusCount > 1)  // first status is inital empty one
+                        {
+                            if (statusCount < 5)
+                            {
+                                status.should.be.calledWith({fill: "blue", shape: "dot", text: sinon.match.any});
+                                clock.setTimeout.should.be.calledWith(sinon.match.any, 1000);
+
+                                // advance clock 3 times
+                                curTime += 1000;
+                                clock.tick(1000);
+                            }
+                            else
+                            {
+                                status.should.be.calledWith({});
+                                should(rn1.sendTime).be.null();
+
+                                done();
+                            }
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
             });
         });
 
@@ -1976,7 +2111,7 @@ describe("repeat until node", function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
 
-            sinon.stub(helper._RED.util, "evaluateJSONataExpression").returns(2000);
+            sinon.stub(chronos, "evaluateJSONataExpression").returns(2000);
             helper.load([configNode, repeatNode], flow, credentials, function()
             {
                 try
@@ -2023,7 +2158,7 @@ describe("repeat until node", function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
 
-            sinon.stub(helper._RED.util, "evaluateJSONataExpression")
+            sinon.stub(chronos, "evaluateJSONataExpression")
                         .onCall(0).returns(1002000)
                         .onCall(1).returns(1004000)
                         .onCall(2).returns(1006000)
@@ -2075,7 +2210,7 @@ describe("repeat until node", function()
         {
             const flow = [{id: "rn1", type: "chronos-repeat", name: "repeat", config: "cn1", wires: [["hn1"]], mode: "custom", interval: 1, intervalUnit: "seconds", crontab: "", customRepetitionType: "jsonata", customRepetitionValue: "true", untilType: "nextMsg", untilValue: "", untilOffset: 0, untilRandom: false, msgIngress: "forward:forced", preserveCtrlProps: true}, hlpNode, cfgNode];
 
-            sinon.stub(helper._RED.util, "evaluateJSONataExpression")
+            sinon.stub(chronos, "evaluateJSONataExpression")
                         .onCall(0).returns("1970-01-01T00:16:42.000+0000")
                         .onCall(1).returns("1970-01-01T00:16:44.000+0000")
                         .onCall(2).returns("1970-01-01T00:16:46.000+0000")

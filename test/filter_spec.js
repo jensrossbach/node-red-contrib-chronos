@@ -263,7 +263,7 @@ describe("time filter node", function()
             fn1.error.should.be.calledWith("error message");
         });
 
-        it("should add conditions for JSONata expression", async function()
+        it("should add conditions for JSONata expression", function(done)
         {
             const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "$condition[0]", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}]}, cfgNode];
 
@@ -271,18 +271,33 @@ describe("time filter node", function()
             sinon.stub(helper._RED.util, "prepareJSONataExpression").returns({assign: sinon.spy()});
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
             {
-                cb(true);
+                cb({message: "error"});
             });
 
-            await helper.load([configNode, filterNode], flow, credentials);
-            const fn1 = helper.getNode("fn1");
+            helper.load([configNode, filterNode], flow, credentials, function()
+            {
+                const fn1 = helper.getNode("fn1");
 
-            fn1.receive({payload: "test"});
-            fn1.expression.assign.should.be.calledWith("condition", [true]);
-            helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test"}, sinon.match.any);
+                fn1.receive({payload: "test"});
+                fn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        fn1.removeAllListeners("call:error");
+                        error.should.be.calledWith("error");
+                        fn1.expression.assign.should.be.calledWith("condition", [true]);
+                        helper._RED.util.evaluateJSONataExpression.should.be.calledWith(sinon.match.any, {_msgid: sinon.match.any, payload: "test"}, sinon.match.any);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle expression error during JSONata evaluation", async function()
+        it("should handle expression error during JSONata evaluation", function(done)
         {
             const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "my JSONata expression", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]},
                           {id: "chn1", type: "catch", name: "", scope: null, uncaught: false, wires: [["hn1"]]}, hlpNode, cfgNode];
@@ -290,20 +305,46 @@ describe("time filter node", function()
             sinon.stub(helper._RED.util, "prepareJSONataExpression").returns({assign: sinon.spy()});
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
             {
-                cb("some error occurred");
+                cb({message: "some error occurred"});
             });
 
-            await helper.load([configNode, filterNode], flow, credentials);
-            const fn1 = helper.getNode("fn1");
+            helper.load([configNode, filterNode], flow, credentials, function()
+            {
+                const fn1 = helper.getNode("fn1");
+                let errorCount = 0;
 
-            helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
-            fn1.receive({payload: "test"});
-            fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
-            fn1.error.should.be.calledTwice();
-            fn1.error.getCall(1).should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed");
+                helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
+                fn1.receive({payload: "test"});
+                fn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        errorCount++;
+                        if (errorCount == 1)
+                        {
+                            error.should.be.calledWith("some error occurred");
+                        }
+                        else
+                        {
+                            error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed");
+                        }
+
+                        fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
+
+                        if (errorCount == 2)
+                        {
+                            done();
+                        }
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
-        it("should handle no boolean error during JSONata evaluation", async function()
+        it("should handle no boolean error during JSONata evaluation", function(done)
         {
             const flow = [{id: "fn1", type: "chronos-filter", name: "filter", config: "cn1", baseTimeType: "msgIngress", baseTime: "", evaluation: "my JSONata expression", evaluationType: "jsonata", conditions: [{operator: "before", operands: {type: "time", value: "10:00", offset: 0, random: false}}, {operator: "after", operands: {type: "time", value: "10:00", offset: 0, random: false}}]},
                           {id: "chn1", type: "catch", name: "", scope: null, uncaught: false, wires: [["hn1"]]}, hlpNode, cfgNode];
@@ -311,16 +352,29 @@ describe("time filter node", function()
             sinon.stub(helper._RED.util, "prepareJSONataExpression").returns({assign: sinon.spy()});
             sinon.stub(helper._RED.util, "evaluateJSONataExpression").callsFake(function(expr, msg, cb)
             {
-                cb(null, 42);
+                cb(undefined, 42);
             });
 
-            await helper.load([configNode, filterNode], flow, credentials);
-            const fn1 = helper.getNode("fn1");
+            helper.load([configNode, filterNode], flow, credentials, function()
+            {
+                const fn1 = helper.getNode("fn1");
 
-            helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
-            fn1.receive({payload: "test"});
-            fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
-            fn1.error.should.be.calledOnce().and.calledWith("node-red-contrib-chronos/chronos-config:common.error.notBoolean");
+                helper._RED.util.prepareJSONataExpression.should.be.calledWith("my JSONata expression", sinon.match.any);
+                fn1.receive({payload: "test"});
+                fn1.on("call:error", error =>
+                {
+                    try
+                    {
+                        error.should.be.calledWith("node-red-contrib-chronos/chronos-config:common.error.notBoolean");
+                        fn1.expression.assign.should.be.calledWith("condition", sinon.match.any);
+                        done();
+                    }
+                    catch (e)
+                    {
+                        done(e);
+                    }
+                });
+            });
         });
 
         it("should pass through (one match)", function(done)
