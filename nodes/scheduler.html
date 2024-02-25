@@ -303,7 +303,7 @@ SOFTWARE.
 
                     let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
                                         .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, cronInput, "global", "flow"]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, cronInput, "env", "global", "flow"]});
                     triggerType.typedInput("width", "280px");
                     triggerType._prevType = "time";
 
@@ -345,7 +345,8 @@ SOFTWARE.
                     triggerType.on("change", function()
                     {
                         let type = triggerType.typedInput("type");
-                        if ((type === "crontab") || (type === "global") || (type === "flow"))
+                        if ((type === "crontab") || (type === "env") ||
+                            (type === "global") || (type === "flow"))
                         {
                             offsetBox.hide();
                         }
@@ -457,7 +458,8 @@ SOFTWARE.
                 data.trigger.type = triggerType.typedInput("type");
                 data.trigger.value = triggerType.typedInput("value");
 
-                if ((data.trigger.type != "crontab") && (data.trigger.type != "global") && (data.trigger.type != "flow"))
+                if ((data.trigger.type != "crontab") && (data.trigger.type != "env") &&
+                    (data.trigger.type != "global") && (data.trigger.type != "flow"))
                 {
                     data.trigger.offset = triggerOffset.spinner("value");
                     data.trigger.random = triggerRandom.prop("checked");
@@ -482,7 +484,18 @@ SOFTWARE.
                     {
                         data.port = node.outputs++;
 
-                        if ((data.trigger.type == "global") || (data.trigger.type == "flow"))
+                        if (data.trigger.type == "env")
+                        {
+                            if (data.trigger.value.includes("${"))
+                            {
+                                data.label = data.trigger.value;
+                            }
+                            else
+                            {
+                                data.label = "${" + data.trigger.value + "}";
+                            }
+                        }
+                        else if ((data.trigger.type == "global") || (data.trigger.type == "flow"))
                         {
                             let ctx = RED.utils.parseContextKey(data.trigger.value);
                             data.label = data.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");

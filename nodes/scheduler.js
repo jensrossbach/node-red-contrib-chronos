@@ -103,7 +103,8 @@ module.exports = function(RED)
                 let data = node.schedule[i];
 
                 // check for presence of variable name
-                if (((data.config.trigger.type == "global") || (data.config.trigger.type == "flow")) && !data.config.trigger.value)
+                if (((data.config.trigger.type == "env") || (data.config.trigger.type == "global") || (data.config.trigger.type == "flow"))
+                        && !data.config.trigger.value)
                 {
                     valid = false;
                     break;
@@ -245,7 +246,7 @@ module.exports = function(RED)
             {
                 updateStatus();
 
-                let lazyInit = null;
+                let lazyInit = undefined;
                 if (settings.nextEventPort)
                 {
                     lazyInit = () =>
@@ -261,7 +262,7 @@ module.exports = function(RED)
                         if (lazyInit)
                         {
                             RED.events.removeListener("flows:started", lazyInit);
-                            lazyInit = null;
+                            lazyInit = undefined;
                         }
                     };
 
@@ -279,7 +280,7 @@ module.exports = function(RED)
                     if (lazyInit)
                     {
                         RED.events.removeListener("flows:started", lazyInit);
-                        lazyInit = null;
+                        lazyInit = undefined;
                     }
                 });
 
@@ -486,12 +487,38 @@ module.exports = function(RED)
         {
             stopTimer(data, keepOrig);
 
-            if ((data.config.trigger.type == "global") || (data.config.trigger.type == "flow"))
+            if ((data.config.trigger.type == "env") ||
+                (data.config.trigger.type == "global") ||
+                (data.config.trigger.type == "flow"))
             {
-                let ctx = RED.util.parseContextStore(data.config.trigger.value);
-                node.debug("[Timer:" + data.id + "] Load trigger from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
+                let ctxData = undefined;
+                let ctxEvent = undefined;
 
-                let ctxData = node.context()[data.config.trigger.type].get(ctx.key, ctx.store);
+                if (data.config.trigger.type == "env")
+                {
+                    if (typeof data.config.trigger.value == "string")
+                    {
+                        node.debug("[Timer:" + data.id + "] Load trigger from environment variable ${" + data.config.trigger.value + "}");
+                        ctxData = RED.util.evaluateNodeProperty(
+                                                data.config.trigger.value,
+                                                data.config.trigger.type,
+                                                node);
+                    }
+                    else
+                    {
+                        ctxData = data.config.trigger.value;
+                    }
+
+                    ctxEvent = "${" + data.config.trigger.value + "}";
+                }
+                else
+                {
+                    let ctx = RED.util.parseContextStore(data.config.trigger.value);
+                    node.debug("[Timer:" + data.id + "] Load trigger from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
+
+                    ctxData = node.context()[data.config.trigger.type].get(ctx.key, ctx.store);
+                    ctxEvent = data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                }
 
                 if (validateExtendedContextData(ctxData))
                 {
@@ -507,7 +534,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    node.error(RED._("scheduler.error.invalidCtxEvent", {event: data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "")}), {});
+                    node.error(RED._("scheduler.error.invalidCtxEvent", {event: ctxEvent}), {});
                     return;
                 }
             }
@@ -689,7 +716,7 @@ module.exports = function(RED)
             {
                 if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
                 {
-                    let value = null;
+                    let value = undefined;
 
                     if (data.config.output.property.type === "jsonata")
                     {
@@ -724,7 +751,7 @@ module.exports = function(RED)
                 }
                 else if (data.config.output.type == "fullMsg")
                 {
-                    let msg = null;
+                    let msg = undefined;
 
                     if (data.config.output.contentType === "jsonata")
                     {
@@ -922,7 +949,7 @@ module.exports = function(RED)
 
         function getNextEvent()
         {
-            let nextEvent = null;
+            let nextEvent = undefined;
 
             node.schedule.forEach(data =>
             {
