@@ -175,14 +175,6 @@ SOFTWARE.
         aus.
     </dd>
     <dd>
-        Tipp: Es ist möglich, boolsche Werte und Zeichenketten in dem Array zu
-        mischen. Somit können mithilfe einer einzigen Nachricht einige
-        Zeitereignisse aktiviert oder deaktiviert und andere mit einem Kommando
-        gesteuert werden. Weiterhin ist es möglich, einzelne Array-Elemente auf
-        <code>null</code> zu setzen, um die dazugehörigen Zeitereignis zu
-        ignorieren.
-    </dd>
-    <dd>
         Folgende Kommandos werden zurzeit unterstützt:
         <ul>
             <li>
@@ -201,8 +193,13 @@ SOFTWARE.
                 des Ereignisses wird dabei nicht verändert.
             </li>
             <li>
-                <code>trigger:forced</code>: Wie oben, allerdings werden alle
-                Zeitereignisse ausgelöst, nicht nur aktivierte.
+                <code>trigger:forced</code>: Wie oben, allerdings werden auch
+                deaktivierte Zeitereignisse ausgelöst, nicht nur aktivierte.
+            </li>
+            <li>
+                <code>trigger:next</code>: Löst das als nächstes bevorstehende
+                Zeitereignis aus. Wird nicht in Array-Elementen unterstützt, nur
+                in <code>msg.payload</code> Zeichenketten.
             </li>
         </ul>
     </dd>
@@ -248,6 +245,14 @@ SOFTWARE.
         <dt class="optional">output.property.value<span class="property-type">any</span></dt>
         <dd>Nur wenn Ausgabeart nicht "fullMsg" ist; Wert der Ausgabe-Eigenschaft/-Variablen</dd>
     </dl>
+    <dd>
+        Tipp: Es ist möglich, boolsche Werte, Zeichenketten und Objekte in dem
+        Array zu mischen. Somit können mithilfe einer einzigen Nachricht einige
+        Zeitereignisse aktiviert oder deaktiviert, andere mit einem Kommando
+        gesteuert und wieder andere überschrieben werden. Weiterhin ist es
+        möglich, einzelne Array-Elemente auf <code>null</code> zu setzen, um
+        die dazugehörigen Zeitereignis zu ignorieren.
+    </dd>
     <h3>Ausgaben</h3>
     <p>
         Geplante Nachrichten werden an den Ausgabe-Port der Nachricht gesendet.

@@ -163,13 +163,6 @@ SOFTWARE.
         schedule at the same index affecting only this one.
     </dd>
     <dd>
-        Hint: You can also mix boolean values and string values in the array
-        in order to enable/disable certain events and apply control commands
-        to other events at the same time. It is also possible to set single
-        elements in the array to <code>null</code> in order to ignore the
-        corresponding events.
-    </dd>
-    <dd>
         The following commands are currently supported:
         <ul>
             <li>
@@ -186,8 +179,13 @@ SOFTWARE.
                 not change the regular schedule time.
             </li>
             <li>
-                <code>trigger:forced</code>: Same as above, but triggers all events,
-                not just enabled ones.
+                <code>trigger:forced</code>: Same as above, but triggers also
+                disabled events, not just enabled ones.
+            </li>
+            <li>
+                <code>trigger:next</code>: Triggers the nearest upcoming event.
+                Not supported in array elements, only for <code>msg.payload</code>
+                strings.
             </li>
         </ul>
     </dd>
@@ -232,6 +230,13 @@ SOFTWARE.
         <dt class="optional">output.property.value<span class="property-type">any</span></dt>
         <dd>Only if output type is not "fullMsg"; value of output property/variable</dd>
     </dl>
+    <dd>
+        Hint: You can also mix boolean, string and objectvalues in the array
+        in order to enable/disable, apply control commands to or override
+        certain events with a single input message. It is also possible to set
+        specific elements in the array to <code>null</code> in order to ignore
+        the corresponding events.
+    </dd>
     <h3>Outputs</h3>
     <p>
         Scheduled messages are sent to the output of this node. The structure and
