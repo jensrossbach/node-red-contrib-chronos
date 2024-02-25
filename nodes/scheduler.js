@@ -325,6 +325,14 @@ module.exports = function(RED)
                         {
                             await triggerEvents(true);
                         }
+                        else if (msg.payload == "trigger:next")
+                        {
+                            let nextEvent = getNextEvent();
+                            if (nextEvent)
+                            {
+                                await triggerEvent(nextEvent, false);
+                            }
+                        }
 
                         updateStatus();
                         done();
@@ -912,6 +920,31 @@ module.exports = function(RED)
             }
         }
 
+        function getNextEvent()
+        {
+            let nextEvent = null;
+
+            node.schedule.forEach(data =>
+            {
+                if (data.triggerTime)
+                {
+                    if (nextEvent)
+                    {
+                        if (data.triggerTime.isBefore(nextEvent.triggerTime))
+                        {
+                            nextEvent = data;
+                        }
+                    }
+                    else
+                    {
+                        nextEvent = data;
+                    }
+                }
+            });
+
+            return nextEvent;
+        }
+
         function updateStatus()
         {
             if (node.disabledSchedule)
@@ -921,28 +954,10 @@ module.exports = function(RED)
             }
             else
             {
-                let nextTrigger = null;
-                node.schedule.forEach(data =>
+                let nextEvent = getNextEvent();
+                if (nextEvent)
                 {
-                    if (data.triggerTime)
-                    {
-                        if (nextTrigger)
-                        {
-                            if (data.triggerTime.isBefore(nextTrigger))
-                            {
-                                nextTrigger = data.triggerTime;
-                            }
-                        }
-                        else
-                        {
-                            nextTrigger = data.triggerTime;
-                        }
-                    }
-                });
-
-                if (nextTrigger)
-                {
-                    let when = nextTrigger.calendar(
+                    let when = nextEvent.triggerTime.calendar(
                     {
                         sameDay: function()
                         {
@@ -981,7 +996,7 @@ module.exports = function(RED)
                             }
                         }
 
-                        let ts = nextTrigger.valueOf();
+                        let ts = nextEvent.triggerTime.valueOf();
                         if (node.nextEventMsg.payload !== ts)
                         {
                             node.nextEventMsg.payload = ts;
