@@ -4,11 +4,14 @@
         "label":
         {
             "node":        "Zeitfilter",
-            "outputPort":  "Bedingte Nachricht",
-            "evaluation":  "Auswertung",
-            "logicalOr":   "Logisches ODER",
-            "logicalAnd":  "Logisches UND",
-            "annotation":  "Annotation"
+            "outputPort":  "Bedingte Nachricht"
+        },
+        "list":
+        {
+            "evaluation":
+            {
+                "annotation":  "Annotation"
+            }
         }
     }
 }

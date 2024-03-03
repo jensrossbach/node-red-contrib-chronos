@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="40"
+   height="60"
+   viewBox="0 0 40 60"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="chronos_state.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="16.719666"
+     inkscape:cx="27.392892"
+     inkscape:cy="30.054428"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g3"
+       transform="translate(0,1.000001)">
+      <g
+         id="g2"
+         style="fill:#ffffff;fill-opacity:1">
+        <circle
+           style="fill:#ffffff;fill-opacity:1;stroke-width:30.2363;stroke-linecap:round;stroke-linejoin:round"
+           id="path1"
+           cx="10.582458"
+           cy="29"
+           r="6" />
+        <circle
+           style="fill:#ffffff;fill-opacity:1;stroke-width:30.2363;stroke-linecap:round;stroke-linejoin:round"
+           id="path1-8"
+           cx="29.417542"
+           cy="39.885384"
+           r="6" />
+        <circle
+           style="fill:#ffffff;fill-opacity:1;stroke-width:30.2363;stroke-linecap:round;stroke-linejoin:round"
+           id="path1-1"
+           cx="29.417542"
+           cy="18.114614"
+           r="6" />
+      </g>
+      <path
+         style="fill:none;stroke:#ffffff;stroke-width:3.26929;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="M 10.962802,29.196784 29.560451,18.266768 29.37068,39.792207 Z"
+         id="path2" />
+    </g>
+  </g>
+</svg>

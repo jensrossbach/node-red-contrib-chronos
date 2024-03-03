@@ -188,8 +188,8 @@ SOFTWARE.
             </li>
             <li>
                 <code>reload</code>: Führt zu einer Neuberechnung von aktivierten
-                Zeitereignissen (programmierte Daten aus Kontextvariablen werden
-                ebenfalls erneut geladen).
+                Zeitereignissen (programmierte Daten aus Umgebungs- und
+                Kontextvariablen werden ebenfalls erneut geladen).
             </li>
             <li>
                 <code>trigger</code>: Löst aktivierte Zeitereignisse aus, d.h.,
@@ -211,15 +211,15 @@ SOFTWARE.
     <dt>Zeitplan dynamisch programmieren</dt>
     <dd>
         Die Konfiguration des Zielzeitpunkts kann dynamisch über die Eingangsnachricht
-        überschrieben oder aus einer Kontextvariablen geladen werden.
+        überschrieben oder aus einer Umgebungs- oder Kontextvariablen geladen werden.
     </dd>
     <dl class="message-properties">
         <dt>payload<span class="property-type">array</span></dt>
         <dd>Überschreibt ein einzelnes oder mehrere Zeitereignisse</dd>
     </dl>
     <dd>
-        Die Kontextvariablen und die Elemente des <code>msg.payload</code> Arrays
-        müssen Objekte sein und die folgenden Eigenschaften enthalten:
+        Die Umgebungs-/Kontextvariablen und die Elemente des <code>msg.payload</code>
+        Arrays müssen Objekte sein und die folgenden Eigenschaften enthalten:
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
@@ -246,7 +246,11 @@ SOFTWARE.
         <dt class="optional">output.property.name<span class="property-type">string</span></dt>
         <dd>Nur wenn Ausgabeart nicht "fullMsg" ist; Name der Ausgabe-Eigenschaft/-Variablen</dd>
         <dt class="optional">output.property.type<span class="property-type">string</span></dt>
-        <dd>Kann optional auf "date" gesetzt und <code>output.property.value</code> ausgelassen werden, um das gleiche Verhalten zu bekommen, als wäre <i>timestamp</i> als Typ in der Benutzeroberfläche ausgewählt worden</dd>
+        <dd>
+            Kann optional auf "date" gesetzt und <code>output.property.value</code>
+            ausgelassen werden, um das gleiche Verhalten zu bekommen, als wäre
+            <i>timestamp</i> als Typ in der Benutzeroberfläche ausgewählt worden
+        </dd>
         <dt class="optional">output.property.value<span class="property-type">any</span></dt>
         <dd>Nur wenn Ausgabeart nicht "fullMsg" ist; Wert der Ausgabe-Eigenschaft/-Variablen</dd>
     </dl>

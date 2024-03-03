@@ -413,7 +413,7 @@ module.exports = function(RED)
                     else
                     {
                         updateStatus();
-                        done(RED._("scheduler.error.invalidInput"));
+                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
                     }
                 });
 
@@ -498,7 +498,7 @@ module.exports = function(RED)
                 {
                     if (typeof data.config.trigger.value == "string")
                     {
-                        node.debug("[Timer:" + data.id + "] Load trigger from environment variable ${" + data.config.trigger.value + "}");
+                        node.debug("[Event:" + data.id + "] Load trigger from environment variable ${" + data.config.trigger.value + "}");
                         ctxData = RED.util.evaluateNodeProperty(
                                                 data.config.trigger.value,
                                                 data.config.trigger.type,
@@ -514,7 +514,7 @@ module.exports = function(RED)
                 else
                 {
                     let ctx = RED.util.parseContextStore(data.config.trigger.value);
-                    node.debug("[Timer:" + data.id + "] Load trigger from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
+                    node.debug("[Event:" + data.id + "] Load trigger from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
 
                     ctxData = node.context()[data.config.trigger.type].get(ctx.key, ctx.store);
                     ctxEvent = data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
@@ -597,8 +597,8 @@ module.exports = function(RED)
         {
             try
             {
-                node.debug("[Timer:" + data.id + "] Set up timer" + (repeat ? " (repeating)" : ""));
-                node.trace("[Timer:" + data.id + "] Timer specification: " + JSON.stringify(data.config));
+                node.debug("[Event:" + data.id + "] Set up timer" + (repeat ? " (repeating)" : ""));
+                node.trace("[Event:" + data.id + "] Timer specification: " + JSON.stringify(data.config));
 
                 if (data.config.trigger.type == "crontab")
                 {
@@ -643,7 +643,7 @@ module.exports = function(RED)
 
                     if (data.triggerTime.isBefore(now))
                     {
-                        node.debug("[Timer:" + data.id + "] Trigger time before current time, adding one day");
+                        node.debug("[Event:" + data.id + "] Trigger time before current time, adding one day");
 
                         if (data.config.trigger.type == "time")
                         {
@@ -661,7 +661,7 @@ module.exports = function(RED)
                         }
                     }
 
-                    node.debug("[Timer:" + data.id + "] Starting timer for trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                    node.debug("[Event:" + data.id + "] Starting timer for trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                     data.timer = setTimeout(handleTimeout, data.triggerTime.diff(now), data, true);
                 }
 
@@ -688,7 +688,7 @@ module.exports = function(RED)
 
         function tearDownTimer(data)
         {
-            node.debug("[Timer:" + data.id + "] Tear down timer");
+            node.debug("[Event:" + data.id + "] Tear down timer");
 
             if (data.timer instanceof cronosjs.CronosTask)
             {
@@ -705,7 +705,7 @@ module.exports = function(RED)
 
         async function handleTimeout(data, restartTimer)
         {
-            node.debug("[Timer:" + data.id + "] Timer expired");
+            node.debug("[Event:" + data.id + "] Timer expired");
 
             if (restartTimer)
             {
@@ -759,7 +759,7 @@ module.exports = function(RED)
                         if (typeof msg != "object")
                         {
                             const details = {event: data.id, expression: data.config.output.value, result: msg};
-                            throw new chronos.TimeError(RED._("scheduler.error.notObject"), details);
+                            throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notObject"), details);
                         }
                     }
                     else

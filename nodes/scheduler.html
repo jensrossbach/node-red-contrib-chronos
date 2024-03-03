@@ -271,7 +271,7 @@ SOFTWARE.
                     const fullMessageInput =
                     {
                         value: "fullMsg",
-                        label: node._("scheduler.label.fullMessage"),
+                        label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
                         hasValue: false
                     };
 
@@ -321,7 +321,7 @@ SOFTWARE.
                                         .appendTo(randomLabel);
 
                     $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px;"})
-                                        .text(node._("scheduler.label.output"))
+                                        .text(node._("node-red-contrib-chronos/chronos-config:common.label.output"))
                                         .appendTo(outputRow);
 
                     let outputBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(outputRow);
@@ -400,7 +400,10 @@ SOFTWARE.
                     triggerType._prevType = data.trigger.type;
                     triggerType.typedInput("type", data.trigger.type);
 
-                    if ((data.trigger.type != "crontab") && (data.trigger.type != "global") && (data.trigger.type != "flow"))
+                    if ((data.trigger.type != "crontab") &&
+                        (data.trigger.type != "env") &&
+                        (data.trigger.type != "global") &&
+                        (data.trigger.type != "flow"))
                     {
                         triggerOffset.spinner("value", data.trigger.offset);
                         triggerRandom.prop("checked", data.trigger.random);

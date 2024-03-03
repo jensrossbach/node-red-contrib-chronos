@@ -4,13 +4,11 @@
         "label":
         {
             "node":           "scheduler",
-            "inputPort":      "enable/disable",
+            "inputPort":      "control/override",
             "outputPort":     "scheduled message",
             "eventTimes":     "event times",
             "schedule":       "Schedule",
-            "output":         "Output",
             "crontab":        "cron table",
-            "fullMessage":    "full message",
             "multiPort":      "Dedicated output ports for schedule events",
             "nextEventPort":  "Output port for event times",
             "disabled":       "Start with disabled schedule"
@@ -25,8 +23,6 @@
         "error":
         {
             "noSchedule":       "No schedule configured",
-            "notObject":        "Expression must result in an object value",
-            "invalidInput":     "Invalid input message",
             "invalidCtxEvent":  "Invalid schedule event from context variable: __event__",
             "invalidMsgEvent":  "Invalid schedule event from message property: __event__"
         }

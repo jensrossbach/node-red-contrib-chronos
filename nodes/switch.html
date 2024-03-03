@@ -282,7 +282,7 @@ SOFTWARE.
                                         .html("&#8594; " + (index + 1))
                                         .appendTo(fragment);
 
-                    let operator = $("<select/>", {class: "node-input-operator", style: "width: 120px;"})
+                    let operator = $("<select/>", {class: "node-input-operator", style: "width: auto;"})
                                         .appendTo(operatorBox);
                     let operGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.operators"))
                                         .append($("<option></option>").val("before").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.before")))
@@ -364,13 +364,13 @@ SOFTWARE.
                     let nthDaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(daysBox);
                     let specificDaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(daysBox);
                     let day = $("<select/>", {class: "node-input-day", style: "width: auto;"})
-                                        .append($("<option></option>").val("monday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.monday")))
-                                        .append($("<option></option>").val("tuesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.tuesday")))
-                                        .append($("<option></option>").val("wednesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.wednesday")))
-                                        .append($("<option></option>").val("thursday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.thursday")))
-                                        .append($("<option></option>").val("friday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.friday")))
-                                        .append($("<option></option>").val("saturday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.saturday")))
-                                        .append($("<option></option>").val("sunday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday.sunday")))
+                                        .append($("<option></option>").val("monday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.monday")))
+                                        .append($("<option></option>").val("tuesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.tuesday")))
+                                        .append($("<option></option>").val("wednesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.wednesday")))
+                                        .append($("<option></option>").val("thursday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.thursday")))
+                                        .append($("<option></option>").val("friday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.friday")))
+                                        .append($("<option></option>").val("saturday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.saturday")))
+                                        .append($("<option></option>").val("sunday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.sunday")))
                                         .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.day")))
                                         .append($("<option></option>").val("workday").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.workday")))
                                         .append($("<option></option>").val("weekend").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.weekend")))

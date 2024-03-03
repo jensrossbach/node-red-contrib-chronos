@@ -6,9 +6,12 @@
             "inputPort":          "Eingehende Nachricht",
             "name":               "Name",
             "config":             "Konfiguration",
+            "output":             "Ausgabe",
             "baseTime":           "Basiszeit",
             "msgIngress":         "Nachrichteneingang",
+            "fullMessage":        "Komplette Nachricht",
             "conditions":         "Bedingungen",
+            "evaluation":         "Auswertung",
             "time":               "Uhrzeit",
             "sun":                "Sonnenstand",
             "moon":               "Mondstand",
@@ -69,16 +72,21 @@
                     "context":     "Kontext"
                 }
             },
+            "evaluation":
+            {
+                "logicalOr":   "Logisches ODER",
+                "logicalAnd":  "Logisches UND"
+            },
             "dayType":
             {
-                "first":     "erster",
-                "second":    "zweiter",
-                "third":     "dritter",
-                "fourth":    "vierter",
-                "fifth":     "fünfter",
-                "last":      "letzter",
-                "even":      "gerade",
-                "specific":  "fest"
+                "first":     "Erster",
+                "second":    "Zweiter",
+                "third":     "Dritter",
+                "fourth":    "Vierter",
+                "fifth":     "Fünfter",
+                "last":      "Letzter",
+                "even":      "Gerade Tage",
+                "specific":  "Fester Tag"
             },
             "day":
             {
@@ -96,6 +104,16 @@
                 "saturday":   "SA",
                 "sunday":     "SO"
             },
+            "weekdayLong":
+            {
+                "monday":     "Montag",
+                "tuesday":    "Dienstag",
+                "wednesday":  "Mittwoch",
+                "thursday":   "Donnerstag",
+                "friday":     "Freitag",
+                "saturday":   "Samstag",
+                "sunday":     "Sonntag"
+            },
             "month":
             {
                 "january":    "JAN",
@@ -111,6 +129,22 @@
                 "november":   "NOV",
                 "december":   "DEZ",
                 "any":        "jeder"
+            },
+            "monthLong":
+            {
+                "january":    "Januar",
+                "february":   "Februar",
+                "march":      "März",
+                "april":      "April",
+                "may":        "Mai",
+                "june":       "Juni",
+                "july":       "Juli",
+                "august":     "August",
+                "september":  "September",
+                "october":    "Oktober",
+                "november":   "November",
+                "december":   "Dezember",
+                "any":        "jedes Monats"
             },
             "unit":
             {
@@ -151,10 +185,12 @@
             "invalidCondition":    "Ungültige Bedingung",
             "invalidName":         "Ungültiger benutzerdefinierter Sonnenstand angegeben",
             "invalidContext":      "Ungültige Kontextvariable",
+            "invalidInput":        "Ungültige Eingangsnachricht",
             "unavailableTime":     "Kein Zeitpunkt für Ereignis verfügbar",
             "evaluationFailed":    "Fehler beim Auswerten des Ausdrucks",
             "notBoolean":          "Ausdruck muss ein Wahrheitswert sein",
             "notTime":             "Ausdruck muss ein gültiger Zeitwert (Zahl oder Zeichenkette) sein",
+            "notObject":           "Ausdruck muss ein Objekt sein",
             "intervalOutOfRange":  "Interval muss zwischen einer Sekunde und einer Woche liegen"
         }
     },
