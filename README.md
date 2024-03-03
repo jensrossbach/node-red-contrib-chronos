@@ -14,6 +14,11 @@ Schedules the transmission of messages or setting of global/flow variables at sp
 
 ![Scheduler](images/scheduler.png)
 
+#### State
+Maintains a state whose value is changed at specific times under consideration of specific conditions.
+
+![State](images/state.png)
+
 #### Repeat
 Repeats each message passing through the node based on a configurable interval.
 

@@ -1,0 +1,329 @@
+<!--
+Copyright (c) 2024 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/html" data-help-name="chronos-state">
+    <p>
+        Maintains a state whose value is changed at specific times under
+        consideration of specific conditions.
+    </p>
+    <h3>Details</h3>
+    <p>
+        This node can send messages or set global or flow variables whenever
+        the internally maintained state changes and optionally at node start.
+        Multiple state values can be configured and each can have a different
+        trigger time. Additionally, multiple conditions can be defined which
+        are applied to each state change.
+    </p>
+    <p>
+        For more information, please refer to the detailed documentation in the
+        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/State-Node">repository wiki</a>.
+    </p>
+    <h3>Configuration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>The name of the node (optional).</dd>
+        <dt>Configuration</dt>
+        <dd>
+            A reference to the configuration node to be used.
+        </dd>
+        <dt>Output</dt>
+        <dd>
+            The output of a state change which can either be a single message
+            property, flow variable or global variable containing the state
+            value or a full message, specified as JSONata expression.
+        </dd>
+        <dt>States tab</dt>
+        <dd>
+            The list containing the state values. New entries can be added
+            using the button below the list. Existing entries can be reordered
+            or deleted. For each entry, a trigger time and the state value can
+            be configured:
+            <ul>
+                <li>
+                    The trigger time can be specified depending on the selection
+                    on the left side with the following possibilities:
+                    <ul>
+                        <li>
+                            <i>time of day</i>: A specific time can be entered
+                            directly in the form <code>hh:mm[:ss] [am|pm]</code>.
+                        </li>
+                        <li>
+                            <i>sun position</i>: The sun position can be
+                            selected from a list of predefined values.
+                        </li>
+                        <li>
+                            <i>moon position</i>: The moon position can be
+                            selected from a list of predefined values.
+                        </li>
+                        <li>
+                            <i>custom sun position</i>: One of the user-defined
+                            sun position names can be entered.
+                        </li>
+                        <li>
+                            <i>env variable</i>: Trigger configuration will be
+                            loaded from the specified environment variable, see
+                            section <i>Input</i> below for details.
+                        </li>
+                        <li>
+                            <i>global</i>: Trigger configuration will be loaded
+                            from the specified global context variable, see
+                            section <i>Input</i> below for details.
+                        </li>
+                        <li>
+                            <i>flow</i>: Trigger configuration will be loaded
+                            from the specified flow context variable, see section
+                            <i>Input</i> below for details.
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    An offset between -300 and +300 can be specified in minutes.
+                    The offset will be added to or subtracted from the event
+                    time.
+                </li>
+                <li>
+                    If the checkbox on the right side is selected, the offset
+                    will be randomized between 0 and the specified value.
+                </li>
+                <li>
+                    The state value can be one of several Node-RED defined data
+                    types.
+                </li>
+            </ul>
+        </dd>
+        <dt>Conditions tab</dt>
+        <dd>
+            The evaluation specifies the method of combining the results
+            of the conditions. This can be one of:
+            <ul>
+                <li>
+                    <i>logical AND</i>: Upon triggered, the state is changed
+                    only if all conditions evaluate to true.
+                </li>
+                <li>
+                    <i>logical OR</i>: Upon triggered, the state is changed
+                    if at least one of the conditions evaluates to true.
+                </li>
+                <li>
+                    <i>expression</i>: Upon triggered, the state is changed
+                    if the specified JSONata expression evaluates to true.
+                    The results of the conditions can be accessed through
+                    the variable <code>$condition</code> which is an array
+                    of boolean values.
+                </li>
+            </ul>
+            The list contains the conditions for restricting the state changes.
+            New entries can be added using the button below the list. Existing
+            entries can be reordered or deleted. Depending on the selected
+            operator on the left side, the following possibilities are available:
+            <ul>
+                <li>
+                    Operator <i>days</i>: Checks if the trigger time matches
+                    special days of a month. This can be the first, second, third,
+                    fourth, fifth or last day, day of a week, workday or weekend
+                    day. Or it can be an even day or a specific day of a specific
+                    month or every month. All operands can be negated by activating
+                    the <i>Exclude</i> checkbox.
+                </li>
+                <li>
+                    Operator <i>week days</i>: Checks if the trigger time matches
+                    one of the selected week days.
+                </li>
+                <li>
+                    Operator <i>months</i>: Checks if the trigger time matches one
+                    of the selected months.
+                </li>
+            </ul>
+        </dd>
+        <dt>Output current state on start</dt>
+        <dd>
+            If selected, the current state will be output when the node starts
+            in the same way as if a state change happened. Optionally you can
+            choose a delay after which the output is produced (defaults to 0.1
+            seconds).
+        </dd>
+    </dl>
+    <h3>Input</h3>
+    <dt>Control state node</dt>
+    <dd>
+        The state node can be dynamically controlled in various ways using
+        an input message.
+    </dd>
+    <dl class="message-properties">
+        <dt>topic<span class="property-type">string</span></dt>
+        <dd>Control command to be executed</dd>
+        <dt class="optional">payload<span class="property-type">number</span></dt>
+        <dd>Identifier of the state to activate</dd>
+        <dt class="optional">timeout<span class="property-type">number | object</span></dt>
+        <dd>Timeout after which the original state is restored</dd>
+    </dl>
+    <dd>
+        <code>msg.topic</code> must be set to a string containing the command
+        to be executed. Depending on the command, <code>msg.payload</code>
+        might be required as well.
+    </dd>
+    <dd>
+        The following commands are currently supported:
+        <ul>
+            <li>
+                <code>get</code>: Explicitly triggers the output of the current
+                state.
+            </li>
+            <li>
+                <code>set</code>: Sets the current state to the configured state
+                with the identifier in <code>msg.payload</code>. The assigned
+                identifiers are displayed in the state list next to each entry.
+                If the state actually changed by this action, the output of the
+                new state is triggered. Optionally, a timeout can be specified
+                in <code>msg.timeout</code>. After the timeout has elapsed, the
+                state is restored in the same way as the <code>reset</code> command
+                does. The timeout can be specified as number of minutes or as an
+                object containing the properties <code>seconds</code>, <code>minutes</code>
+                and/or <code>hours</code>.
+            </li>
+            <li>
+                <code>reset</code>: Sets the state back to its original value
+                according to the configured trigger time and conditions. If the
+                state actually changed by this action, the output of the restored
+                state is triggered.
+            </li>
+            <li>
+                <code>reload</code>: Forces state triggers to be recalculated
+                (also reloads programmed data from environment and context
+                variables).
+            </li>
+        </ul>
+    </dd>
+    <dt>Dynamically program states and conditions</dt>
+    <dd>
+        The state configuration as well as the conditions can be dynamically
+        overridden via the input message (the state triggers can also be
+        loaded from an environment or context variable).
+    </dd>
+    <dl class="message-properties">
+        <dt>topic<span class="property-type">string</span></dt>
+        <dd>Control command; must be "configure"</dd>
+        <dt>payload<span class="property-type">object</span></dt>
+        <dd>Overrides states and/or conditions</dd>
+    </dl>
+    <dd>
+        For overriding via input message, <code>msg.payload</code> must be an
+        object containing the following properties:
+    </dd>
+    <dl class="message-properties">
+        <dt class="optional">states<span class="property-type">array</span></dt>
+        <dd>List of states to be overriden</dd>
+        <dt class="optional">conditions<span class="property-type">array</span></dt>
+        <dd>List of conditions to be overriden</dd>
+    </dl>
+    <dd>
+        Each element of the <code>states</code> array corresponds to an entry
+        in the state configuration and must be an object containing the following
+        properties:
+    </dd>
+    <dl class="message-properties">
+        <dt class="optional">trigger<span class="property-type">object</span></dt>
+        <dd>Trigger of the state</dd>
+        <dt class="optional">state<span class="property-type">object</span></dt>
+        <dd>Value of the state</dd>
+    </dl>
+    <dd>
+        The <code>trigger</code> property has the following structure (the same
+        structure is used when loading triggers from environment or context
+        variables):
+    </dd>
+    <dl class="message-properties">
+        <dt>type<span class="property-type">string</span></dt>
+        <dd>Trigger type; one of "time", "sun", "moon" or "custom"</dd>
+        <dt>value<span class="property-type">string | number</span></dt>
+        <dd>Trigger value; content is depending on trigger type</dd>
+        <dt class="optional">offset<span class="property-type">number</span></dt>
+        <dd>Offset to the trigger time</dd>
+        <dt class="optional">random<span class="property-type">boolean</span></dt>
+        <dd>Randomized offset</dd>
+    </dl>
+    <dd>
+        The <code>state</code> property has the following structure:
+    </dd>
+    <dl class="message-properties">
+        <dt class="optional">type<span class="property-type">string</span></dt>
+        <dd>
+            Optionally set to "date" and leave <code>value</code> undefined to
+            have same behavior as if selecting <i>timestamp</i> type in UI
+        </dd>
+        <dt class="optional">value<span class="property-type">string | number | boolean | object</span></dt>
+        <dd>State value (not needed for type "date")</dd>
+    </dl>
+    <dd>
+        Each element of the <code>conditions</code> array corresponds to an entry
+        in the condition configuration and must be an object containing the following
+        properties:
+    </dd>
+    <dl class="message-properties">
+        <dt>operator<span class="property-type">string</span></dt>
+        <dd>Operator for comparison; one of "days", "weekdays" or "months"</dd>
+        <dt>operands<span class="property-type">object | array</span></dt>
+        <dd>Operands for comparison; content is depending on operator</dd>
+    </dl>
+    <p>
+        If <code>operator</code> is "days", <code>operands</code> must be
+        an object containing the following properties:
+    </p>
+    <dl class="message-properties">
+        <dt>type<span class="property-type">string</span></dt>
+        <dd>
+            Operand type; one of "first", "second", "third", "fourth",
+            "fifth", "last", "even" or "specific"
+        </dd>
+        <dt class="optional">day<span class="property-type">string | number</span></dt>
+        <dd>
+            Depending on the operand type the name of a day or the day
+            of the month as number; not applicable for type "even"
+        </dd>
+        <dt class="optional">month<span class="property-type">string</span></dt>
+        <dd>Name of the month; only applicable for type "specific"</dd>
+        <dt>exclude<span class="property-type">boolean</span></dt>
+        <dd>Negated result</dd>
+    </dl>
+    <p>
+        If <code>operator</code> is "weekdays", <code>operands</code>
+        must be an object. It may contain boolean properties with names of
+        days of the week. If <code>true</code>, the condition is fullfilled
+        for trigger times on that day or not fulfilled if the property is
+        <code>false</code> or not present.
+    </p>
+    <p>
+        If <code>operator</code> is "months", <code>operands</code>
+        must be an object. It may contain boolean properties with names of
+        months of the year. If <code>true</code>, the condition is fullfilled
+        for trigger times in that month or not fulfilled if the property is
+        <code>false</code> or not present.
+    </p>
+    <h3>Output</h3>
+    <p>
+        Whenever the state changes and the output is configured to be a message
+        property or a full message, a message is sent to the output port of this
+        node.
+    </p>
+</script>

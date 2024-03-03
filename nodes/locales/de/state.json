@@ -1,0 +1,27 @@
+{
+    "state":
+    {
+        "label":
+        {
+            "node":           "Zustand",
+            "inputPort":      "Steuerung/Überschreiben",
+            "outputPort":     "Aktueller Zustand",
+            "message":        "Nachricht",
+            "states":         "Zustände",
+            "value":          "Wert",
+            "outputOnStart":  "Beim Start aktuellen Zustand ausgeben nach"
+        },
+        "status":
+        {
+            "noStates":          "Keine Zustände",
+            "noState":           "Kein aktueller Zustand",
+            "currentState":      "Aktueller Zustand",
+            "until":             "bis"
+        },
+        "error":
+        {
+            "noStates":           "Keine Zustände konfiguriert",
+            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable: __trigger__"
+        }
+    }
+}

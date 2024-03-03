@@ -573,7 +573,6 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                             id);
             }, "<(sn)o:b>");
 
-            node.debug("[Condition:" + id + "] Check if '" + cond.expression + "' evaluates to true");
             result = await node.chronos.evaluateJSONataExpression(RED, expression, msg);
         }
         catch (e)
@@ -616,7 +615,6 @@ function evalCondition(RED, node, baseTime, cond, id)
     if (cond.operator == "context")
     {
         let ctx = RED.util.parseContextStore(cond.context.value);
-        node.debug("[Condition:" + id + "] Load from context variable " + cond.context.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
 
         result = evalCondition(
                     RED,
@@ -638,7 +636,6 @@ function evalCondition(RED, node, baseTime, cond, id)
             targetTime.add(offset, "minutes");
         }
 
-        node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + targetTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
         result = (((cond.operator == "before") && baseTime.isBefore(targetTime))
                     || ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)));
     }
@@ -658,7 +655,6 @@ function evalCondition(RED, node, baseTime, cond, id)
             time2.add(offset, "minutes");
         }
 
-        node.debug("[Condition:" + id + "] Check if " + cond.operator + " " + time1.format("YYYY-MM-DD HH:mm:ss (Z))") + " and " + time2.format("YYYY-MM-DD HH:mm:ss (Z)"));
         if (time2.isSameOrBefore(time1))
         {
             result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2)))
@@ -670,25 +666,33 @@ function evalCondition(RED, node, baseTime, cond, id)
                         || ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
         }
     }
-    else if ((cond.operator == "days"))
+    else
+    {
+        result = evaluateDateCondition(baseTime, cond);
+    }
+
+    return result;
+}
+
+function evaluateDateCondition(baseTime, cond)
+{
+    let result = false;
+
+    if ((cond.operator == "days"))
     {
         if (cond.operands.type == "specific")
         {
             const MONTHS = {january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6, august: 7, september: 8, october: 9, november: 10, december: 11};
-
-            node.debug("[Condition:" + id + "] Check if " + (cond.operands.exclude ? "not " : "") + cond.operands.day + ". of " + ((cond.operands.month == "any") ? "any month" : cond.operands.month));
             result = ((baseTime.date() == cond.operands.day) && ((cond.operands.month == "any") || (baseTime.month() == ((typeof cond.operands.month == "string") ? MONTHS[cond.operands.month] : cond.operands.month - 1))));
         }
         else if (cond.operands.type == "even")
         {
-            node.debug("[Condition:" + id + "] Check if " + (cond.operands.exclude ? "not " : "") + cond.operands.type);
             result = ((baseTime.date() % 2) == 0);
         }
         else
         {
             const WEEKDAYS = {sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6};
 
-            node.debug("[Condition:" + id + "] Check if " + (cond.operands.exclude ? "not " : "") + cond.operands.type + " " + cond.operands.day + " of month");
             if (cond.operands.type == "last")
             {
                 let lastDay = baseTime.clone().endOf("month");
@@ -813,34 +817,10 @@ function evalCondition(RED, node, baseTime, cond, id)
     }
     else if ((cond.operator == "weekdays"))
     {
-        const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
-        let weekdays = "";
-
-        for (let i=0; i<7; ++i)
-        {
-            if (cond.operands[i])
-            {
-                weekdays += " " + WEEKDAYS[i];
-            }
-        }
-
-        node.debug("[Condition:" + id + "] Check if within" + weekdays);
         result = cond.operands[baseTime.day()];
     }
     else if ((cond.operator == "months"))
     {
-        const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-        let months = "";
-
-        for (let i=0; i<12; ++i)
-        {
-            if (cond.operands[i])
-            {
-                months += " " + MONTHS[i];
-            }
-        }
-
-        node.debug("[Condition:" + id + "] Check if within" + months);
         result = cond.operands[baseTime.month()];
     }
 
@@ -886,6 +866,8 @@ function getBaseTime(RED, node, msg)
 module.exports =
 {
     validateCondition: validateCondition,
+    convertCondition: convertCondition,
     evaluateCondition: evaluateCondition,
+    evaluateDateCondition: evaluateDateCondition,
     getBaseTime: getBaseTime
 };

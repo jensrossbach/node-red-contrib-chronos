@@ -4,11 +4,14 @@
         "label":
         {
             "node":        "time filter",
-            "outputPort":  "conditional message",
-            "evaluation":  "Evaluation",
-            "logicalOr":   "logical OR",
-            "logicalAnd":  "logical AND",
-            "annotation":  "annotation"
+            "outputPort":  "conditional message"
+        },
+        "list":
+        {
+            "evaluation":
+            {
+                "annotation":  "annotation"
+            }
         }
     }
 }

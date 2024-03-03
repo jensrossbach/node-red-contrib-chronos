@@ -176,7 +176,8 @@ SOFTWARE.
             </li>
             <li>
                 <code>reload</code>: Forces enabled events to be recalculated
-                (also reloads programmed data from context variables).
+                (also reloads programmed data from environment and context
+                variables).
             </li>
             <li>
                 <code>trigger</code>: Triggers enabled events, i.e., the output
@@ -197,14 +198,14 @@ SOFTWARE.
     <dt>Dynamically program schedule</dt>
     <dd>
         The trigger configuration can be dynamically overridden via the input message
-        or loaded from a context variable.
+        or loaded from an environment or context variable.
     </dd>
     <dl class="message-properties">
         <dt>payload<span class="property-type">array</span></dt>
         <dd>Overrides a single or multiple schedule events</dd>
     </dl>
     <dd>
-        The context variables and the elements of the <code>msg.payload</code>
+        The environment/context variables and the elements of the <code>msg.payload</code>
         array must be objects containing the following properties:
     </dd>
     <dl class="message-properties">
@@ -231,7 +232,10 @@ SOFTWARE.
         <dt class="optional">output.property.name<span class="property-type">string</span></dt>
         <dd>Only if output type is not "fullMsg"; name of output property/variable</dd>
         <dt class="optional">output.property.type<span class="property-type">string</span></dt>
-        <dd>Optionally set to "date" and leave <code>output.property.value</code> undefined to have same behavior as if selecting timestamp type in UI</dd>
+        <dd>
+            Optionally set to "date" and leave <code>output.property.value</code>
+            undefined to have same behavior as if selecting <i>timestamp</i> type in UI
+        </dd>
         <dt class="optional">output.property.value<span class="property-type">any</span></dt>
         <dd>Only if output type is not "fullMsg"; value of output property/variable</dd>
     </dl>
