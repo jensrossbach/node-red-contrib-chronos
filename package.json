@@ -53,6 +53,7 @@
         "nodes": {
             "chronos-config": "nodes/config.js",
             "chronos-scheduler": "nodes/scheduler.js",
+            "chronos-state": "nodes/state.js",
             "chronos-repeat": "nodes/repeat.js",
             "chronos-delay": "nodes/delay.js",
             "chronos-switch": "nodes/switch.js",

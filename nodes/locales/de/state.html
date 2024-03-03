@@ -1,0 +1,341 @@
+<!--
+Copyright (c) 2024 Jens-Uwe Rossbach
+
+This code is licensed under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<script type="text/html" data-help-name="chronos-state">
+    <p>
+        Verwaltet einen Zustand dessen Wert zu bestimmten Uhrzeiten unter
+        Einhaltung bestimmter Bedingungen geändert wird.
+    </p>
+    <h3>Details</h3>
+    <p>
+        Dieser Knoten kann Nachrichten schicken oder globale / Flow-spezifische
+        Variablen setzen, sobald sich der interne Zustand geändert hat und
+        optional beim Starten des Knotens. Mehrere Zustandswerte können konfiguriert
+        werden und jeder Zustand kann unterschiedliche zeitliche Auslöser haben.
+        Zusätzlich können Bedingungen definiert werden, die bei jeder Zustandsänderung
+        angewendet werden.
+    </p>
+    <p>
+        Für weitere Informationen bitte die ausführliche Dokumentation im
+        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/State-Node">Repository-Wiki</a>
+        öffnen (nur in Englisch verfügbar).
+    </p>
+    <h3>Konfiguration</h3>
+    <dl>
+        <dt>Name</dt>
+        <dd>Der Name des Knotens (optional).</dd>
+        <dt>Konfiguration</dt>
+        <dd>
+            Ein Verweis auf den zu verwendenden Konfigurationsknoten.
+        </dd>
+        <dt>Ausgabe</dt>
+        <dd>
+            Die Ausgabe einer Zustandsänderung, die entweder eine einzelne
+            Eigenschaft der Nachricht bzw. eine globale oder Flow-spezifische
+            Variable ist und den Zustandswert enthält oder eine vollständige
+            Nachricht, spezifiziert als JSONata-Ausdruck.
+        </dd>
+        <dt>Reiter Zustände</dt>
+        <dd>
+            Liste der Zustandswerte. Neue Einträge können über den Button
+            unterhalb der Liste hinzugefügt werden. Vorhandene Einträge
+            können neu angeordnet oder gelöscht werden.
+            Jeder Eintrag in der Liste kann wie folgt konfiguriert werden:
+            <ul>
+                <li>
+                    Der Zielzeitpunkt, zu dem ein Zustand geändert werden soll.
+                    Abhängig von der Auswahl auf der linken Seite gibt es
+                    folgende Möglichkeiten:
+                    <ul>
+                        <li>
+                            <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt
+                            in der Form <code>hh:mm[:ss] [am|pm]</code>
+                            eingegeben werden.
+                        </li>
+                        <li>
+                            <i>Sonnenstand</i>: Der Sonnenstand kann aus einer
+                            Liste vorgegebener Werte ausgewählt werden.
+                        </li>
+                        <li>
+                            <i>Mondstand</i>: Der Mondstand kann aus einer Liste
+                            vorgegebener Werte ausgewählt werden.
+                        </li>
+                        <li>
+                            <i>Sonnenstand (benutzerdf.)</i>: Einer der Namen für
+                            benutzerdefinierte Sonnenstände kann eingegeben
+                            werden.
+                        </li>
+                        <li>
+                            <i>Umgebungsvariable</i>: Der Zielzeitpunkt wird aus der
+                            angegebenen Umgebungsvariablen geladen, siehe Abschnitt
+                            <i>Eingabe</i> für weitere Informationen.
+                        </li>
+                        <li>
+                            <i>global</i>: Der Zielzeitpunkt wird aus der
+                            angegebenen globalen Kontextvariablen geladen,
+                            siehe Abschnitt <i>Eingabe</i> für weitere Informationen.
+                        </li>
+                        <li>
+                            <i>flow</i>: Der Zielzeitpunkt wird aus der
+                            angegebenen Flow-Kontextvariablen geladen,
+                            siehe Abschnitt <i>Eingabe</i> für weitere Informationen.
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    Ein zeitlicher Versatz in Minuten zwischen -300 und +300 kann
+                    angegeben werden. Der Versatz wird zur Zielzeit hinzuaddiert
+                    oder davon abgezogen.
+                </li>
+                <li>
+                    Ist die Checkbox auf der rechten Seite aktiviert, wird der
+                    Versatz im Bereich zwischen 0 und dem angegeben Wert
+                    zufällig ausgewählt.
+                </li>
+                <li>
+                    Der Zustandswert kann mittels eines Node-RED spezifischen
+                    Datentyps definiert werden.
+                </li>
+            </ul>
+        </dd>
+        <dt>Reiter Bedingungen</dt>
+        <dd>
+            Die Auswertung spezifiziert die Methode, wie die Ergebnisse
+            der Bedingungen kombiniert werden. Es gibt folgende
+            Möglichkeiten:
+            <ul>
+                <li>
+                    <i>Logisches UND</i>: Bei Auslösung wird der Zustand
+                    geändert, wenn alle Bedingungen wahr sind.
+                </li>
+                <li>
+                    <i>Logisches ODER</i>: Bei Auslösung wird der Zustand
+                    geändert, wenn mindestens eine der Bedingungen wahr ist.
+                </li>
+                <li>
+                    <i>JSONata</i>: Bei Auslösung wird der Zustand geändert,
+                    wenn der angegebene JSONata-Ausdruck wahr ist. Über die
+                    Variable <code>$condition</code> können die Ergebnisse
+                    der Bedingungen als Array von booleschen Werten abgefragt
+                    werden.
+                </li>
+            </ul>
+            Die Liste enthält die Bedingungen zur Einschränkung der
+            Zustandsänderungen. Neue Einträge können über den Button unterhalb
+            der Liste hinzugefügt werden. Vorhandene Einträge können neu
+            angeordnet oder gelöscht werden. Abhängig vom gewählten Operator
+            auf der linken Seite gibt es die folgenden Möglichkeiten:
+            <ul>
+                <li>
+                    Operator <i>Tage</i>: Prüft ob die Auslösezeit auf spezielle Tage
+                    eines Monats zutrifft. Das kann der erste, zweite, dritte, vierte,
+                    fünfte oder letzte Tag, Wochentag, Werktag oder Wochenendtag sein.
+                    Es kann auch ein gerader Tag oder ein bestimmter Tag eines Monats
+                    oder jedes Monats sein. Alle Operanden können durch Aktivieren
+                    der Option <i>Ausschließen</i> negiert werden.
+                </li>
+                <li>
+                    Operator <i>Wochentage</i>: Prüft ob die Auslösezeit auf den
+                    ausgewählten Wochentag zutrifft.
+                </li>
+                <li>
+                    Operator <i>Monate</i>: Prüft ob die Auslösezeit auf einen der
+                    ausgewählten Monate zutrifft.
+                </li>
+            </ul>
+        </dd>
+        <dt>Beim Start aktuellen Zustand ausgeben</dt>
+        <dd>
+            Wenn aktiviert, wird der aktuelle Zustand beim Starten des Knotens
+            in der gleichen Weise ausgegeben, als hätte sich der Zustand geändert.
+            Optional kann eine Verzögerung angegeben werden, nach der die Ausgabe
+            erfolgt (standardmäßig nach 0,1 Sekunden).
+        </dd>
+    </dl>
+    <h3>Eingabe</h3>
+    <dt>Zustands-Knoten steuern</dt>
+    <dd>
+        Der Zustands-Knoten kann auf verschiedene Weise dynamisch gesteuert
+        werden, indem eine Nachricht an den Knoten geschickt wird.
+    </dd>
+    <dl class="message-properties">
+        <dt>topic<span class="property-type">string</span></dt>
+        <dd>Steuert den Knoten abhängig von den angegebenen Kommandos</dd>
+        <dt class="optional">payload<span class="property-type">number</span></dt>
+        <dd>Kennzeichnung des zu aktivierenden Zustands</dd>
+        <dt class="optional">timeout<span class="property-type">number | object</span></dt>
+        <dd>Zeit bis der ursprüngliche Zustands wiederhergestellt wird</dd>
+    </dl>
+    <dd>
+        <code>msg.topic</code> muss auf eine Zeichenkette gesetzt werden, die
+        das auszuführende Kommando enthält. Abhängig vom Kommando muss ggf.
+        auch <code>msg.payload</code> gesetzt werden.
+    </dd>
+    <dd>
+        Folgende Kommandos werden zurzeit unterstützt:
+        <ul>
+            <li>
+                <code>get</code>: Löst die Ausgabe des aktuellen Zustandswertes
+                aus.
+            </li>
+            <li>
+                <code>set</code>: Setzt den aktuellen Zustand auf den konfigurierten
+                Zustand mit der Kennzeichnung in <code>msg.payload</code>. Die
+                zugehörigen Kennzeichnungen werden in der Zustandsliste neben
+                den Einträgen angezeigt. Wenn sich der Zustand durch die Aktion
+                ändert, wird auch die Ausgabe des Zustands ausgelöst. Optional
+                kann eine Zeit in <code>msg.timeout</code> angegeben werden,
+                nach deren Ablauf der Zustand wie beim Kommando <code>reset</code>
+                zurückgesetzt wird. Die Zeit kann entweder als Zahl in Minuten
+                oder als Objekt mit den Eigenschaften <code>seconds</code>,
+                <code>minutes</code> und/oder <code>hours</code> angegeben werden.
+            </li>
+            <li>
+                <code>reset</code>: Setzt den aktuellen Zustand auf seinen
+                ursprünglichen Wert anhand des konfigurierten Auslösezeitpunkts
+                und der Bedingungen zurück. Wenn sich der Zustand durch die Aktion
+                ändert, wird auch die Ausgabe des Zustands ausgelöst.
+            </li>
+            <li>
+                <code>reload</code>: Führt zu einer Neuberechnung der Zeitereignisse
+                (programmierte Daten aus Umgebungs- und Kontextvariablen werden
+                ebenfalls erneut geladen).
+            </li>
+        </ul>
+    </dd>
+    <dt>Zustände und Bedingungen dynamisch programmieren</dt>
+    <dd>
+        Die Konfiguration der Zustände und der Bedingungen kann dynamisch über die
+        Eingangsnachricht überschrieben werden (Zustandsauslöser können auch
+        aus einer Umgebungs- oder Kontextvariablen geladen werden).
+    </dd>
+    <dl class="message-properties">
+        <dt>topic<span class="property-type">string</span></dt>
+        <dd>Kontrolkommando; must auf "configure" gesetzt werden</dd>
+        <dt>payload<span class="property-type">object</span></dt>
+        <dd>Überschreibt Zustände und/oder Bedingungen</dd>
+    </dl>
+    <dd>
+        Um mittels der Eingangsnachricht zu überschreiben, muss <code>msg.payload</code>
+        ein Objekt mit folgenden Eigenschaften sein:
+    </dd>
+    <dl class="message-properties">
+        <dt class="optional">states<span class="property-type">array</span></dt>
+        <dd>Liste der zu überschreibenden Zustände</dd>
+        <dt class="optional">conditions<span class="property-type">array</span></dt>
+        <dd>Liste der zu überschreibenden Bedingungen</dd>
+    </dl>
+    <dd>
+        Jedes Element des <code>states</code> Arrays gehört zu einem Eintrag
+        in der Zustandskonfiguration und muss ein Objekt mit folgenden
+        Eigenschaften sein:
+    </dd>
+    <dl class="message-properties">
+        <dt class="optional">trigger<span class="property-type">object</span></dt>
+        <dd>Zeitlicher Auslöser des Zustands</dd>
+        <dt class="optional">state<span class="property-type">object</span></dt>
+        <dd>Wert des Zustands</dd>
+    </dl>
+    <dd>
+        Die Eigenschaft <code>trigger</code> hat den folgenden Aufbau (der gleiche
+        Aufbau wird auch beim Laden des Auslösers aus einer Umgebungs- oder
+        Kontextvariablen verwenden):
+    </dd>
+    <dl class="message-properties">
+        <dt>type<span class="property-type">string</span></dt>
+        <dd>Auslöseart; entweder "time", "sun", "moon" oder "custom"</dd>
+        <dt>value<span class="property-type">string | number</span></dt>
+        <dd>Auslösezeitpunkt; der Inhalt ist abhängig von der Auslöseart</dd>
+        <dt class="optional">offset<span class="property-type">number</span></dt>
+        <dd>Zeitlicher Versatz zum Auslösezeitpunkt</dd>
+        <dt class="optional">random<span class="property-type">boolean</span></dt>
+        <dd>Zufälliger Zeitversatz</dd>
+    </dl>
+    <dd>
+        Die Eigenschaft <code>state</code> hat folgenden Aufbau:
+    </dd>
+    <dl class="message-properties">
+        <dt class="optional">type<span class="property-type">string</span></dt>
+        <dd>
+            Kann optional auf "date" gesetzt und <code>value</code>
+            ausgelassen werden, um das gleiche Verhalten zu bekommen, als wäre
+            <i>timestamp</i> als Typ in der Benutzeroberfläche ausgewählt worden
+        </dd>
+        <dt class="optional">value<span class="property-type">string | number | boolean | object</span></dt>
+        <dd>Zustandswert (kann für den Datentyp "date" entfallen)</dd>
+    </dl>
+    <dd>
+        Jedes Element des <code>conditions</code> Arrays gehört zu einem Eintrag
+        in der Konfiguration der Bedingungen und muss ein Objekt mit folgenden
+        Eigenschaften sein:
+    </dd>
+    <dl class="message-properties">
+        <dt>operator<span class="property-type">string</span></dt>
+        <dd>Operator für den Vergleich; entweder "days", "weekdays" oder "months"</dd>
+        <dt>operands<span class="property-type">object | array</span></dt>
+        <dd>Operanden für den Vergleich; der Inhalt ist abhängig vom Operator</dd>
+    </dl>
+    <p>
+        Wenn <code>operator</code> "days" enthält, muss <code>operands</code> ein
+        Objekt sein und folgende Eigenschaften enthalten:
+    </p>
+    <dl class="message-properties">
+        <dt>type<span class="property-type">string</span></dt>
+        <dd>
+            Art des Operanden; entweder "first", "second", "third", "fourth",
+            "fifth", "last", "even" oder "specific"
+        </dd>
+        <dt class="optional">day<span class="property-type">string | number</span></dt>
+        <dd>
+            Abhängig von der Art des Operanden der (englische) Name eines Tages
+            oder der Monatstag als Zahl; gilt nicht für den Typ "even"
+        </dd>
+        <dt class="optional">month<span class="property-type">string</span></dt>
+        <dd>(Englischer) Name des Monats; gilt nur für den Typ "specific"</dd>
+        <dt>exclude<span class="property-type">boolean</span></dt>
+        <dd>Negiertes Ergebnis</dd>
+    </dl>
+    <p>
+        Wenn <code>operator</code> "weekdays" enthält, muss <code>operands</code>
+        ein Objekt sein. Dieses kann boolesche Eigenschaften enthalten, deren
+        Namen einem englischen Wochentag ("monday", "tuesday", ...) entsprechen.
+        Wenn der Wert wahr ist, ist die Bedingung für Auslösezeitpunkte an dem
+        entsprechenden Tag erfüllt oder sie ist nicht erfüllt, wenn der Wert der
+        Eigenschaft falsch ist oder die Eigenschaft fehlt.
+    </p>
+    <p>
+        Wenn <code>operator</code> "months" enthält, muss <code>operands</code>
+        ein Objekt sein. Dieses kann boolesche Eigenschaften enthalten, deren
+        Namen einem englischen Monat ("january", "february", ...) des Jahres
+        entsprechen. Wenn der Wert wahr ist, ist die Bedingung für Auslösezeitpunkte
+        in dem entsprechenden Monat erfüllt oder sie ist nicht erfüllt, wenn der
+        Wert der Eigenschaft falsch ist oder die Eigenschaft fehlt.
+    </p>
+    <h3>Ausgabe</h3>
+    <p>
+        Immer wenn sich der Zustand ändert und die Ausgabe als Ausgangsnachricht
+        konfiguriert ist, wird eine Nachricht an den Ausgabe-Port des Knotens
+        gesendet.
+    </p>
+</script>

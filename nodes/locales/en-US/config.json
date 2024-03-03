@@ -6,9 +6,12 @@
             "inputPort":          "input message",
             "name":               "Name",
             "config":             "Configuration",
+            "output":             "Output",
             "baseTime":           "Base Time",
             "msgIngress":         "message ingress",
+            "fullMessage":        "full message",
             "conditions":         "Conditions",
+            "evaluation":         "Evaluation",
             "time":               "time of day",
             "sun":                "sun position",
             "moon":               "moon position",
@@ -69,6 +72,11 @@
                     "context":     "context"
                 }
             },
+            "evaluation":
+            {
+                "logicalOr":   "logical OR",
+                "logicalAnd":  "logical AND"
+            },
             "dayType":
             {
                 "first":     "first",
@@ -77,8 +85,8 @@
                 "fourth":    "fourth",
                 "fifth":     "fifth",
                 "last":      "last",
-                "even":      "even",
-                "specific":  "specific"
+                "even":      "even days",
+                "specific":  "specific day"
             },
             "day":
             {
@@ -96,6 +104,16 @@
                 "saturday":   "SA",
                 "sunday":     "SU"
             },
+            "weekdayLong":
+            {
+                "monday":     "Monday",
+                "tuesday":    "Tuesday",
+                "wednesday":  "Wednesday",
+                "thursday":   "Thursday",
+                "friday":     "Friday",
+                "saturday":   "Saturday",
+                "sunday":     "Sunday"
+            },
             "month":
             {
                 "january":    "JAN",
@@ -111,6 +129,22 @@
                 "november":   "NOV",
                 "december":   "DEC",
                 "any":        "any"
+            },
+            "monthLong":
+            {
+                "january":    "January",
+                "february":   "February",
+                "march":      "March",
+                "april":      "April",
+                "may":        "May",
+                "june":       "June",
+                "july":       "July",
+                "august":     "August",
+                "september":  "September",
+                "october":    "October",
+                "november":   "November",
+                "december":   "December",
+                "any":        "each month"
             },
             "unit":
             {
@@ -151,10 +185,12 @@
             "invalidCondition":    "Invalid condition",
             "invalidName":         "Invalid custom sun position specified",
             "invalidContext":      "Invalid context variable",
+            "invalidInput":        "Invalid input message",
             "unavailableTime":     "No time available for event",
             "evaluationFailed":    "Unable to evaluate expression",
             "notBoolean":          "Expression must result in boolean value",
             "notTime":             "Expression must result in valid time value (number or string)",
+            "notObject":           "Expression must result in an object value",
             "intervalOutOfRange":  "Interval must be between one second and one week"
         }
     },

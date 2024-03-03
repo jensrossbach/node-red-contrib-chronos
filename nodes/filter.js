@@ -157,7 +157,7 @@ module.exports = function(RED)
                                 {
                                     if (e instanceof node.chronos.TimeError)
                                     {
-                                        let errMsg = RED.util.cloneMessage(msg);
+                                        const errMsg = RED.util.cloneMessage(msg);
 
                                         if (e.details)
                                         {

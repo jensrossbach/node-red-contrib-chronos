@@ -1,0 +1,27 @@
+{
+    "state":
+    {
+        "label":
+        {
+            "node":           "state",
+            "inputPort":      "control/override",
+            "outputPort":     "current state",
+            "message":        "Message",
+            "value":          "Value",
+            "states":         "States",
+            "outputOnStart":  "Output current state on start after"
+        },
+        "status":
+        {
+            "noStates":          "no states",
+            "noState":           "no current state",
+            "currentState":      "current state",
+            "until":             "until"
+        },
+        "error":
+        {
+            "noStates":           "No states configured",
+            "invalidCtxTrigger":  "Invalid state trigger from context variable: __trigger__"
+        }
+    }
+}

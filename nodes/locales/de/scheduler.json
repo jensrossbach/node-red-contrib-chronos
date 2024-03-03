@@ -4,13 +4,11 @@
         "label":
         {
             "node":           "Zeitplaner",
-            "inputPort":      "Ein-/Ausschalten",
+            "inputPort":      "Steuerung/Überschreiben",
             "outputPort":     "Geplante Nachricht",
             "eventTimes":     "Ereigniszeiten",
             "schedule":       "Zeitplan",
-            "output":         "Ausgabe",
             "crontab":        "Cron-Tabelle",
-            "fullMessage":    "Komplette Nachricht",
             "multiPort":      "Separate Ausgabe-Ports für Zeitereignisse",
             "nextEventPort":  "Ausgabe-Port für Ereigniszeiten",
             "disabled":       "Mit inaktivem Zeitplan starten"
@@ -25,8 +23,6 @@
         "error":
         {
             "noSchedule":       "Kein Zeitplan konfiguriert",
-            "notObject":        "Ausdruck muss ein Objekt sein",
-            "invalidInput":     "Ungültige Eingangsnachricht",
             "invalidCtxEvent":  "Ungültiges Zeitereignis aus Kontextvariable: __event__",
             "invalidMsgEvent":  "Ungültiges Zeitereignis aus Nachrichteneigenschaft: __event__"
         }
