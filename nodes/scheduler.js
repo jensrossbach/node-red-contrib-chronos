@@ -34,7 +34,7 @@ module.exports = function(RED)
 
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
-        node.locale = require("os-locale").sync();
+        node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
 
         node.initializing = true;
         node.eventTimesPending = false;
