@@ -118,8 +118,18 @@ SOFTWARE.
             },
             schedule:
             {
-                value: [{trigger: {type: "time", value: "", offset: 0, random: false},
-                         output: {type: "msg", property: {name: "payload", type: "str", value: ""}}}],
+                value: [{
+                    trigger: {
+                        type: "time",
+                        value: "",
+                        offset: 0,
+                        random: false},
+                    output: {
+                        type: "msg",
+                        property: {
+                            name: "payload",
+                            type: "str",
+                            value: ""}}}],
                 validate: function(v)
                 {
                     // just a simple check if there are any events, no detailed check of the content
@@ -145,9 +155,9 @@ SOFTWARE.
         },
         oneditprepare: function()
         {
-            let node = this;
+            const node = this;
 
-            let scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "150px").editableList(
+            const scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "150px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -297,54 +307,54 @@ SOFTWARE.
                         }
                     };
 
-                    let fragment = document.createDocumentFragment();
-                    let triggerRow = $("<div/>").appendTo(fragment);
-                    let outputRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+                    const fragment = document.createDocumentFragment();
+                    const triggerRow = $("<div/>").appendTo(fragment);
+                    const outputRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
 
-                    let triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
+                    const triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
                                         .appendTo(triggerRow)
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, cronInput, "env", "global", "flow"]});
                     triggerType.typedInput("width", "280px");
                     triggerType._prevType = "time";
 
-                    let offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
-                    let offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                    const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
+                    const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
                                         .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
                                         .appendTo(offsetBox);
-                    let triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
+                    const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
                                         .appendTo(offsetLabel)
                                         .spinner(offsetInput);
-                    let randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                    const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
                                         .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                         .appendTo(offsetBox);
-                    let triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                    const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
                                         .appendTo(randomLabel);
 
                     $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px;"})
                                         .text(node._("node-red-contrib-chronos/chronos-config:common.label.output"))
                                         .appendTo(outputRow);
 
-                    let outputBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(outputRow);
-                    let outTypeRow = $("<div/>").appendTo(outputBox);
-                    let outValueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(outputBox);
+                    const outputBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(outputRow);
+                    const outTypeRow = $("<div/>").appendTo(outputBox);
+                    const outValueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(outputBox);
 
-                    let outType = $("<input/>", {type: "text", class: "node-input-outType"})
+                    const outType = $("<input/>", {type: "text", class: "node-input-outType"})
                                         .appendTo(outTypeRow)
                                         .typedInput({types: ["global", "flow", "msg", fullMessageInput]});
                     outType.typedInput("width", "280px");
                     outType._prevType = "global";
-                    let propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
+                    const propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
                                         .appendTo(outValueRow)
                                         .typedInput({types: ["str", "num", "bool", "json", "jsonata", "bin", "date"]});
                     propValue.typedInput("width", "280px");
-                    let msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
+                    const msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
                                         .appendTo(outValueRow)
                                         .typedInput({types: ["json", "jsonata"]});
                     msgValue.typedInput("width", "280px");
 
                     triggerType.on("change", function()
                     {
-                        let type = triggerType.typedInput("type");
+                        const type = triggerType.typedInput("type");
                         if ((type === "crontab") || (type === "env") ||
                             (type === "global") || (type === "flow"))
                         {
@@ -367,7 +377,7 @@ SOFTWARE.
 
                     outType.on("change", function()
                     {
-                        let type = outType.typedInput("type");
+                        const type = outType.typedInput("type");
                         if (type === "fullMsg")
                         {
                             propValue.typedInput("hide");
@@ -439,24 +449,23 @@ SOFTWARE.
         },
         oneditsave: function()
         {
-            let node = this;
-            let scheduleList = $("#node-input-scheduleList").editableList("items");
-            let multiPort = $("#node-input-multiPort").prop("checked");
-            let nextEventPort = $("#node-input-nextEventPort").prop("checked");
+            const node = this;
+            const multiPort = $("#node-input-multiPort").prop("checked");
+            const nextEventPort = $("#node-input-nextEventPort").prop("checked");
 
             node.schedule = [];
             node.outputs = 0;
 
-            scheduleList.each(function(index)
+            $("#node-input-scheduleList").editableList("items").each(function(index)
             {
-                let data = {trigger: {}, output: {}};
+                const data = {trigger: {}, output: {}};
 
-                let triggerType = $(this).find(".node-input-triggerType");
-                let triggerOffset = $(this).find(".node-input-triggerOffset");
-                let triggerRandom = $(this).find(".node-input-triggerRandom");
-                let outType = $(this).find(".node-input-outType");
-                let propValue = $(this).find(".node-input-propValue");
-                let msgValue = $(this).find(".node-input-msgValue");
+                const triggerType = $(this).find(".node-input-triggerType");
+                const triggerOffset = $(this).find(".node-input-triggerOffset");
+                const triggerRandom = $(this).find(".node-input-triggerRandom");
+                const outType = $(this).find(".node-input-outType");
+                const propValue = $(this).find(".node-input-propValue");
+                const msgValue = $(this).find(".node-input-msgValue");
 
                 data.trigger.type = triggerType.typedInput("type");
                 data.trigger.value = triggerType.typedInput("value");
@@ -543,9 +552,9 @@ SOFTWARE.
         },
         oneditresize: function(size)
         {
+            const scheduleListRow = $("#dialog-form>div.node-input-scheduleList-row");
+            const otherRows = $("#dialog-form>div:not(.node-input-scheduleList-row)");
             let height = size.height;
-            let scheduleListRow = $("#dialog-form>div.node-input-scheduleList-row");
-            let otherRows = $("#dialog-form>div:not(.node-input-scheduleList-row)");
 
             for (let i=0; i<otherRows.length; ++i)
             {

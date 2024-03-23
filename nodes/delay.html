@@ -302,7 +302,7 @@ SOFTWARE.
         },
         oneditprepare: function()
         {
-            let node = this;
+            const node = this;
 
             const sunTimes =
             [
@@ -483,13 +483,13 @@ SOFTWARE.
                 }
             };
 
-            let fixedDuration = $("#node-input-fixedDuration")
+            const fixedDuration = $("#node-input-fixedDuration")
                             .spinner({min: 1, max: 3600, step: 1, change: validateInput});
-            let randomDuration1 = $("#node-input-randomDuration1")
+            const randomDuration1 = $("#node-input-randomDuration1")
                             .spinner({min: 1, max: 3600, step: 1, change: validateInput});
-            let randomDuration2 = $("#node-input-randomDuration2")
+            const randomDuration2 = $("#node-input-randomDuration2")
                             .spinner({min: 1, max: 3600, step: 1, change: validateInput});
-            let when = $("#node-input-when")
+            const when = $("#node-input-when")
                             .typedInput({
                                 types: [
                                     timeInput,
@@ -497,9 +497,9 @@ SOFTWARE.
                                     moonTimeInput,
                                     customInput],
                                 typeField: $("#node-input-whenType")});
-            let offset = $("#node-input-offset")
+            const offset = $("#node-input-offset")
                             .spinner({min: -300, max: 300, step: 1, change: validateInput});
-            let customDelay = $("#node-input-customDelay")
+            const customDelay = $("#node-input-customDelay")
                             .typedInput({
                                 types: [
                                     "jsonata",
@@ -516,7 +516,7 @@ SOFTWARE.
                 $("#form-row-offset").hide();
                 $("#form-row-custom").hide();
 
-                let value = $(this).val();
+                const value = $(this).val();
                 switch (value)
                 {
                     case "fixedDuration":

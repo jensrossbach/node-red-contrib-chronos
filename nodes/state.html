@@ -69,49 +69,6 @@ SOFTWARE.
 </script>
 
 <script type="text/javascript">
-    const months =
-    [
-        "january",
-        "february",
-        "march",
-        "april",
-        "may",
-        "june",
-        "july",
-        "august",
-        "september",
-        "october",
-        "november",
-        "december"
-    ];
-
-    const weekdays =
-    [
-        "sunday",  // moment.js uses US order -> Sunday is first day of the week
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday"
-    ];
-
-    function validateNumericInput(event, ui)
-    {
-        let value = parseInt($(this).spinner("value"), 10);
-        let min = $(this).spinner("option", "min");
-        let max = $(this).spinner("option", "max");
-        if (isNaN(value) ||
-            (value < min))
-        {
-            $(this).spinner("value", min);
-        }
-        else if (value > max)
-        {
-            $(this).spinner("value", max);
-        }
-    }
-
     RED.nodes.registerType("chronos-state",
     {
         category:     "chronos",
@@ -233,7 +190,34 @@ SOFTWARE.
         },
         oneditprepare: function()
         {
-            let node = this;
+            const node = this;
+
+            const months =
+            [
+                "january",
+                "february",
+                "march",
+                "april",
+                "may",
+                "june",
+                "july",
+                "august",
+                "september",
+                "october",
+                "november",
+                "december"
+            ];
+
+            const weekdays =
+            [
+                "sunday",  // moment.js uses US order -> Sunday is first day of the week
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday"
+            ];
 
             const sunTimes =
             [
@@ -377,6 +361,22 @@ SOFTWARE.
                 label: node._("node-red-contrib-chronos/chronos-config:common.list.evaluation.logicalOr"),
                 hasValue: false
             };
+
+            const validateNumericInput = function(event, ui)
+            {
+                const value = parseInt($(this).spinner("value"), 10);
+                const min = $(this).spinner("option", "min");
+                const max = $(this).spinner("option", "max");
+                if (isNaN(value) ||
+                    (value < min))
+                {
+                    $(this).spinner("value", min);
+                }
+                else if (value > max)
+                {
+                    $(this).spinner("value", max);
+                }
+            }
 
             const outputValue = $("#node-input-outputValue")
                                     .typedInput({types: ["global", "flow", "msg", fullMessageInput], typeField: "#node-input-outputType"});
@@ -728,8 +728,6 @@ SOFTWARE.
                     }
                     else if (data.operator == "weekdays")
                     {
-                        let value = "";
-
                         for (let i=0; i<7; ++i)
                         {
                             weekdayInputs[i].prop("checked", data.operands[i]);
@@ -769,6 +767,33 @@ SOFTWARE.
         },
         oneditsave: function()
         {
+            const months =
+            [
+                "january",
+                "february",
+                "march",
+                "april",
+                "may",
+                "june",
+                "july",
+                "august",
+                "september",
+                "october",
+                "november",
+                "december"
+            ];
+
+            const weekdays =
+            [
+                "sunday",  // moment.js uses US order -> Sunday is first day of the week
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday"
+            ];
+
             let node = this;
             let stateList = $("#node-input-stateList").editableList("items");
             let conditionList = $("#node-input-conditionList").editableList("items");
