@@ -322,8 +322,32 @@ module.exports = function(RED)
             {
                 if ((delayType == "custom") && (node.customDelayType != "jsonata"))
                 {
-                    let ctx = RED.util.parseContextStore(node.customDelayValue);
-                    let ctxData = node.context()[node.customDelayType].get(ctx.key, ctx.store);
+                    let ctxData = undefined;
+                    let errorDetails = undefined;
+
+                    if (node.customDelayType == "env")
+                    {
+                        if (typeof node.customDelayValue == "string")
+                        {
+                            ctxData = RED.util.evaluateNodeProperty(
+                                                    node.customDelayValue,
+                                                    node.customDelayType,
+                                                    node);
+                        }
+                        else
+                        {
+                            ctxData = node.customDelayValue;
+                        }
+
+                        errorDetails = {variable: "${" + node.customDelayValue + "}"};
+                    }
+                    else
+                    {
+                        const ctx = RED.util.parseContextStore(node.customDelayValue);
+
+                        ctxData = node.context()[node.customDelayType].get(ctx.key, ctx.store);
+                        errorDetails = {store: ctx.store, key: ctx.key, value: ctxData};
+                    }
 
                     if (isValidFixedDuration(ctxData))
                     {
@@ -351,7 +375,7 @@ module.exports = function(RED)
                     {
                         throw new chronos.TimeError(
                                     RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
-                                    {store: ctx.store, key: ctx.key, value: ctxData});
+                                    errorDetails);
                     }
                 }
 
