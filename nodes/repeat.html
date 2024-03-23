@@ -269,7 +269,7 @@ SOFTWARE.
         },
         oneditprepare: function()
         {
-            let node = this;
+            const node = this;
 
             const sunTimes =
             [
@@ -399,23 +399,23 @@ SOFTWARE.
                 }
             };
 
-            let interval = $("#node-input-interval")
+            const interval = $("#node-input-interval")
                             .spinner({min: 1, max: 59, step: 1, change: validateInput});
-            let customRepetition = $("#node-input-customRepetition")
+            const customRepetition = $("#node-input-customRepetition")
                             .typedInput({
                                 types: [
                                     "jsonata",
                                     "global",
                                     "flow"],
                                 typeField: $("#node-input-customRepetitionType")});
-            let untilDate = $("#node-input-untilDate")
+            const untilDate = $("#node-input-untilDate")
                             .datepicker({
                                 dateFormat: "yy-mm-dd",
                                 minDate: "2000-01-01",
                                 maxDate: "9999-12-31",
                                 changeYear: true,
                                 firstDay: 1});
-            let until = $("#node-input-until")
+            const until = $("#node-input-until")
                             .typedInput({
                                 types: [
                                     nextMsgInput,
@@ -427,12 +427,12 @@ SOFTWARE.
                                     "global",
                                     "flow"],
                                 typeField: $("#node-input-untilType")});
-            let untilOffset = $("#node-input-untilOffset")
+            const untilOffset = $("#node-input-untilOffset")
                             .spinner({min: -300, max: 300, step: 1, change: validateInput});
 
             $("#node-input-intervalUnit").change(function()
             {
-                let value = $(this).val();
+                const value = $(this).val();
                 switch (value)
                 {
                     case "seconds":
@@ -457,7 +457,7 @@ SOFTWARE.
 
             $("#node-input-mode").change(function()
             {
-                let value = $(this).val();
+                const value = $(this).val();
                 switch (value)
                 {
                     case "simple":
@@ -486,7 +486,7 @@ SOFTWARE.
 
             until.on("change", function()
             {
-                let type = until.typedInput("type");
+                const type = until.typedInput("type");
                 if ((type === "nextMsg") || (type === "jsonata"))
                 {
                     $("#form-row-untilDate").hide();

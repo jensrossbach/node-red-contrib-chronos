@@ -88,9 +88,9 @@ SOFTWARE.
         },
         oneditprepare: function()
         {
-            let node = this;
+            const node = this;
 
-            let taskList = $("#node-input-taskList").css("min-width", "510px").css("min-height", "150px").editableList(
+            const taskList = $("#node-input-taskList").css("min-width", "510px").css("min-height", "150px").editableList(
             {
                 removable: true,
                 sortable: true,
@@ -274,12 +274,12 @@ SOFTWARE.
                         change: numericValidator
                     };
 
-                    let fragment = document.createDocumentFragment();
-                    let actionBox = $("<div/>").appendTo(fragment);
-                    let setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-                    let changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                    const fragment = document.createDocumentFragment();
+                    const actionBox = $("<div/>").appendTo(fragment);
+                    const setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                    const changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
 
-                    let action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
+                    const action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
                                         .append($("<option></option>").val("set").text(node._("change.list.action.set")))
                                         .append($("<option></option>").val("change").text(node._("change.list.action.change")))
                                         .appendTo(actionBox);
@@ -287,25 +287,25 @@ SOFTWARE.
                     $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
                                         .text(node._("change.label.to"))
                                         .appendTo(setBox);
-                    let setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
-                    let setRow1 = $("<div/>").appendTo(setToBox);
-                    let setRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
+                    const setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
+                    const setRow1 = $("<div/>").appendTo(setToBox);
+                    const setRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
 
-                    let property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
+                    const property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
                                         .appendTo(actionBox)
                                         .typedInput({types: ["global", "flow", "msg"]});
                     property.typedInput("width", "280px");
 
-                    let date = $("<input/>", {type: "text", class: "node-input-date"})
+                    const date = $("<input/>", {type: "text", class: "node-input-date"})
                                         .appendTo(setRow1)
                                         .typedInput({types: [nowInput, dateInput, "jsonata"]});
                     date.typedInput("width", "280px");
-                    let time = $("<input/>", {type: "text", class: "node-input-time"})
+                    const time = $("<input/>", {type: "text", class: "node-input-time"})
                                         .appendTo(setRow2)
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
                     time.typedInput("width", "280px");
 
-                    let changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
+                    const changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
                                         .append($("<option></option>").val("set").text(node._("change.list.changeType.set")))
                                         .append($("<option></option>").val("add").text(node._("change.list.changeType.add")))
                                         .append($("<option></option>").val("subtract").text(node._("change.list.changeType.subtract")))
@@ -314,12 +314,12 @@ SOFTWARE.
                                         .append($("<option></option>").val("toString").text(node._("change.list.changeType.toString")))
                                         .appendTo(changeBox);
 
-                    let setPartBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
-                    let addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
-                    let startEndOfBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
-                    let toStringBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    const setPartBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    const addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    const startEndOfBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    const toStringBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
 
-                    let setPartType = $("<select/>", {class: "node-input-setPartType", style: "width: auto;"})
+                    const setPartType = $("<select/>", {class: "node-input-setPartType", style: "width: auto;"})
                                         .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
                                         .append($("<option></option>").val("quarter").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarter")))
                                         .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
@@ -334,14 +334,14 @@ SOFTWARE.
                     $("<label/>", {style: "margin-bottom: 0px; width: auto; text-align: right; margin-left: 4px; margin-right: 4px;"})
                                         .text(node._("change.label.to"))
                                         .appendTo(setPartBox);
-                    let setPartValue = $("<input/>", {class: "node-input-setPartValue", style: "width: 100px !important;"})
+                    const setPartValue = $("<input/>", {class: "node-input-setPartValue", style: "width: 100px !important;"})
                                         .appendTo(setPartBox)
                                         .spinner(partInput);
 
-                    let addsub = $("<input/>", {class: "node-input-addsub", style: "width: 100px !important;"})
+                    const addsub = $("<input/>", {class: "node-input-addsub", style: "width: 100px !important;"})
                                         .appendTo(addsubBox)
                                         .spinner(addsubInput);
-                    let addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: auto; margin-left: 4px"})
+                    const addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: auto; margin-left: 4px"})
                                         .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
                                         .append($("<option></option>").val("quarters").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarters")))
                                         .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
@@ -353,7 +353,7 @@ SOFTWARE.
                                         .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
                                         .appendTo(addsubBox);
 
-                    let startEndOfArg = $("<select/>", {class: "node-input-startEndOfArg", style: "width: auto;"})
+                    const startEndOfArg = $("<select/>", {class: "node-input-startEndOfArg", style: "width: auto;"})
                                         .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
                                         .append($("<option></option>").val("quarter").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarter")))
                                         .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
@@ -364,7 +364,7 @@ SOFTWARE.
                                         .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
                                         .appendTo(startEndOfBox);
 
-                    let stringFormat = $("<input/>", {type: "text", class: "node-input-stringFormat", title: node._("change.label.format"), placeholder: node._("change.label.formatPlaceholder")})
+                    const stringFormat = $("<input/>", {type: "text", class: "node-input-stringFormat", title: node._("change.label.format"), placeholder: node._("change.label.formatPlaceholder")})
                                         .appendTo(toStringBox)
                                         .typedInput({types: [customFormatInput, iso8601FormatInput, iso8601UTCFormatInput]});
                     stringFormat.typedInput("width", "280px");
@@ -374,7 +374,7 @@ SOFTWARE.
                         setBox.hide();
                         changeBox.hide();
 
-                        var value = $(this).val();
+                        const value = $(this).val();
                         switch (value)
                         {
                             case "set":
@@ -397,7 +397,7 @@ SOFTWARE.
                         startEndOfBox.hide();
                         toStringBox.hide();
 
-                        var value = $(this).val();
+                        const value = $(this).val();
                         switch (value)
                         {
                             case "set":
@@ -427,7 +427,7 @@ SOFTWARE.
 
                     setPartType.change(function()
                     {
-                        var value = $(this).val();
+                        const value = $(this).val();
                         switch (value)
                         {
                             case "year":
@@ -497,7 +497,7 @@ SOFTWARE.
 
                     date.on("change", function()
                     {
-                        let type = date.typedInput("type");
+                        const type = date.typedInput("type");
                         if ((type === "now") || (type === "jsonata"))
                         {
                             setRow2.hide();
@@ -508,7 +508,7 @@ SOFTWARE.
                         }
                     });
 
-                    let now = new Date();
+                    const now = new Date();
                     if (!("action" in data))
                     {
                         data = {action: "set", target: {type: "msg", name: "payload"}, type: "now"};
@@ -585,28 +585,21 @@ SOFTWARE.
         },
         oneditsave: function()
         {
-            let node = this;
+            const node = this;
 
-            let taskList = $("#node-input-taskList").editableList("items");
+            const taskList = $("#node-input-taskList").editableList("items");
             node.rules = [];
 
             taskList.each(function(index)
             {
-                let data = {};
+                const data = {};
 
-                let action = $(this).find(".node-input-action");
-                let property = $(this).find(".node-input-property");
-                let date = $(this).find(".node-input-date");
-                let time = $(this).find(".node-input-time");
-                let changeType = $(this).find(".node-input-changeType");
-                let setPartType = $(this).find(".node-input-setPartType");
-                let setPartValue = $(this).find(".node-input-setPartValue");
-                let addsub = $(this).find(".node-input-addsub");
-                let addsubUnit = $(this).find(".node-input-addsubUnit");
-                let startEndOfArg = $(this).find(".node-input-startEndOfArg");
-                let stringFormat = $(this).find(".node-input-stringFormat");
+                const property = $(this).find(".node-input-property");
+                const date = $(this).find(".node-input-date");
+                const time = $(this).find(".node-input-time");
+                const stringFormat = $(this).find(".node-input-stringFormat");
 
-                data.action = action.val();
+                data.action = $(this).find(".node-input-action").val();
                 data.target = {};
                 data.target.type = property.typedInput("type");
                 data.target.name = property.typedInput("value");
@@ -628,20 +621,20 @@ SOFTWARE.
                 }
                 else if (data.action == "change")
                 {
-                    data.type = changeType.val();
+                    data.type = $(this).find(".node-input-changeType").val();
                     if (data.type == "set")
                     {
-                        data.part = setPartType.val();
-                        data.value = setPartValue.spinner("value");
+                        data.part = $(this).find(".node-input-setPartType").val();
+                        data.value = $(this).find(".node-input-setPartValue").spinner("value");
                     }
                     else if ((data.type == "add") || (data.type == "subtract"))
                     {
-                        data.value = addsub.spinner("value");
-                        data.unit = addsubUnit.val();
+                        data.value = $(this).find(".node-input-addsub").spinner("value");
+                        data.unit = $(this).find(".node-input-addsubUnit").val();
                     }
                     else if ((data.type == "startOf") || (data.type == "endOf"))
                     {
-                        data.arg = startEndOfArg.val();
+                        data.arg = $(this).find(".node-input-startEndOfArg").val();
                     }
                     else if (data.type == "toString")
                     {
@@ -655,9 +648,9 @@ SOFTWARE.
         },
         oneditresize: function(size)
         {
+            const conditionListRow = $("#dialog-form>div.node-input-taskList-row");
+            const otherRows = $("#dialog-form>div:not(.node-input-taskList-row)");
             let height = size.height;
-            let conditionListRow = $("#dialog-form>div.node-input-taskList-row");
-            let otherRows = $("#dialog-form>div:not(.node-input-taskList-row)");
 
             for (let i=0; i<otherRows.length; ++i)
             {
