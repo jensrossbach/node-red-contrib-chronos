@@ -143,6 +143,17 @@ SOFTWARE.
                         return this.customRepetitionValue.substring(0, 19) + "...";
                     }
                 }
+                else if (this.customRepetitionType == "env")
+                {
+                    if (this.customRepetitionValue.includes("${"))
+                    {
+                        return this.customRepetitionValue;
+                    }
+                    else
+                    {
+                        return "${" + this.customRepetitionValue + "}";
+                    }
+                }
                 else
                 {
                     return this.customRepetitionType + "." + this.customRepetitionValue;
@@ -384,11 +395,12 @@ SOFTWARE.
                 hasValue: false
             };
 
-            const validateInput = function(event, ui)
+            const validateNumericInput = function(event, ui)
             {
-                var value = parseInt($(this).spinner("value"), 10);
-                var min = $(this).spinner("option", "min");
-                var max = $(this).spinner("option", "max");
+                const value = parseInt($(this).spinner("value"), 10);
+                const min = $(this).spinner("option", "min");
+                const max = $(this).spinner("option", "max");
+
                 if (isNaN(value) || (value < min))
                 {
                     $(this).spinner("value", min);
@@ -399,36 +411,51 @@ SOFTWARE.
                 }
             };
 
-            const interval = $("#node-input-interval")
-                            .spinner({min: 1, max: 59, step: 1, change: validateInput});
-            const customRepetition = $("#node-input-customRepetition")
-                            .typedInput({
-                                types: [
-                                    "jsonata",
-                                    "global",
-                                    "flow"],
-                                typeField: $("#node-input-customRepetitionType")});
-            const untilDate = $("#node-input-untilDate")
-                            .datepicker({
-                                dateFormat: "yy-mm-dd",
-                                minDate: "2000-01-01",
-                                maxDate: "9999-12-31",
-                                changeYear: true,
-                                firstDay: 1});
-            const until = $("#node-input-until")
-                            .typedInput({
-                                types: [
-                                    nextMsgInput,
-                                    timeInput,
-                                    sunTimeInput,
-                                    moonTimeInput,
-                                    customInput,
-                                    "jsonata",
-                                    "global",
-                                    "flow"],
-                                typeField: $("#node-input-untilType")});
-            const untilOffset = $("#node-input-untilOffset")
-                            .spinner({min: -300, max: 300, step: 1, change: validateInput});
+            const interval =
+                    $("#node-input-interval")
+                        .spinner({
+                            min: 1,
+                            max: 59,
+                            step: 1,
+                            change: validateNumericInput});
+            const customRepetition =
+                    $("#node-input-customRepetition")
+                        .typedInput({
+                            types: [
+                                "jsonata",
+                                "env",
+                                "global",
+                                "flow"],
+                            typeField: $("#node-input-customRepetitionType")});
+            const untilDate =
+                    $("#node-input-untilDate")
+                        .datepicker({
+                            dateFormat: "yy-mm-dd",
+                            minDate: "2000-01-01",
+                            maxDate: "9999-12-31",
+                            changeYear: true,
+                            firstDay: 1});
+            const until =
+                    $("#node-input-until")
+                        .typedInput({
+                            types: [
+                                nextMsgInput,
+                                timeInput,
+                                sunTimeInput,
+                                moonTimeInput,
+                                customInput,
+                                "jsonata",
+                                "env",
+                                "global",
+                                "flow"],
+                            typeField: $("#node-input-untilType")});
+            const untilOffset =
+                    $("#node-input-untilOffset")
+                        .spinner({
+                            min: -300,
+                            max: 300,
+                            step: 1,
+                            change: validateNumericInput});
 
             $("#node-input-intervalUnit").change(function()
             {
@@ -452,7 +479,7 @@ SOFTWARE.
                     }
                 }
 
-                validateInput.call(interval);
+                validateNumericInput.call(interval);
             });
 
             $("#node-input-mode").change(function()
