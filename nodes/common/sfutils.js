@@ -189,7 +189,7 @@ function convertCondition(RED, node, cond, num)
         }
     }
 
-    let convCond = {operator: cond.operator};
+    const convCond = {operator: cond.operator};
 
     if ((convCond.operator == "before") || (convCond.operator == "after") ||
         (convCond.operator == "between") || (convCond.operator == "outside"))
@@ -614,7 +614,27 @@ function evalCondition(RED, node, baseTime, cond, id)
 
     if (cond.operator == "context")
     {
-        let ctx = RED.util.parseContextStore(cond.context.value);
+        let ctxData = undefined;
+
+        if (cond.context.type == "env")
+        {
+            if (typeof cond.context.value == "string")
+            {
+                ctxData = RED.util.evaluateNodeProperty(
+                                        cond.context.value,
+                                        cond.context.type,
+                                        node);
+            }
+            else
+            {
+                ctxData = cond.context.value;
+            }
+        }
+        else
+        {
+            const ctx = RED.util.parseContextStore(cond.context.value);
+            ctxData = node.context()[cond.context.type].get(ctx.key, ctx.store);
+        }
 
         result = evalCondition(
                     RED,
@@ -623,12 +643,12 @@ function evalCondition(RED, node, baseTime, cond, id)
                     convertCondition(
                         RED,
                         node,
-                        node.context()[cond.context.type].get(ctx.key, ctx.store), id),
+                        ctxData, id),
                     id);
     }
     else if ((cond.operator == "before") || (cond.operator == "after"))
     {
-        let targetTime = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands.type, cond.operands.value);
+        const targetTime = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands.type, cond.operands.value);
 
         if (cond.operands.offset != 0)
         {
@@ -641,17 +661,17 @@ function evalCondition(RED, node, baseTime, cond, id)
     }
     else if ((cond.operator == "between") || (cond.operator == "outside"))
     {
-        let time1 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-        let time2 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+        const time1 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+        const time2 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
         if (cond.operands[0].offset != 0)
         {
-            let offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
+            const offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
             time1.add(offset, "minutes");
         }
         if (cond.operands[1].offset != 0)
         {
-            let offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
+            const offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
             time2.add(offset, "minutes");
         }
 
@@ -695,7 +715,7 @@ function evaluateDateCondition(baseTime, cond)
 
             if (cond.operands.type == "last")
             {
-                let lastDay = baseTime.clone().endOf("month");
+                const lastDay = baseTime.clone().endOf("month");
 
                 switch (cond.operands.day)
                 {
@@ -739,7 +759,7 @@ function evaluateDateCondition(baseTime, cond)
                     }
                     case "weekend":
                     {
-                        let day = lastDay.day();
+                        const day = lastDay.day();
                         if ((day >= 1) && (day <= 5))  // Monday .. Friday
                         {
                             lastDay.subtract(day, "days");
@@ -753,7 +773,7 @@ function evaluateDateCondition(baseTime, cond)
             else
             {
                 const ORDINALS = {first: 0, second: 1, third: 2, fourth: 3, fifth: 4};
-                let firstDay = baseTime.clone().startOf("month");
+                const firstDay = baseTime.clone().startOf("month");
 
                 switch (cond.operands.day)
                 {
@@ -797,7 +817,7 @@ function evaluateDateCondition(baseTime, cond)
                     }
                     case "weekend":
                     {
-                        let day = firstDay.day();
+                        const day = firstDay.day();
                         if ((day >= 1) && (day <= 5))  // Monday .. Friday
                         {
                             firstDay.add(6 - day, "days");
@@ -843,7 +863,7 @@ function getBaseTime(RED, node, msg)
             case "global":
             case "flow":
             {
-                let ctx = RED.util.parseContextStore(node.baseTime);
+                const ctx = RED.util.parseContextStore(node.baseTime);
                 value = node.context()[node.baseTimeType].get(ctx.key, ctx.store);
                 break;
             }
