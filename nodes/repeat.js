@@ -307,8 +307,32 @@ module.exports = function(RED)
 
             if ((mode == "custom") && (node.customRepetitionType != "jsonata"))
             {
-                let ctx = RED.util.parseContextStore(node.customRepetitionValue);
-                let ctxData = node.context()[node.customRepetitionType].get(ctx.key, ctx.store);
+                let ctxData = undefined;
+                let errorDetails = undefined;
+
+                if (node.customRepetitionType == "env")
+                {
+                    if (typeof node.customRepetitionValue == "string")
+                    {
+                        ctxData = RED.util.evaluateNodeProperty(
+                                                node.customRepetitionValue,
+                                                node.customRepetitionType,
+                                                node);
+                    }
+                    else
+                    {
+                        ctxData = node.customRepetitionValue;
+                    }
+
+                    errorDetails = {variable: "${" + node.customRepetitionValue + "}"};
+                }
+                else
+                {
+                    const ctx = RED.util.parseContextStore(node.customRepetitionValue);
+
+                    ctxData = node.context()[node.customRepetitionType].get(ctx.key, ctx.store);
+                    errorDetails = {store: ctx.store, key: ctx.key, value: ctxData};
+                }
 
                 if (isValidInterval(ctxData))
                 {
@@ -325,7 +349,7 @@ module.exports = function(RED)
                 {
                     throw new chronos.TimeError(
                                 RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
-                                {store: ctx.store, key: ctx.key, value: ctxData});
+                                errorDetails);
                 }
             }
 
@@ -359,10 +383,34 @@ module.exports = function(RED)
         {
             let ret = {};
 
-            if ((type == "global") || (type == "flow"))
+            if ((type == "env") || (type == "global") || (type == "flow"))
             {
-                let ctx = RED.util.parseContextStore(value);
-                let ctxData = node.context()[type].get(ctx.key, ctx.store);
+                let ctxData = undefined;
+                let errorDetails = undefined;
+
+                if (type == "env")
+                {
+                    if (typeof value == "string")
+                    {
+                        ctxData = RED.util.evaluateNodeProperty(
+                                                value,
+                                                type,
+                                                node);
+                    }
+                    else
+                    {
+                        ctxData = value;
+                    }
+
+                    errorDetails = {variable: "${" + value + "}"};
+                }
+                else
+                {
+                    const ctx = RED.util.parseContextStore(value);
+
+                    ctxData = node.context()[type].get(ctx.key, ctx.store);
+                    errorDetails = {store: ctx.store, key: ctx.key, value: ctxData};
+                }
 
                 if (isValidUntilTime(ctxData))
                 {
@@ -388,7 +436,7 @@ module.exports = function(RED)
                 {
                     throw new chronos.TimeError(
                                 RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
-                                {store: ctx.store, key: ctx.key, value: ctxData});
+                                errorDetails);
                 }
             }
             else if (type == "jsonata")
