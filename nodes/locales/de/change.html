@@ -148,14 +148,35 @@ SOFTWARE.
                     </li>
                     <li>
                         <i>Konvertieren</i>: Konvertiert den Zeitstempel des
-                        Ziels in eine Zeichenkettenrepräsentation. Wenn
-                        <i>Benutzerdef. Format</i> ausgewählt wurde, wird das
-                        Format der Zeichnkette über das Texteingabefeld
-                        angegeben und muss den Regeln von <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js</a>
-                        entsprechen. Es kann auch eine der beiden ISO-String
-                        Optionen ausgewählt werden um in einen ISO-8601
-                        String in lokaler (entsprechend der konfigurierten
-                        Zeitzone) oder UTC Zeit zu konvertieren.
+                        Ziels in eine von mehreren möglichen Zeichenkettenrepräsentationen:
+                        <ul>
+                            <li>
+                                <i>Benutzerdef. Format</i>: Die Zeichenkette kann
+                                über das Texteingabefeld beliebig angepasst werden.
+                                Das Format muss den Regeln von <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js</a>
+                                entsprechen.
+                            </li>
+                            <li>
+                                <i>Relative Zeit</i>: Zeichenkette, die die Zeit
+                                relativ zum jetzigen Zeitpunkt darstellt und
+                                undeutlicher wird, je weiter sie entfernt ist.
+                            </li>
+                            <li>
+                                <i>Kalendarzeit</i>: Zeichenkette, die die absolute
+                                Zeit (sofern nicht weiter entfernt als eine
+                                Woche) sowie das Datum relativ zum heutigen Tag
+                                (oder absolut, falls weiter entfernt als eine Woche)
+                                enthält.
+                            </li>
+                            <li>
+                                <i>ISO-8601</i>: ISO-8601 Zeichenkette in lokaler
+                                Zeit (entsprechend der konfigurierten Zeitzone).
+                            </li>
+                            <li>
+                                <i>ISO-8601 (UTC)</i>: ISO-8601 Zeichenkette in
+                                UTC-Zeit.
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </p>
