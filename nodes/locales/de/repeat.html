@@ -75,11 +75,11 @@ SOFTWARE.
             enthält. Oder es handelt sich um eine Zeichenkette mit einem Datum
             und einer Uhrzeit, die den absoluten Zeitpunkt der nächsten Wiederholung
             darstellt. Die Zeichenkette muss nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-            geparst werden können. Im Fall von <i>global</i> oder <i>flow</i>
-            wird die Wiederholung aus der angegebenen Kontextvariablen geladen.
-            Siehe Abschnitt <i>Input</i> weiter unten für eine Beschreibung
-            des Variablenformats (Eigenschaften <code>interval</code> und
-            <code>crontab</code>).
+            geparst werden können. Im Fall von <i>Umgebungsvariable</i>, <i>global</i>
+            oder <i>flow</i> wird die Wiederholung aus der angegebenen Umgebungs-
+            bzw. Kontextvariablen geladen. Siehe Abschnitt <i>Input</i> weiter
+            unten für eine Beschreibung des Variablenformats (Eigenschaften
+            <code>interval</code> und <code>crontab</code>).
         </dd>
         <dt>Bis</dt>
         <dd>
@@ -115,6 +115,12 @@ SOFTWARE.
                     erreicht) ergibt, kann eingegeben werden. Der Zeitpunkt des nächsten
                     Sendens der Nachricht kann über die Variable <code>$next</code>
                     abgefragt werden.
+                </li>
+                <li>
+                    <i>Umgebungsvariable</i>: Die Ende-Bedingung wird aus der
+                    angegebenen Umgebungsvariablen geladen, siehe Abschnitt
+                    <i>Eingabe</i> (Eigenschaft <code>until</code>) für eine
+                    Beschreibung des Variablenformats.
                 </li>
                 <li>
                     <i>global</i>: Die Ende-Bedingung wird aus der angegebenen

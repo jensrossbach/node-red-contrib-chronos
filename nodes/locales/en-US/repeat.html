@@ -72,10 +72,10 @@ SOFTWARE.
             the absolute time of the next trigger. Or it is a valid datetime string
             representing the absolute time of the next trigger. The string must be
             parseable according to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
-            When selecting <i>global</i> or <i>flow</i>, the repetition is taken
-            from the specified context variable. See section <i>Input</i> below
-            for a description of the format (properties <code>interval</code>
-            and <code>crontab</code>).
+            When selecting <i>env variable</i>, <i>global</i> or <i>flow</i>, the
+            repetition is taken from the specified environment or context variable.
+            See section <i>Input</i> below for a description of the format (properties
+            <code>interval</code> and <code>crontab</code>).
         </dd>
         <dt>Until</dt>
         <dd>
@@ -110,6 +110,11 @@ SOFTWARE.
                     evaluate to either <code>false</code> (ending condition not reached)
                     or <code>true</code> (ending condition reached). The time of the
                     next trigger can be accessed via expression variable <code>$next</code>.
+                </li>
+                <li>
+                    <i>env variable</i>: Ending condition will be loaded from the specified
+                    environment variable, see section <i>Input</i> (property <code>until</code>)
+                    below for a description of the format.
                 </li>
                 <li>
                     <i>global</i>: Ending condition will be loaded from the specified global
