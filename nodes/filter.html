@@ -484,7 +484,7 @@ SOFTWARE.
 
                     const context = $("<input/>", {type: "text", class: "node-input-context"})
                                         .appendTo(contextBox)
-                                        .typedInput({types: ["global", "flow"]});
+                                        .typedInput({types: ["env", "global", "flow"]});
                     context.typedInput("width", "280px");
 
                     operator.change(function()
