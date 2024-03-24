@@ -256,6 +256,14 @@ module.exports = function(RED)
                                                 {
                                                     output = input.format(rule.format);
                                                 }
+                                                else if (rule.formatType == "calendar")
+                                                {
+                                                    output = input.calendar();
+                                                }
+                                                else if (rule.formatType == "relative")
+                                                {
+                                                    output = input.fromNow();
+                                                }
                                                 else if (rule.formatType == "iso8601")
                                                 {
                                                     output = input.toISOString(true);

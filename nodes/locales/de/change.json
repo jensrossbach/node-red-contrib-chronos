@@ -10,8 +10,10 @@
             "date":               "Datum & Uhrzeit",
             "format":             "Format",
             "customFormat":       "Benutzerdef. Format",
-            "iso8601Format":      "ISO-8601 String",
-            "iso8601UTCFormat":   "ISO-8601 String (UTC)",
+            "relativeTime":       "Relative Zeit",
+            "calendarTime":       "Kalenderzeit",
+            "iso8601Format":      "ISO-8601",
+            "iso8601UTCFormat":   "ISO-8601 (UTC)",
             "formatPlaceholder":  "z.B.: YYYY-MM-DD HH:mm:ss"
         },
         "list":
