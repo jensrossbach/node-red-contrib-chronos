@@ -235,29 +235,6 @@ SOFTWARE.
                         validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
                     };
 
-                    const customFormatInput =
-                    {
-                        value: "custom",
-                        label: node._("change.label.customFormat"),
-                        icon: "fa fa-user-o",
-                        hasValue: true,
-                        validate: /^.+$/
-                    };
-
-                    const iso8601FormatInput =
-                    {
-                        value: "iso8601",
-                        label: node._("change.label.iso8601Format"),
-                        hasValue: false
-                    };
-
-                    const iso8601UTCFormatInput =
-                    {
-                        value: "iso8601utc",
-                        label: node._("change.label.iso8601UTCFormat"),
-                        hasValue: false
-                    };
-
                     const partInput =
                     {
                         min: -270000,
@@ -364,9 +341,42 @@ SOFTWARE.
                                         .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
                                         .appendTo(startEndOfBox);
 
-                    const stringFormat = $("<input/>", {type: "text", class: "node-input-stringFormat", title: node._("change.label.format"), placeholder: node._("change.label.formatPlaceholder")})
-                                        .appendTo(toStringBox)
-                                        .typedInput({types: [customFormatInput, iso8601FormatInput, iso8601UTCFormatInput]});
+                    const stringFormat =
+                            $("<input/>", {
+                                type: "text",
+                                class: "node-input-stringFormat",
+                                title: node._("change.label.format"),
+                                placeholder: node._("change.label.formatPlaceholder")})
+                                    .appendTo(toStringBox)
+                                    .typedInput({
+                                        types: [
+                                            {
+                                                value: "custom",
+                                                label: node._("change.label.customFormat"),
+                                                icon: "fa fa-user-o",
+                                                hasValue: true,
+                                                validate: /^.+$/
+                                            },
+                                            {
+                                                value: "relative",
+                                                label: node._("change.label.relativeTime"),
+                                                hasValue: false
+                                            },
+                                            {
+                                                value: "calendar",
+                                                label: node._("change.label.calendarTime"),
+                                                hasValue: false
+                                            },
+                                            {
+                                                value: "iso8601",
+                                                label: node._("change.label.iso8601Format"),
+                                                hasValue: false
+                                            },
+                                            {
+                                                value: "iso8601utc",
+                                                label: node._("change.label.iso8601UTCFormat"),
+                                                hasValue: false
+                                            }]});
                     stringFormat.typedInput("width", "280px");
 
                     action.change(function()
