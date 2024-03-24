@@ -454,7 +454,7 @@ SOFTWARE.
 
                     const context = $("<input/>", {type: "text", class: "node-input-context"})
                                         .appendTo(contextBox)
-                                        .typedInput({types: ["global", "flow"]});
+                                        .typedInput({types: ["env", "global", "flow"]});
                     context.typedInput("width", "280px");
 
                     operator.change(function()
@@ -988,8 +988,22 @@ SOFTWARE.
                     data.context.value = context.typedInput("value");
                     data.context.type = context.typedInput("type");
 
-                    const ctx = RED.utils.parseContextKey(data.context.value);
-                    data.label = data.context.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                    if (data.context.type == "env")
+                    {
+                        if (data.context.value.includes("${"))
+                        {
+                            data.label = data.context.value;
+                        }
+                        else
+                        {
+                            data.label = "${" + data.context.value + "}";
+                        }
+                    }
+                    else
+                    {
+                        const ctx = RED.utils.parseContextKey(data.context.value);
+                        data.label = data.context.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                    }
                 }
 
                 node.conditions.push(data);
