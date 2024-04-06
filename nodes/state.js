@@ -437,15 +437,18 @@ module.exports = function(RED)
 
         function prepareTrigger(data)
         {
-            const trigger =
+            const trigger = {};
+
+            trigger.type = data.type;
+
+            if (data.type != "manual")
             {
-                type: data.type,
-                value: data.value,
-                offset: data.random
+                trigger.value = data.value;
+                trigger.offset = data.random
                     ? Math.round(data.offset * Math.random())
-                    : data.offset,
-                random: data.random
-            };
+                    : data.offset;
+                trigger.random = data.random;
+            }
 
             return trigger;
         }
@@ -528,57 +531,60 @@ module.exports = function(RED)
 
                 node.states.forEach(data =>
                 {
-                    try
+                    if (data.trigger.type != "manual")  // ignore manual triggers
                     {
-                        let triggerTime = chronos.getTime(RED, node, baseTime.clone(), data.trigger.type, data.trigger.value);
-
-                        if ((data.trigger.offset != 0) && (!data.trigger.random || !ignoreRandomOffset))
+                        try
                         {
-                            triggerTime.add(data.trigger.offset, "minutes");
-                        }
+                            let triggerTime = chronos.getTime(RED, node, baseTime.clone(), data.trigger.type, data.trigger.value);
 
-                        if (reverse)
-                        {
-                            if (stateTriggerTime)
+                            if ((data.trigger.offset != 0) && (!data.trigger.random || !ignoreRandomOffset))
                             {
-                                if ((!isSameDay || triggerTime.isSameOrBefore(baseTime)) &&
-                                    triggerTime.isAfter(stateTriggerTime))
+                                triggerTime.add(data.trigger.offset, "minutes");
+                            }
+
+                            if (reverse)
+                            {
+                                if (stateTriggerTime)
+                                {
+                                    if ((!isSameDay || triggerTime.isSameOrBefore(baseTime)) &&
+                                        triggerTime.isAfter(stateTriggerTime))
+                                    {
+                                        stateTriggerTime = triggerTime;
+                                        stateData = data;
+                                    }
+                                }
+                                else if (!isSameDay || triggerTime.isSameOrBefore(baseTime))
                                 {
                                     stateTriggerTime = triggerTime;
                                     stateData = data;
                                 }
                             }
-                            else if (!isSameDay || triggerTime.isSameOrBefore(baseTime))
+                            else if (stateTriggerTime)
+                            {
+                                if ((!isSameDay || triggerTime.isAfter(baseTime)) &&
+                                    triggerTime.isBefore(stateTriggerTime))
+                                {
+                                    stateTriggerTime = triggerTime;
+                                    stateData = data;
+                                }
+                            }
+                            else if (!isSameDay || triggerTime.isAfter(baseTime))
                             {
                                 stateTriggerTime = triggerTime;
                                 stateData = data;
                             }
                         }
-                        else if (stateTriggerTime)
+                        catch(e)
                         {
-                            if ((!isSameDay || triggerTime.isAfter(baseTime)) &&
-                                triggerTime.isBefore(stateTriggerTime))
+                            if (e instanceof chronos.TimeError)
                             {
-                                stateTriggerTime = triggerTime;
-                                stateData = data;
+                                node.debug(e.message);
                             }
-                        }
-                        else if (!isSameDay || triggerTime.isAfter(baseTime))
-                        {
-                            stateTriggerTime = triggerTime;
-                            stateData = data;
-                        }
-                    }
-                    catch(e)
-                    {
-                        if (e instanceof chronos.TimeError)
-                        {
-                            node.debug(e.message);
-                        }
-                        else
-                        {
-                            node.error(e.message);
-                            node.debug(e.stack);
+                            else
+                            {
+                                node.error(e.message);
+                                node.debug(e.stack);
+                            }
                         }
                     }
                 });
@@ -837,13 +843,17 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.type != "string") || !/^(time|sun|moon|custom)$/.test(data.type))
+            if ((typeof data.type != "string") || !/^(time|sun|moon|custom|manual)$/.test(data.type))
             {
                 return false;
             }
 
-            if (((typeof data.value != "string") && (typeof data.value != "number")) ||
-                ((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
+            if ((data.type != "manual") && (typeof data.value != "string") && (typeof data.value != "number"))
+            {
+                return false;
+            }
+
+            if (((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
                 ((data.type == "sun") && !chronos.PATTERN_SUNTIME.test(data.value)) ||
                 ((data.type == "moon") && !chronos.PATTERN_MOONTIME.test(data.value)))
             {
