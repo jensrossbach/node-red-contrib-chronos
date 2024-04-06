@@ -325,6 +325,13 @@ SOFTWARE.
                 validate: /^[a-zA-Z][0-9a-zA-Z_]+$/
             };
 
+            const manualInput =
+            {
+                value: "manual",
+                label: node._("state.label.manualTrigger"),
+                hasValue: false
+            };
+
             const fullMessageInput =
             {
                 value: "fullMsg",
@@ -422,7 +429,7 @@ SOFTWARE.
 
                     const trigger = $("<input/>", {type: "text", class: "node-input-trigger"})
                                         .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow"]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", manualInput]});
                     trigger.typedInput("width", "280px");
                     trigger._prevType = "time";
 
@@ -449,7 +456,8 @@ SOFTWARE.
                         let type = trigger.typedInput("type");
                         if ((type === "env") ||
                             (type === "global") ||
-                            (type === "flow"))
+                            (type === "flow") ||
+                            (type === "manual"))
                         {
                             offsetBox.hide();
                         }
@@ -474,13 +482,18 @@ SOFTWARE.
                                 state: {type: "str", value: ""}};
                     }
 
-                    trigger.typedInput("value", data.trigger.value);
+                    if (data.trigger.type != "manual")
+                    {
+                        trigger.typedInput("value", data.trigger.value);
+                    }
+
                     trigger._prevType = data.trigger.type;
                     trigger.typedInput("type", data.trigger.type);
 
                     if ((data.trigger.type != "env") &&
                         (data.trigger.type != "global") &&
-                        (data.trigger.type != "flow"))
+                        (data.trigger.type != "flow") &&
+                        (data.trigger.type != "manual"))
                     {
                         triggerOffset.spinner("value", data.trigger.offset);
                         triggerRandom.prop("checked", data.trigger.random);
@@ -794,26 +807,31 @@ SOFTWARE.
                 "saturday"
             ];
 
-            let node = this;
-            let stateList = $("#node-input-stateList").editableList("items");
-            let conditionList = $("#node-input-conditionList").editableList("items");
+            const node = this;
+            const stateList = $("#node-input-stateList").editableList("items");
+            const conditionList = $("#node-input-conditionList").editableList("items");
 
             node.states = [];
             node.conditions = [];
 
             stateList.each(function(index)
             {
-                let data = {trigger: {}, state: {}};
+                const data = {trigger: {}, state: {}};
 
-                let trigger = $(this).find(".node-input-trigger");
-                let state = $(this).find(".node-input-state");
+                const trigger = $(this).find(".node-input-trigger");
+                const state = $(this).find(".node-input-state");
 
                 data.trigger.type = trigger.typedInput("type");
-                data.trigger.value = trigger.typedInput("value");
+
+                if (data.trigger.type != "manual")
+                {
+                    data.trigger.value = trigger.typedInput("value");
+                }
 
                 if ((data.trigger.type != "env") &&
                     (data.trigger.type != "global") &&
-                    (data.trigger.type != "flow"))
+                    (data.trigger.type != "flow") &&
+                    (data.trigger.type != "manual"))
                 {
                     data.trigger.offset = $(this).find(".node-input-triggerOffset").spinner("value");
                     data.trigger.random = $(this).find(".node-input-triggerRandom").prop("checked");
@@ -827,7 +845,7 @@ SOFTWARE.
 
             conditionList.each(function(index)
             {
-                let data = {};
+                const data = {};
                 data.operator = $(this).find(".node-input-operator").val();
 
                 if (data.operator == "days")
