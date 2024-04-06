@@ -57,25 +57,13 @@ SOFTWARE.
                     Nachricht.
                 </li>
                 <li>
-                    <i>global</i>: Zeitstempel aus einer globalen Variable als
-                    Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung oder
-                    eine Zeichenkette, die ein Datum und eine Zeit enthält
-                    und nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-                    geparst werden kann.
-                </li>
-                <li>
-                    <i>flow</i>: Zeitstempel aus einer Flow-Variable als
+                    <i>global</i>, <i>flow</i>, <i>msg</i>: Zeitstempel aus
+                    einer Kontextvariablen or einer Nachrichteneigenschaft als
                     Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung
-                    oder eine Zeichenkette, die ein Datum und eine Zeit
-                    enthält und nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-                    geparst werden kann.
-                </li>
-                <li>
-                    <i>msg</i>: Zeitstempel aus einer Nachrichteneigenschaft
-                    als Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung
-                    oder eine Zeichenkette, die ein Datum und eine Zeit enthält
-                    und nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-                    geparst werden kann.
+                    (oder Anzahl Millisekunden seit Mitternacht, wenn kleiner
+                    als 86.400.000) oder eine Zeichenkette, die eine Zeit,
+                    ein Datum und eine Zeit nach ISO 8601 oder ein Datum und
+                    eine Zeit nach RFC 2822 enthält.
                 </li>
             </ul>
         </dd>
@@ -132,7 +120,7 @@ SOFTWARE.
                 </li>
                 <li>
                     Quelle <i>Kontext</i>: Lädt die Bedingung aus der angegebenen
-                    Umgebungs- bzw. Kontextvariablen. Siehe Abschnitt <i>Eingabe</i>
+                    Umgebungs- bzw. Kontextvariable. Siehe Abschnitt <i>Eingabe</i>
                     weiter unten für eine Beschreibung der benötigten Struktur der
                     Variable.
                 </li>
@@ -155,6 +143,15 @@ SOFTWARE.
                 <li>
                     <i>Sonnenstand (benutzerdef.)</i>: Einer der Namen für benutzerdefinierte
                     Sonnenstände kann eingegeben werden.
+                </li>
+                <li>
+                    <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeit
+                    wird aus einer Kontextvariablen or einer Nachrichteneigenschaft
+                    als Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung
+                    (oder Anzahl Millisekunden seit Mitternacht, wenn kleiner
+                    als 86.400.000) oder eine Zeichenkette, die eine Zeit,
+                    ein Datum und eine Zeit nach ISO 8601 oder ein Datum und
+                    eine Zeit nach RFC 2822 enthält, gelesen.
                 </li>
             </ul>
             Die spezifizierten Zeitpunkte können zusätzlich mittels eines

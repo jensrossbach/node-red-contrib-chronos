@@ -368,7 +368,7 @@ SOFTWARE.
 
                     const time1 = $("<input/>", {type: "text", class: "node-input-time1"})
                                         .appendTo(time1Row1)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
                     time1.typedInput("width", "280px");
                     time1._prevType = "time";
                     const extend1 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
@@ -377,7 +377,7 @@ SOFTWARE.
 
                     const time2 = $("<input/>", {type: "text", class: "node-input-time2"})
                                         .appendTo(time2Row1)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
+                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
                     time2.typedInput("width", "280px");
                     time2._prevType = "time";
                     const extend2 = $("<a/>", {href: "#", style: "margin-left: 6px;"})

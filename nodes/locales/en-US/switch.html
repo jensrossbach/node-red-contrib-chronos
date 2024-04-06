@@ -53,22 +53,12 @@ SOFTWARE.
                     <i>message ingress</i>: Ingress time of the input message.
                 </li>
                 <li>
-                    <i>global</i>: Timestamp from a global variable as number
-                    of milliseconds elapsed since the UNIX epoch or a string
-                    containing a date and time which must be parsable according
-                    to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
-                </li>
-                <li>
-                    <i>flow</i>: Timestamp from a flow variable as number of
-                    milliseconds elapsed since the UNIX epoch or a string
-                    containing a date and time which must be parsable according
-                    to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
-                </li>
-                <li>
-                    <i>msg</i>: Timestamp from a message property as number of
-                    milliseconds elapsed since the UNIX epoch or a string
-                    containing a date and time which must be parsable according
-                    to <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
+                    <i>global</i>, <i>flow</i>, <i>msg</i>: Timestamp from
+                    a context variable or message property as number of
+                    milliseconds elapsed since the UNIX epoch (or number
+                    of milliseconds elapsed since midnight if smaller than
+                    86.400.000) or a string containing a time, an ISO 8601
+                    datetime or an RFC 2822 datetime.
                 </li>
             </ul>
         </dd>
@@ -145,6 +135,14 @@ SOFTWARE.
                 <li>
                     <i>custom sun position</i>: One of the user-defined sun position names
                     can be entered.
+                </li>
+                <li>
+                    <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: The time is
+                    retrieved from an environment variable, a context variable or a
+                    message property with a timestamp as number of milliseconds elapsed
+                    since the UNIX epoch (or number of milliseconds elapsed since
+                    midnight if smaller than 86.400.000) or a string containing a
+                    time, an ISO 8601 datetime or an RFC 2822 datetime.
                 </li>
             </ul>
             The specified times can additionally be shifted by an (optionally

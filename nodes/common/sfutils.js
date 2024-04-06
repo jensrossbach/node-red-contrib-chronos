@@ -306,6 +306,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -325,6 +326,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -344,6 +346,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -367,6 +370,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -390,6 +394,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -408,6 +413,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -426,6 +432,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -444,6 +451,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -462,6 +470,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -480,6 +489,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -498,6 +508,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -515,6 +526,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -534,6 +546,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -549,6 +562,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -564,6 +578,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                 return evalCondition(
                             RED,
                             node,
+                            msg,
                             node.chronos.getTimeFrom(node, ts),
                             convertCondition(
                                 RED,
@@ -602,13 +617,13 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
     }
     else
     {
-        result = evalCondition(RED, node, baseTime, cond, id);
+        result = evalCondition(RED, node, msg, baseTime, cond, id);
     }
 
     return result;
 }
 
-function evalCondition(RED, node, baseTime, cond, id)
+function evalCondition(RED, node, msg, baseTime, cond, id)
 {
     let result = false;
 
@@ -639,6 +654,7 @@ function evalCondition(RED, node, baseTime, cond, id)
         result = evalCondition(
                     RED,
                     node,
+                    msg,
                     baseTime,
                     convertCondition(
                         RED,
@@ -648,7 +664,7 @@ function evalCondition(RED, node, baseTime, cond, id)
     }
     else if ((cond.operator == "before") || (cond.operator == "after"))
     {
-        const targetTime = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands.type, cond.operands.value);
+        const targetTime = getTime(RED, node, msg, baseTime.clone(), cond.operands.type, cond.operands.value);
 
         if (cond.operands.offset != 0)
         {
@@ -661,8 +677,8 @@ function evalCondition(RED, node, baseTime, cond, id)
     }
     else if ((cond.operator == "between") || (cond.operator == "outside"))
     {
-        const time1 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-        const time2 = node.chronos.getTime(RED, node, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+        const time1 = getTime(RED, node, msg, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+        const time2 = getTime(RED, node, msg, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
         if (cond.operands[0].offset != 0)
         {
@@ -692,6 +708,51 @@ function evalCondition(RED, node, baseTime, cond, id)
     }
 
     return result;
+}
+
+function getTime(RED, node, msg, baseTime, type, value)
+{
+    let ret = undefined;
+
+    if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
+    {
+        let ctxValue = undefined;
+
+        if (type == "env")
+        {
+            ctxValue = RED.util.evaluateNodeProperty(value, type, node);
+        }
+        else if ((type == "global") || (type == "flow"))
+        {
+            const ctx = RED.util.parseContextStore(value);
+            ctxValue = node.context()[type].get(ctx.key, ctx.store);
+        }
+        else
+        {
+            ctxValue = RED.util.getMessageProperty(msg, value);
+        }
+
+        if (!ctxValue || ((typeof ctxValue != "number") && (typeof ctxValue != "string")))
+        {
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
+                        {type: type, value: ctxValue});
+        }
+
+        ret = node.chronos.getTimeFrom(node, ctxValue);
+        if (!ret.isValid())
+        {
+            throw new node.chronos.TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
+                        {type: type, value: ctxValue});
+        }
+    }
+    else
+    {
+        ret = node.chronos.getTime(RED, node, baseTime, type, value);
+    }
+
+    return ret;
 }
 
 function evaluateDateCondition(baseTime, cond)
