@@ -45,7 +45,7 @@ Modifies time values in messages or context stores.
 ![Timer Change](images/change.png)
 
 ## Documentation
-The detailed documentation of each node is available in the wiki of the GitHub repository.
+Each node has a built-in help that is displayed in the help tab of the Node-RED sidebar providing essential information about how to use the node. There is also a comprehensive and detailed (English-only) documentation available in the wiki of the GitHub repository.
 
 **&rarr; [Documentation](https://github.com/jensrossbach/node-red-contrib-chronos/wiki)**
 
