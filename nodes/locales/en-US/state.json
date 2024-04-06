@@ -9,6 +9,7 @@
             "message":        "Message",
             "value":          "Value",
             "states":         "States",
+            "manualTrigger":  "manual trigger",
             "outputOnStart":  "Output current state on start after"
         },
         "status":

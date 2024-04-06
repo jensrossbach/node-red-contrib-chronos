@@ -9,6 +9,7 @@
             "message":        "Nachricht",
             "states":         "Zustände",
             "value":          "Wert",
+            "manualTrigger":  "Manueller Auslöser",
             "outputOnStart":  "Beim Start aktuellen Zustand ausgeben nach"
         },
         "status":
