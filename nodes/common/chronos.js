@@ -111,6 +111,12 @@ function getTimeFrom(node, source)
     if (!ret || !ret.isValid())  // fallback to number and ISO/RFC string parsing
     {
         ret = getMoment(node, source);
+
+        if ((typeof source == "number") && (source < 86400000))  // value is interpreted as number of milliseconds since midnight
+        {
+            const now = getMoment(node);
+            ret = ret.year(now.year()).month(now.month()).date(now.date());
+        }
     }
 
     ret.locale(node.locale);
