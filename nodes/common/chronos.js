@@ -23,7 +23,7 @@
  */
 
 
-const TIME_REGEX = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(am|AM|pm|PM)?$/;
+const TIME_REGEX = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/;
 const DATE_REGEX = /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/;
 
 class TimeError extends Error
@@ -44,8 +44,8 @@ const sunCalc = require("suncalc");
 
 function getMoment()
 {
+    const args = Array.prototype.slice.call(arguments, 1);
     let ret = null;
-    let args = Array.prototype.slice.call(arguments, 1);
 
     if (arguments[0].config.timezone)
     {
@@ -93,7 +93,7 @@ function printNodeInfo(node)
 
 function getCurrentTime(node)
 {
-    let ret = getMoment(node);
+    const ret = getMoment(node);
     ret.locale(node.locale);
 
     return ret;
@@ -101,7 +101,18 @@ function getCurrentTime(node)
 
 function getTimeFrom(node, source)
 {
-    let ret = getMoment(node, source);
+    let ret = undefined;
+
+    if ((typeof source == "string") && TIME_REGEX.test(source))
+    {
+        ret = getMoment(node, source, ["H:m:s", "H:m", "h:m:s a", "h:m a"], true);  // try time-only string parsing
+    }
+
+    if (!ret || !ret.isValid())  // fallback to number and ISO/RFC string parsing
+    {
+        ret = getMoment(node, source);
+    }
+
     ret.locale(node.locale);
 
     return ret;
@@ -109,49 +120,16 @@ function getTimeFrom(node, source)
 
 function getUserTime(RED, day, value)
 {
-    let ret = null;
+    let ret = undefined;
 
-    if (typeof value == "string")
+    if ((typeof value == "string") && TIME_REGEX.test(value))
     {
-        let matches = value.match(TIME_REGEX);
-        if (matches)
-        {
-            let hour = Number.parseInt(matches[1]);
-            let min = Number.parseInt(matches[2]);
-            let sec = Number.parseInt(matches[3]);
-            let ampm = matches[4];
-
-            if (ampm)
-            {
-                switch (ampm.toUpperCase())
-                {
-                    case "AM":
-                    {
-                        if (hour >= 12)
-                        {
-                            hour -= 12;
-                        }
-
-                        break;
-                    }
-                    case "PM":
-                    {
-                        if (hour < 12)
-                        {
-                            hour += 12;
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            ret = day.hour(hour).minute(min).second(sec ? sec : 0).millisecond(0);
-        }
+        const time = moment.utc(value, ["h:m:s a", "h:m a", "H:m:s", "H:m"]);
+        ret = day.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(0);
     }
     else if (typeof value == "number")
     {
-        let time = moment.utc(value);
+        const time = moment.utc(value);
         ret = day.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(time.millisecond());
     }
 
@@ -165,7 +143,7 @@ function getUserTime(RED, day, value)
 
 function getUserDate(RED, node, value)
 {
-    let ret = null;
+    let ret = undefined;
 
     if (DATE_REGEX.test(value))
     {
