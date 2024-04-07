@@ -9,11 +9,8 @@
             "now":                "Aktuelle Zeit",
             "date":               "Datum & Uhrzeit",
             "format":             "Format",
-            "customFormat":       "Benutzerdef. Format",
-            "relativeTime":       "Relative Zeit",
-            "calendarTime":       "Kalenderzeit",
-            "iso8601Format":      "ISO-8601",
-            "iso8601UTCFormat":   "ISO-8601 (UTC)",
+            "predefinedFormat":   "Vordefiniertes Format",
+            "customFormat":       "Benutzerdefiniertes Format",
             "formatPlaceholder":  "z.B.: YYYY-MM-DD HH:mm:ss"
         },
         "list":
@@ -31,6 +28,16 @@
                 "startOf":   "Anfang von",
                 "endOf":     "Ende von",
                 "toString":  "Konvertieren"
+            },
+            "convert":
+            {
+                "regionalDateTime":   "Regional",
+                "regionalDate":       "Regional (nur Datum)",
+                "regionalTime":       "Regional (nur Zeit)",
+                "relativeTime":       "Relative Zeit",
+                "calendar":           "Kalender",
+                "iso8601Format":      "ISO-8601",
+                "iso8601UTCFormat":   "ISO-8601 (UTC)"
             }
         },
         "status":
