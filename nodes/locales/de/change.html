@@ -151,30 +151,52 @@ SOFTWARE.
                         Ziels in eine von mehreren möglichen Zeichenkettenrepräsentationen:
                         <ul>
                             <li>
-                                <i>Benutzerdef. Format</i>: Die Zeichenkette kann
-                                über das Texteingabefeld beliebig angepasst werden.
+                                <i>Vordefiniertes Format</i>: Das Format der
+                                Zeichenkette kann aus einer Liste vordefinierter
+                                Formate ausgewählt werden.
+                            </li>
+                            <ul>
+                                <li>
+                                    <i>Regional</i>: Zeichenkette, die das Datum
+                                    und die Uhrzeit in einem Region-spezifischen
+                                    Format enthält.
+                                </li>
+                                <li>
+                                    <i>Regional (nur Datum)</i>: Zeichenkette, die
+                                    das Datum in einem Region-spezifischen Format
+                                    enthält.
+                                </li>
+                                <li>
+                                    <i>Regional (nur Zeit)</i>: Zeichenkette, die
+                                    die Uhrzeit in einem Region-spezifischen Format
+                                    enthält.
+                                </li>
+                                <li>
+                                    <i>Relative Zeit</i>: Zeichenkette, die die Zeit
+                                    relativ zum jetzigen Zeitpunkt darstellt und
+                                    undeutlicher wird, je weiter sie entfernt ist.
+                                </li>
+                                <li>
+                                    <i>Kalender</i>: Zeichenkette, die die absolute
+                                    Zeit (sofern nicht weiter entfernt als eine
+                                    Woche) sowie das Datum relativ zum heutigen Tag
+                                    (oder absolut, falls weiter entfernt als eine Woche)
+                                    enthält.
+                                </li>
+                                <li>
+                                    <i>ISO-8601</i>: ISO-8601 Zeichenkette in lokaler
+                                    Zeit (entsprechend der konfigurierten Zeitzone).
+                                </li>
+                                <li>
+                                    <i>ISO-8601 (UTC)</i>: ISO-8601 Zeichenkette in
+                                    UTC-Zeit.
+                                </li>
+                            </ul>
+                            <li>
+                                <i>Benutzerdefiniertes Format</i>: Die Zeichenkette
+                                kann über das Texteingabefeld beliebig angepasst werden.
                                 Das Format muss den Regeln von <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js</a>
                                 entsprechen.
-                            </li>
-                            <li>
-                                <i>Relative Zeit</i>: Zeichenkette, die die Zeit
-                                relativ zum jetzigen Zeitpunkt darstellt und
-                                undeutlicher wird, je weiter sie entfernt ist.
-                            </li>
-                            <li>
-                                <i>Kalendarzeit</i>: Zeichenkette, die die absolute
-                                Zeit (sofern nicht weiter entfernt als eine
-                                Woche) sowie das Datum relativ zum heutigen Tag
-                                (oder absolut, falls weiter entfernt als eine Woche)
-                                enthält.
-                            </li>
-                            <li>
-                                <i>ISO-8601</i>: ISO-8601 Zeichenkette in lokaler
-                                Zeit (entsprechend der konfigurierten Zeitzone).
-                            </li>
-                            <li>
-                                <i>ISO-8601 (UTC)</i>: ISO-8601 Zeichenkette in
-                                UTC-Zeit.
                             </li>
                         </ul>
                     </li>

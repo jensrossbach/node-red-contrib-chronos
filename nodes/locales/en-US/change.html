@@ -147,28 +147,46 @@ SOFTWARE.
                         different kind of string representations:
                         <ul>
                             <li>
+                                <i>predefined format</i>: String format can be
+                                chosen from a list of predefined formats.
+                            </li>
+                            <ul>
+                                <li>
+                                    <i>regional</i>: String containing the date
+                                    and the time in a region-specific format.
+                                </li>
+                                <li>
+                                    <i>regional (date only)</i>: String containing
+                                    the date in a region-specific format.
+                                </li>
+                                <li>
+                                    <i>regional (time only)</i>: String containing
+                                    the time in a region-specific format.
+                                </li>
+                                <li>
+                                    <i>relative time</i>: String representing the time
+                                    relative to the current time, being less precise
+                                    the farer away it is.
+                                </li>
+                                <li>
+                                    <i>calendar</i>: String containing the absolute
+                                    time (if not farer away than one week) and the
+                                    date relative to today (or absolute if farer away
+                                    than one week).
+                                </li>
+                                <li>
+                                    <i>ISO-8601</i>: ISO-8601 string as local time
+                                    (according to configured time zone).
+                                </li>
+                                <li>
+                                    <i>ISO-8601 (UTC)</i>: ISO-8601 string as UTC
+                                    time.
+                                </li>
+                            </ul>
+                            <li>
                                 <i>custom format</i>: String can be customized
                                 by specifying the format via the text box which
                                 must follow the rules from the <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js documentation</a>.
-                            </li>
-                            <li>
-                                <i>relative time</i>: String representing the time
-                                relative to the current time, being less precise
-                                the farer away it is.
-                            </li>
-                            <li>
-                                <i>calendar time</i>: String containing the absolute
-                                time (if not farer away than one week) and the date
-                                relative to today (or absolute if farer away than one
-                                week).
-                            </li>
-                            <li>
-                                <i>ISO-8601</i>: ISO-8601 string as local time
-                                (according to configured time zone).
-                            </li>
-                            <li>
-                                <i>ISO-8601 (UTC)</i>: ISO-8601 string as UTC
-                                time.
                             </li>
                         </ul>
                     </li>
