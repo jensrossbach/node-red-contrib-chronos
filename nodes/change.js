@@ -65,6 +65,36 @@ module.exports = function(RED)
             {
                 let rule = node.rules[i];
 
+                // backward compatibility adaptations
+                if ((rule.action == "change") && (rule.type == "toString"))
+                {
+                    if (!rule.formatType)  // backward compatibility to v1.19.1 and below
+                    {
+                        rule.formatType = "custom";
+                    }
+                    // backward compatibility to v1.21 and below
+                    else if (rule.formatType == "relative")
+                    {
+                        rule.formatType = "predefined";
+                        rule.format = "relative";
+                    }
+                    else if (rule.formatType == "calendar")
+                    {
+                        rule.formatType = "predefined";
+                        rule.format = "calendar";
+                    }
+                    else if (rule.formatType == "iso8601")
+                    {
+                        rule.formatType = "predefined";
+                        rule.format = "iso8601";
+                    }
+                    else if (rule.formatType == "iso8601utc")
+                    {
+                        rule.formatType = "predefined";
+                        rule.format = "iso8601utc";
+                    }
+                }
+
                 if ((rule.action == "set") && (rule.type == "date"))
                 {
                     if (!node.chronos.isValidUserDate(rule.date))
@@ -81,7 +111,7 @@ module.exports = function(RED)
                 else if (
                     (rule.action == "change") &&
                     (rule.type == "toString") &&
-                    ((rule.formatType == "custom") || !rule.formatType) &&
+                    (rule.formatType == "custom") &&
                     !rule.format)
                 {
                     valid = false;
@@ -251,26 +281,40 @@ module.exports = function(RED)
                                             }
                                             case "toString":
                                             {
-                                                if ((rule.formatType == "custom") ||
-                                                    !rule.formatType)  // backward compatibility to v1.19.1 and below
+                                                if (rule.formatType == "custom")
                                                 {
                                                     output = input.format(rule.format);
                                                 }
-                                                else if (rule.formatType == "calendar")
+                                                else if (rule.formatType == "predefined")
                                                 {
-                                                    output = input.calendar();
-                                                }
-                                                else if (rule.formatType == "relative")
-                                                {
-                                                    output = input.fromNow();
-                                                }
-                                                else if (rule.formatType == "iso8601")
-                                                {
-                                                    output = input.toISOString(true);
-                                                }
-                                                else if (rule.formatType == "iso8601utc")
-                                                {
-                                                    output = input.toISOString();
+                                                    if (rule.format == "calendar")
+                                                    {
+                                                        output = input.calendar();
+                                                    }
+                                                    else if (rule.format == "relative")
+                                                    {
+                                                        output = input.fromNow();
+                                                    }
+                                                    else if (rule.format == "regional")
+                                                    {
+                                                        output = input.format("L LTS");
+                                                    }
+                                                    else if (rule.format == "regionalDate")
+                                                    {
+                                                        output = input.format("L");
+                                                    }
+                                                    else if (rule.format == "regionalTime")
+                                                    {
+                                                        output = input.format("LTS");
+                                                    }
+                                                    else if (rule.format == "iso8601")
+                                                    {
+                                                        output = input.toISOString(true);
+                                                    }
+                                                    else if (rule.format == "iso8601utc")
+                                                    {
+                                                        output = input.toISOString();
+                                                    }
                                                 }
 
                                                 break;

@@ -351,31 +351,47 @@ SOFTWARE.
                                     .typedInput({
                                         types: [
                                             {
+                                                value: "predefined",
+                                                label: node._("change.label.predefinedFormat"),
+                                                icon: "fa fa-calendar",
+                                                options:
+                                                [
+                                                    {
+                                                        value: "regional",
+                                                        label: node._("change.list.convert.regionalDateTime")
+                                                    },
+                                                    {
+                                                        value: "regionalDate",
+                                                        label: node._("change.list.convert.regionalDate")
+                                                    },
+                                                    {
+                                                        value: "regionalTime",
+                                                        label: node._("change.list.convert.regionalTime")
+                                                    },
+                                                    {
+                                                        value: "relative",
+                                                        label: node._("change.list.convert.relativeTime")
+                                                    },
+                                                    {
+                                                        value: "calendar",
+                                                        label: node._("change.list.convert.calendar")
+                                                    },
+                                                    {
+                                                        value: "iso8601",
+                                                        label: node._("change.list.convert.iso8601Format")
+                                                    },
+                                                    {
+                                                        value: "iso8601utc",
+                                                        label: node._("change.list.convert.iso8601UTCFormat")
+                                                    }
+                                                ]
+                                            },
+                                            {
                                                 value: "custom",
                                                 label: node._("change.label.customFormat"),
                                                 icon: "fa fa-user-o",
                                                 hasValue: true,
                                                 validate: /^.+$/
-                                            },
-                                            {
-                                                value: "relative",
-                                                label: node._("change.label.relativeTime"),
-                                                hasValue: false
-                                            },
-                                            {
-                                                value: "calendar",
-                                                label: node._("change.label.calendarTime"),
-                                                hasValue: false
-                                            },
-                                            {
-                                                value: "iso8601",
-                                                label: node._("change.label.iso8601Format"),
-                                                hasValue: false
-                                            },
-                                            {
-                                                value: "iso8601utc",
-                                                label: node._("change.label.iso8601UTCFormat"),
-                                                hasValue: false
                                             }]});
                     stringFormat.typedInput("width", "280px");
 
@@ -570,11 +586,35 @@ SOFTWARE.
                         }
                         else if (data.type == "toString")
                         {
-                            if (data.formatType)
+                            // backward compatibility to v1.19.1 and below
+                            if (!data.formatType)
                             {
-                                stringFormat.typedInput("type", data.formatType);
+                                data.formatType = "custom";
                             }
 
+                            // backward compatibility to v1.21 and below
+                            if (data.formatType == "relative")
+                            {
+                                data.formatType = "predefined";
+                                data.format = "relative";
+                            }
+                            else if (data.formatType == "calendar")
+                            {
+                                data.formatType = "predefined";
+                                data.format = "calendar";
+                            }
+                            else if (data.formatType == "iso8601")
+                            {
+                                data.formatType = "predefined";
+                                data.format = "iso8601";
+                            }
+                            else if (data.formatType == "iso8601utc")
+                            {
+                                data.formatType = "predefined";
+                                data.format = "iso8601utc";
+                            }
+
+                            stringFormat.typedInput("type", data.formatType);
                             stringFormat.typedInput("value", data.format);
                         }
                         changeType.val(data.type);
