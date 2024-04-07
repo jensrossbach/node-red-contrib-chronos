@@ -103,12 +103,23 @@ function getTimeFrom(node, source)
 {
     let ret = undefined;
 
-    if ((typeof source == "string") && TIME_REGEX.test(source))
+    if (typeof source == "string")
     {
-        ret = getMoment(node, source, ["H:m:s", "H:m", "h:m:s a", "h:m a"], true);  // try time-only string parsing
+        ret = getMoment(
+                node,
+                source, [
+                    "H:m:s",           // 24-hour format with seconds
+                    "H:m",             // 24-hour format without seconds
+                    "h:m:s a",         // 12-hour format with seconds
+                    "h:m a",           // 12-hour format without seconds
+                    "L LT",            // locale-specific date and time
+                    "L LTS",           // locale-specific date and time (incl. seconds)
+                    moment.ISO_8601],  // ISO 8601 datetime
+                node.locale,
+                true);
     }
 
-    if (!ret || !ret.isValid())  // fallback to number and ISO/RFC string parsing
+    if (!ret || !ret.isValid())
     {
         ret = getMoment(node, source);
 
@@ -124,14 +135,39 @@ function getTimeFrom(node, source)
     return ret;
 }
 
-function getUserTime(RED, day, value)
+function getUserTime(RED, node, day, value)
 {
     let ret = undefined;
 
-    if ((typeof value == "string") && TIME_REGEX.test(value))
+    if (typeof value == "string")
     {
-        const time = moment.utc(value, ["h:m:s a", "h:m a", "H:m:s", "H:m"]);
-        ret = day.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(0);
+        // first, try time-only strings
+        ret = getMoment(
+                node,
+                value, [
+                    "H:m",       // 24-hour format
+                    "H:m:s",     // 24-hour format (incl. seconds)
+                    "h:m a",     // 12-hour format
+                    "h:m:s a"],  // 12-hour format (incl. seconds)
+                true);
+
+        if (ret.isValid())
+        {
+            // and override the date with the given one
+            ret = ret.year(day.year()).month(day.month()).date(day.date());
+        }
+        else
+        {
+            // if not time-only, try strings containing date and time
+            ret = getMoment(
+                    node,
+                    value, [
+                        "L LT",            // locale-specific date and time
+                        "L LTS",           // locale-specific date and time (incl. seconds)
+                        moment.ISO_8601],  // ISO 8601 datetime
+                    node.locale,
+                    true);
+        }
     }
     else if (typeof value == "number")
     {
@@ -165,9 +201,9 @@ function getUserDate(RED, node, value)
     return ret;
 }
 
-function isValidUserTime(value)
+function isValidUserTime(value, timeOnly = true)
 {
-    return ((typeof value == "string") && TIME_REGEX.test(value)) ||
+    return ((typeof value == "string") && ((timeOnly && TIME_REGEX.test(value)) || (!timeOnly && value))) ||
            ((typeof value == "number") && (value >= 0) && (value < (24 * 60 * 60 * 1000)));
 }
 
@@ -247,7 +283,7 @@ function getTime(RED, node, day, type, value)
 {
     if (type == "time")
     {
-        return getUserTime(RED, day, value);
+        return getUserTime(RED, node, day, value);
     }
     else if ((type == "sun") || (type == "custom"))
     {
