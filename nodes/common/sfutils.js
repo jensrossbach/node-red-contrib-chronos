@@ -32,7 +32,7 @@ function validateCondition(node, cond)
 
     if ((cond.operator == "before") || (cond.operator == "after"))
     {
-        if ((cond.operands.type == "time") && !node.chronos.isValidUserTime(cond.operands.value))
+        if ((cond.operands.type == "time") && !node.chronos.isValidUserTime(cond.operands.value, false))
         {
             return false;
         }
@@ -40,12 +40,12 @@ function validateCondition(node, cond)
 
     if ((cond.operator == "between") || (cond.operator == "outside"))
     {
-        if ((cond.operands[0].type == "time") && !node.chronos.isValidUserTime(cond.operands[0].value))
+        if ((cond.operands[0].type == "time") && !node.chronos.isValidUserTime(cond.operands[0].value, false))
         {
             return false;
         }
 
-        if ((cond.operands[1].type == "time") && !node.chronos.isValidUserTime(cond.operands[1].value))
+        if ((cond.operands[1].type == "time") && !node.chronos.isValidUserTime(cond.operands[1].value, false))
         {
             return false;
         }
@@ -262,7 +262,7 @@ function validateOperand(RED, node, operand, num)
     }
 
     if ((typeof operand.value != "string")
-        || ((operand.type == "time") && !node.chronos.isValidUserTime(operand.value))
+        || ((operand.type == "time") && !node.chronos.isValidUserTime(operand.value, false))
         || ((operand.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(operand.value))
         || ((operand.type == "moon") && !/^(rise|set)$/.test(operand.value)))
     {

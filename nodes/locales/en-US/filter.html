@@ -57,8 +57,9 @@ SOFTWARE.
                     a context variable or message property as number of
                     milliseconds elapsed since the UNIX epoch (or number
                     of milliseconds elapsed since midnight if smaller than
-                    86.400.000) or a string containing a time, an ISO 8601
-                    datetime or an RFC 2822 datetime.
+                    86.400.000) or a string containing a time in 12 or 24
+                    hour format, a region-specific datetime or an ISO 8601
+                    datetime.
                 </li>
             </ul>
         </dd>
@@ -143,7 +144,9 @@ SOFTWARE.
             <ul>
                 <li>
                     <i>time of day</i>: A specific time can be entered directly
-                    in the form <code>hh:mm[:ss] [am|pm]</code>.
+                    in the form <code>hh:mm[:ss] [am|pm]</code>. Optionally it
+                    is possible to specify a date and a time using regional or
+                    ISO 8601 format.
                 </li>
                 <li>
                     <i>sun position</i>: The sun position can be selected from
@@ -163,7 +166,8 @@ SOFTWARE.
                     message property with a timestamp as number of milliseconds elapsed
                     since the UNIX epoch (or number of milliseconds elapsed since
                     midnight if smaller than 86.400.000) or a string containing a
-                    time, an ISO 8601 datetime or an RFC 2822 datetime.
+                    time in 12 or 24 hour format, a region-specific datetime or an
+                    ISO 8601 datetime.
                 </li>
             </ul>
             The specified times can additionally be shifted by an (optionally
