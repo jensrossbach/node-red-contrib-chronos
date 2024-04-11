@@ -23,6 +23,12 @@ SOFTWARE.
 -->
 
 <script type="text/html" data-template-name="chronos-switch">
+    <style>
+        a:focus:not(:focus-visible)
+        {
+            outline: none;
+        }
+    </style>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
         <input type="text" id="node-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
@@ -341,8 +347,8 @@ SOFTWARE.
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
                     time1.typedInput("width", "280px");
                     time1._prevType = "time";
-                    const extend1 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
-                                        .html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>")
+                    const extend1 = $("<a/>", {href: "#", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.expand"), style: "margin-left: 6px;"})
+                                        .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
                                         .appendTo(time1Row1);
 
                     const time2 = $("<input/>", {type: "text", class: "node-input-time2"})
@@ -350,8 +356,8 @@ SOFTWARE.
                                         .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
                     time2.typedInput("width", "280px");
                     time2._prevType = "time";
-                    const extend2 = $("<a/>", {href: "#", style: "margin-left: 6px;"})
-                                        .html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>")
+                    const extend2 = $("<a/>", {href: "#", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.expand"), style: "margin-left: 6px;"})
+                                        .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
                                         .appendTo(time2Row1);
 
                     $("<label/>", {style: "width: auto; margin-right: 6px;"})
@@ -542,13 +548,13 @@ SOFTWARE.
                     function showExtensionRow1()
                     {
                         time1Row2.show();
-                        extend1.html("<i class='fa fa-angle-double-up' aria-hidden='true'></i>");
+                        extend1.html("<i class='fa fa-angle-down' aria-hidden='true'></i>");
                     }
 
                     function hideExtensionRow1()
                     {
                         time1Row2.hide();
-                        extend1.html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>");
+                        extend1.html("<i class='fa fa-angle-right' aria-hidden='true'></i>");
 
                         offset1.spinner("value", 0);
                         random1.prop("checked", false);
@@ -557,13 +563,13 @@ SOFTWARE.
                     function showExtensionRow2()
                     {
                         time2Row2.show();
-                        extend2.html("<i class='fa fa-angle-double-up' aria-hidden='true'></i>");
+                        extend2.html("<i class='fa fa-angle-down' aria-hidden='true'></i>");
                     }
 
                     function hideExtensionRow2()
                     {
                         time2Row2.hide();
-                        extend2.html("<i class='fa fa-angle-double-down' aria-hidden='true'></i>");
+                        extend2.html("<i class='fa fa-angle-right' aria-hidden='true'></i>");
 
                         offset2.spinner("value", 0);
                         random2.prop("checked", false);

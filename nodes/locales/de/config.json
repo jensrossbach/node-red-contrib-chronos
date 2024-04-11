@@ -25,7 +25,8 @@
         },
         "tooltip":
         {
-            "offset":  "Versatz (in Minuten)"
+            "offset":  "Versatz (in Minuten)",
+            "expand":  "Aus-/Einklappen"
         },
         "list":
         {
