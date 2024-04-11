@@ -78,8 +78,8 @@ module.exports = function(RED)
             if (data && (data.length > 0))
             {
                 const EXP = /^[0-9a-zA-Z_]+$/;
+                const names = [];
                 let valid = true;
-                let names = [];
 
                 // check for invalid names
                 for (let i=0; i<data.length; ++i)
@@ -103,7 +103,7 @@ module.exports = function(RED)
             }
             else
             {
-                return true;
+                return false;
             }
 
             function hasDuplicates(arr)

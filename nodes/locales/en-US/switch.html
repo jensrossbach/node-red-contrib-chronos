@@ -53,13 +53,32 @@ SOFTWARE.
                     <i>message ingress</i>: Ingress time of the input message.
                 </li>
                 <li>
-                    <i>global</i>, <i>flow</i>, <i>msg</i>: Timestamp from
-                    a context variable or message property as number of
-                    milliseconds elapsed since the UNIX epoch (or number
-                    of milliseconds elapsed since midnight if smaller than
-                    86.400.000) or a string containing a time in 12 or 24
-                    hour format, a region-specific datetime or an ISO 8601
-                    datetime.
+                    <i>global</i>, <i>flow</i>, <i>msg</i>: Time from a context
+                    variable or message property. The variables/properties can
+                    have the following format:
+                    <ul>
+                        <li>
+                            Number (timestamp)
+                            <ul>
+                                <li>
+                                    Number of milliseconds elapsed since the UNIX
+                                    epoch
+                                </li>
+                                <li>
+                                    Number of milliseconds elapsed since midnight
+                                    if value is smaller than 86.400.000
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            String
+                            <ul>
+                                <li>Time in 12 or 24 hour format</li>
+                                <li>Date and time in region-specific format</li>
+                                <li>Date and time in ISO 8601 format</li>
+                            </ul>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </dd>
@@ -123,9 +142,8 @@ SOFTWARE.
             <ul>
                 <li>
                     <i>time of day</i>: A specific time can be entered directly
-                    in the form <code>hh:mm[:ss] [am|pm]</code>. Optionally it
-                    is possible to specify a date and a time using regional or
-                    ISO 8601 format.
+                    in 12 or 24 hour format. Optionally it is possible to specify
+                    a date and a time using regional or ISO 8601 format.
                 </li>
                 <li>
                     <i>sun position</i>: The sun position can be selected from
@@ -142,11 +160,37 @@ SOFTWARE.
                 <li>
                     <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: The time is
                     retrieved from an environment variable, a context variable or a
-                    message property with a timestamp as number of milliseconds elapsed
-                    since the UNIX epoch (or number of milliseconds elapsed since
-                    midnight if smaller than 86.400.000) or a string containing a
-                    time in 12 or 24 hour format, a region-specific datetime or an
-                    ISO 8601 datetime.
+                    message property. The variables/properties can have the following
+                    format:
+                    <ul>
+                        <li>
+                            Number (timestamp)
+                            <ul>
+                                <li>
+                                    Number of milliseconds elapsed since the UNIX
+                                    epoch
+                                </li>
+                                <li>
+                                    Number of milliseconds elapsed since midnight
+                                    if value is smaller than 86.400.000
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            String
+                            <ul>
+                                <li>Time in 12 or 24 hour format</li>
+                                <li>Sun time</li>
+                                <li>Moon time</li>
+                                <li>Custom sun time</li>
+                                <li>Date and time in region-specific format</li>
+                                <li>Date and time in ISO 8601 format</li>
+                                <li>Date and sun time</li>
+                                <li>Date and moon time</li>
+                                <li>Date and custom sun time</li>
+                            </ul>
+                        </li>
+                    </ul>
                 </li>
             </ul>
             The specified times can additionally be shifted by an (optionally
