@@ -263,8 +263,8 @@ function validateOperand(RED, node, operand, num)
 
     if ((typeof operand.value != "string")
         || ((operand.type == "time") && !node.chronos.isValidUserTime(operand.value, false))
-        || ((operand.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(operand.value))
-        || ((operand.type == "moon") && !/^(rise|set)$/.test(operand.value)))
+        || ((operand.type == "sun") && !node.chronos.PATTERN_SUNTIME.test(operand.value))
+        || ((operand.type == "moon") && !node.chronos.PATTERN_MOONTIME.test(operand.value)))
     {
         throw new node.chronos.TimeError(
                     RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
@@ -691,15 +691,28 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
             time2.add(offset, "minutes");
         }
 
-        if (time2.isSameOrBefore(time1))
+        if (time1.isSame(time2, "day"))
         {
-            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2)))
-                        || ((cond.operator == "outside") && (baseTime.isBefore(time1) && baseTime.isAfter(time2))));
+            if (time1.isBefore(time2))
+            {
+                result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2)))
+                            || ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+            }
+            else
+            {
+                result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2)))
+                            || ((cond.operator == "outside") && (baseTime.isBefore(time1) && baseTime.isAfter(time2))));
+            }
         }
-        else
+        else if (time1.isSameOrBefore(time2))
         {
             result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2)))
                         || ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+        }
+        else
+        {
+            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time2) && baseTime.isSameOrBefore(time1)))
+                        || ((cond.operator == "outside") && (baseTime.isBefore(time2) || baseTime.isAfter(time1))));
         }
     }
     else
@@ -739,7 +752,15 @@ function getTime(RED, node, msg, baseTime, type, value)
                         {type: type, value: ctxValue});
         }
 
-        ret = node.chronos.getTimeFrom(node, ctxValue);
+        ret = node.chronos.getTime(
+                            RED,
+                            node,
+                            baseTime,
+                            (typeof ctxValue == "string")
+                                ? "auto"
+                                : "time",
+                            ctxValue);
+
         if (!ret.isValid())
         {
             throw new node.chronos.TimeError(

@@ -844,8 +844,8 @@ module.exports = function(RED)
 
             if (((typeof data.value != "string") && (typeof data.value != "number")) ||
                 ((data.type == "time") && !chronos.isValidUserTime(data.value)) ||
-                ((data.type == "sun") && !/^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/.test(data.value)) ||
-                ((data.type == "moon") && !/^(rise|set)$/.test(data.value)))
+                ((data.type == "sun") && !chronos.PATTERN_SUNTIME.test(data.value)) ||
+                ((data.type == "moon") && !chronos.PATTERN_MOONTIME.test(data.value)))
             {
                 return false;
             }
