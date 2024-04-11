@@ -25,7 +25,8 @@
         },
         "tooltip":
         {
-            "offset":  "Offset (in minutes)"
+            "offset":  "Offset (in minutes)",
+            "expand":  "expand/collapse"
         },
         "list":
         {
