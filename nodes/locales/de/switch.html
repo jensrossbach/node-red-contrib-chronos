@@ -57,14 +57,35 @@ SOFTWARE.
                     Nachricht.
                 </li>
                 <li>
-                    <i>global</i>, <i>flow</i>, <i>msg</i>: Zeitstempel aus
-                    einer Kontextvariablen or einer Nachrichteneigenschaft als
-                    Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung
-                    (oder Anzahl Millisekunden seit Mitternacht, wenn kleiner
-                    als 86.400.000) oder eine Zeichenkette, die eine Zeit im
-                    12- oder 24-Stunden-Format, ein Datum und eine Zeit in
-                    Region-spezifischem Format oder ein Datum und eine Zeit
-                    nach ISO 8601 enthält.
+                    <i>global</i>, <i>flow</i>, <i>msg</i>: Zeit aus einer
+                    Kontextvariablen or einer Nachrichteneigenschaft. Die
+                    Variablen/Eigenschaften können folgendes Format haben:
+                    <ul>
+                        <li>
+                            Zahl (Zeitstempel)
+                            <ul>
+                                <li>
+                                    Anzahl Millisekunden seit Beginn der
+                                    UNIX-Zeitzählung
+                                </li>
+                                <li>
+                                    Anzahl Millisekunden seit Mitternacht,
+                                    wenn Wert kleiner als 86.400.000
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            Zeichenkette
+                            <ul>
+                                <li>Uhrzeit im 12- oder 24-Stunden-Format</li>
+                                <li>
+                                    Datum und Uhrzeit in Region-spezifischem
+                                    Format
+                                </li>
+                                <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                            </ul>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </dd>
@@ -130,10 +151,10 @@ SOFTWARE.
             gibt es folgende Möglichkeiten:
             <ul>
                 <li>
-                    <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt in der
-                    Form <code>hh:mm[:ss] [am|pm]</code> eingegeben werden.
-                    Optional ist die Eingabe eines Datums und einer Zeit in
-                    Region-spezifischem oder ISO 8601 Format möglich.
+                    <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt im 12-
+                    oder 24-Stunden-Format eingegeben werden. Optional ist die
+                    Eingabe eines Datums und einer Zeit in Region-spezifischem
+                    oder ISO 8601 Format möglich.
                 </li>
                 <li>
                     <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste
@@ -149,13 +170,44 @@ SOFTWARE.
                 </li>
                 <li>
                     <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeit
-                    wird aus einer Kontextvariablen or einer Nachrichteneigenschaft
-                    als Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung
-                    (oder Anzahl Millisekunden seit Mitternacht, wenn kleiner
-                    als 86.400.000) oder eine Zeichenkette, die eine Zeit im
-                    12- oder 24-Stunden-Format, ein Datum und eine Zeit in
-                    Region-spezifischem Format oder ein Datum und eine Zeit
-                    nach ISO 8601 enthält.
+                    wird aus einer Umgebungs- oder Kontextvariablen oder einer
+                    Nachrichteneigenschaft gelesen. Die Variablen/Eigenschaften
+                    können folgendes Format haben:
+                    <ul>
+                        <li>
+                            Zahl (Zeitstempel)
+                            <ul>
+                                <li>
+                                    Anzahl Millisekunden seit Beginn der
+                                    UNIX-Zeitzählung
+                                </li>
+                                <li>
+                                    Anzahl Millisekunden seit Mitternacht,
+                                    wenn Wert kleiner als 86.400.000
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            Zeichenkette
+                            <ul>
+                                <li>Uhrzeit im 12- oder 24-Stunden-Format</li>
+                                <li>Sonnenstand</li>
+                                <li>Mondstand</li>
+                                <li>Benutzerdefinierter Sonnenstand</li>
+                                <li>
+                                    Datum und Uhrzeit in Region-spezifischem
+                                    Format
+                                </li>
+                                <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                                <li>Datum und Sonnenstand</li>
+                                <li>Datum und Mondstand</li>
+                                <li>
+                                    Datum und benutzerdefinierter
+                                    Sonnenstand
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                 </li>
             </ul>
             Die spezifizierten Zeitpunkte können zusätzlich mittels eines
