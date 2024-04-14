@@ -109,13 +109,13 @@ function getTimeFrom(node, source)
         ret = getMoment(
                 node,
                 source, [
-                    "H:m:s",           // 24-hour format with seconds
-                    "H:m",             // 24-hour format without seconds
-                    "h:m:s a",         // 12-hour format with seconds
-                    "h:m a",           // 12-hour format without seconds
-                    "L LT",            // locale-specific date and time
-                    "L LTS",           // locale-specific date and time (incl. seconds)
-                    moment.ISO_8601],  // ISO 8601 datetime
+                    "H:mm",      "HH:mm",       // 24-hour format
+                    "H:mm:ss",   "HH:mm:ss",    // 24-hour format (incl. seconds)
+                    "h:mm a",    "hh:mm a",     // 12-hour format
+                    "h:mm:ss a", "hh:mm:ss a",  // 12-hour format (incl. seconds)
+                    "L LT",                     // locale-specific date and time
+                    "L LTS",                    // locale-specific date and time (incl. seconds)
+                    moment.ISO_8601],           // ISO 8601 datetime
                 node.locale,
                 true);
     }
@@ -146,10 +146,10 @@ function getUserTime(RED, node, day, value)
         ret = getMoment(
                 node,
                 value, [
-                    "H:m",       // 24-hour format
-                    "H:m:s",     // 24-hour format (incl. seconds)
-                    "h:m a",     // 12-hour format
-                    "h:m:s a"],  // 12-hour format (incl. seconds)
+                    "H:mm",      "HH:mm",        // 24-hour format
+                    "H:mm:ss",   "HH:mm:ss",     // 24-hour format (incl. seconds)
+                    "h:mm a",    "hh:mm a",      // 12-hour format
+                    "h:mm:ss a", "hh:mm:ss a"],  // 12-hour format (incl. seconds)
                 true);
 
         if (ret.isValid())
@@ -183,7 +183,7 @@ function getUserTime(RED, node, day, value)
         }
     }
 
-    if (!ret)
+    if (!ret || !ret.isValid())
     {
         throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
     }
@@ -293,15 +293,15 @@ function getTime(RED, node, day, type, value)
 
     if (type == "time")
     {
-        ret =  getUserTime(RED, node, day, value);
+        ret = getUserTime(RED, node, day, value);
     }
     else if ((type == "sun") || (type == "custom"))
     {
-        ret =  getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
+        ret = getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
     }
     else if (type == "moon")
     {
-        ret =  getMoonTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
+        ret = getMoonTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
     }
     else if (type == "auto")
     {
@@ -328,15 +328,15 @@ function getTime(RED, node, day, type, value)
 
             if (matches[2])  // time part (sun time)
             {
-                ret =  getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
             }
             else if (matches[3])  // time part (moon time)
             {
-                ret =  getMoonTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                ret = getMoonTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
             }
             else if (matches[4])  // time part (custom sun time)
             {
-                ret =  getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
+                ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
             }
         }
         else
