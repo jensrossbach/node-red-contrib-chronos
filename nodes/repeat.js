@@ -354,9 +354,8 @@ module.exports = function(RED)
             }
 
             const untilTime = getUntilTime(
-                                untilDate
-                                    ? chronos.getUserDate(RED, node, untilDate)
-                                    : now,
+                                now,
+                                untilDate,
                                 untilType,
                                 untilValue,
                                 untilOffset,
@@ -379,7 +378,7 @@ module.exports = function(RED)
                     (msgIngress == "forward:forced"));
         }
 
-        function getUntilTime(now, type, value, offset, random)
+        function getUntilTime(now, date, type, value, offset, random)
         {
             let ret = {};
 
@@ -417,9 +416,8 @@ module.exports = function(RED)
                     if (ctxData)
                     {
                         return getUntilTime(
-                                    ctxData.date
-                                        ? chronos.getUserDate(RED, node, ctxData.date)
-                                        : now,
+                                    now,
+                                    ctxData.date,
                                     ctxData.type,
                                     ctxData.value,
                                     (typeof ctxData.offset == "number")
@@ -429,7 +427,7 @@ module.exports = function(RED)
                     }
                     else
                     {
-                        return getUntilTime(null, "nextMsg", "", 0, false);
+                        return getUntilTime(now, null, "nextMsg", "", 0, false);
                     }
                 }
                 else
@@ -502,11 +500,17 @@ module.exports = function(RED)
             }
             else
             {
-                ret.time = chronos.getTime(RED, node, now.clone(), type, value);
+                const base = date ? chronos.getUserDate(RED, node, date) : now.clone();
+                ret.time = chronos.getTime(RED, node, base, type, value);
 
                 if (offset != 0)
                 {
                     ret.time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
+                }
+
+                if (!date && ret.time.isBefore(now))
+                {
+                    ret.time.add(1, "days");
                 }
 
                 ret.isExceededAt = async function(next)
