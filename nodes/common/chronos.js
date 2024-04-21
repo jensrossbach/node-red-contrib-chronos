@@ -362,6 +362,14 @@ function getJSONataExpression(RED, node, expr)
 {
     const expression = RED.util.prepareJSONataExpression(expr, node);
 
+    expression.assign(
+        "config", {
+            name: node.config.name,
+            latitude: node.config.latitude,
+            longitude: node.config.longitude,
+            timezone: node.config.timezone,
+            locale: node.locale});
+
     expression.registerFunction("millisecond", ts => { return getMoment(node, ts).millisecond(); }, "<(sn):n>");
     expression.registerFunction("second", ts => { return getMoment(node, ts).second(); }, "<(sn):n>");
     expression.registerFunction("minute", ts => { return getMoment(node, ts).minute(); }, "<(sn):n>");
