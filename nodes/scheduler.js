@@ -29,7 +29,7 @@ module.exports = function(RED)
         const chronos = require("./common/chronos.js");
         const cronosjs = require("cronosjs");
 
-        let node = this;
+        const node = this;
         RED.nodes.createNode(node, settings);
 
         node.name = settings.name;
@@ -793,18 +793,12 @@ module.exports = function(RED)
         {
             try
             {
-                return await chronos.evaluateJSONataExpression(
-                                            RED,
-                                            expression, {
-                                                name: node.name,
-                                                config: {
-                                                    name: node.config.name,
-                                                    latitude: node.config.latitude,
-                                                    longitude: node.config.longitude,
-                                                    timezone: node.config.timezone},
-                                                schedule: {
-                                                    id: id,
-                                                    trigger: trigger}});
+                expression.assign(
+                            "schedule", {
+                                id: id,
+                                trigger: trigger});
+
+                return await chronos.evaluateJSONataExpression(RED, expression, {});
             }
             catch (e)
             {

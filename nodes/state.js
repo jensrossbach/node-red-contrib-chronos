@@ -808,21 +808,15 @@ module.exports = function(RED)
         {
             try
             {
-                return await chronos.evaluateJSONataExpression(
-                                RED,
-                                node.outputValue, {
-                                    name: node.name,
-                                    config: {
-                                        name: node.config.name,
-                                        latitude: node.config.latitude,
-                                        longitude: node.config.longitude,
-                                        timezone: node.config.timezone},
-                                    state: {
+                node.outputValue.assign(
+                                    "state", {
                                         id: node.currentState.data.id,
                                         trigger: node.currentState.data.trigger,
                                         value: (node.currentState.data.state.type === "date") ? Date.now() : node.currentState.data.state.value,
                                         since: node.currentState.since.valueOf(),
-                                        until: node.currentState.until ? node.currentState.until.valueOf() : null}});
+                                        until: node.currentState.until ? node.currentState.until.valueOf() : null});
+
+                return await chronos.evaluateJSONataExpression(RED, node.outputValue, {});
             }
             catch (e)
             {
