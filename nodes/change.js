@@ -232,21 +232,24 @@ module.exports = function(RED)
                                 }
                                 else if (rule.action == "change")
                                 {
-                                    let input = null;
+                                    let input = undefined;
                                     let property = getTarget(msg, rule.target);
 
-                                    if (property && ((typeof property == "number") || (typeof property == "string")))
+                                    if ((typeof property == "number") || (typeof property == "string"))
                                     {
-                                        input = node.chronos.getTimeFrom(node, property);
-                                        if (!input.isValid())
-                                        {
-                                            input = null;
-                                        }
+                                        input = node.chronos.getTime(
+                                                                RED,
+                                                                node,
+                                                                node.chronos.getCurrentTime(node),
+                                                                (typeof property == "number")
+                                                                    ? "time"
+                                                                    : "auto",
+                                                                property);
                                     }
 
                                     if (input)
                                     {
-                                        let output = null;
+                                        let output = undefined;
 
                                         switch (rule.type)
                                         {
