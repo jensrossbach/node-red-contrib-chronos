@@ -201,6 +201,7 @@ module.exports = function(RED)
                 node.conditions = settings.conditions;
                 node.evaluation = settings.evaluation;
                 node.evaluationType = settings.evaluationType;
+                node.passiveMode = settings.passiveMode;
 
                 node.currentState = {};
 
@@ -209,166 +210,223 @@ module.exports = function(RED)
                     cancelTimer();
                 });
 
-                node.on("input", async(msg, send, done) =>
-                {
-                    if (!send || !done)  // Node-RED 0.x not supported anymore
-                    {
-                        return;
-                    }
-
-                    if (msg.topic === "get")
-                    {
-                        outputCurrentState();
-                        done();
-                    }
-                    else if (msg.topic === "set")
-                    {
-                        if ((typeof msg.payload == "number") &&
-                            (msg.payload >= 1) &&
-                            (msg.payload <= node.states.length))
-                        {
-                            if (!node.currentState.data ||
-                                (node.currentState.data.id != node.states[msg.payload-1].id))
-                            {
-                                node.currentState.data = node.states[msg.payload-1];
-                                node.currentState.since = chronos.getCurrentTime(node);
-
-                                if ("timeout" in msg)
-                                {
-                                    let timeout = 0;
-
-                                    if (typeof msg.timeout == "number")
-                                    {
-                                        // msg.timeout number is interpreted as minutes
-                                        timeout = msg.timeout * 60000;
-                                    }
-                                    else if (typeof msg.timeout == "object")
-                                    {
-                                        if (typeof msg.timeout.hours == "number")
-                                        {
-                                            timeout += msg.timeout.hours * 3600000;
-                                        }
-
-                                        if (typeof msg.timeout.minutes == "number")
-                                        {
-                                            timeout += msg.timeout.minutes * 60000;
-                                        }
-
-                                        if (typeof msg.timeout.seconds == "number")
-                                        {
-                                            timeout += msg.timeout.seconds * 1000;
-                                        }
-                                    }
-
-                                    if ((timeout >= 1000) && (timeout <= 86400000))
-                                    {
-                                        cancelTimer();
-
-                                        node.debug("[State:" + node.currentState.data.id + "] Starting timer for timeout of " + timeout + " milliseconds");
-                                        node.currentState.timer = setTimeout(resetCurrentState, timeout);
-                                        node.currentState.until = node.currentState.since.clone();
-                                        node.currentState.until.add(timeout, "milliseconds");
-                                    }
-                                }
-
-                                outputCurrentState();
-                                updateStatus();
-
-                                done();
-                            }
-                        }
-                    }
-                    else if (msg.topic === "reset")
-                    {
-                        resetCurrentState();
-                        done();
-                    }
-                    else if (msg.topic === "reload")
-                    {
-                        reload();
-                        done();
-                    }
-                    else if (msg.topic === "configure")
-                    {
-                        let reset = false;
-
-                        if (msg.payload && (typeof msg.payload == "object"))
-                        {
-                            if ("states" in msg.payload)
-                            {
-                                if (msg.payload.states && Array.isArray(msg.payload.states))
-                                {
-                                    for (let i=0; (i<msg.payload.states.length) && (i<node.states.length); ++i)
-                                    {
-                                        if (msg.payload.states[i] && (typeof msg.payload.states[i] == "object"))
-                                        {
-                                            if (("trigger" in msg.payload.states[i]) && validateTriggerData(msg.payload.states[i].trigger))
-                                            {
-                                                node.states[i].triggerConfig = msg.payload.states[i].trigger;
-                                                node.states[i].trigger = prepareTrigger(msg.payload.states[i].trigger);
-                                                reset = true;
-                                            }
-
-                                            if (("state" in msg.payload.states[i]) && validateStateData(msg.payload.states[i].state))
-                                            {
-                                                node.states[i].state = msg.payload.states[i].state;
-                                                reset = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if ("conditions" in msg.payload)
-                            {
-                                if (msg.payload.conditions && Array.isArray(msg.payload.conditions))
-                                {
-                                    for (let i=0; (i<msg.payload.conditions.length) && (i<node.conditions.length); ++i)
-                                    {
-                                        try
-                                        {
-                                            node.conditions[i] = sfUtils.convertCondition(RED, node, msg.payload.conditions[i], i+1);
-                                            reset = true;
-                                        }
-                                        catch (e)
-                                        {
-                                            if (e instanceof node.chronos.TimeError)
-                                            {
-                                                const errMsg = RED.util.cloneMessage(msg);
-
-                                                if (e.details)
-                                                {
-                                                    errMsg.errorDetails = e.details;
-                                                }
-
-                                                node.error(e.message, errMsg);
-                                            }
-                                            else
-                                            {
-                                                node.error(e.message);
-                                                node.debug(e.stack);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (reset)
-                        {
-                            resetCurrentState();
-                        }
-
-                        done();
-                    }
-                    else
-                    {
-                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
-                    }
-                });
-
                 restoreCurrentState(false).then(() =>
                 {
+                    node.on("input", async(msg, send, done) =>
+                    {
+                        if (!send || !done)  // Node-RED 0.x not supported anymore
+                        {
+                            return;
+                        }
+
+                        if (msg.topic == "trigger")
+                        {
+                            if (node.passiveMode)
+                            {
+                                const triggerTime = chronos.getCurrentTime(node);
+
+                                if ((typeof msg.payload == "number") &&
+                                    (msg.payload >= 1) &&
+                                    (msg.payload <= node.states.length))
+                                {
+                                    const targetState = node.states[msg.payload-1];
+
+                                    if ((!node.currentState.data || (node.currentState.data.id != targetState.id)) &&
+                                        (await evalConditions(triggerTime)))
+                                    {
+                                        await switchState({data: targetState, triggerTime: triggerTime});
+
+                                        outputCurrentState();
+                                        updateStatus();
+
+                                        done();
+                                    }
+                                }
+                                else if (node.currentState.data)
+                                {
+                                    const targetState = getState(triggerTime, triggerTime, false, true);
+
+                                    if (targetState &&
+                                        (targetState.data.id != node.currentState.data.id) &&
+                                        (await evalConditions(targetState.triggerTime)))
+                                    {
+                                        await switchState(targetState);
+
+                                        outputCurrentState();
+                                        updateStatus();
+
+                                        done();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                done(RED._("state.error.commandNotAllowed"), RED.util.cloneMessage(msg));
+                            }
+                        }
+                        else if (msg.topic === "get")
+                        {
+                            outputCurrentState();
+                            done();
+                        }
+                        else if (msg.topic === "set")
+                        {
+                            if ((typeof msg.payload == "number") &&
+                                (msg.payload >= 1) &&
+                                (msg.payload <= node.states.length))
+                            {
+                                const targetState = node.states[msg.payload-1];
+
+                                if (!node.currentState.data ||
+                                    (node.currentState.data.id != targetState.id))
+                                {
+                                    if (node.currentState.data)
+                                    {
+                                        // reload trigger of old state before new state is activated
+                                        reloadTrigger(node.currentState.data);
+                                    }
+
+                                    node.currentState.data = targetState;
+                                    node.currentState.since = chronos.getCurrentTime(node);
+
+                                    if ("timeout" in msg)
+                                    {
+                                        let timeout = 0;
+
+                                        if (typeof msg.timeout == "number")
+                                        {
+                                            // msg.timeout number is interpreted as minutes
+                                            timeout = msg.timeout * 60000;
+                                        }
+                                        else if (typeof msg.timeout == "object")
+                                        {
+                                            if (typeof msg.timeout.hours == "number")
+                                            {
+                                                timeout += msg.timeout.hours * 3600000;
+                                            }
+
+                                            if (typeof msg.timeout.minutes == "number")
+                                            {
+                                                timeout += msg.timeout.minutes * 60000;
+                                            }
+
+                                            if (typeof msg.timeout.seconds == "number")
+                                            {
+                                                timeout += msg.timeout.seconds * 1000;
+                                            }
+                                        }
+
+                                        if ((timeout >= 1000) && (timeout <= 86400000))
+                                        {
+                                            cancelTimer();
+
+                                            node.debug("[State:" + node.currentState.data.id + "] Starting timer for timeout of " + timeout + " milliseconds");
+                                            node.currentState.timer = setTimeout(resetCurrentState, timeout);
+                                            node.currentState.until = node.currentState.since.clone();
+                                            node.currentState.until.add(timeout, "milliseconds");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        node.currentState.until = await getNextTrigger();
+                                    }
+
+                                    outputCurrentState();
+                                    updateStatus();
+
+                                    done();
+                                }
+                            }
+                        }
+                        else if (msg.topic === "reset")
+                        {
+                            resetCurrentState();
+                            done();
+                        }
+                        else if (msg.topic === "reload")
+                        {
+                            reload();
+                            done();
+                        }
+                        else if (msg.topic === "configure")
+                        {
+                            let reset = false;
+
+                            if (msg.payload && (typeof msg.payload == "object"))
+                            {
+                                if ("states" in msg.payload)
+                                {
+                                    if (msg.payload.states && Array.isArray(msg.payload.states))
+                                    {
+                                        for (let i=0; (i<msg.payload.states.length) && (i<node.states.length); ++i)
+                                        {
+                                            if (msg.payload.states[i] && (typeof msg.payload.states[i] == "object"))
+                                            {
+                                                if (("trigger" in msg.payload.states[i]) && validateTriggerData(msg.payload.states[i].trigger))
+                                                {
+                                                    node.states[i].triggerConfig = msg.payload.states[i].trigger;
+                                                    node.states[i].trigger = prepareTrigger(msg.payload.states[i].trigger);
+                                                    reset = true;
+                                                }
+
+                                                if (("state" in msg.payload.states[i]) && validateStateData(msg.payload.states[i].state))
+                                                {
+                                                    node.states[i].state = msg.payload.states[i].state;
+                                                    reset = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if ("conditions" in msg.payload)
+                                {
+                                    if (msg.payload.conditions && Array.isArray(msg.payload.conditions))
+                                    {
+                                        for (let i=0; (i<msg.payload.conditions.length) && (i<node.conditions.length); ++i)
+                                        {
+                                            try
+                                            {
+                                                node.conditions[i] = sfUtils.convertCondition(RED, node, msg.payload.conditions[i], i+1);
+                                                reset = true;
+                                            }
+                                            catch (e)
+                                            {
+                                                if (e instanceof node.chronos.TimeError)
+                                                {
+                                                    const errMsg = RED.util.cloneMessage(msg);
+
+                                                    if (e.details)
+                                                    {
+                                                        errMsg.errorDetails = e.details;
+                                                    }
+
+                                                    node.error(e.message, errMsg);
+                                                }
+                                                else
+                                                {
+                                                    node.error(e.message);
+                                                    node.debug(e.stack);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (reset)
+                            {
+                                resetCurrentState();
+                            }
+
+                            done();
+                        }
+                        else
+                        {
+                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
+                        }
+                    });
+
                     setUpTimer();
                     updateStatus();
 
@@ -459,34 +517,39 @@ module.exports = function(RED)
 
             node.states.forEach(data =>
             {
-                const trigger = loadTrigger(data.triggerConfig);
-                if (trigger)
-                {
-                    data.trigger = trigger;
-                }
+                reloadTrigger(data);
             });
 
             setUpTimer();
+        }
+
+        function reloadTrigger(data)
+        {
+            const trigger = loadTrigger(data.triggerConfig);
+            if (trigger)
+            {
+                data.trigger = trigger;
+            }
         }
 
         function resetCurrentState()
         {
             cancelTimer();
 
-            restoreCurrentState(true).then(() =>
+            restoreCurrentState(true, false).then(() =>
             {
                 setUpTimer();
                 updateStatus();
             });
         }
 
-        async function restoreCurrentState(output)
+        async function restoreCurrentState(output, ignoreRandomOffset = true)
         {
             const now = chronos.getCurrentTime(node);
             const baseDate = await getApplicableDate(now.clone(), true);
 
             // always assume a random offset of 0 when restoring last state to avoid weird effects
-            let restoredState = getState(baseDate, now, true, true);
+            let restoredState = getState(baseDate, now, ignoreRandomOffset, true);
             if (!restoredState && baseDate && baseDate.isSame(now, "day"))
             {
                 // all state triggers are in the future -> search for last state yesterday and earlier
@@ -494,7 +557,7 @@ module.exports = function(RED)
                                     await getApplicableDate(
                                             baseDate.subtract(1, "days"),
                                             true),
-                                    now, true, true);
+                                    now, ignoreRandomOffset, true);
             }
 
             if (restoredState)
@@ -520,7 +583,7 @@ module.exports = function(RED)
             }
         }
 
-        function getState(baseTime, today, ignoreRandomOffset, reverse = false)
+        function getState(baseTime, today, ignoreRandomOffset, reverse, precision)
         {
             let stateTriggerTime = undefined;
             let stateData = undefined;
@@ -546,14 +609,14 @@ module.exports = function(RED)
                             {
                                 if (stateTriggerTime)
                                 {
-                                    if ((!isSameDay || triggerTime.isSameOrBefore(baseTime)) &&
-                                        triggerTime.isAfter(stateTriggerTime))
+                                    if ((!isSameDay || triggerTime.isSameOrBefore(baseTime, precision)) &&
+                                        triggerTime.isAfter(stateTriggerTime, precision))
                                     {
                                         stateTriggerTime = triggerTime;
                                         stateData = data;
                                     }
                                 }
-                                else if (!isSameDay || triggerTime.isSameOrBefore(baseTime))
+                                else if (!isSameDay || triggerTime.isSameOrBefore(baseTime, precision))
                                 {
                                     stateTriggerTime = triggerTime;
                                     stateData = data;
@@ -561,14 +624,14 @@ module.exports = function(RED)
                             }
                             else if (stateTriggerTime)
                             {
-                                if ((!isSameDay || triggerTime.isAfter(baseTime)) &&
-                                    triggerTime.isBefore(stateTriggerTime))
+                                if ((!isSameDay || triggerTime.isAfter(baseTime, precision)) &&
+                                    triggerTime.isBefore(stateTriggerTime, precision))
                                 {
                                     stateTriggerTime = triggerTime;
                                     stateData = data;
                                 }
                             }
-                            else if (!isSameDay || triggerTime.isAfter(baseTime))
+                            else if (!isSameDay || triggerTime.isAfter(baseTime, precision))
                             {
                                 stateTriggerTime = triggerTime;
                                 stateData = data;
@@ -598,13 +661,13 @@ module.exports = function(RED)
             const now = chronos.getCurrentTime(node);
             const baseDate = await getApplicableDate(now.clone());
 
-            let nextState = getState(baseDate, now, false);
+            let nextState = getState(baseDate, now, false, false);
             if (!nextState && baseDate && baseDate.isSame(now, "day"))
             {
                 // all state triggers are in the past -> search for next state tomorrow and later
                 nextState = getState(
                                 await getApplicableDate(baseDate.add(1, "days")),
-                                now, false);
+                                now, false, false);
             }
 
             return nextState.triggerTime;
@@ -614,11 +677,11 @@ module.exports = function(RED)
         {
             const now = chronos.getCurrentTime(node);
 
-            let nextState = getState(now, now, false);
+            let nextState = getState(now, now, false, false);
             if (!nextState)
             {
                 // all state triggers are in the past -> search for next state tomorrow
-                nextState = getState(now.clone().add(1, "days"), now, false);
+                nextState = getState(now.clone().add(1, "days"), now, false, false);
             }
 
             return nextState;
@@ -700,48 +763,55 @@ module.exports = function(RED)
             return result;
         }
 
+        async function switchState(targetState)
+        {
+            if (node.currentState.data)
+            {
+                // reload trigger of old state before new state is activated
+                reloadTrigger(node.currentState.data);
+            }
+
+            node.currentState.data = targetState.data;
+            node.currentState.since = targetState.triggerTime;
+            node.currentState.until = await getNextTrigger();
+        }
+
         function setUpTimer()
         {
-            const state = getNextState();
-            if (state)
+            if (!node.passiveMode)
             {
-                node.debug("[State:" + state.data.id + "] Set up timer");
-                node.trace("[State:" + state.data.id + "] Trigger configuration: " + JSON.stringify(state.data.triggerConfig));
-                node.trace("[State:" + state.data.id + "] Trigger specification: " + JSON.stringify(state.data.trigger));
-
-                cancelTimer();
-
-                node.debug("[State:" + state.data.id + "] Starting timer for trigger at " + state.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
-                node.currentState.timer = setTimeout(async() =>
+                const state = getNextState();
+                if (state)
                 {
-                    node.debug("[State:" + state.data.id + "] Timer expired");
-                    delete node.currentState.timer;
+                    node.debug("[State:" + state.data.id + "] Set up timer");
+                    node.trace("[State:" + state.data.id + "] Trigger configuration: " + JSON.stringify(state.data.triggerConfig));
+                    node.trace("[State:" + state.data.id + "] Trigger specification: " + JSON.stringify(state.data.trigger));
 
-                    if (await evalConditions(state.triggerTime))
+                    cancelTimer();
+
+                    node.debug("[State:" + state.data.id + "] Starting timer for trigger at " + state.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                    node.currentState.timer = setTimeout(async() =>
                     {
-                        // refresh trigger of new current state
-                        state.data.trigger = loadTrigger(state.data.triggerConfig);
-                        node.states.forEach(data =>
-                        {
-                            node.debug(JSON.stringify(data));
-                        });
+                        node.debug("[State:" + state.data.id + "] Timer expired");
+                        delete node.currentState.timer;
 
-                        node.currentState.data = state.data;
-                        node.currentState.since = state.triggerTime;
-                        node.currentState.until = await getNextTrigger();
-
-                        if (node.currentState.timer)
+                        if (await evalConditions(state.triggerTime))
                         {
-                            clearTimeout(node.currentState.timer);
-                            delete node.currentState.timer;
+                            await switchState(state);
+
+                            if (node.currentState.timer)
+                            {
+                                clearTimeout(node.currentState.timer);
+                                delete node.currentState.timer;
+                            }
+
+                            outputState();
                         }
 
-                        outputState();
-                    }
-
-                    setUpTimer();
-                    updateStatus();
-                }, state.triggerTime.diff(chronos.getCurrentTime(node)));
+                        setUpTimer();
+                        updateStatus();
+                    }, state.triggerTime.diff(chronos.getCurrentTime(node)));
+                }
             }
         }
 
