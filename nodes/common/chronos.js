@@ -362,6 +362,7 @@ function getJSONataExpression(RED, node, expr)
 {
     const expression = RED.util.prepareJSONataExpression(expr, node);
 
+    expression.assign("node", node.name || "");
     expression.assign(
         "config", {
             name: node.config.name,
