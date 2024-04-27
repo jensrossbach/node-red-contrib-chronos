@@ -186,7 +186,10 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>topic<span class="property-type">string</span></dt>
-        <dd>Control command to be executed; one of "trigger", "get", "set", "reset" or "reload"</dd>
+        <dd>
+            Control command to be executed;
+            one of "trigger", "get", "getid", "set", "reset" or "reload"
+        </dd>
         <dt class="optional">payload<span class="property-type">number</span></dt>
         <dd>Identifier of the state to trigger or activate</dd>
         <dt class="optional">timeout<span class="property-type">number | object</span></dt>
@@ -214,6 +217,13 @@ SOFTWARE.
             <li>
                 <code>get</code>: Explicitly sends or stores the current state
                 value.
+            </li>
+            <li>
+                <code>getid</code>: Sends a message with the identifier of the
+                currently active state in <code>msg.payload</code> to the output
+                port. The message contains the original <code>msg.topic</code>
+                property with "getid" in order to distinguish it from normal
+                state change output messages.
             </li>
             <li>
                 <code>set</code>: Sets the current state unconditionally to the
@@ -347,7 +357,8 @@ SOFTWARE.
     <h3>Output</h3>
     <p>
         Whenever the state changes and the output is configured to be a message
-        property or a full message, a message is sent to the output port of this
-        node.
+        property or a full message, a message containing the state value is
+        sent to the output port of this node. Additionally, a response to the
+        "getid" command may be sent to the output port.
     </p>
 </script>
