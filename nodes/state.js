@@ -535,6 +535,7 @@ module.exports = function(RED)
         function resetCurrentState()
         {
             cancelTimer();
+            node.currentState = {};
 
             restoreCurrentState(true, false).then(() =>
             {
@@ -670,7 +671,7 @@ module.exports = function(RED)
                                 now, false, false);
             }
 
-            return nextState.triggerTime;
+            return nextState ? nextState.triggerTime : undefined;
         }
 
         function getNextState()
@@ -984,7 +985,7 @@ module.exports = function(RED)
                     stateValue = node.currentState.data.state.value;
                 }
 
-                let when = (node.currentState.until) ? node.currentState.until.calendar() : undefined;
+                let when = node.currentState.until ? node.currentState.until.calendar() : undefined;
 
                 if (when)
                 {
@@ -997,7 +998,7 @@ module.exports = function(RED)
             }
             else
             {
-                node.status({fill: "yellow", shape: "dot", text: "state.status.noState"});
+                node.status({fill: "grey", shape: "dot", text: "state.status.noState"});
             }
         }
     }
