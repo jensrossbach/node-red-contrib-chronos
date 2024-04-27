@@ -794,7 +794,7 @@ module.exports = function(RED)
             try
             {
                 expression.assign(
-                            "schedule", {
+                            "event", {
                                 id: id,
                                 trigger: trigger});
 

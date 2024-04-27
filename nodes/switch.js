@@ -32,6 +32,7 @@ module.exports = function(RED)
         RED.nodes.createNode(this, settings);
 
         node.chronos = require("./common/chronos.js");
+        node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
         node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
 
