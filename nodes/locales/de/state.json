@@ -10,7 +10,8 @@
             "states":         "Zustände",
             "value":          "Wert",
             "manualTrigger":  "Manueller Auslöser",
-            "outputOnStart":  "Beim Start aktuellen Zustand ausgeben nach"
+            "outputOnStart":  "Beim Start aktuellen Zustand ausgeben nach",
+            "passiveMode":    "Passiver Auslösemodus"
         },
         "status":
         {
@@ -22,7 +23,8 @@
         "error":
         {
             "noStates":           "Keine Zustände konfiguriert",
-            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable: __trigger__"
+            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable: __trigger__",
+            "commandNotAllowed":  "Kommando nur im passiven Auslösemodus erlaubt"
         }
     }
 }

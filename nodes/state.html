@@ -66,6 +66,10 @@ SOFTWARE.
         <input id="node-input-outputOnStartDelay" type="text" placeholder="0.1" style="width: 45px; height: 28px;">&nbsp;
         <span data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.seconds"></span>
     </div>
+    <div class="form-row">
+        <input id="node-input-passiveMode" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-passiveMode" style="margin-bottom: 0px; width: auto;" data-i18n="state.label.passiveMode"></label>
+    </div>
 </script>
 
 <script type="text/javascript">
@@ -186,6 +190,10 @@ SOFTWARE.
             {
                 value:    0.1,
                 validate: RED.validators.number(true)
+            },
+            passiveMode:
+            {
+                value: false
             }
         },
         oneditprepare: function()

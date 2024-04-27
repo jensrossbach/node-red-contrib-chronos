@@ -10,7 +10,8 @@
             "value":          "Value",
             "states":         "States",
             "manualTrigger":  "manual trigger",
-            "outputOnStart":  "Output current state on start after"
+            "outputOnStart":  "Output current state on start after",
+            "passiveMode":    "Passive trigger mode"
         },
         "status":
         {
@@ -22,7 +23,8 @@
         "error":
         {
             "noStates":           "No states configured",
-            "invalidCtxTrigger":  "Invalid state trigger from context variable: __trigger__"
+            "invalidCtxTrigger":  "Invalid state trigger from context variable: __trigger__",
+            "commandNotAllowed":  "Command only allowed in passive trigger mode"
         }
     }
 }
