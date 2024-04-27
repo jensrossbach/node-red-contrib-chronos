@@ -197,7 +197,10 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>topic<span class="property-type">string</span></dt>
-        <dd>Steuert den Knoten abhängig von den angegebenen Kommandos; entweder "trigger", "get", "set", "reset" oder "reload"</dd>
+        <dd>
+            Steuert den Knoten abhängig von den angegebenen Kommandos;
+            entweder "trigger", "get", "getid", "set", "reset" oder "reload"
+        </dd>
         <dt class="optional">payload<span class="property-type">number</span></dt>
         <dd>Kennzeichnung des auszulösenden oder zu aktivierenden Zustands</dd>
         <dt class="optional">timeout<span class="property-type">number | object</span></dt>
@@ -225,6 +228,14 @@ SOFTWARE.
             </li>
             <li>
                 <code>get</code>: Gibt den aktuellen Zustandswert aus.
+            </li>
+            <li>
+                <code>getid</code>: Schickt eine Nachricht mit der Kennzeichnung
+                des aktuellen Zustands in <code>msg.payload</code> an den
+                Ausgabe-Port. Die Nachricht enthält die ursprüngliche
+                <code>msg.topic</code> Eigenschaft mit "getid", um diese
+                von normalen Zustandsänderungsnachrichten unterscheiden
+                zu können.
             </li>
             <li>
                 <code>set</code>: Setzt den aktuellen Zustand bedingungslos
@@ -362,7 +373,8 @@ SOFTWARE.
     <h3>Ausgabe</h3>
     <p>
         Immer wenn sich der Zustand ändert und die Ausgabe als Ausgangsnachricht
-        konfiguriert ist, wird eine Nachricht an den Ausgabe-Port des Knotens
-        gesendet.
+        konfiguriert ist, wird eine Nachricht mit dem Zustandswert an den
+        Ausgabe-Port des Knotens gesendet. Zusätzlich kann eine Antwortnachricht
+        auf das "getid" Kommando an den Ausgabe-Port gesendet werden.
     </p>
 </script>

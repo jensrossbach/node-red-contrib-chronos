@@ -219,7 +219,7 @@ module.exports = function(RED)
                             return;
                         }
 
-                        if (msg.topic == "trigger")
+                        if (msg.topic === "trigger")
                         {
                             if (node.passiveMode)
                             {
@@ -267,6 +267,16 @@ module.exports = function(RED)
                         else if (msg.topic === "get")
                         {
                             outputCurrentState();
+                            done();
+                        }
+                        else if (msg.topic === "getid")
+                        {
+                            if (node.currentState.data)
+                            {
+                                msg.payload = node.currentState.data.id;
+                                send(msg);
+                            }
+
                             done();
                         }
                         else if (msg.topic === "set")
