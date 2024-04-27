@@ -103,9 +103,10 @@ SOFTWARE.
                         </li>
                         <li>
                             <i>Manueller Auslöser</i>: Zustand wird nicht
-                            automatisch ausgelöst, sondern kann nur manuell
-                            über eine Eingangsnachricht ausgelöst werden.
-                            Siehe Abschnitt <i>Eingabe</i> für weitere Informationen.
+                            automatisch aktiviert, sondern kann nur manuell
+                            über eine Eingabenachricht aktiviert werden.
+                            Siehe Kommando <code>set</code> im Abschnitt
+                            <i>Eingabe</i> für weitere Informationen.
                         </li>
                     </ul>
                 </li>
@@ -178,6 +179,15 @@ SOFTWARE.
             Optional kann eine Verzögerung angegeben werden, nach der die Ausgabe
             erfolgt (standardmäßig nach 0,1 Sekunden).
         </dd>
+        <dt>Passiver Auslösemodus</dt>
+        <dd>
+            Wenn aktiviert, wird der Knoten beim Erreichen der Auslösezeitpunkte
+            die Zustände nicht selbstständig ändern. Stattdessen müssen
+            Zustandsänderungen von einem externen Zeitgeber (beispielsweise
+            einem Scheduler-Knoten) über eine Eingabenachricht ausgelöst werden.
+            Siehe Kommando <code>trigger</code> weiter unten im Abschnitt
+            <i>Eingabe</i> für weitere Informationen.
+        </dd>
     </dl>
     <h3>Eingabe</h3>
     <dt>Zustands-Knoten steuern</dt>
@@ -187,9 +197,9 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>topic<span class="property-type">string</span></dt>
-        <dd>Steuert den Knoten abhängig von den angegebenen Kommandos</dd>
+        <dd>Steuert den Knoten abhängig von den angegebenen Kommandos; entweder "trigger", "get", "set", "reset" oder "reload"</dd>
         <dt class="optional">payload<span class="property-type">number</span></dt>
-        <dd>Kennzeichnung des zu aktivierenden Zustands</dd>
+        <dd>Kennzeichnung des auszulösenden oder zu aktivierenden Zustands</dd>
         <dt class="optional">timeout<span class="property-type">number | object</span></dt>
         <dd>Zeit bis der ursprüngliche Zustands wiederhergestellt wird</dd>
     </dl>
@@ -202,26 +212,37 @@ SOFTWARE.
         Folgende Kommandos werden zurzeit unterstützt:
         <ul>
             <li>
-                <code>get</code>: Löst die Ausgabe des aktuellen Zustandswertes
-                aus.
+                <code>trigger</code>: Nur möglich im passiven Auslösemodus.
+                Wenn <code>msg.payload</code> eine gültige Kennzeichnung
+                eines konfigurierten Zustands enthält, wird dieser Zustand
+                aktiviert, sofern die konfigurierten Bedingungen zutreffen.
+                Wenn <code>msg.payload</code> nicht gesetzt ist, wird geprüft,
+                ob der Auslösezeitpunkt eines Zustands erreicht wurde und
+                in diesem Fall, unter der Voraussetzung dass die Bedingungen
+                erfüllt sind, der Zustand aktiviert. Wenn sich der Zustand
+                durch die Aktion ändert, wird der aktuelle Wert des Zustands
+                ausgegeben.
             </li>
             <li>
-                <code>set</code>: Setzt den aktuellen Zustand auf den konfigurierten
-                Zustand mit der Kennzeichnung in <code>msg.payload</code>. Die
-                zugehörigen Kennzeichnungen werden in der Zustandsliste neben
-                den Einträgen angezeigt. Wenn sich der Zustand durch die Aktion
-                ändert, wird auch die Ausgabe des Zustands ausgelöst. Optional
-                kann eine Zeit in <code>msg.timeout</code> angegeben werden,
-                nach deren Ablauf der Zustand wie beim Kommando <code>reset</code>
-                zurückgesetzt wird. Die Zeit kann entweder als Zahl in Minuten
-                oder als Objekt mit den Eigenschaften <code>seconds</code>,
-                <code>minutes</code> und/oder <code>hours</code> angegeben werden.
+                <code>get</code>: Gibt den aktuellen Zustandswert aus.
+            </li>
+            <li>
+                <code>set</code>: Setzt den aktuellen Zustand bedingungslos
+                auf den konfigurierten Zustand mit der Kennzeichnung in
+                <code>msg.payload</code>. Wenn sich der Zustand durch die
+                Aktion ändert, wird der aktuelle Wert des Zustands ausgegeben.
+                Optional kann eine Zeit in <code>msg.timeout</code> angegeben
+                werden, nach deren Ablauf der Zustand wie beim Kommando
+                <code>reset</code> zurückgesetzt wird. Die Zeit kann entweder
+                als Zahl in Minuten oder als Objekt mit den Eigenschaften
+                <code>seconds</code>, <code>minutes</code> und/oder
+                <code>hours</code> angegeben werden.
             </li>
             <li>
                 <code>reset</code>: Setzt den aktuellen Zustand auf seinen
                 ursprünglichen Wert anhand des konfigurierten Auslösezeitpunkts
                 und der Bedingungen zurück. Wenn sich der Zustand durch die Aktion
-                ändert, wird auch die Ausgabe des Zustands ausgelöst.
+                ändert, wird der aktuelle Wert des Zustands ausgegeben.
             </li>
             <li>
                 <code>reload</code>: Führt zu einer Neuberechnung der Zeitereignisse
@@ -238,7 +259,7 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>topic<span class="property-type">string</span></dt>
-        <dd>Kontrolkommando; must auf "configure" gesetzt werden</dd>
+        <dd>Kontrolkommando; muss auf "configure" gesetzt werden</dd>
         <dt>payload<span class="property-type">object</span></dt>
         <dd>Überschreibt Zustände und/oder Bedingungen</dd>
     </dl>

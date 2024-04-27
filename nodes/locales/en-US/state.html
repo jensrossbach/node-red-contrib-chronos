@@ -96,10 +96,10 @@ SOFTWARE.
                             <i>Input</i> below for details.
                         </li>
                         <li>
-                            <i>manual trigger</i>: State will not be triggered
-                            automatically but can only be triggered manually
-                            via an input message. See section <i>Input</i>
-                            below for details.
+                            <i>manual trigger</i>: State will not be activated
+                            automatically but can only be activated manually
+                            via an input message. See <code>set</code> command
+                            in section <i>Input</i> below for details.
                         </li>
                     </ul>
                 </li>
@@ -169,6 +169,14 @@ SOFTWARE.
             choose a delay after which the output is produced (defaults to 0.1
             seconds).
         </dd>
+        <dt>Passive trigger mode</dt>
+        <dd>
+            If selected, the state node will not actively change states upon
+            reaching their trigger times. Instead, state changes must be
+            triggered by an external timer source (such as a scheduler node)
+            via input message. See <code>trigger</code> command in section
+            <i>Input</i> below for further information.
+        </dd>
     </dl>
     <h3>Input</h3>
     <dt>Control state node</dt>
@@ -178,9 +186,9 @@ SOFTWARE.
     </dd>
     <dl class="message-properties">
         <dt>topic<span class="property-type">string</span></dt>
-        <dd>Control command to be executed</dd>
+        <dd>Control command to be executed; one of "trigger", "get", "set", "reset" or "reload"</dd>
         <dt class="optional">payload<span class="property-type">number</span></dt>
-        <dd>Identifier of the state to activate</dd>
+        <dd>Identifier of the state to trigger or activate</dd>
         <dt class="optional">timeout<span class="property-type">number | object</span></dt>
         <dd>Timeout after which the original state is restored</dd>
     </dl>
@@ -193,26 +201,36 @@ SOFTWARE.
         The following commands are currently supported:
         <ul>
             <li>
-                <code>get</code>: Explicitly triggers the output of the current
-                state.
+                <code>trigger</code>: Only allowed in passive trigger mode. If
+                <code>msg.payload</code> contains a valid identifier of a
+                configured state, that state will be activated provided that
+                the configured conditions are met. If <code>msg.payload</code>
+                is not set, checks if the trigger time of a configured state
+                is reached and in this case activates the state provided
+                that the conditions are met. If the state actually changed
+                by this action, the current value of the state will be sent
+                or stored.
             </li>
             <li>
-                <code>set</code>: Sets the current state to the configured state
-                with the identifier in <code>msg.payload</code>. The assigned
-                identifiers are displayed in the state list next to each entry.
-                If the state actually changed by this action, the output of the
-                new state is triggered. Optionally, a timeout can be specified
-                in <code>msg.timeout</code>. After the timeout has elapsed, the
-                state is restored in the same way as the <code>reset</code> command
-                does. The timeout can be specified as number of minutes or as an
-                object containing the properties <code>seconds</code>, <code>minutes</code>
-                and/or <code>hours</code>.
+                <code>get</code>: Explicitly sends or stores the current state
+                value.
+            </li>
+            <li>
+                <code>set</code>: Sets the current state unconditionally to the
+                configured state with the identifier in <code>msg.payload</code>.
+                If the state actually changed by this action, the current value
+                of the state will be sent or stored. Optionally, a timeout can
+                be specified in <code>msg.timeout</code>. After the timeout has
+                elapsed, the state is restored in the same way as the <code>reset</code>
+                command does. The timeout can be specified as number of minutes
+                or as an object containing the properties <code>seconds</code>,
+                <code>minutes</code> and/or <code>hours</code>.
             </li>
             <li>
                 <code>reset</code>: Sets the state back to its original value
                 according to the configured trigger time and conditions. If the
-                state actually changed by this action, the output of the restored
-                state is triggered.
+                state actually changed by this action, the current value of the
+                state will be sent or stored.
             </li>
             <li>
                 <code>reload</code>: Forces state triggers to be recalculated
