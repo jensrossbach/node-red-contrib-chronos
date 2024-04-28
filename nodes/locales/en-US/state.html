@@ -187,8 +187,8 @@ SOFTWARE.
     <dl class="message-properties">
         <dt>topic<span class="property-type">string</span></dt>
         <dd>
-            Control command to be executed;
-            one of "trigger", "get", "getid", "set", "reset" or "reload"
+            Control command to be executed; one of "trigger", "get", "getid",
+            "set", "reset", "reload", "pause" or "resume"
         </dd>
         <dt class="optional">payload<span class="property-type">number</span></dt>
         <dd>Identifier of the state to trigger or activate</dd>
@@ -204,8 +204,8 @@ SOFTWARE.
         The following commands are currently supported:
         <ul>
             <li>
-                <code>trigger</code>: Only allowed in passive trigger mode. If
-                <code>msg.payload</code> contains a valid identifier of a
+                <code>trigger</code>: Only supported in passive trigger mode.
+                If <code>msg.payload</code> contains a valid identifier of a
                 configured state, that state will be activated provided that
                 the configured conditions are met. If <code>msg.payload</code>
                 is not set, checks if the trigger time of a configured state
@@ -246,6 +246,19 @@ SOFTWARE.
                 <code>reload</code>: Forces state triggers to be recalculated
                 (also reloads programmed data from environment and context
                 variables).
+            </li>
+            <li>
+                <code>pause</code>: Suppresses automatic state changes when
+                trigger times have been reached. Does nothing if passive trigger
+                mode is enabled.
+            </li>
+            <li>
+                <code>resume</code>: Resumes automatic state changes. Does
+                nothing if passive trigger mode is enabled. Note that this
+                command does not reset the current state to the state that
+                would have normally been activated during paused period.
+                Additionally use the <code>reset</code> command to also have
+                the state reset.
             </li>
         </ul>
     </dd>

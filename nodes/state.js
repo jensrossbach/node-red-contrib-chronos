@@ -202,6 +202,7 @@ module.exports = function(RED)
                 node.evaluation = settings.evaluation;
                 node.evaluationType = settings.evaluationType;
                 node.passiveMode = settings.passiveMode;
+                node.paused = false;
 
                 node.currentState = {};
 
@@ -238,8 +239,6 @@ module.exports = function(RED)
 
                                         outputCurrentState();
                                         updateStatus();
-
-                                        done();
                                     }
                                 }
                                 else if (node.currentState.data)
@@ -254,15 +253,11 @@ module.exports = function(RED)
 
                                         outputCurrentState();
                                         updateStatus();
-
-                                        done();
                                     }
                                 }
                             }
-                            else
-                            {
-                                done(RED._("state.error.commandNotAllowed"), RED.util.cloneMessage(msg));
-                            }
+
+                            done();
                         }
                         else if (msg.topic === "get")
                         {
@@ -332,6 +327,8 @@ module.exports = function(RED)
 
                                             node.debug("[State:" + node.currentState.data.id + "] Starting timer for timeout of " + timeout + " milliseconds");
                                             node.currentState.timer = setTimeout(resetCurrentState, timeout);
+                                            node.trace("[State:" + node.currentState.data.id + "] Successfully started timer with ID " + node.currentState.timer);
+
                                             node.currentState.until = node.currentState.since.clone();
                                             node.currentState.until.add(timeout, "milliseconds");
                                         }
@@ -343,10 +340,10 @@ module.exports = function(RED)
 
                                     outputCurrentState();
                                     updateStatus();
-
-                                    done();
                                 }
                             }
+
+                            done();
                         }
                         else if (msg.topic === "reset")
                         {
@@ -356,6 +353,16 @@ module.exports = function(RED)
                         else if (msg.topic === "reload")
                         {
                             reload();
+                            done();
+                        }
+                        else if (msg.topic === "pause")
+                        {
+                            pause();
+                            done();
+                        }
+                        else if (msg.topic === "resume")
+                        {
+                            resume();
                             done();
                         }
                         else if (msg.topic === "configure")
@@ -539,6 +546,30 @@ module.exports = function(RED)
             if (trigger)
             {
                 data.trigger = trigger;
+            }
+        }
+
+        function pause()
+        {
+            if (!node.passiveMode && !node.paused)
+            {
+                node.debug("Pausing state changes");
+
+                node.paused = true;
+                cancelTimer();
+                updateStatus();
+            }
+        }
+
+        function resume()
+        {
+            if (!node.passiveMode && node.paused)
+            {
+                node.debug("Resuming state changes");
+
+                node.paused = false;
+                setUpTimer();
+                updateStatus();
             }
         }
 
@@ -789,7 +820,7 @@ module.exports = function(RED)
 
         function setUpTimer()
         {
-            if (!node.passiveMode)
+            if (!node.passiveMode && !node.paused)
             {
                 const state = getNextState();
                 if (state)
@@ -822,6 +853,8 @@ module.exports = function(RED)
                         setUpTimer();
                         updateStatus();
                     }, state.triggerTime.diff(chronos.getCurrentTime(node)));
+
+                    node.trace("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer);
                 }
             }
         }
@@ -830,6 +863,8 @@ module.exports = function(RED)
         {
             if (node.currentState.timer)
             {
+                node.trace("Cancelling active timer with ID " + node.currentState.timer);
+
                 clearTimeout(node.currentState.timer);
                 delete node.currentState.timer;
             }
@@ -995,11 +1030,11 @@ module.exports = function(RED)
                     stateValue = node.currentState.data.state.value;
                 }
 
-                let when = node.currentState.until ? node.currentState.until.calendar() : undefined;
+                const until = (node.currentState.until && !node.paused) ? node.currentState.until.calendar() : undefined;
 
-                if (when)
+                if (until)
                 {
-                    node.status({fill: "green", shape: "dot", text: "»" + stateValue + "« " + RED._("state.status.until") + " " + when});
+                    node.status({fill: "green", shape: "dot", text: "»" + stateValue + "« " + RED._("state.status.until") + " " + until});
                 }
                 else
                 {

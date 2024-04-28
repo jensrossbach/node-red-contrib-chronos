@@ -15,16 +15,15 @@
         },
         "status":
         {
-            "noStates":          "Keine Zustände",
-            "noState":           "Kein aktueller Zustand",
-            "currentState":      "Aktueller Zustand",
-            "until":             "bis"
+            "noStates":      "Keine Zustände",
+            "noState":       "Kein aktueller Zustand",
+            "currentState":  "Aktueller Zustand",
+            "until":         "bis"
         },
         "error":
         {
             "noStates":           "Keine Zustände konfiguriert",
-            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable: __trigger__",
-            "commandNotAllowed":  "Kommando nur im passiven Auslösemodus erlaubt"
+            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable: __trigger__"
         }
     }
 }
