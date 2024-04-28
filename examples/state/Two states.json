@@ -1,0 +1,116 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Two states",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Two states\nState node that is configured with two states and one condition.\n1. First state with boolean value \"true\" is activated at 10:00 in the morning.\n2. Second state with boolean value \"false\" is activated at sunset in the evening.\n3. State changes happen only during work week (Monday to Friday).\n4. Initial state value is sent to the output port when node starts.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "c2900ff315be9284",
+        "type": "chronos-state",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "outputValue": "payload",
+        "outputType": "msg",
+        "states": [
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "10:00",
+                    "offset": 0,
+                    "random": false
+                },
+                "state": {
+                    "type": "bool",
+                    "value": "true"
+                }
+            },
+            {
+                "trigger": {
+                    "type": "sun",
+                    "value": "sunsetStart",
+                    "offset": 0,
+                    "random": false
+                },
+                "state": {
+                    "type": "bool",
+                    "value": "false"
+                }
+            }
+        ],
+        "conditions": [
+            {
+                "operator": "weekdays",
+                "operands": [
+                    false,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    false
+                ]
+            }
+        ],
+        "evaluation": "",
+        "evaluationType": "and",
+        "outputOnStart": true,
+        "outputOnStartDelay": 0.1,
+        "passiveMode": false,
+        "x": 170,
+        "y": 140,
+        "wires": [
+            [
+                "ff49410550fef9fa"
+            ]
+        ]
+    },
+    {
+        "id": "ff49410550fef9fa",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "state value",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]

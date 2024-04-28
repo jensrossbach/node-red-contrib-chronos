@@ -1,0 +1,174 @@
+[
+    {
+        "id": "671609705841dfab",
+        "type": "tab",
+        "label": "Advanced output and conditions",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "04b2823017743f50",
+        "type": "comment",
+        "z": "671609705841dfab",
+        "name": "",
+        "info": "# Advanced output and conditions\nState node that is configured with three states, full message output and advanced conditions.\n1. First state with string value \"on\" is activated at 08:00.\n2. Second state with string value \"auto\" is activated at 10:00.\n3. Third state with string value \"off\" is activated at 18:00.\n4. State changes happen from April to September on work days and from October to March on weekends.\n5. Full message with state identifier, value, start date/time and end date/time is sent on state change.\n6. Initial state output is sent when node starts.",
+        "x": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "c2900ff315be9284",
+        "type": "chronos-state",
+        "z": "671609705841dfab",
+        "name": "",
+        "config": "5e581578.25c88c",
+        "outputValue": "{\t    \"id\": $state.id,\t    \"payload\": $state.value,\t    \"since\": $moment($state.since, $config.timezone).calendar(),\t    \"until\": $moment($state.until, $config.timezone).calendar()\t}",
+        "outputType": "fullMsg",
+        "states": [
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "8:00",
+                    "offset": 0,
+                    "random": false
+                },
+                "state": {
+                    "type": "str",
+                    "value": "on"
+                }
+            },
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "10:00",
+                    "offset": 0,
+                    "random": false
+                },
+                "state": {
+                    "type": "str",
+                    "value": "auto"
+                }
+            },
+            {
+                "trigger": {
+                    "type": "time",
+                    "value": "18:00",
+                    "offset": 0,
+                    "random": false
+                },
+                "state": {
+                    "type": "str",
+                    "value": "off"
+                }
+            }
+        ],
+        "conditions": [
+            {
+                "operator": "months",
+                "operands": [
+                    false,
+                    false,
+                    false,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false
+                ]
+            },
+            {
+                "operator": "weekdays",
+                "operands": [
+                    false,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    false
+                ]
+            },
+            {
+                "operator": "months",
+                "operands": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    true,
+                    true
+                ]
+            },
+            {
+                "operator": "weekdays",
+                "operands": [
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ]
+            }
+        ],
+        "evaluation": "($condition[0] and $condition[1]) or ($condition[2] and $condition[3])",
+        "evaluationType": "jsonata",
+        "outputOnStart": true,
+        "outputOnStartDelay": 0.1,
+        "passiveMode": false,
+        "x": 170,
+        "y": 140,
+        "wires": [
+            [
+                "ff49410550fef9fa"
+            ]
+        ]
+    },
+    {
+        "id": "ff49410550fef9fa",
+        "type": "debug",
+        "z": "671609705841dfab",
+        "name": "state value",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e581578.25c88c",
+        "type": "chronos-config",
+        "name": "Berlin",
+        "timezone": "",
+        "sunPositions": [
+            {
+                "angle": -4,
+                "riseName": "blueHourDawn",
+                "setName": "blueHourDusk"
+            },
+            {
+                "angle": -8,
+                "riseName": "blueHourDawnBegin",
+                "setName": "blueHourDuskEnd"
+            }
+        ]
+    }
+]
