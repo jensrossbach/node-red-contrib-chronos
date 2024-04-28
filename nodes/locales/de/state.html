@@ -199,7 +199,8 @@ SOFTWARE.
         <dt>topic<span class="property-type">string</span></dt>
         <dd>
             Steuert den Knoten abhängig von den angegebenen Kommandos;
-            entweder "trigger", "get", "getid", "set", "reset" oder "reload"
+            entweder "trigger", "get", "getid", "set", "reset", "reload",
+            "pause" oder "resume"
         </dd>
         <dt class="optional">payload<span class="property-type">number</span></dt>
         <dd>Kennzeichnung des auszulösenden oder zu aktivierenden Zustands</dd>
@@ -259,6 +260,20 @@ SOFTWARE.
                 <code>reload</code>: Führt zu einer Neuberechnung der Zeitereignisse
                 (programmierte Daten aus Umgebungs- und Kontextvariablen werden
                 ebenfalls erneut geladen).
+            </li>
+            <li>
+                <code>pause</code>: Unterdrückt automatische Zustandsänderungen
+                wenn Auslösezeiten erreicht werden. Hat keine Wirkung, wenn der
+                passive Auslösemodus aktiviert ist.
+            </li>
+            <li>
+                <code>resume</code>: Setzt automatische Zustandsänderungen
+                wieder in Gang. Hat keine Wirkung, wenn der passive Auslösemodus
+                aktiviert ist. Bitte beachten, dass dieses Kommando den
+                aktuellen Zustand nicht auf denjenigen Zustand zurücksetzt,
+                der normalerweise während der pausierten Zeitspanne ausgelöst
+                worden wäre. Um den Zustand zurückzusetzen, muss zusätzlich
+                das Kommando <code>reset</code> geschickt werden.
             </li>
         </ul>
     </dd>
