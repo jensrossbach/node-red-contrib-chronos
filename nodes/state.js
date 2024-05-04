@@ -327,7 +327,7 @@ module.exports = function(RED)
 
                                             node.debug("[State:" + node.currentState.data.id + "] Starting timer for timeout of " + timeout + " milliseconds");
                                             node.currentState.timer = setTimeout(resetCurrentState, timeout);
-                                            node.trace("[State:" + node.currentState.data.id + "] Successfully started timer with ID " + node.currentState.timer);
+                                            node.debug("[State:" + node.currentState.data.id + "] Successfully started timer with ID " + node.currentState.timer);
 
                                             node.currentState.until = node.currentState.since.clone();
                                             node.currentState.until.add(timeout, "milliseconds");
@@ -834,7 +834,7 @@ module.exports = function(RED)
                     node.debug("[State:" + state.data.id + "] Starting timer for trigger at " + state.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                     node.currentState.timer = setTimeout(async() =>
                     {
-                        node.debug("[State:" + state.data.id + "] Timer expired");
+                        node.trace("[State:" + state.data.id + "] Timer with ID " + node.currentState.timer + " expired");
                         delete node.currentState.timer;
 
                         if (await evalConditions(state.triggerTime))
@@ -854,7 +854,7 @@ module.exports = function(RED)
                         updateStatus();
                     }, state.triggerTime.diff(chronos.getCurrentTime(node)));
 
-                    node.trace("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer);
+                    node.debug("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer);
                 }
             }
         }
@@ -863,7 +863,7 @@ module.exports = function(RED)
         {
             if (node.currentState.timer)
             {
-                node.trace("Cancelling active timer with ID " + node.currentState.timer);
+                node.debug("Cancelling active timer with ID " + node.currentState.timer);
 
                 clearTimeout(node.currentState.timer);
                 delete node.currentState.timer;

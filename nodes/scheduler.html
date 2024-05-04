@@ -31,23 +31,37 @@ SOFTWARE.
         <label for="node-input-config"><i class="fa fa-cog"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.config"></span></label>
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
-    <div class="form-row node-input-scheduleList-row" style="padding-top: 10px">
-        <label for="node-input-scheduleList"><i class="fa fa-calendar-o"></i> <span data-i18n="scheduler.label.schedule"></span></label>
-        <div class="form-row">
-            <ol id="node-input-scheduleList"></ol>
+    <div class="form-row" style="margin-bottom: 0px;">
+        <ul style="min-width: 600px; margin-bottom: 20px;" id="tab-row"></ul>
+    </div>
+    <div id="tabs-content">
+        <div id="tab-schedule" style="display: none;">
+            <div class="form-row list-row">
+                <div class="form-row">
+                    <ol id="node-input-scheduleList"></ol>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="form-row">
-        <input id="node-input-multiPort" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-multiPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.multiPort"></label>
-    </div>
-    <div class="form-row">
-        <input id="node-input-nextEventPort" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-nextEventPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.nextEventPort"></label>
-    </div>
-    <div class="form-row">
-        <input id="node-input-disabled" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
-        <label for="node-input-disabled" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.disabled"></label>
+        <div id="tab-options" style="display: none;">
+            <div class="form-row">
+                <input id="node-input-disabled" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+                <label for="node-input-disabled" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.disabled"></label>
+            </div>
+            <div class="form-row">
+                <input id="node-input-multiPort" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+                <label for="node-input-multiPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.multiPort"></label>
+            </div>
+            <div class="form-row">
+                <input id="node-input-nextEventPort" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+                <label for="node-input-nextEventPort" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.nextEventPort"></label>
+            </div>
+            <div class="form-row">
+                <input id="node-input-delayOnStart" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+                <label for="node-input-delayOnStart" style="margin-bottom: 0px; width: auto;" data-i18n="scheduler.label.delayOnStart"></label>
+                <input id="node-input-onStartDelay" type="text" placeholder="0.1" style="width: 45px; height: 28px;">&nbsp;
+                <span data-i18n="node-red-contrib-chronos/chronos-config:common.list.unit.seconds"></span>
+            </div>
+        </div>
     </div>
 </script>
 
@@ -136,6 +150,10 @@ SOFTWARE.
                     return v.length > 0;
                 }
             },
+            disabled:
+            {
+                value: false
+            },
             multiPort:
             {
                 value: false
@@ -144,9 +162,14 @@ SOFTWARE.
             {
                 value: false
             },
-            disabled:
+            delayOnStart:
             {
-                value: false
+                value: true
+            },
+            onStartDelay:
+            {
+                value:    0.1,
+                validate: RED.validators.number(true)
             },
             outputs:
             {
@@ -156,6 +179,21 @@ SOFTWARE.
         oneditprepare: function()
         {
             const node = this;
+
+            const tabs = RED.tabs.create(
+            {
+                id: "tab-row",
+                onchange: function(tab)
+                {
+                    $("#tabs-content").children().hide();
+                    $("#" + tab.id).show();
+                    RED.tray.resize();
+                }
+            });
+
+            tabs.addTab({id: "tab-schedule", iconClass: "fa fa-calendar", label: node._("scheduler.label.schedule")});
+            tabs.addTab({id: "tab-options", iconClass: "fa fa-cogs", label: node._("scheduler.label.options")});
+            tabs.activateTab("tab-schedule");
 
             const scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "150px").editableList(
             {
@@ -442,6 +480,17 @@ SOFTWARE.
                 }
             });
 
+            // backward compatibility to v1.23.x and earlier
+            if (typeof node.delayOnStart == "undefined")
+            {
+                $("#node-input-delayOnStart").prop("checked", true);
+            }
+
+            $("#node-input-delayOnStart").on("change", function()
+            {
+                $("#node-input-onStartDelay").attr("disabled", !$("#node-input-delayOnStart").prop("checked"));
+            });
+
             node.schedule.forEach(data =>
             {
                 scheduleList.editableList("addItem", data);
@@ -552,19 +601,26 @@ SOFTWARE.
         },
         oneditresize: function(size)
         {
-            const scheduleListRow = $("#dialog-form>div.node-input-scheduleList-row");
-            const otherRows = $("#dialog-form>div:not(.node-input-scheduleList-row)");
+            const listRow = $("#dialog-form div.list-row");
+            const otherRows = $("#dialog-form>div");
             let height = size.height;
 
             for (let i=0; i<otherRows.length; ++i)
             {
-                height -= $(otherRows[i]).outerHeight(true);
+                let row = $(otherRows[i]);
+
+                if (row.is(":visible") && (row.attr("id") != "tabs-content"))
+                {
+                    height -= row.outerHeight(true);
+                }
             }
 
-            height -= (parseInt(scheduleListRow.css("marginTop")) + parseInt(scheduleListRow.css("marginBottom")));
-            height -= $("#dialog-form>div.node-input-scheduleList-row>label").outerHeight(true);
+            height -= (parseInt(listRow.css("marginTop")) + parseInt(listRow.css("marginBottom")));
 
-            $("#node-input-scheduleList").editableList("height", height);
+            if ($("#tab-schedule").is(":visible"))
+            {
+                $("#node-input-scheduleList").editableList("height", height);
+            }
         }
     });
 </script>

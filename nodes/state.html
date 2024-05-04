@@ -897,9 +897,9 @@ SOFTWARE.
         },
         oneditresize: function(size)
         {
+            const listRow = $("#dialog-form div.list-row");
+            const otherRows = $("#dialog-form>div");
             let height = size.height;
-            let listRow = $("#dialog-form div.list-row");
-            let otherRows = $("#dialog-form>div");
 
             for (let i=0; i<otherRows.length; ++i)
             {
