@@ -8,9 +8,11 @@
             "outputPort":     "scheduled message",
             "eventTimes":     "event times",
             "schedule":       "Schedule",
+            "options":        "Options",
             "crontab":        "cron table",
             "multiPort":      "Dedicated output ports for schedule events",
             "nextEventPort":  "Output port for event times",
+            "delayOnStart":   "Delay messages on start by",
             "disabled":       "Start with disabled schedule"
         },
         "status":
@@ -18,7 +20,7 @@
             "noSchedule":        "no schedule",
             "noTime":            "no time",
             "disabledSchedule":  "disabled",
-            "nextEvent":         "next event at"
+            "nextEvent":         "next event"
         },
         "error":
         {

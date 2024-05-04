@@ -8,9 +8,11 @@
             "outputPort":     "Geplante Nachricht",
             "eventTimes":     "Ereigniszeiten",
             "schedule":       "Zeitplan",
+            "options":        "Optionen",
             "crontab":        "Cron-Tabelle",
             "multiPort":      "Separate Ausgabe-Ports für Zeitereignisse",
             "nextEventPort":  "Ausgabe-Port für Ereigniszeiten",
+            "delayOnStart":   "Beim Starten Nachrichten verzögern um",
             "disabled":       "Mit inaktivem Zeitplan starten"
         },
         "status":
@@ -18,7 +20,7 @@
             "noSchedule":        "Kein Zeitplan",
             "noTime":            "Kein Zeitpunkt",
             "disabledSchedule":  "Zeitplan inaktiv",
-            "nextEvent":         "Nächstes Ereignis:"
+            "nextEvent":         "Nächstes Ereignis"
         },
         "error":
         {
