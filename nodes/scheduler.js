@@ -65,6 +65,7 @@ module.exports = function(RED)
             node.status({});
 
             node.disabledSchedule = (typeof settings.disabled == "undefined") ? false : settings.disabled;
+            node.delayMessages = (typeof settings.delayOnStart == "undefined") ? true : settings.delayOnStart;
 
             node.schedule = [];
             for (let i=0; i<settings.schedule.length; ++i)
@@ -246,42 +247,9 @@ module.exports = function(RED)
             {
                 updateStatus();
 
-                let lazyInit = undefined;
-                if (settings.nextEventPort)
-                {
-                    lazyInit = () =>
-                    {
-                        if (node.eventTimesPending)
-                        {
-                            notifyEventTimes();
-                            node.eventTimesPending = false;
-                        }
-
-                        node.initializing = false;
-
-                        if (lazyInit)
-                        {
-                            RED.events.removeListener("flows:started", lazyInit);
-                            lazyInit = undefined;
-                        }
-                    };
-
-                    RED.events.on("flows:started", lazyInit);
-                }
-                else
-                {
-                    node.initializing = false;
-                }
-
                 node.on("close", () =>
                 {
-                    stopTimers();
-
-                    if (lazyInit)
-                    {
-                        RED.events.removeListener("flows:started", lazyInit);
-                        lazyInit = undefined;
-                    }
+                    stopEvents();
                 });
 
                 node.on("input", async(msg, send, done) =>
@@ -295,12 +263,12 @@ module.exports = function(RED)
                     {
                         if (msg.payload)
                         {
-                            startTimers();
                             node.disabledSchedule = false;
+                            startEvents();
                         }
                         else
                         {
-                            stopTimers();
+                            stopEvents();
                             node.disabledSchedule = true;
                         }
 
@@ -311,12 +279,12 @@ module.exports = function(RED)
                     {
                         if (msg.payload == "toggle")
                         {
-                            toggleTimers();
+                            toggleEvents();
                         }
                         else if (msg.payload == "reload")
                         {
                             resetNextEventMsg();
-                            reloadTimers();
+                            reloadEvents();
                         }
                         else if (msg.payload == "trigger")
                         {
@@ -340,30 +308,30 @@ module.exports = function(RED)
                     }
                     else if (Array.isArray(msg.payload))
                     {
-                        let numDisabled = 0;
+                        let numEnabled = 0;
                         for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
                         {
                             if (typeof msg.payload[i] == "boolean")
                             {
                                 if (msg.payload[i])
                                 {
-                                    startTimer(node.schedule[i]);
+                                    startEvent(node.schedule[i]);
                                 }
                                 else
                                 {
-                                    stopTimer(node.schedule[i]);
+                                    stopEvent(node.schedule[i]);
                                 }
                             }
                             else if (typeof msg.payload[i] == "string")
                             {
                                 if (msg.payload[i] == "toggle")
                                 {
-                                    toggleTimer(node.schedule[i]);
+                                    toggleEvent(node.schedule[i]);
                                 }
                                 else if (msg.payload[i] == "reload")
                                 {
                                     resetNextEventMsg(i);
-                                    reloadTimer(node.schedule[i]);
+                                    reloadEvent(node.schedule[i]);
                                 }
                                 else if (msg.payload[i] == "trigger")
                                 {
@@ -384,14 +352,14 @@ module.exports = function(RED)
                                     data.config.trigger = msg.payload[i].trigger;
                                     data.config.output = msg.payload[i].output;
 
-                                    startTimer(data, true);
+                                    startEvent(data, true);
                                 }
                                 else if (validateContextData(msg.payload[i]))
                                 {
                                     data.orig = {trigger: data.config.trigger};
                                     data.config.trigger = msg.payload[i];
 
-                                    startTimer(data, true);
+                                    startEvent(data, true);
                                 }
                                 else
                                 {
@@ -399,13 +367,14 @@ module.exports = function(RED)
                                 }
                             }
 
-                            if (!("timer" in node.schedule[i]))
+                            if ("triggerTime" in node.schedule[i])
                             {
-                                numDisabled++;
+                                numEnabled++;
                             }
                         }
 
-                        node.disabledSchedule = (numDisabled == node.schedule.length);
+                        node.disabledSchedule = (numEnabled == 0);
+                        startTimer();
 
                         updateStatus();
                         done();
@@ -417,75 +386,100 @@ module.exports = function(RED)
                     }
                 });
 
+                if (node.delayMessages)
+                {
+                    setTimeout(() =>
+                    {
+                        node.delayMessages = false;
+
+                        if (node.startQueue)
+                        {
+                            for (let entry of node.startQueue)
+                            {
+                                sendMessage(entry);
+                            }
+
+                            delete node.startQueue;
+                        }
+                    }, (settings.onStartDelay || 0.1) * 1000);
+                }
+
                 if (!node.disabledSchedule)
                 {
-                    startTimers();
+                    startEvents();
                     updateStatus();
                 }
             }
         }
 
-        function startTimers()
+        function startEvents()
         {
-            node.debug("Starting timers");
+            node.debug("Starting events");
 
-            node.schedule.forEach(data =>
+            for (let data of node.schedule)
             {
-                startTimer(data);
-            });
+                startEvent(data);
+            }
+
+            startTimer();
         }
 
-        function stopTimers()
+        function stopEvents()
         {
-            node.debug("Stopping timers");
+            node.debug("Stopping events");
 
-            node.schedule.forEach(data =>
+            for (let data of node.schedule)
             {
-                stopTimer(data);
-            });
+                stopEvent(data);
+            }
+
+            stopTimer();
         }
 
-        function toggleTimers()
+        function toggleEvents()
         {
-            node.debug("Toggling timers");
+            node.debug("Toggling events");
 
-            let numDisabled = 0;
-            node.schedule.forEach(data =>
+            let numEnabled = 0;
+            for (let data of node.schedule)
             {
-                toggleTimer(data);
+                toggleEvent(data);
 
-                if (!("timer" in data))
+                if ("triggerTime" in data)
                 {
-                    numDisabled++;
+                    numEnabled++;
                 }
-            });
+            }
 
-            node.disabledSchedule = (numDisabled == node.schedule.length);
+            node.disabledSchedule = (numEnabled == 0);
+            startTimer();
         }
 
-        function reloadTimers()
+        function reloadEvents()
         {
-            node.debug("Rescheduling timers");
+            node.debug("Rescheduling events");
 
-            node.schedule.forEach(data =>
+            for (let data of node.schedule)
             {
-                reloadTimer(data);
-            });
+                reloadEvent(data);
+            }
+
+            startTimer();
         }
 
         async function triggerEvents(forced)
         {
             node.debug("Triggering events" + (forced ? " (forced)" : ""));
 
-            for (const data of node.schedule)
+            for (let data of node.schedule)
             {
                 await triggerEvent(data, forced);
             }
         }
 
-        function startTimer(data, keepOrig = false)
+        function startEvent(data, keepOrig = false)
         {
-            stopTimer(data, keepOrig);
+            stopEvent(data, keepOrig);
 
             if ((data.config.trigger.type == "env") ||
                 (data.config.trigger.type == "global") ||
@@ -539,10 +533,10 @@ module.exports = function(RED)
                 }
             }
 
-            setUpTimer(data, false);
+            setUpEvent(data, false);
         }
 
-        function stopTimer(data, keepOrig = false)
+        function stopEvent(data, keepOrig = false)
         {
             if (("orig" in data) && (!keepOrig))
             {
@@ -559,46 +553,50 @@ module.exports = function(RED)
                 delete data.orig;
             }
 
-            if ("timer" in data)
+            if ("task" in data)
             {
-                tearDownTimer(data);
+                node.debug("[Event:" + data.id + "] Stopping cron task");
+
+                data.task.stop();
+                delete data.task;
             }
+
+            delete data.triggerTime;
         }
 
-        function toggleTimer(data)
+        function toggleEvent(data)
         {
-            if ("timer" in data)
+            if ("triggerTime" in data)
             {
-                stopTimer(data);
+                stopEvent(data);
             }
             else
             {
-                startTimer(data);
+                startEvent(data);
             }
         }
 
-        function reloadTimer(data)
+        function reloadEvent(data)
         {
-            if ("timer" in data)
+            if ("triggerTime" in data)
             {
-                startTimer(data);
+                startEvent(data);
             }
         }
 
         async function triggerEvent(data, forced)
         {
-            if (("timer" in data) || forced)
+            if (("triggerTime" in data) || forced)
             {
-                await handleTimeout(data, false);
+                await produceOutput(data, false);
             }
         }
 
-        function setUpTimer(data, repeat)
+        function setUpEvent(data, repeat)
         {
             try
             {
-                node.debug("[Event:" + data.id + "] Set up timer" + (repeat ? " (repeating)" : ""));
-                node.trace("[Event:" + data.id + "] Timer specification: " + JSON.stringify(data.config));
+                node.trace("[Event:" + data.id + "] Event specification: " + JSON.stringify(data.config));
 
                 if (data.config.trigger.type == "crontab")
                 {
@@ -608,11 +606,12 @@ module.exports = function(RED)
                     if (firstTrigger)
                     {
                         data.triggerTime = chronos.getTimeFrom(node, firstTrigger);
-                        data.timer = new cronosjs.CronosTask(expression);
+                        data.task = new cronosjs.CronosTask(expression);
 
-                        data.timer.on("run", async() =>
+                        data.task.on("run", async() =>
                         {
-                            await handleTimeout(data, false);
+                            node.trace("[Event:" + data.id + "] Cron task expired");
+                            await produceOutput(data, false);
 
                             let nextTrigger = expression.nextDate();
                             if (nextTrigger)
@@ -627,7 +626,8 @@ module.exports = function(RED)
                             updateStatus();
                         });
 
-                        data.timer.start();
+                        node.debug("[Event:" + data.id + "] Starting cron task with first trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                        data.task.start();
                     }
                 }
                 else
@@ -643,7 +643,7 @@ module.exports = function(RED)
 
                     if (data.triggerTime.isBefore(now))
                     {
-                        node.debug("[Event:" + data.id + "] Trigger time before current time, adding one day");
+                        node.trace("[Event:" + data.id + "] Trigger time before current time, adding one day");
 
                         if (data.config.trigger.type == "time")
                         {
@@ -661,8 +661,7 @@ module.exports = function(RED)
                         }
                     }
 
-                    node.debug("[Event:" + data.id + "] Starting timer for trigger at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
-                    data.timer = setTimeout(handleTimeout, data.triggerTime.diff(now), data, true);
+                    node.debug("[Event:" + data.id + "] Event triggers at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
                 }
 
                 if (repeat)
@@ -686,32 +685,73 @@ module.exports = function(RED)
             }
         }
 
-        function tearDownTimer(data)
+        function startTimer()
         {
-            node.debug("[Event:" + data.id + "] Tear down timer");
+            let next = undefined;
+            let events = undefined;
 
-            if (data.timer instanceof cronosjs.CronosTask)
-            {
-                data.timer.stop();
-            }
-            else
-            {
-                clearTimeout(data.timer);
-            }
+            stopTimer();
 
-            delete data.timer;
-            delete data.triggerTime;
+            if (!node.disabledSchedule)
+            {
+                for (let data of node.schedule)
+                {
+                    if ((data.config.trigger.type != "crontab") && data.triggerTime)
+                    {
+                        if (next)
+                        {
+                            if (data.triggerTime.isBefore(next.triggerTime, "second"))
+                            {
+                                next = data;
+                                events = [data];
+                            }
+                            else if (data.triggerTime.isSame(next.triggerTime, "second"))
+                            {
+                                events.push(data);
+                            }
+                        }
+                        else
+                        {
+                            next = data;
+                            events = [data];
+                        }
+                    }
+                }
+
+                if (next)
+                {
+                    node.debug("Starting timer for trigger at " + next.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                    node.timer = setTimeout(async() =>
+                    {
+                        node.trace("Timer with ID " + node.timer + " expired");
+
+                        for (let data of events)
+                        {
+                            await produceOutput(data);
+                            setUpEvent(data, true);
+                        }
+
+                        startTimer();
+                    }, next.triggerTime.diff(chronos.getCurrentTime(node)));
+
+                    node.debug("Successfully started timer with ID " + node.timer);
+                }
+            }
         }
 
-        async function handleTimeout(data, restartTimer)
+        function stopTimer()
         {
-            node.debug("[Event:" + data.id + "] Timer expired");
-
-            if (restartTimer)
+            if (node.timer)
             {
-                delete data.timer;
-            }
+                node.debug("Stopping timer with ID " + node.timer);
 
+                clearTimeout(node.timer);
+                delete node.timer;
+            }
+        }
+
+        async function produceOutput(data)
+        {
             try
             {
                 if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
@@ -747,7 +787,7 @@ module.exports = function(RED)
                         RED.util.setMessageProperty(msg, data.config.output.property.name, data.config.output.property.value, true);
                     }
 
-                    sendMessage(data, msg);
+                    sendOrQueue(msg, data.port, false);
                 }
                 else if (data.config.output.type == "fullMsg")
                 {
@@ -767,7 +807,7 @@ module.exports = function(RED)
                         msg = data.config.output.value;
                     }
 
-                    sendMessage(data, msg);
+                    sendOrQueue(msg, data.port, false);
                 }
             }
             catch (e)
@@ -781,11 +821,6 @@ module.exports = function(RED)
                     node.error(e.message);
                     node.debug(e.stack);
                 }
-            }
-
-            if (restartTimer)
-            {
-                setUpTimer(data, true);
             }
         }
 
@@ -807,24 +842,45 @@ module.exports = function(RED)
             }
         }
 
-        function sendMessage(data, msg)
+        function sendOrQueue(msg, port, notification)
         {
             if (msg)
             {
-                if (settings.multiPort)
+                const entry = {msg: msg, port: port, notification: notification};
+
+                if (node.delayMessages)
                 {
-                    node.ports[data.port] = msg;
-                    node.send(node.ports);
-                    node.ports[data.port] = null;
-                }
-                else if (settings.nextEventPort)
-                {
-                    node.send([msg, null]);
+                    if (node.startQueue)
+                    {
+                        node.startQueue.push(entry);
+                    }
+                    else
+                    {
+                        node.startQueue = [entry];
+                    }
                 }
                 else
                 {
-                    node.send(msg);
+                    sendMessage(entry);
                 }
+            }
+        }
+
+        function sendMessage(entry)
+        {
+            if (settings.multiPort)
+            {
+                node.ports[entry.port] = entry.msg;
+                node.send(node.ports);
+                node.ports[entry.port] = null;
+            }
+            else if (settings.nextEventPort)
+            {
+                node.send(entry.notification ? [null, entry.msg] : [entry.msg, null]);
+            }
+            else
+            {
+                node.send(entry.msg);
             }
         }
 
@@ -978,19 +1034,10 @@ module.exports = function(RED)
                 let nextEvent = getNextEvent();
                 if (nextEvent)
                 {
-                    let when = nextEvent.triggerTime.calendar(
-                    {
-                        sameDay: function()
-                        {
-                            return "LT" + ((this.second() > 0) ? "S" : "");
-                        },
-                        nextDay: function()
-                        {
-                            return "l LT" + ((this.second() > 0) ? "S" : "");
-                        }
-                    });
-
-                    node.status({fill: "green", shape: "dot", text: RED._("scheduler.status.nextEvent") + " " + when});
+                    node.status({
+                            fill: "green",
+                            shape: "dot",
+                            text: RED._("scheduler.status.nextEvent") + " " + nextEvent.triggerTime.calendar()});
 
                     if (settings.nextEventPort)
                     {
@@ -1026,14 +1073,7 @@ module.exports = function(RED)
 
                         if (changed)
                         {
-                            if (node.initializing)
-                            {
-                                node.eventTimesPending = true;
-                            }
-                            else
-                            {
-                                notifyEventTimes();
-                            }
+                            sendOrQueue(node.nextEventMsg, node.ports.length - 1, true);
                         }
                     }
                 }
@@ -1042,20 +1082,6 @@ module.exports = function(RED)
                     node.status({fill: "yellow", shape: "dot", text: "scheduler.status.noTime"});
                     resetNextEventMsg();
                 }
-            }
-        }
-
-        function notifyEventTimes()
-        {
-            if (settings.multiPort)
-            {
-                node.ports[node.ports.length-1] = node.nextEventMsg;
-                node.send(node.ports);
-                node.ports[node.ports.length-1] = null;
-            }
-            else
-            {
-                node.send([null, node.nextEventMsg]);
             }
         }
     }
