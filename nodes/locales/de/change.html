@@ -199,6 +199,29 @@ SOFTWARE.
                                 entsprechen.
                             </li>
                         </ul>
+                        In der zweiten Zeile kann die lokale Zeit des Eingangszeitstempels
+                        geändert werden:
+                        <ul>
+                            <li>
+                                <i>Aktuelle Zeitzone</i>: Die ursprüngliche Zeitzone
+                                (die Zeitzone, die im verwendeten Konfigurationsknoten
+                                eingestellt wurde) wird beibehalten.
+                            </li>
+                            <li>
+                                <i>Zeitzone</i>: Ein <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">gültiger Zeitzonenname</a>
+                                kann angegeben werden und die Zeit wird in die ensprechende
+                                Zeitzone konvertiert.
+                            </li>
+                            <li>
+                                <i>UTC-Versatz</i>: Ein Versatz in Minuten und/oder
+                                Stunden kann angegeben werden. Eine Zahl zwischen
+                                -16 und 16 wird als Stunden interpretiert, alle Zahlen
+                                außerhalb dieses Bereichs als Minuten. Zusätzlich ist
+                                es möglich, Stunden und Minuten in der Form <code>+/-HH:MM</code>
+                                anzugeben. Der Wert wird als Versatz zur UTC-Zeit
+                                angewendet.
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </p>

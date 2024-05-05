@@ -189,6 +189,28 @@ SOFTWARE.
                                 must follow the rules from the <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js documentation</a>.
                             </li>
                         </ul>
+                        In the second row, it is possible to change the local time
+                        of the input timestamp:
+                        <ul>
+                            <li>
+                                <i>current time zone</i>: The original time zone (the
+                                time zone configured in the associated configuration
+                                node) is kept unmodified.
+                            </li>
+                            <li>
+                                <i>time zone</i>: The name of a valid <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zone identifier</a>
+                                can be specified and the time is converted to that
+                                time zone.
+                            </li>
+                            <li>
+                                <i>UTC offset</i>: An offset in minutes and/or hours
+                                can be specified. A number between -16 and 16 is
+                                interpreted as hours, a number outside of that range
+                                as minutes. Additionally, it is possible to specify
+                                hours and minutes in the form <code>+/-HH:MM</code>.
+                                The value is applied as offset to the UTC time.
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </p>

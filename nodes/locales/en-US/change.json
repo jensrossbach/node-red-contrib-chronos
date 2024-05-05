@@ -11,6 +11,9 @@
             "format":             "Format",
             "predefinedFormat":   "predefined format",
             "customFormat":       "custom format",
+            "currentTZ":          "current time zone",
+            "timeZone":           "time zone",
+            "utcOffset":          "UTC offset",
             "formatPlaceholder":  "e.g.: YYYY-MM-DD HH:mm:ss"
         },
         "list":
@@ -27,6 +30,7 @@
                 "subtract":  "Subtract",
                 "startOf":   "Start of",
                 "endOf":     "End of",
+                "timeZone":  "Time zone",
                 "toString":  "Convert"
             },
             "convert":
