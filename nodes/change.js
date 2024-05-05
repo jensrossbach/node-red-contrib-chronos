@@ -285,6 +285,21 @@ module.exports = function(RED)
                                             }
                                             case "toString":
                                             {
+                                                if (rule.tzType == "timeZone")
+                                                {
+                                                    input.tz(rule.tzValue);
+                                                }
+                                                else if (rule.tzType == "utcOffset")
+                                                {
+                                                    // if it's a number, convert it to a number
+                                                    if (+rule.tzValue === +rule.tzValue)
+                                                    {
+                                                        rule.tzValue = +rule.tzValue;
+                                                    }
+
+                                                    input.utcOffset(rule.tzValue);
+                                                }
+
                                                 if (rule.formatType == "custom")
                                                 {
                                                     output = input.format(rule.format);

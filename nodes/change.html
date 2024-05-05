@@ -294,7 +294,9 @@ SOFTWARE.
                     const setPartBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
                     const addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
                     const startEndOfBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
-                    const toStringBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    const convertBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                    const convertRow1 = $("<div/>").appendTo(convertBox);
+                    const convertRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(convertBox);
 
                     const setPartType = $("<select/>", {class: "node-input-setPartType", style: "width: auto;"})
                                         .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
@@ -347,7 +349,7 @@ SOFTWARE.
                                 class: "node-input-stringFormat",
                                 title: node._("change.label.format"),
                                 placeholder: node._("change.label.formatPlaceholder")})
-                                    .appendTo(toStringBox)
+                                    .appendTo(convertRow1)
                                     .typedInput({
                                         types: [
                                             {
@@ -395,6 +397,35 @@ SOFTWARE.
                                             }]});
                     stringFormat.typedInput("width", "280px");
 
+                    const timeZone =
+                            $("<input/>", {
+                                type: "text",
+                                class: "node-input-timeZone",
+                                title: node._("change.label.format")})
+                                    .appendTo(convertRow2)
+                                    .typedInput({
+                                        types: [
+                                            {
+                                                value: "current",
+                                                label: node._("change.label.currentTZ"),
+                                                hasValue: false
+                                            },
+                                            {
+                                                value: "timeZone",
+                                                label: node._("change.label.timeZone"),
+                                                icon: "fa fa-globe",
+                                                hasValue: true,
+                                                validate: /^.+$/
+                                            },
+                                            {
+                                                value: "utcOffset",
+                                                label: node._("change.label.utcOffset"),
+                                                icon: "fa fa-expand",
+                                                hasValue: true,
+                                                validate: /^(?:Z|[+-]\d\d:\d\d|-?\d+)$/
+                                            }]});
+                    timeZone.typedInput("width", "280px");
+
                     action.change(function()
                     {
                         setBox.hide();
@@ -421,7 +452,7 @@ SOFTWARE.
                         setPartBox.hide();
                         addsubBox.hide();
                         startEndOfBox.hide();
-                        toStringBox.hide();
+                        convertBox.hide();
 
                         const value = $(this).val();
                         switch (value)
@@ -445,7 +476,7 @@ SOFTWARE.
                             }
                             case "toString":
                             {
-                                toStringBox.show();
+                                convertBox.show();
                                 break;
                             }
                         }
@@ -614,8 +645,17 @@ SOFTWARE.
                                 data.format = "iso8601utc";
                             }
 
+                            if (typeof data.tzType == "undefined")
+                            {
+                                data.tzType = "current";
+                                data.tzValue = "";
+                            }
+
                             stringFormat.typedInput("type", data.formatType);
                             stringFormat.typedInput("value", data.format);
+
+                            timeZone.typedInput("type", data.tzType);
+                            timeZone.typedInput("value", data.tzValue);
                         }
                         changeType.val(data.type);
                     }
@@ -648,6 +688,7 @@ SOFTWARE.
                 const date = $(this).find(".node-input-date");
                 const time = $(this).find(".node-input-time");
                 const stringFormat = $(this).find(".node-input-stringFormat");
+                const timeZone = $(this).find(".node-input-timeZone");
 
                 data.action = $(this).find(".node-input-action").val();
                 data.target = {};
@@ -690,6 +731,8 @@ SOFTWARE.
                     {
                         data.formatType = stringFormat.typedInput("type");
                         data.format = stringFormat.typedInput("value");
+                        data.tzType = timeZone.typedInput("type");
+                        data.tzValue = timeZone.typedInput("value");
                     }
                 }
 
