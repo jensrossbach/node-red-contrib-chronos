@@ -734,6 +734,10 @@ function getTime(RED, node, msg, baseTime, type, value)
         if (type == "env")
         {
             ctxValue = RED.util.evaluateNodeProperty(value, type, node);
+            if (!ctxValue)
+            {
+                ctxValue = value;
+            }
         }
         else if ((type == "global") || (type == "flow"))
         {
