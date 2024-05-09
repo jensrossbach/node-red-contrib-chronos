@@ -218,8 +218,8 @@ SOFTWARE.
         <dd>Überschreibt ein einzelnes oder mehrere Zeitereignisse</dd>
     </dl>
     <dd>
-        Die Umgebungs-/Kontextvariablen und die Elemente des <code>msg.payload</code>
-        Arrays müssen Objekte sein und die folgenden Eigenschaften enthalten:
+        Die Elemente des <code>msg.payload</code> Arrays müssen Objekte sein und
+        die folgenden Eigenschaften enthalten:
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
@@ -261,6 +261,15 @@ SOFTWARE.
         gesteuert und wieder andere überschrieben werden. Weiterhin ist es
         möglich, einzelne Array-Elemente auf <code>null</code> zu setzen, um
         die dazugehörigen Zeitereignis zu ignorieren.
+    </dd>
+    <dd>
+        Umgebungs- und Kontextvariablen können als Zahlen, Zeichenketten oder
+        Objekte spezifiziert werden. Bei letzterem muss die Objektstruktur die
+        gleiche sein wie bei den Nachrichteneigenschaften (siehe oben). Zahlen
+        müssen als Millisekunden seit Mitternacht angegeben werden und
+        Zeichenketten müssen entweder eine Uhrzeit im 12- oder 24-Stunden-Format,
+        einen Sonnenstand, einen Mondstand oder einen benutzerdefinierten
+        Sonnenstand enthalten.
     </dd>
     <h3>Ausgaben</h3>
     <p>

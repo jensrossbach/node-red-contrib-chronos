@@ -23,12 +23,13 @@
  */
 
 
-const PATTERN_TIME     = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/;
-const PATTERN_DATE     = /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/;
+const PATTERN_TIME          = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/;
+const PATTERN_DATE          = /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/;
 
-const PATTERN_SUNTIME  = /^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/;
-const PATTERN_MOONTIME = /^(rise|set)$/;
-const PATTERN_AUTOTIME = /^(?:([0-9/.\-\s\u200F]+)\s)?(?:(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)|(rise|set)|(?:custom:([0-9a-zA-Z_]+)))$/;
+const PATTERN_SUNTIME       = /^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/;
+const PATTERN_MOONTIME      = /^(rise|set)$/;
+const PATTERN_AUTO_TIME     = /^(?:((?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?\s*(?:a|am|A|AM|p|pm|P|PM)?)|(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)|(rise|set)|(?:custom:([0-9a-zA-Z_]+)))$/;
+const PATTERN_AUTO_DATETIME = /^(?:([0-9/.\-\s\u200F]+)\s)?(?:(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)|(rise|set)|(?:custom:([0-9a-zA-Z_]+)))$/;
 
 class TimeError extends Error
 {
@@ -137,7 +138,7 @@ function getTimeFrom(node, source)
     return ret;
 }
 
-function getUserTime(RED, node, day, value)
+function getUserTime(RED, node, day, value, timeOnly = false)
 {
     let ret = undefined;
 
@@ -171,14 +172,14 @@ function getUserTime(RED, node, day, value)
                     true);
         }
     }
-    else if (typeof value == "number")
+    else if ((typeof value == "number") && (value >= 0))
     {
         if (value < 86400000)  // value is interpreted as number of milliseconds since midnight
         {
             const time = moment.utc(value);
             ret = day.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(time.millisecond());
         }
-        else
+        else if (!timeOnly)
         {
             ret = getMoment(node, value);
         }
@@ -306,43 +307,84 @@ function getTime(RED, node, day, type, value)
     }
     else if (type == "auto")
     {
-        let matches = value.match(PATTERN_AUTOTIME);
-        if (matches)
+        if (typeof value == "string")
         {
-            let date = undefined;
+            let matches = value.match(PATTERN_AUTO_DATETIME);
+            if (matches)
+            {
+                let date = undefined;
 
-            if (matches[1])  // date part
-            {
-                date = getMoment(
-                        node,
-                        matches[1], [
-                            "L",            // locale-specific date
-                            "YYYY-MM-DD"],  // ISO 8601 date
-                        node.locale,
-                        true);
-            }
+                if (matches[1])  // date part
+                {
+                    date = getMoment(
+                            node,
+                            matches[1], [
+                                "L",            // locale-specific date
+                                "YYYY-MM-DD"],  // ISO 8601 date
+                            node.locale,
+                            true);
+                }
 
-            if (!date)
-            {
-                date = day;
-            }
+                if (!date)
+                {
+                    date = day;
+                }
 
-            if (matches[2])  // time part (sun time)
-            {
-                ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                if (matches[2])  // time part (sun time)
+                {
+                    ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                }
+                else if (matches[3])  // time part (moon time)
+                {
+                    ret = getMoonTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                }
+                else if (matches[4])  // time part (custom sun time)
+                {
+                    ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
+                }
             }
-            else if (matches[3])  // time part (moon time)
+            else
             {
-                ret = getMoonTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
-            }
-            else if (matches[4])  // time part (custom sun time)
-            {
-                ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
+                ret = getUserTime(RED, node, day, value);
             }
         }
         else
         {
             ret = getUserTime(RED, node, day, value);
+        }
+    }
+    else if (type == "auto:time")
+    {
+        if (typeof value == "string")
+        {
+            let matches = value.match(PATTERN_AUTO_TIME);
+            if (matches)
+            {
+                if (matches[1])  // specific time
+                {
+                    ret = getUserTime(RED, node, day, value);
+                }
+                else if (matches[2])  // sun time
+                {
+                    ret = getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                }
+                else if (matches[3])  // moon time
+                {
+                    ret = getMoonTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                }
+                else if (matches[4])  // custom sun time
+                {
+                    ret = getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
+                }
+            }
+            else
+            {
+                throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
+            }
+        }
+        else
+        {
+            ret = getUserTime(RED, node, day, value, true);
         }
     }
 
@@ -427,5 +469,6 @@ module.exports =
     evaluateJSONataExpression: evaluateJSONataExpression,
     TimeError: TimeError,
     PATTERN_SUNTIME: PATTERN_SUNTIME,
-    PATTERN_MOONTIME: PATTERN_MOONTIME
+    PATTERN_MOONTIME: PATTERN_MOONTIME,
+    PATTERN_AUTO_TIME: PATTERN_AUTO_TIME
 };
