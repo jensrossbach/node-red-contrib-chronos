@@ -25,8 +25,8 @@
         "error":
         {
             "noSchedule":       "No schedule configured",
-            "invalidCtxEvent":  "Invalid schedule event from context variable: __event__",
-            "invalidMsgEvent":  "Invalid schedule event from message property: __event__"
+            "invalidCtxEvent":  "Invalid schedule event from context variable",
+            "invalidMsgEvent":  "Invalid schedule event from message property"
         }
     }
 }

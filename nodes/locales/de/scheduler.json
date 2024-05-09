@@ -25,8 +25,8 @@
         "error":
         {
             "noSchedule":       "Kein Zeitplan konfiguriert",
-            "invalidCtxEvent":  "Ungültiges Zeitereignis aus Kontextvariable: __event__",
-            "invalidMsgEvent":  "Ungültiges Zeitereignis aus Nachrichteneigenschaft: __event__"
+            "invalidCtxEvent":  "Ungültiges Zeitereignis aus Kontextvariable",
+            "invalidMsgEvent":  "Ungültiges Zeitereignis aus Nachrichteneigenschaft"
         }
     }
 }

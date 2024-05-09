@@ -346,7 +346,7 @@ module.exports = function(RED)
                             {
                                 let data = node.schedule[i];
 
-                                if (validateExtendedContextData(msg.payload[i]))
+                                if (validateFullStructuredContextData(msg.payload[i]))
                                 {
                                     data.orig = {trigger: data.config.trigger, output: data.config.output};
                                     data.config.trigger = msg.payload[i].trigger;
@@ -354,7 +354,7 @@ module.exports = function(RED)
 
                                     startEvent(data, true);
                                 }
-                                else if (validateContextData(msg.payload[i]))
+                                else if (validateStructuredContextData(msg.payload[i]))
                                 {
                                     data.orig = {trigger: data.config.trigger};
                                     data.config.trigger = msg.payload[i];
@@ -363,7 +363,8 @@ module.exports = function(RED)
                                 }
                                 else
                                 {
-                                    node.error(RED._("scheduler.error.invalidMsgEvent", {event: "msg.payload[" + i + "]"}), msg);
+                                    msg.errorDetails = {property: "msg.payload[" + i + "]"};
+                                    node.error(RED._("scheduler.error.invalidMsgEvent"), msg);
                                 }
                             }
 
@@ -486,49 +487,52 @@ module.exports = function(RED)
                 (data.config.trigger.type == "flow"))
             {
                 let ctxData = undefined;
-                let ctxEvent = undefined;
 
                 if (data.config.trigger.type == "env")
                 {
                     if (typeof data.config.trigger.value == "string")
                     {
-                        node.debug("[Event:" + data.id + "] Load trigger from environment variable ${" + data.config.trigger.value + "}");
                         ctxData = RED.util.evaluateNodeProperty(
                                                 data.config.trigger.value,
                                                 data.config.trigger.type,
                                                 node);
+                        if (!ctxData)
+                        {
+                            ctxData = data.config.trigger.value;
+                        }
                     }
                     else
                     {
                         ctxData = data.config.trigger.value;
                     }
-
-                    ctxEvent = "${" + data.config.trigger.value + "}";
                 }
                 else
                 {
-                    let ctx = RED.util.parseContextStore(data.config.trigger.value);
-                    node.debug("[Event:" + data.id + "] Load trigger from context variable " + data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : ""));
-
+                    const ctx = RED.util.parseContextStore(data.config.trigger.value);
                     ctxData = node.context()[data.config.trigger.type].get(ctx.key, ctx.store);
-                    ctxEvent = data.config.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                 }
 
-                if (validateExtendedContextData(ctxData))
+                if (validateFlatContextData(ctxData))
+                {
+                    data.orig = {trigger: data.config.trigger};
+                    data.config.trigger.type = "auto:time";
+                    data.config.trigger.value = ctxData;
+                }
+                else if (validateFullStructuredContextData(ctxData))
                 {
                     data.orig = {trigger: data.config.trigger, output: data.config.output};
                     data.config.trigger = ctxData.trigger;
                     data.config.output = ctxData.output;
                 }
                 else if (("type" in data.config.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
-                            && validateContextData(ctxData))
+                            && validateStructuredContextData(ctxData))
                 {
                     data.orig = {trigger: data.config.trigger};
                     data.config.trigger = ctxData;
                 }
                 else
                 {
-                    node.error(RED._("scheduler.error.invalidCtxEvent", {event: ctxEvent}), {});
+                    node.error(RED._("scheduler.error.invalidCtxEvent"), {errorDetails: {event: data.id, type: data.config.trigger.type, value: ctxData}});
                     return;
                 }
             }
@@ -884,7 +888,32 @@ module.exports = function(RED)
             }
         }
 
-        function validateContextData(data)
+        function validateFlatContextData(data)
+        {
+            if ((typeof data != "string") && (typeof data != "number"))
+            {
+                return false;
+            }
+
+            if ((typeof data == "string") && !data)
+            {
+                return false;
+            }
+
+            if ((typeof data == "string") && !chronos.PATTERN_AUTO_TIME.test(data))
+            {
+                return false;
+            }
+
+            if ((typeof data == "number") && ((data < 0) || (data >= 86400000)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateStructuredContextData(data)
         {
             if ((typeof data != "object") || !data)
             {
@@ -923,14 +952,14 @@ module.exports = function(RED)
             return true;
         }
 
-        function validateExtendedContextData(data)
+        function validateFullStructuredContextData(data)
         {
             if ((typeof data != "object") || !data)
             {
                 return false;
             }
 
-            if (!validateContextData(data.trigger))
+            if (!validateStructuredContextData(data.trigger))
             {
                 return false;
             }

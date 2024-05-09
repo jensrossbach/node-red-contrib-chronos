@@ -393,8 +393,7 @@ SOFTWARE.
                     triggerType.on("change", function()
                     {
                         const type = triggerType.typedInput("type");
-                        if ((type === "crontab") || (type === "env") ||
-                            (type === "global") || (type === "flow"))
+                        if (type === "crontab")
                         {
                             offsetBox.hide();
                         }
@@ -448,13 +447,18 @@ SOFTWARE.
                     triggerType._prevType = data.trigger.type;
                     triggerType.typedInput("type", data.trigger.type);
 
-                    if ((data.trigger.type != "crontab") &&
-                        (data.trigger.type != "env") &&
-                        (data.trigger.type != "global") &&
-                        (data.trigger.type != "flow"))
+                    if (data.trigger.type != "crontab")
                     {
-                        triggerOffset.spinner("value", data.trigger.offset);
-                        triggerRandom.prop("checked", data.trigger.random);
+                        triggerOffset.spinner(
+                                        "value",
+                                        (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
+                                            ? data.trigger.offset
+                                            : 0);
+                        triggerRandom.prop(
+                                        "checked",
+                                        (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
+                                            ? data.trigger.random
+                                            : false);
                     }
                     else
                     {
@@ -519,8 +523,7 @@ SOFTWARE.
                 data.trigger.type = triggerType.typedInput("type");
                 data.trigger.value = triggerType.typedInput("value");
 
-                if ((data.trigger.type != "crontab") && (data.trigger.type != "env") &&
-                    (data.trigger.type != "global") && (data.trigger.type != "flow"))
+                if (data.trigger.type != "crontab")
                 {
                     data.trigger.offset = triggerOffset.spinner("value");
                     data.trigger.random = triggerRandom.prop("checked");

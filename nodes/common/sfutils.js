@@ -760,9 +760,7 @@ function getTime(RED, node, msg, baseTime, type, value)
                             RED,
                             node,
                             baseTime,
-                            (typeof ctxValue == "string")
-                                ? "auto"
-                                : "time",
+                            "auto",
                             ctxValue);
 
         if (!ret.isValid())
