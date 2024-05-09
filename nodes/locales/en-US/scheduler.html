@@ -205,8 +205,8 @@ SOFTWARE.
         <dd>Overrides a single or multiple schedule events</dd>
     </dl>
     <dd>
-        The environment/context variables and the elements of the <code>msg.payload</code>
-        array must be objects containing the following properties:
+        The elements of the <code>msg.payload</code> array must be objects
+        containing the following properties:
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
@@ -245,6 +245,13 @@ SOFTWARE.
         certain events with a single input message. It is also possible to set
         specific elements in the array to <code>null</code> in order to ignore
         the corresponding events.
+    </dd>
+    <dd>
+        Environment and context variables can be specified as numbers, strings or
+        objects. For the latter, the object structure must be the same as for
+        message properties, see above. Numbers must be provided as milliseconds
+        elapsed since midnight and strings must contain either a time in 12 or 24
+        hour format, a sun time, a moon time or a custom sun time.
     </dd>
     <h3>Outputs</h3>
     <p>
