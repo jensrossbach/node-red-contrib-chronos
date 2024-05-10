@@ -119,26 +119,23 @@ SOFTWARE.
                 <li>
                     <i>Umgebungsvariable</i>: Die Ende-Bedingung wird aus der
                     angegebenen Umgebungsvariablen geladen, siehe Abschnitt
-                    <i>Eingabe</i> (Eigenschaft <code>until</code>) für eine
-                    Beschreibung des Variablenformats.
+                    <i>Eingabe</i> für weitere Informationen.
                 </li>
                 <li>
                     <i>global</i>: Die Ende-Bedingung wird aus der angegebenen
-                    globalen Kontextvariablen geladen, siehe Abschnitt <i>Eingabe</i>
-                    (Eigenschaft <code>until</code>) für eine Beschreibung des
-                    Variablenformats.
+                    globalen Kontextvariablen geladen, siehe Abschnitt
+                    <i>Eingabe</i> für weitere Informationen.
                 </li>
                 <li>
                     <i>flow</i>: Die Ende-Bedingung wird aus der angegebenen
-                    Flow-Kontextvariablen geladen, siehe Abschnitt <i>Eingabe</i>
-                    (Eigenschaft <code>until</code>) für eine Beschreibung des
-                    Variablenformats.
+                    Flow-Kontextvariablen geladen, siehe Abschnitt
+                    <i>Eingabe</i> für weitere Informationen.
                 </li>
             </ul>
         </dd>
         <dt>Datum</dt>
         <dd>
-            Ein Datum für den Endezeitpunkt kann in der Form <code>JJJJ-MM-TT</code>
+            Ein Datum für den Endzeitpunkt kann in der Form <code>JJJJ-MM-TT</code>
             angegeben werden. Falls nicht angegeben, wird das Datum des Eintreffens
             der Nachricht verwendet.
         </dd>
@@ -244,16 +241,58 @@ SOFTWARE.
     </p>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
-        <dd>Art des Endezeitpunkts; entweder "time", "sun", "moon" oder "custom"</dd>
+        <dd>Art des Endzeitpunkts; entweder "time", "sun", "moon" oder "custom"</dd>
         <dt>value<span class="property-type">string | number</span></dt>
-        <dd>Endezeitpunkt; der Inhalt ist abhängig von der Art des Endezeitpunkts</dd>
+        <dd>Endzeitpunkt; der Inhalt ist abhängig von der Art des Endzeitpunkts</dd>
         <dt class="optional">date<span class="property-type">string</span></dt>
-        <dd>Datum des Endezeitpunkts in der Form <code>JJJJ-MM-TT</code></dd>
+        <dd>Datum des Endzeitpunkts in der Form <code>JJJJ-MM-TT</code></dd>
         <dt class="optional">offset<span class="property-type">number</span></dt>
-        <dd>Zeitlicher Versatz zum Endezeitpunkt</dd>
+        <dd>Zeitlicher Versatz zum Endzeitpunkt</dd>
         <dt class="optional">random<span class="property-type">boolean</span></dt>
         <dd>Zufälliger Zeitversatz</dd>
     </dl>
+    <p>
+        Umgebungs- und Kontextvariablen für den Endzeitpunkt der periodischen
+        Nachrichtenwiederholung können als Zahlen, Zeichenketten oder Objekte
+        spezifiziert werden. Bei letzterem muss die Objektstruktur die gleiche
+        sein wie bei der Nachrichteneigenschaft <code>until</code> (siehe oben).
+        Zahlen und Zeichenketten können folgendes Format haben:
+        <ul>
+            <li>
+                Zahl (Zeitstempel)
+                <ul>
+                    <li>
+                        Anzahl Millisekunden seit Beginn der
+                        UNIX-Zeitzählung
+                    </li>
+                    <li>
+                        Anzahl Millisekunden seit Mitternacht,
+                        wenn Wert kleiner als 86.400.000
+                    </li>
+                </ul>
+            </li>
+            <li>
+                Zeichenkette
+                <ul>
+                    <li>Uhrzeit im 12- oder 24-Stunden-Format</li>
+                    <li>Sonnenstand</li>
+                    <li>Mondstand</li>
+                    <li>Benutzerdefinierter Sonnenstand</li>
+                    <li>
+                        Datum und Uhrzeit in Region-spezifischem
+                        Format
+                    </li>
+                    <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                    <li>Datum und Sonnenstand</li>
+                    <li>Datum und Mondstand</li>
+                    <li>
+                        Datum und benutzerdefinierter
+                        Sonnenstand
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </p>
     <h3>Ausgaben</h3>
     <p>
         Nachrichten werden beim Eintreffen zum Ausgabe-Port weitergeleitet und
