@@ -51,7 +51,7 @@ require("./moment_locales.js");
 function getMoment()
 {
     const args = Array.prototype.slice.call(arguments, 1);
-    let ret = null;
+    let ret = undefined;
 
     if (arguments[0].config.timezone)
     {
@@ -62,6 +62,19 @@ function getMoment()
     {
         ret = moment.apply(null, args);
     }
+
+    ret._hasUserDate = false;
+    ret.hasUserDate = function(flag)
+    {
+        if (flag === undefined)
+        {
+            return this._hasUserDate;
+        }
+        else
+        {
+            this._hasUserDate = flag;
+        }
+    };
 
     return ret;
 }
@@ -121,16 +134,23 @@ function getTimeFrom(node, source)
                 node.locale,
                 true);
     }
-
-    if (!ret || !ret.isValid())
+    else if ((typeof source == "number") && (source >= 0))
     {
-        ret = getMoment(node, source);
-
-        if ((typeof source == "number") && (source < 86400000))  // value is interpreted as number of milliseconds since midnight
+        if (source < 86400000)  // value is interpreted as number of milliseconds since midnight
         {
-            const now = getMoment(node);
-            ret = ret.year(now.year()).month(now.month()).date(now.date());
+            const time = moment.utc(source);
+            ret = getMoment(node).hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(time.millisecond());
         }
+        else
+        {
+            ret = getMoment(node, source);
+        }
+    }
+
+    if (!ret)
+    {
+        // fallback to have at least "something"
+        ret = moment.invalid();
     }
 
     ret.locale(node.locale);
@@ -144,22 +164,25 @@ function getUserTime(RED, node, day, value, timeOnly = false)
 
     if (typeof value == "string")
     {
-        // first, try time-only strings
-        ret = getMoment(
-                node,
-                value, [
-                    "H:mm",      "HH:mm",        // 24-hour format
-                    "H:mm:ss",   "HH:mm:ss",     // 24-hour format (incl. seconds)
-                    "h:mm a",    "hh:mm a",      // 12-hour format
-                    "h:mm:ss a", "hh:mm:ss a"],  // 12-hour format (incl. seconds)
-                true);
-
-        if (ret.isValid())
+        if (PATTERN_TIME.test(value))
         {
-            // and override the date with the given one
-            ret = ret.year(day.year()).month(day.month()).date(day.date());
+            // first, try time-only strings
+            ret = getMoment(
+                    node,
+                    value, [
+                        "H:mm",      "HH:mm",        // 24-hour format
+                        "H:mm:ss",   "HH:mm:ss",     // 24-hour format (incl. seconds)
+                        "h:mm a",    "hh:mm a",      // 12-hour format
+                        "h:mm:ss a", "hh:mm:ss a"],  // 12-hour format (incl. seconds)
+                    true);
+
+            if (ret.isValid())
+            {
+                // and override the date with the given one
+                ret = ret.year(day.year()).month(day.month()).date(day.date());
+            }
         }
-        else
+        else if (!timeOnly)
         {
             // if not time-only, try strings containing date and time
             ret = getMoment(
@@ -170,6 +193,7 @@ function getUserTime(RED, node, day, value, timeOnly = false)
                         moment.ISO_8601],  // ISO 8601 datetime
                     node.locale,
                     true);
+            ret.hasUserDate(true);
         }
     }
     else if ((typeof value == "number") && (value >= 0))
@@ -182,6 +206,7 @@ function getUserTime(RED, node, day, value, timeOnly = false)
         else if (!timeOnly)
         {
             ret = getMoment(node, value);
+            ret.hasUserDate(true);
         }
     }
 
@@ -312,6 +337,7 @@ function getTime(RED, node, day, type, value)
             let matches = value.match(PATTERN_AUTO_DATETIME);
             if (matches)
             {
+                let hasUserDate = false;
                 let date = undefined;
 
                 if (matches[1])  // date part
@@ -329,6 +355,10 @@ function getTime(RED, node, day, type, value)
                 {
                     date = day;
                 }
+                else
+                {
+                    hasUserDate = true;
+                }
 
                 if (matches[2])  // time part (sun time)
                 {
@@ -342,6 +372,8 @@ function getTime(RED, node, day, type, value)
                 {
                     ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
                 }
+
+                ret.hasUserDate(hasUserDate);
             }
             else
             {
@@ -362,7 +394,7 @@ function getTime(RED, node, day, type, value)
             {
                 if (matches[1])  // specific time
                 {
-                    ret = getUserTime(RED, node, day, value);
+                    ret = getUserTime(RED, node, day, value, true);
                 }
                 else if (matches[2])  // sun time
                 {
@@ -453,22 +485,23 @@ function evaluateJSONataExpression(RED, expr, msg)
 
 module.exports =
 {
-    initCustomTimes: initCustomTimes,
-    validateTimeZone: validateTimeZone,
-    printNodeInfo: printNodeInfo,
-    getCurrentTime: getCurrentTime,
-    getTimeFrom: getTimeFrom,
-    getUserTime: getUserTime,
-    getSunTime: getSunTime,
-    getMoonTime: getMoonTime,
-    getTime: getTime,
-    getUserDate: getUserDate,
-    isValidUserTime: isValidUserTime,
-    isValidUserDate: isValidUserDate,
-    getJSONataExpression: getJSONataExpression,
+    initCustomTimes:           initCustomTimes,
+    validateTimeZone:          validateTimeZone,
+    printNodeInfo:             printNodeInfo,
+    getCurrentTime:            getCurrentTime,
+    getTimeFrom:               getTimeFrom,
+    getUserTime:               getUserTime,
+    getSunTime:                getSunTime,
+    getMoonTime:               getMoonTime,
+    getTime:                   getTime,
+    getUserDate:               getUserDate,
+    isValidUserTime:           isValidUserTime,
+    isValidUserDate:           isValidUserDate,
+    getJSONataExpression:      getJSONataExpression,
     evaluateJSONataExpression: evaluateJSONataExpression,
-    TimeError: TimeError,
-    PATTERN_SUNTIME: PATTERN_SUNTIME,
-    PATTERN_MOONTIME: PATTERN_MOONTIME,
-    PATTERN_AUTO_TIME: PATTERN_AUTO_TIME
+    TimeError:                 TimeError,
+    PATTERN_SUNTIME:           PATTERN_SUNTIME,
+    PATTERN_MOONTIME:          PATTERN_MOONTIME,
+    PATTERN_AUTO_TIME:         PATTERN_AUTO_TIME,
+    PATTERN_AUTO_DATETIME:     PATTERN_AUTO_DATETIME
 };

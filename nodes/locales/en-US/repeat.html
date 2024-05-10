@@ -113,18 +113,15 @@ SOFTWARE.
                 </li>
                 <li>
                     <i>env variable</i>: Ending condition will be loaded from the specified
-                    environment variable, see section <i>Input</i> (property <code>until</code>)
-                    below for a description of the format.
+                    environment variable, see section <i>Input</i> below for details.
                 </li>
                 <li>
                     <i>global</i>: Ending condition will be loaded from the specified global
-                    context variable, see section <i>Input</i> (property <code>until</code>)
-                    below for a description of the format.
+                    context variable, see section <i>Input</i> below for details.
                 </li>
                 <li>
                     <i>flow</i>: Ending condition will be loaded from the specified flow
-                    context variable, see section <i>Input</i> (property <code>until</code>)
-                    below for a description of the format.
+                    context variable, see section <i>Input</i> below for details.
                 </li>
             </ul>
         </dd>
@@ -240,6 +237,41 @@ SOFTWARE.
         <dt class="optional">random<span class="property-type">boolean</span></dt>
         <dd>Randomized offset</dd>
     </dl>
+    <p>
+        Environment and context variables for the repetition ending time can be
+        specified as numbers, strings or objects. For the latter, the object
+        structure must be the same as for message property <code>until</code>,
+        see above. Numbers and strings can have the following format:
+        <ul>
+            <li>
+                Number (timestamp)
+                <ul>
+                    <li>
+                        Number of milliseconds elapsed since the UNIX
+                        epoch
+                    </li>
+                    <li>
+                        Number of milliseconds elapsed since midnight
+                        if value is smaller than 86.400.000
+                    </li>
+                </ul>
+            </li>
+            <li>
+                String
+                <ul>
+                    <li>Time in 12 or 24 hour format</li>
+                    <li>Sun time</li>
+                    <li>Moon time</li>
+                    <li>Custom sun time</li>
+                    <li>Date and time in region-specific format</li>
+                    <li>Date and time in ISO 8601 format</li>
+                    <li>Date and sun time</li>
+                    <li>Date and moon time</li>
+                    <li>Date and custom sun time</li>
+                </ul>
+            </li>
+        </ul>
+    </p>
     <h3>Outputs</h3>
     <p>
         Messages are sent to the output upon reception and periodically until

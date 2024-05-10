@@ -264,7 +264,7 @@ module.exports = function(RED)
                     }
                 }
 
-                if (isValidUntilTime(msg.until))
+                if (isValidStructuredUntilTime(msg.until))
                 {
                     node.debug("Input message has override property for until time");
 
@@ -386,7 +386,6 @@ module.exports = function(RED)
             if ((type == "env") || (type == "global") || (type == "flow"))
             {
                 let ctxData = undefined;
-                let errorDetails = undefined;
 
                 if (type == "env")
                 {
@@ -396,23 +395,33 @@ module.exports = function(RED)
                                                 value,
                                                 type,
                                                 node);
+                        if (!ctxData)
+                        {
+                            ctxData = value;
+                        }
                     }
                     else
                     {
                         ctxData = value;
                     }
-
-                    errorDetails = {variable: "${" + value + "}"};
                 }
                 else
                 {
                     const ctx = RED.util.parseContextStore(value);
-
                     ctxData = node.context()[type].get(ctx.key, ctx.store);
-                    errorDetails = {store: ctx.store, key: ctx.key, value: ctxData};
                 }
 
-                if (isValidUntilTime(ctxData))
+                if (isValidFlatUntilTime(ctxData))
+                {
+                    return getUntilTime(
+                                now,
+                                date,
+                                "auto",
+                                ctxData,
+                                offset,
+                                random);
+                }
+                else if (isValidStructuredUntilTime(ctxData))
                 {
                     if (ctxData)
                     {
@@ -435,7 +444,7 @@ module.exports = function(RED)
                 {
                     throw new chronos.TimeError(
                                 RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
-                                errorDetails);
+                                {type: type, value: ctxData});
                 }
             }
             else if (type == "jsonata")
@@ -509,7 +518,7 @@ module.exports = function(RED)
                     ret.time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
                 }
 
-                if (!date && ret.time.isBefore(now))
+                if (!date && !ret.time.hasUserDate() && ret.time.isBefore(now))
                 {
                     ret.time.add(1, "days");
                 }
@@ -739,7 +748,28 @@ module.exports = function(RED)
             return true;
         }
 
-        function isValidUntilTime(data)
+        function isValidFlatUntilTime(data)
+        {
+            if ((typeof data != "string") && (typeof data != "number"))
+            {
+                return false;
+            }
+
+            // datetime strings can be quite complex, so don't try to validate them here
+            if ((typeof data == "string") && !data)
+            {
+                return false;
+            }
+
+            if ((typeof data == "number") && (data < 0))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function isValidStructuredUntilTime(data)
         {
             if (typeof data != "object")
             {
