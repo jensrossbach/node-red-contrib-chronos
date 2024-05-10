@@ -462,10 +462,7 @@ SOFTWARE.
                     trigger.on("change", function()
                     {
                         let type = trigger.typedInput("type");
-                        if ((type === "env") ||
-                            (type === "global") ||
-                            (type === "flow") ||
-                            (type === "manual"))
+                        if (type === "manual")
                         {
                             offsetBox.hide();
                         }
@@ -498,13 +495,18 @@ SOFTWARE.
                     trigger._prevType = data.trigger.type;
                     trigger.typedInput("type", data.trigger.type);
 
-                    if ((data.trigger.type != "env") &&
-                        (data.trigger.type != "global") &&
-                        (data.trigger.type != "flow") &&
-                        (data.trigger.type != "manual"))
+                    if (data.trigger.type != "manual")
                     {
-                        triggerOffset.spinner("value", data.trigger.offset);
-                        triggerRandom.prop("checked", data.trigger.random);
+                        triggerOffset.spinner(
+                                        "value",
+                                        (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
+                                            ? data.trigger.offset
+                                            : 0);
+                        triggerRandom.prop(
+                                        "checked",
+                                        (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
+                                            ? data.trigger.random
+                                            : false);
                     }
                     else
                     {
@@ -836,10 +838,7 @@ SOFTWARE.
                     data.trigger.value = trigger.typedInput("value");
                 }
 
-                if ((data.trigger.type != "env") &&
-                    (data.trigger.type != "global") &&
-                    (data.trigger.type != "flow") &&
-                    (data.trigger.type != "manual"))
+                if (data.trigger.type != "manual")
                 {
                     data.trigger.offset = $(this).find(".node-input-triggerOffset").spinner("value");
                     data.trigger.random = $(this).find(".node-input-triggerRandom").prop("checked");
