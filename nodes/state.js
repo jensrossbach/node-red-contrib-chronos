@@ -77,6 +77,9 @@ module.exports = function(RED)
                 if (trigger)
                 {
                     data = {id: i+1, trigger: trigger, state: settings.states[i].state, triggerConfig: settings.states[i].trigger};
+
+                    node.trace("[State:" + data.id + "] Trigger configuration: " + JSON.stringify(data.triggerConfig));
+                    node.trace("[State:" + data.id + "] Trigger specification: " + JSON.stringify(data.trigger));
                 }
                 else
                 {
@@ -379,7 +382,7 @@ module.exports = function(RED)
                                         {
                                             if (msg.payload.states[i] && (typeof msg.payload.states[i] == "object"))
                                             {
-                                                if (("trigger" in msg.payload.states[i]) && validateTriggerData(msg.payload.states[i].trigger))
+                                                if (("trigger" in msg.payload.states[i]) && validateStructuredTriggerData(msg.payload.states[i].trigger))
                                                 {
                                                     node.states[i].triggerConfig = msg.payload.states[i].trigger;
                                                     node.states[i].trigger = prepareTrigger(msg.payload.states[i].trigger);
@@ -467,7 +470,6 @@ module.exports = function(RED)
                 (source.type == "flow"))
             {
                 let ctxData = undefined;
-                let ctxName = undefined;
 
                 if (source.type == "env")
                 {
@@ -477,32 +479,40 @@ module.exports = function(RED)
                                                 source.value,
                                                 source.type,
                                                 node);
+                        if (!ctxData)
+                        {
+                            ctxData = source.value;
+                        }
                     }
                     else
                     {
                         ctxData = source.value;
                     }
-
-                    ctxName = "${" + source.value + "}";
                 }
                 else
                 {
-                    let ctx = RED.util.parseContextStore(source.value);
-
+                    const ctx = RED.util.parseContextStore(source.value);
                     ctxData = node.context()[source.type].get(ctx.key, ctx.store);
-                    ctxName = source.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                 }
 
-                if (validateTriggerData(ctxData))
+                if (validateFlatTriggerData(ctxData))
+                {
+                    trigger = prepareTrigger({
+                                type: "auto:time",
+                                value: ctxData,
+                                offset: source.offset,
+                                random: source.random});
+                }
+                else if (validateStructuredTriggerData(ctxData))
                 {
                     trigger = prepareTrigger(ctxData);
                 }
                 else
                 {
-                    node.error(RED._("state.error.invalidCtxTrigger", {trigger: ctxName}));
+                    node.error(RED._("state.error.invalidCtxTrigger"), {errorDetails: {type: source.type, value: ctxData}});
                 }
             }
-            else if (validateTriggerData(source))
+            else if (validateStructuredTriggerData(source))
             {
                 trigger = prepareTrigger(source);
             }
@@ -519,10 +529,19 @@ module.exports = function(RED)
             if (data.type != "manual")
             {
                 trigger.value = data.value;
-                trigger.offset = data.random
-                    ? Math.round(data.offset * Math.random())
-                    : data.offset;
-                trigger.random = data.random;
+
+                if (typeof data.offset == "number")
+                {
+                    trigger.offset = data.random
+                        ? Math.round(data.offset * Math.random())
+                        : data.offset;
+                    trigger.random = data.random;
+                }
+                else
+                {
+                    trigger.offset = 0;
+                    trigger.random = false;
+                }
             }
 
             return trigger;
@@ -546,6 +565,9 @@ module.exports = function(RED)
             if (trigger)
             {
                 data.trigger = trigger;
+
+                node.trace("[State:" + data.id + "] Trigger configuration: " + JSON.stringify(data.triggerConfig));
+                node.trace("[State:" + data.id + "] Trigger specification: " + JSON.stringify(data.trigger));
             }
         }
 
@@ -825,10 +847,6 @@ module.exports = function(RED)
                 const state = getNextState();
                 if (state)
                 {
-                    node.debug("[State:" + state.data.id + "] Set up timer");
-                    node.trace("[State:" + state.data.id + "] Trigger configuration: " + JSON.stringify(state.data.triggerConfig));
-                    node.trace("[State:" + state.data.id + "] Trigger specification: " + JSON.stringify(state.data.trigger));
-
                     cancelTimer();
 
                     node.debug("[State:" + state.data.id + "] Starting timer for trigger at " + state.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
@@ -946,7 +964,32 @@ module.exports = function(RED)
             }
         }
 
-        function validateTriggerData(data)
+        function validateFlatTriggerData(data)
+        {
+            if ((typeof data != "string") && (typeof data != "number"))
+            {
+                return false;
+            }
+
+            if ((typeof data == "string") && !data)
+            {
+                return false;
+            }
+
+            if ((typeof data == "string") && !chronos.PATTERN_AUTO_TIME.test(data))
+            {
+                return false;
+            }
+
+            if ((typeof data == "number") && ((data < 0) || (data >= 86400000)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateStructuredTriggerData(data)
         {
             if ((typeof data != "object") || !data)
             {
