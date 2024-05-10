@@ -23,7 +23,7 @@
         "error":
         {
             "noStates":           "No states configured",
-            "invalidCtxTrigger":  "Invalid state trigger from context variable: __trigger__"
+            "invalidCtxTrigger":  "Invalid state trigger from context variable"
         }
     }
 }

@@ -23,7 +23,7 @@
         "error":
         {
             "noStates":           "Keine Zustände konfiguriert",
-            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable: __trigger__"
+            "invalidCtxTrigger":  "Ungültiger Zustandsauslöser aus Kontextvariable"
         }
     }
 }

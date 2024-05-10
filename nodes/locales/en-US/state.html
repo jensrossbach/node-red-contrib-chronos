@@ -296,9 +296,7 @@ SOFTWARE.
         <dd>Value of the state</dd>
     </dl>
     <dd>
-        The <code>trigger</code> property has the following structure (the same
-        structure is used when loading triggers from environment or context
-        variables):
+        The <code>trigger</code> property has the following structure:
     </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
@@ -310,6 +308,13 @@ SOFTWARE.
         <dt class="optional">random<span class="property-type">boolean</span></dt>
         <dd>Randomized offset</dd>
     </dl>
+    <dd>
+        Environment and context variables can be specified as numbers, strings or
+        objects. For the latter, the object structure must be the same as for
+        message property <code>trigger</code>, see above. Numbers must be provided
+        as milliseconds elapsed since midnight and strings must contain either a
+        time in 12 or 24 hour format, a sun time, a moon time or a custom sun time.
+    </dd>
     <dd>
         The <code>state</code> property has the following structure:
     </dd>
@@ -333,10 +338,10 @@ SOFTWARE.
         <dt>operands<span class="property-type">object | array</span></dt>
         <dd>Operands for comparison; content is depending on operator</dd>
     </dl>
-    <p>
+    <dd>
         If <code>operator</code> is "days", <code>operands</code> must be
         an object containing the following properties:
-    </p>
+    </dd>
     <dl class="message-properties">
         <dt>type<span class="property-type">string</span></dt>
         <dd>
@@ -353,20 +358,20 @@ SOFTWARE.
         <dt>exclude<span class="property-type">boolean</span></dt>
         <dd>Negated result</dd>
     </dl>
-    <p>
+    <dd>
         If <code>operator</code> is "weekdays", <code>operands</code>
         must be an object. It may contain boolean properties with names of
         days of the week. If <code>true</code>, the condition is fullfilled
         for trigger times on that day or not fulfilled if the property is
         <code>false</code> or not present.
-    </p>
-    <p>
+    </dd>
+    <dd>
         If <code>operator</code> is "months", <code>operands</code>
         must be an object. It may contain boolean properties with names of
         months of the year. If <code>true</code>, the condition is fullfilled
         for trigger times in that month or not fulfilled if the property is
         <code>false</code> or not present.
-    </p>
+    </dd>
     <h3>Output</h3>
     <p>
         Whenever the state changes and the output is configured to be a message
