@@ -324,7 +324,6 @@ module.exports = function(RED)
                 if ((delayType == "custom") && (node.customDelayType != "jsonata"))
                 {
                     let ctxData = undefined;
-                    let errorDetails = undefined;
 
                     if (node.customDelayType == "env")
                     {
@@ -334,20 +333,24 @@ module.exports = function(RED)
                                                     node.customDelayValue,
                                                     node.customDelayType,
                                                     node);
+                            if (!ctxData)
+                            {
+                                ctxData = node.customDelayValue;
+                            }
                         }
                         else
                         {
                             ctxData = node.customDelayValue;
                         }
-
-                        errorDetails = {variable: "${" + node.customDelayValue + "}"};
+                    }
+                    else if ((node.customDelayType == "global") || (node.customDelayType == "flow"))
+                    {
+                        const ctx = RED.util.parseContextStore(node.customDelayValue);
+                        ctxData = node.context()[node.customDelayType].get(ctx.key, ctx.store);
                     }
                     else
                     {
-                        const ctx = RED.util.parseContextStore(node.customDelayValue);
-
-                        ctxData = node.context()[node.customDelayType].get(ctx.key, ctx.store);
-                        errorDetails = {store: ctx.store, key: ctx.key, value: ctxData};
+                        ctxData = RED.util.getMessageProperty(msg, node.customDelayValue);
                     }
 
                     if (isValidFixedDuration(ctxData))
@@ -376,7 +379,7 @@ module.exports = function(RED)
                     {
                         throw new chronos.TimeError(
                                     RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
-                                    errorDetails);
+                                    {type: node.customDelayType, value: ctxData});
                     }
                 }
 
