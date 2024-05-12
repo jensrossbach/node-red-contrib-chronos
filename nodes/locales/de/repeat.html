@@ -74,12 +74,11 @@ SOFTWARE.
             UNIX-Zeitzählung als absoluten Zeitpunkt der nächsten Wiederholung
             enthält. Oder es handelt sich um eine Zeichenkette mit einem Datum
             und einer Uhrzeit, die den absoluten Zeitpunkt der nächsten Wiederholung
-            darstellt. Die Zeichenkette muss nach den Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-            geparst werden können. Im Fall von <i>Umgebungsvariable</i>, <i>global</i>
-            oder <i>flow</i> wird die Wiederholung aus der angegebenen Umgebungs-
-            bzw. Kontextvariablen geladen. Siehe Abschnitt <i>Input</i> weiter
-            unten für eine Beschreibung des Variablenformats (Eigenschaften
-            <code>interval</code> und <code>crontab</code>).
+            darstellt. Im Fall von <i>Umgebungsvariable</i>, <i>global</i>,
+            <i>flow</i> oder <i>msg</i> wird die Wiederholung aus der angegebenen
+            Umgebungs-/Kontextvariablen bzw. Nachrichteneigenschaft geladen. Siehe
+            Abschnitt <i>Input</i> weiter unten für eine Beschreibung des
+            Variablenformats (Eigenschaften <code>interval</code> und <code>crontab</code>).
         </dd>
         <dt>Bis</dt>
         <dd>
