@@ -383,7 +383,7 @@ module.exports = function(RED)
         {
             let ret = {};
 
-            if ((type == "env") || (type == "global") || (type == "flow"))
+            if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
             {
                 let ctxData = undefined;
 
@@ -405,10 +405,14 @@ module.exports = function(RED)
                         ctxData = value;
                     }
                 }
-                else
+                else if ((type == "global") || (type == "flow"))
                 {
                     const ctx = RED.util.parseContextStore(value);
                     ctxData = node.context()[type].get(ctx.key, ctx.store);
+                }
+                else
+                {
+                    ctxData = RED.util.getMessageProperty(node.message, value);
                 }
 
                 if (isValidFlatUntilTime(ctxData))
