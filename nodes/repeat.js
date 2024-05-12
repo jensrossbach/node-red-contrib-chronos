@@ -309,7 +309,6 @@ module.exports = function(RED)
             if ((mode == "custom") && (node.customRepetitionType != "jsonata"))
             {
                 let ctxData = undefined;
-                let errorDetails = undefined;
 
                 if (node.customRepetitionType == "env")
                 {
@@ -319,20 +318,24 @@ module.exports = function(RED)
                                                 node.customRepetitionValue,
                                                 node.customRepetitionType,
                                                 node);
+                        if (!ctxData)
+                        {
+                            ctxData = node.customRepetitionValue;
+                        }
                     }
                     else
                     {
                         ctxData = node.customRepetitionValue;
                     }
-
-                    errorDetails = {variable: "${" + node.customRepetitionValue + "}"};
+                }
+                else if ((node.customRepetitionType == "global") || (node.customRepetitionType == "flow"))
+                {
+                    const ctx = RED.util.parseContextStore(node.customRepetitionValue);
+                    ctxData = node.context()[node.customRepetitionType].get(ctx.key, ctx.store);
                 }
                 else
                 {
-                    const ctx = RED.util.parseContextStore(node.customRepetitionValue);
-
-                    ctxData = node.context()[node.customRepetitionType].get(ctx.key, ctx.store);
-                    errorDetails = {store: ctx.store, key: ctx.key, value: ctxData};
+                    ctxData = RED.util.getMessageProperty(node.message, node.customRepetitionValue);
                 }
 
                 if (isValidInterval(ctxData))
@@ -350,7 +353,7 @@ module.exports = function(RED)
                 {
                     throw new chronos.TimeError(
                                 RED._("node-red-contrib-chronos/chronos-config:common.error.invalidContext"),
-                                errorDetails);
+                                {type: node.customRepetitionType, value: ctxData});
                 }
             }
 
