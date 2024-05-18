@@ -509,6 +509,11 @@ module.exports = function(RED)
                 else
                 {
                     node.sendTime = chronos.getTime(RED, node, node.sendTime.add(1, "days"), type, value);
+
+                    if (offset != 0)
+                    {
+                        node.sendTime.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
+                    }
                 }
             }
 
@@ -517,7 +522,7 @@ module.exports = function(RED)
             {
                 delete node.delayTimer;
                 flushQueue();
-            }, node.sendTime.diff(now));
+            }, node.sendTime.diff(chronos.getCurrentTime(node)));
         }
 
         async function setupCustomDelayTimer(msg)
