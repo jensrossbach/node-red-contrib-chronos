@@ -116,16 +116,32 @@ SOFTWARE.
             the left side, the following possibilities are available:
             <ul>
                 <li>
+                    Operator <i>==</i>: Checks if the base time is the same as the
+                    specified time.
+                </li>
+                <li>
+                    Operator <i>!=</i>: Checks if the base time is not the same as the
+                    specified time.
+                </li>
+                <li>
                     Operator <i>before</i>: Checks if the base time is earlier than the
                     specified time.
                 </li>
                 <li>
-                    Operator <i>after</i>: Checks if the base time is equal to or later
+                    Operator <i>until</i>: Checks if the base time is earlier than or
+                    equal to the specified time.
+                </li>
+                <li>
+                    Operator <i>since</i>: Checks if the base time is equal to or later
                     than the specified time.
                 </li>
                 <li>
+                    Operator <i>after</i>: Checks if the base time is later than the
+                    specified time.
+                </li>
+                <li>
                     Operator <i>between</i>: Checks if the base time is equal to or later
-                    than the first and earlier than the second specified time.
+                    than the first and earlier than or equal to the second specified time.
                 </li>
                 <li>
                     Operator <i>outside</i>: Checks if the base time is earlier than the
@@ -215,7 +231,8 @@ SOFTWARE.
                 </li>
             </ul>
             The specified times can additionally be shifted by an (optionally
-            randomized) offset, accessible through the expand/collapse arrow on
+            randomized) offset and set to a certain precision for the comparison.
+            These settings are accessible through the expand/collapse arrow on
             the right side.
         </dd>
     </dl>
@@ -231,14 +248,17 @@ SOFTWARE.
     </p>
     <dl class="message-properties">
         <dt>operator<span class="property-type">string</span></dt>
-        <dd>Operator for comparison; one of "before", "after", "between", "outside", "days", "weekdays" or "months"</dd>
+        <dd>
+            Operator for comparison; one of "equal", "notEqual", "before", "until",
+            "since", "after", "between", "outside", "days", "weekdays", or "months"
+        </dd>
         <dt class="optional">operands<span class="property-type">object | array</span></dt>
         <dd>Operands for comparison; content is depending on operator</dd>
     </dl>
     <p>
         If <code>operator</code> is:
         <ul>
-            <li>"before" or "after", <code>operands</code> must be an object</li>
+            <li>"equal", "notEqual", "before", "until", "since" or "after", <code>operands</code> must be an object</li>
             <li>"between" or "outside", <code>operands</code> must be an array containing two objects corresponding to the first and second operand</li>
         </ul>
         The objects must each include the following properties:
@@ -252,6 +272,11 @@ SOFTWARE.
         <dd>Offset to the operand time</dd>
         <dt>random<span class="property-type">boolean</span></dt>
         <dd>Randomized offset</dd>
+        <dt class="optional">precision<span class="property-type">string</span></dt>
+        <dd>
+            Comparison precision; one of "millisecond", "second",
+            "minute", "hour", "day", "month" or "year"
+        </dd>
     </dl>
     <p>
         If <code>operator</code> is "days", <code>operands</code> must be

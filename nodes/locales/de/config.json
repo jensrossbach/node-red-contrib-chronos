@@ -25,8 +25,9 @@
         },
         "tooltip":
         {
-            "offset":  "Versatz (in Minuten)",
-            "expand":  "Aus-/Einklappen"
+            "offset":     "Versatz (in Minuten)",
+            "precision":  "Genauigkeit",
+            "expand":     "Aus-/Einklappen"
         },
         "list":
         {
@@ -58,7 +59,11 @@
                 "sources":    "Quelle",
                 "operator":
                 {
+                    "equal":      "==",
+                    "notEqual":   "!=",
                     "before":     "Vor",
+                    "until":      "Bis",
+                    "since":      "Ab",
                     "after":      "Nach",
                     "between":    "Zwischen",
                     "outside":    "Außerhalb",

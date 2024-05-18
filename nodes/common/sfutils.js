@@ -30,7 +30,12 @@ function validateCondition(node, cond)
         return false;
     }
 
-    if ((cond.operator == "before") || (cond.operator == "after"))
+    if ((cond.operator == "equal") ||
+        (cond.operator == "notEqual") ||
+        (cond.operator == "before") ||
+        (cond.operator == "until") ||
+        (cond.operator == "since") ||
+        (cond.operator == "after"))
     {
         if ((cond.operands.type == "time") && !node.chronos.isValidUserTime(cond.operands.value, false))
         {
@@ -63,14 +68,19 @@ function convertCondition(RED, node, cond, num)
                     {condition: num, error: "Condition: Not an object or null"});
     }
 
-    if (!/^(before|after|between|outside|days|weekdays|months|otherwise)$/.test(cond.operator))
+    if (!/^(equal|notEqual|before|until|since|after|between|outside|days|weekdays|months|otherwise)$/.test(cond.operator))
     {
         throw new node.chronos.TimeError(
                     RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
                     {condition: num, error: "Operator: Invalid value", value: cond.operator});
     }
 
-    if ((cond.operator == "before") || (cond.operator == "after"))
+    if ((cond.operator == "equal") ||
+        (cond.operator == "notEqual") ||
+        (cond.operator == "before") ||
+        (cond.operator == "until") ||
+        (cond.operator == "since") ||
+        (cond.operator == "after"))
     {
         validateOperand(RED, node, cond.operands, num);
     }
@@ -191,8 +201,14 @@ function convertCondition(RED, node, cond, num)
 
     const convCond = {operator: cond.operator};
 
-    if ((convCond.operator == "before") || (convCond.operator == "after") ||
-        (convCond.operator == "between") || (convCond.operator == "outside"))
+    if ((convCond.operator == "equal") ||
+        (convCond.operator == "notEqual") ||
+        (convCond.operator == "before") ||
+        (convCond.operator == "until") ||
+        (convCond.operator == "since") ||
+        (convCond.operator == "after") ||
+        (convCond.operator == "between") ||
+        (convCond.operator == "outside"))
     {
         convCond.operands = cond.operands;
     }
@@ -284,6 +300,14 @@ function validateOperand(RED, node, operand, num)
                     RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
                     {condition: num, error: "Operand: Invalid random flag", value: operand.random});
     }
+
+    if (((typeof operand.precision != "undefined") && (typeof operand.precision != "string")) ||
+        ((typeof operand.precision == "string") && !/^(millisecond|second|minute|hour|day|month|year)$/.test(operand.precision)))
+    {
+        throw new node.chronos.TimeError(
+                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
+                    {condition: num, error: "Operand: Invalid precision", value: operand.precision});
+    }
 }
 
 async function evaluateCondition(RED, node, msg, baseTime, cond, id)
@@ -301,7 +325,28 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
             // time switch/filter node specific JSONata extensions
             expression.assign("baseTime", baseTime.valueOf());
 
-            expression.registerFunction("isBefore", (ts, type, value, offset, random) =>
+            expression.registerFunction("isSame", (ts, type, value, offset, random, precision) =>
+            {
+                return evalCondition(
+                            RED,
+                            node,
+                            msg,
+                            node.chronos.getTimeFrom(node, ts),
+                            convertCondition(
+                                RED,
+                                node, {
+                                    operator: "equal",
+                                    operands: {
+                                        type: type,
+                                        value: value,
+                                        offset: (typeof offset != "undefined") ? offset : 0,
+                                        random: (typeof random != "undefined") ? random : false,
+                                        precision: precision}},
+                                id),
+                            id);
+            }, "<(sn)ssn?b?s?:b>");
+
+            expression.registerFunction("isBefore", (ts, type, value, offset, random, precision) =>
             {
                 return evalCondition(
                             RED,
@@ -316,12 +361,13 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type,
                                         value: value,
                                         offset: (typeof offset != "undefined") ? offset : 0,
-                                        random: (typeof random != "undefined") ? random : false}},
+                                        random: (typeof random != "undefined") ? random : false,
+                                        precision: precision}},
                                 id),
                             id);
-            }, "<(sn)ssn?b?:b>");
+            }, "<(sn)ssn?b?s?:b>");
 
-            expression.registerFunction("isAfter", async(ts, type, value, offset, random) =>
+            expression.registerFunction("isAfter", async(ts, type, value, offset, random, precision) =>
             {
                 return evalCondition(
                             RED,
@@ -336,12 +382,13 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type,
                                         value: value,
                                         offset: (typeof offset != "undefined") ? offset : 0,
-                                        random: (typeof random != "undefined") ? random : false}},
+                                        random: (typeof random != "undefined") ? random : false,
+                                        precision: precision}},
                                 id),
                             id);
-            }, "<(sn)ssn?b?:b>");
+            }, "<(sn)ssn?b?s?:b>");
 
-            expression.registerFunction("isBetween", (ts, type1, value1, offset1, random1, type2, value2, offset2, random2) =>
+            expression.registerFunction("isBetween", (ts, type1, value1, offset1, random1, precision1, type2, value2, offset2, random2, precision2) =>
             {
                 return evalCondition(
                             RED,
@@ -356,16 +403,18 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type1,
                                         value: value1,
                                         offset: offset1,
-                                        random: random1}, {
+                                        random: random1,
+                                        precision: precision1}, {
                                         type: type2,
                                         value: value2,
                                         offset: offset2,
-                                        random: random2}]},
+                                        random: random2,
+                                        precision: precision2}]},
                                 id),
                             id);
-            }, "<(sn)ssnbssnb:b>");
+            }, "<(sn)ssnbsssnbs:b>");
 
-            expression.registerFunction("isOutside", (ts, type1, value1, offset1, random1, type2, value2, offset2, random2) =>
+            expression.registerFunction("isOutside", (ts, type1, value1, offset1, random1, precision1, type2, value2, offset2, random2, precision2) =>
             {
                 return evalCondition(
                             RED,
@@ -380,14 +429,16 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type1,
                                         value: value1,
                                         offset: offset1,
-                                        random: random1}, {
+                                        random: random1,
+                                        precision: precision1}, {
                                         type: type2,
                                         value: value2,
                                         offset: offset2,
-                                        random: random2}]},
+                                        random: random2,
+                                        precision: precision2}]},
                                 id),
                             id);
-            }, "<(sn)ssnbssnb:b>");
+            }, "<(sn)ssnbsssnbs:b>");
 
             expression.registerFunction("isFirstDay", (ts, day) =>
             {
@@ -662,8 +713,15 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
                         ctxData, id),
                     id);
     }
-    else if ((cond.operator == "before") || (cond.operator == "after"))
+    else if (
+        (cond.operator == "equal") ||
+        (cond.operator == "notEqual") ||
+        (cond.operator == "before") ||
+        (cond.operator == "until") ||
+        (cond.operator == "since") ||
+        (cond.operator == "after"))
     {
+        const precision = (cond.operands.precision == "millisecond") ? undefined : cond.operands.precision;
         const targetTime = getTime(RED, node, msg, baseTime.clone(), cond.operands.type, cond.operands.value);
 
         if (cond.operands.offset != 0)
@@ -672,11 +730,44 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
             targetTime.add(offset, "minutes");
         }
 
-        result = (((cond.operator == "before") && baseTime.isBefore(targetTime))
-                    || ((cond.operator == "after") && baseTime.isSameOrAfter(targetTime)));
+        switch (cond.operator)
+        {
+            case "equal":
+            {
+                result = baseTime.isSame(targetTime, precision);
+                break;
+            }
+            case "notEqual":
+            {
+                result = !baseTime.isSame(targetTime, precision);
+                break;
+            }
+            case "before":
+            {
+                result = baseTime.isBefore(targetTime, precision);
+                break;
+            }
+            case "until":
+            {
+                result = baseTime.isSameOrBefore(targetTime, precision);
+                break;
+            }
+            case "since":
+            {
+                result = baseTime.isSameOrAfter(targetTime, precision);
+                break;
+            }
+            case "after":
+            {
+                result = baseTime.isAfter(targetTime, precision);
+                break;
+            }
+        }
     }
     else if ((cond.operator == "between") || (cond.operator == "outside"))
     {
+        const precision1 = (cond.operands[0].precision == "millisecond") ? undefined : cond.operands[0].precision;
+        const precision2 = (cond.operands[1].precision == "millisecond") ? undefined : cond.operands[1].precision;
         const time1 = getTime(RED, node, msg, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
         const time2 = getTime(RED, node, msg, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
@@ -695,24 +786,28 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
         {
             if (time1.isBefore(time2))
             {
-                result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2)))
-                            || ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+                result = (
+                    ((cond.operator == "between") && (baseTime.isSameOrAfter(time1, precision1) && baseTime.isSameOrBefore(time2, precision2))) ||
+                    ((cond.operator == "outside") && (baseTime.isBefore(time1, precision1) || baseTime.isAfter(time2, precision2))));
             }
             else
             {
-                result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) || baseTime.isSameOrBefore(time2)))
-                            || ((cond.operator == "outside") && (baseTime.isBefore(time1) && baseTime.isAfter(time2))));
+                result = (
+                    ((cond.operator == "between") && (baseTime.isSameOrAfter(time1, precision1) || baseTime.isSameOrBefore(time2, precision2))) ||
+                    ((cond.operator == "outside") && (baseTime.isBefore(time1, precision1) && baseTime.isAfter(time2, precision2))));
             }
         }
         else if (time1.isSameOrBefore(time2))
         {
-            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time1) && baseTime.isSameOrBefore(time2)))
-                        || ((cond.operator == "outside") && (baseTime.isBefore(time1) || baseTime.isAfter(time2))));
+            result = (
+                ((cond.operator == "between") && (baseTime.isSameOrAfter(time1, precision1) && baseTime.isSameOrBefore(time2, precision2))) ||
+                ((cond.operator == "outside") && (baseTime.isBefore(time1, precision1) || baseTime.isAfter(time2, precision2))));
         }
         else
         {
-            result = (((cond.operator == "between") && (baseTime.isSameOrAfter(time2) && baseTime.isSameOrBefore(time1)))
-                        || ((cond.operator == "outside") && (baseTime.isBefore(time2) || baseTime.isAfter(time1))));
+            result = (
+                ((cond.operator == "between") && (baseTime.isSameOrAfter(time2, precision2) && baseTime.isSameOrBefore(time1, precision1))) ||
+                ((cond.operator == "outside") && (baseTime.isBefore(time2, precision2) || baseTime.isAfter(time1, precision1))));
         }
     }
     else
