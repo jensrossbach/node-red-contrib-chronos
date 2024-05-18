@@ -641,7 +641,7 @@ module.exports = function(RED)
 
                     if ((typeof data.config.trigger.offset == "number") && (data.config.trigger.offset != 0))
                     {
-                        let offset = (data.config.trigger.random === true) ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
+                        const offset = (data.config.trigger.random === true) ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
                         data.triggerTime.add(offset, "minutes");
                     }
 
@@ -659,13 +659,13 @@ module.exports = function(RED)
 
                             if ((typeof data.config.trigger.offset == "number") && (data.config.trigger.offset != 0))
                             {
-                                let offset = (data.config.trigger.random === true) ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
+                                const offset = (data.config.trigger.random === true) ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
                                 data.triggerTime.add(offset, "minutes");
                             }
                         }
                     }
 
-                    node.debug("[Event:" + data.id + "] Event triggers at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                    node.debug("[Event:" + data.id + "] Event triggers at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss.SSS (Z)"));
                 }
 
                 if (repeat)
@@ -704,19 +704,20 @@ module.exports = function(RED)
                     {
                         if (next)
                         {
-                            if (data.triggerTime.isBefore(next.triggerTime, "second"))
+                            if (data.triggerTime.isBefore(next, "second"))
                             {
-                                next = data;
+                                next = data.triggerTime;
                                 events = [data];
                             }
-                            else if (data.triggerTime.isSame(next.triggerTime, "second"))
+                            else if (data.triggerTime.isSame(next, "second"))
                             {
+                                // group all events that trigger within one second
                                 events.push(data);
                             }
                         }
                         else
                         {
-                            next = data;
+                            next = data.triggerTime;
                             events = [data];
                         }
                     }
@@ -724,7 +725,13 @@ module.exports = function(RED)
 
                 if (next)
                 {
-                    node.debug("Starting timer for trigger at " + next.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                    if (events.length > 1)
+                    {
+                        // align trigger time to full seconds if multiple events are grouped
+                        next.milliseconds(0);
+                    }
+
+                    node.debug("Starting timer for trigger at " + next.format("YYYY-MM-DD HH:mm:ss.SSS (Z)"));
                     node.timer = setTimeout(async() =>
                     {
                         node.trace("Timer with ID " + node.timer + " expired");
@@ -736,7 +743,7 @@ module.exports = function(RED)
                         }
 
                         startTimer();
-                    }, next.triggerTime.diff(chronos.getCurrentTime(node)));
+                    }, next.diff(chronos.getCurrentTime(node)));
 
                     node.debug("Successfully started timer with ID " + node.timer);
                 }
