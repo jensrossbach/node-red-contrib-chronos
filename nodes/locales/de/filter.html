@@ -124,17 +124,33 @@ SOFTWARE.
             linken Seite gibt es die folgenden Möglichkeiten:
             <ul>
                 <li>
+                    Operator <i>==</i>: Prüft ob die Basiszeit mit der spezifizierten
+                    Zeit identisch ist.
+                </li>
+                <li>
+                    Operator <i>!=</i>: Prüft ob die Basiszeit nicht mit der
+                    spezifizierten Zeit identisch ist.
+                </li>
+                <li>
                     Operator <i>Vor</i>: Prüft ob die Basiszeit früher als die
                     spezifizierte Zeit ist.
                 </li>
                 <li>
-                    Operator <i>Nach</i>: Prüft ob die Basiszeit gleich oder später als
-                    die spezifizierte Zeit ist.
+                    Operator <i>Bis</i>: Prüft ob die Basiszeit früher als oder
+                    gleich wie die spezifizierte Zeit ist.
                 </li>
                 <li>
-                    Operator <i>Zwischen</i>: Prüft ob die Basiszeit gleich oder später
-                    als die erste und früher als die zweite spezifizierte Zeit
-                    ist.
+                    Operator <i>Ab</i>: Prüft ob die Basiszeit gleich wie oder
+                    später als die spezifizierte Zeit ist.
+                </li>
+                <li>
+                    Operator <i>Nach</i>: Prüft ob die Basiszeit später als die
+                    spezifizierte Zeit ist.
+                </li>
+                <li>
+                    Operator <i>Zwischen</i>: Prüft ob die Basiszeit gleich wie oder
+                    später als die erste und früher als oder gleich wie die zweite
+                    spezifizierte Zeit ist.
                 </li>
                 <li>
                     Operator <i>Außerhalb</i>: Prüft ob die Basiszeit früher als die
@@ -234,9 +250,10 @@ SOFTWARE.
                 </li>
             </ul>
             Die spezifizierten Zeitpunkte können zusätzlich mittels eines
-            (wahlweise zufälligen) Versatzes verschoben werden. Die
-            entsprechenden Eingabefelder können über den Pfeil-Knopf auf
-            der rechten Seite ausgeklappt werden.
+            (wahlweise zufälligen) Versatzes verschoben werden und die
+            Genauigkeit der Zeitpunkte für den Vergleich kann festgelegt
+            werden. Die entsprechenden Eingabefelder können über den
+            Pfeil-Knopf auf der rechten Seite ausgeklappt werden.
         </dd>
         <dt>Alle Bedingungen müssen zutreffen</dt>
         <dd>
@@ -263,14 +280,17 @@ SOFTWARE.
     </p>
     <dl class="message-properties">
         <dt>operator<span class="property-type">string</span></dt>
-        <dd>Operator für den Vergleich; entweder "before", "after", "between", "outside", "days", "weekdays" oder "months"</dd>
+        <dd>
+            Operator für den Vergleich; entweder "equal", "notEqual", "before", "until",
+            "since", "after", "between", "outside", "days", "weekdays" oder "months"
+        </dd>
         <dt class="optional">operands<span class="property-type">object | array</span></dt>
         <dd>Operanden für den Vergleich; der Inhalt ist abhängig vom Operator</dd>
     </dl>
     <p>
         Wenn <code>operator</code> folgendes enthält:
         <ul>
-            <li>"before" oder "after", muss <code>operands</code> ein Objekt sein</li>
+            <li>"equal", "notEqual", "before", "until", "since" oder "after", muss <code>operands</code> ein Objekt sein</li>
             <li>"between" oder "outside", muss <code>operands</code> ein Array mit zwei Objekten sein, die den zwei Operanden entsprechen</li>
         </ul>
         Die Objekte müssen jeweils folgende Eigenschaften enthalten:
@@ -284,6 +304,11 @@ SOFTWARE.
         <dd>Zeitlicher Versatz zum Operandenwert</dd>
         <dt>random<span class="property-type">boolean</span></dt>
         <dd>Zufälliger Zeitversatz</dd>
+        <dt class="optional">precision<span class="property-type">string</span></dt>
+        <dd>
+            Vergleichsgenauigkeit; entweder "millisecond", "second",
+            "minute", "hour", "day", "month" oder "year"
+        </dd>
     </dl>
     <p>
         Wenn <code>operator</code> "days" enthält, muss <code>operands</code> ein
