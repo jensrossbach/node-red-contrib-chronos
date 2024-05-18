@@ -318,7 +318,11 @@ SOFTWARE.
                     const operator = $("<select/>", {class: "node-input-operator", style: "width: auto;"})
                                         .appendTo(operatorBox);
                     const operGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.operators"))
+                                        .append($("<option></option>").val("equal").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.equal")))
+                                        .append($("<option></option>").val("notEqual").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.notEqual")))
                                         .append($("<option></option>").val("before").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.before")))
+                                        .append($("<option></option>").val("until").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.until")))
+                                        .append($("<option></option>").val("since").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.since")))
                                         .append($("<option></option>").val("after").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.after")))
                                         .append($("<option></option>").val("between").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.between")))
                                         .append($("<option></option>").val("outside").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.outside")))
@@ -360,28 +364,52 @@ SOFTWARE.
                                         .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
                                         .appendTo(time2Row1);
 
-                    $("<label/>", {style: "width: auto; margin-right: 6px;"})
-                                        .text(node._("node-red-contrib-chronos/chronos-config:common.label.offset"))
+                    $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                                        .html("<span style='margin-right: 6px;'>&#8597;</span>")
                                         .appendTo(time1Row2);
                     const offset1 = $("<input/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), class: "node-input-offset1", style: "width: 50px !important;"})
                                         .appendTo(time1Row2)
                                         .spinner(offsetInput);
-                    const random1 = $("<input/>", {type: "checkbox", class: "node-input-random1", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                    const random1Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                        .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                         .appendTo(time1Row2);
-                    $("<label/>", {style: "margin-left: 4px; margin-bottom: 0px; width: auto;"})
-                                        .text(node._("node-red-contrib-chronos/chronos-config:common.label.random"))
+                    const random1 = $("<input/>", {type: "checkbox", class: "node-input-random1", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(random1Label);
+                    $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                        .html("<i class='fa fa-bullseye' aria-hidden='true'></i>")
+                                        .appendTo(time1Row2);
+                    const precision1 = $("<select/>", {class: "node-input-precision1", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 117px; margin-left: 4px;"})
+                                        .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
+                                        .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
+                                        .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
+                                        .append($("<option></option>").val("hour").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hour")))
+                                        .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.day")))
+                                        .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
+                                        .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
                                         .appendTo(time1Row2);
 
-                    $("<label/>", {style: "width: auto; margin-right: 6px;"})
-                                        .text(node._("node-red-contrib-chronos/chronos-config:common.label.offset"))
+                    $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                                        .html("<span style='margin-right: 6px;'>&#8597;</span>")
                                         .appendTo(time2Row2);
                     const offset2 = $("<input/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), class: "node-input-offset2", style: "width: 50px !important;"})
                                         .appendTo(time2Row2)
                                         .spinner(offsetInput);
-                    const random2 = $("<input/>", {type: "checkbox", class: "node-input-random2", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                    const random2Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                        .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                         .appendTo(time2Row2);
-                    $("<label/>", {style: "margin-left: 4px; margin-bottom: 0px; width: auto;"})
-                                        .text(node._("node-red-contrib-chronos/chronos-config:common.label.random"))
+                    const random2 = $("<input/>", {type: "checkbox", class: "node-input-random2", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                        .appendTo(random2Label);
+                    $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                        .html("<i class='fa fa-bullseye' aria-hidden='true'></i>")
+                                        .appendTo(time2Row2);
+                    const precision2 = $("<select/>", {class: "node-input-precision2", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 117px; margin-left: 4px;"})
+                                        .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
+                                        .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
+                                        .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
+                                        .append($("<option></option>").val("hour").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hour")))
+                                        .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.day")))
+                                        .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
+                                        .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
                                         .appendTo(time2Row2);
 
                     const dayType = $("<select/>", {class: "node-input-dayType", style: "width: auto; margin-left: 4px;"})
@@ -476,7 +504,11 @@ SOFTWARE.
                         var value = $(this).val();
                         switch (value)
                         {
+                            case "equal":
+                            case "notEqual":
                             case "before":
+                            case "until":
+                            case "since":
                             case "after":
                             {
                                 timeBox.show();
@@ -676,39 +708,77 @@ SOFTWARE.
 
                     operator.val(data.operator);
 
-                    if ((data.operator == "before") || (data.operator == "after"))
+                    if ((data.operator == "equal") ||
+                        (data.operator == "notEqual") ||
+                        (data.operator == "before") ||
+                        (data.operator == "until") ||
+                        (data.operator == "since") ||
+                        (data.operator == "after"))
                     {
+                        // backward compatibility to v1.0.2 and below
+                        if (typeof data.operands.offset == "undefined")
+                        {
+                            data.operands.offset = 0;
+                            data.operands.random = false;
+                        }
+                        // backward compatibility to v1.24.0 and below
+                        if (typeof data.operands.precision == "undefined")
+                        {
+                            data.operands.precision = "millisecond";
+                        }
+
                         time1._prevType = data.operands.type;
                         time1.typedInput("type", data.operands.type);
                         time1.typedInput("value", data.operands.value);
-                        if (data.operands.offset &&  // backwards compatibility to v1.0.2
-                            (data.operands.offset != 0))
+                        offset1.spinner("value", data.operands.offset);
+                        random1.prop("checked", data.operands.random);
+                        precision1.val(data.operands.precision);
+                        if ((data.operands.offset != 0) || (data.operands.precision != "millisecond"))
                         {
-                            offset1.spinner("value", data.operands.offset);
-                            random1.prop("checked", data.operands.random);
                             showExtensionRow1();
                         }
                     }
                     else if ((data.operator == "between") || (data.operator == "outside"))
                     {
+                        // backward compatibility to v1.0.2 and below
+                        if (typeof data.operands[0].offset == "undefined")
+                        {
+                            data.operands[0].offset = 0;
+                            data.operands[0].random = false;
+                        }
+                        if (typeof data.operands[1].offset == "undefined")
+                        {
+                            data.operands[1].offset = 0;
+                            data.operands[1].random = false;
+                        }
+                        // backward compatibility to v1.24.0 and below
+                        if (typeof data.operands[0].precision == "undefined")
+                        {
+                            data.operands[0].precision = "millisecond";
+                        }
+                        if (typeof data.operands[1].precision == "undefined")
+                        {
+                            data.operands[1].precision = "millisecond";
+                        }
+
                         time1._prevType = data.operands[0].type;
                         time1.typedInput("type", data.operands[0].type);
                         time1.typedInput("value", data.operands[0].value);
+                        offset1.spinner("value", data.operands[0].offset);
+                        random1.prop("checked", data.operands[0].random);
+                        precision1.val(data.operands[0].precision);
                         time2._prevType = data.operands[1].type;
                         time2.typedInput("type", data.operands[1].type);
                         time2.typedInput("value", data.operands[1].value);
-                        if (data.operands[0].offset &&  // backwards compatibility to v1.0.2
-                            (data.operands[0].offset != 0))
+                        offset2.spinner("value", data.operands[1].offset);
+                        random2.prop("checked", data.operands[1].random);
+                        precision2.val(data.operands[1].precision);
+                        if ((data.operands[0].offset != 0) || (data.operands[0].precision != "millisecond"))
                         {
-                            offset1.spinner("value", data.operands[0].offset);
-                            random1.prop("checked", data.operands[0].random);
                             showExtensionRow1();
                         }
-                        if (data.operands[1].offset &&  // backwards compatibility to v1.0.2
-                            (data.operands[1].offset != 0))
+                        if ((data.operands[1].offset != 0) || (data.operands[1].precision != "millisecond"))
                         {
-                            offset2.spinner("value", data.operands[1].offset);
-                            random2.prop("checked", data.operands[1].random);
                             showExtensionRow2();
                         }
                     }
@@ -851,17 +921,25 @@ SOFTWARE.
                 const offset2 = $(this).find(".node-input-offset2");
                 const random1 = $(this).find(".node-input-random1");
                 const random2 = $(this).find(".node-input-random2");
+                const precision1 = $(this).find(".node-input-precision1");
+                const precision2 = $(this).find(".node-input-precision2");
 
                 data.operator = $(this).find(".node-input-operator").val();
                 data.label = node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator." + data.operator);
 
-                if ((data.operator == "before") || (data.operator == "after"))
+                if ((data.operator == "equal") ||
+                    (data.operator == "notEqual") ||
+                    (data.operator == "before") ||
+                    (data.operator == "until") ||
+                    (data.operator == "since") ||
+                    (data.operator == "after"))
                 {
                     data.operands = {};
                     data.operands.type = time1.typedInput("type");
                     data.operands.value = time1.typedInput("value");
                     data.operands.offset = offset1.spinner("value");
                     data.operands.random = random1.prop("checked");
+                    data.operands.precision = precision1.val();
 
                     if ((data.operands.type == "time") || (data.operands.type == "custom"))
                     {
@@ -911,10 +989,12 @@ SOFTWARE.
                     data.operands[0].value = time1.typedInput("value");
                     data.operands[0].offset = offset1.spinner("value");
                     data.operands[0].random = random1.prop("checked");
+                    data.operands[0].precision = precision1.val();
                     data.operands[1].type = time2.typedInput("type");
                     data.operands[1].value = time2.typedInput("value");
                     data.operands[1].offset = offset2.spinner("value");
                     data.operands[1].random = random2.prop("checked");
+                    data.operands[1].precision = precision2.val();
 
                     data.label += " ";
                     if ((data.operands[0].type == "time") || (data.operands[0].type == "custom"))
