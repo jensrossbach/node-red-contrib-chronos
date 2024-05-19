@@ -150,7 +150,7 @@ module.exports = function(RED)
                             {
                                 data.config.output.value = JSON.parse(data.config.output.value);
                             }
-                            catch (e)
+                            catch
                             {
                                 valid = false;
                                 break;
@@ -201,7 +201,7 @@ module.exports = function(RED)
                             {
                                 data.config.output.property.value = JSON.parse(data.config.output.property.value);
                             }
-                            catch (e)
+                            catch
                             {
                                 valid = false;
                                 break;
@@ -228,7 +228,7 @@ module.exports = function(RED)
                             {
                                 data.config.output.property.value = Buffer.from(JSON.parse(data.config.output.property.value));
                             }
-                            catch (e)
+                            catch
                             {
                                 valid = false;
                                 break;

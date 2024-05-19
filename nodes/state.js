@@ -118,7 +118,7 @@ module.exports = function(RED)
                     {
                         data.state.value = JSON.parse(data.state.value);
                     }
-                    catch (e)
+                    catch
                     {
                         valid = false;
                         break;
@@ -130,7 +130,7 @@ module.exports = function(RED)
                     {
                         data.state.value = Buffer.from(JSON.parse(data.state.value));
                     }
-                    catch (e)
+                    catch
                     {
                         valid = false;
                         break;

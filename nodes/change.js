@@ -461,7 +461,7 @@ module.exports = function(RED)
                     {
                         value = RED.util.getMessageProperty(msg, target.name);
                     }
-                    catch (e)
+                    catch
                     {
                         // message property is not existing
                         value = undefined;
