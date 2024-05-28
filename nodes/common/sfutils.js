@@ -722,7 +722,7 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
         (cond.operator == "after"))
     {
         const precision = (cond.operands.precision == "millisecond") ? undefined : cond.operands.precision;
-        const targetTime = getTime(RED, node, msg, baseTime.clone(), cond.operands.type, cond.operands.value);
+        const targetTime = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands.type, cond.operands.value);
 
         if (cond.operands.offset != 0)
         {
@@ -768,8 +768,8 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
     {
         const precision1 = (cond.operands[0].precision == "millisecond") ? undefined : cond.operands[0].precision;
         const precision2 = (cond.operands[1].precision == "millisecond") ? undefined : cond.operands[1].precision;
-        const time1 = getTime(RED, node, msg, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-        const time2 = getTime(RED, node, msg, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+        const time1 = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+        const time2 = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
         if (cond.operands[0].offset != 0)
         {
@@ -816,61 +816,6 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
     }
 
     return result;
-}
-
-function getTime(RED, node, msg, baseTime, type, value)
-{
-    let ret = undefined;
-
-    if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
-    {
-        let ctxValue = undefined;
-
-        if (type == "env")
-        {
-            ctxValue = RED.util.evaluateNodeProperty(value, type, node);
-            if (!ctxValue)
-            {
-                ctxValue = value;
-            }
-        }
-        else if ((type == "global") || (type == "flow"))
-        {
-            const ctx = RED.util.parseContextStore(value);
-            ctxValue = node.context()[type].get(ctx.key, ctx.store);
-        }
-        else
-        {
-            ctxValue = RED.util.getMessageProperty(msg, value);
-        }
-
-        if (!ctxValue || ((typeof ctxValue != "number") && (typeof ctxValue != "string")))
-        {
-            throw new node.chronos.TimeError(
-                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
-                        {type: type, value: ctxValue});
-        }
-
-        ret = node.chronos.getTime(
-                            RED,
-                            node,
-                            baseTime,
-                            "auto",
-                            ctxValue);
-
-        if (!ret.isValid())
-        {
-            throw new node.chronos.TimeError(
-                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
-                        {type: type, value: ctxValue});
-        }
-    }
-    else
-    {
-        ret = node.chronos.getTime(RED, node, baseTime, type, value);
-    }
-
-    return ret;
 }
 
 function evaluateDateCondition(baseTime, cond)

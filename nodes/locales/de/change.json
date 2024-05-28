@@ -3,45 +3,69 @@
     {
         "label":
         {
-            "node":               "Änderung",
-            "rules":              "Änderungsregeln",
-            "to":                 "auf",
-            "now":                "Aktuelle Zeit",
-            "date":               "Datum & Uhrzeit",
-            "format":             "Format",
-            "predefinedFormat":   "Vordefiniertes Format",
-            "customFormat":       "Benutzerdefiniertes Format",
-            "currentTZ":          "Aktuelle Zeitzone",
-            "timeZone":           "Zeitzone",
-            "utcOffset":          "UTC-Versatz",
-            "formatPlaceholder":  "z.B.: YYYY-MM-DD HH:mm:ss"
+            "node":              "Änderung",
+            "outputPort":        "Veränderte Nachricht",
+            "mode":              "Modus",
+            "rules":             "Änderungsregeln",
+            "setTo":             "auf",
+            "convertTo":         "in",
+            "now":               "Aktuelle Zeit",
+            "date":              "Datum & Uhrzeit",
+            "number":            "Zahl",
+            "format":            "Format",
+            "numericFormat":     "Numerisches Format",
+            "stringFormat":      "Zeichenketten-Format",
+            "predefinedFormat":  "Vordefiniertes Format",
+            "customFormat":      "Benutzerdefiniertes Format",
+            "integer":           "Ganzzahl",
+            "float":             "Fließkommazahl",
+            "currentTZ":         "Aktuelle Zeitzone",
+            "timeZone":          "Zeitzone",
+            "utcOffset":         "UTC-Versatz"
         },
         "list":
         {
+            "mode":
+            {
+                "moment":    "Zeitpunkt",
+                "duration":  "Zeitspanne"
+            },
             "action":
             {
-                "set":     "Festlegen",
-                "change":  "Ändern"
+                "set":      "Festlegen",
+                "change":   "Ändern",
+                "convert":  "Konvertieren"
             },
             "changeType":
             {
-                "set":       "Festlegen",
-                "add":       "Hinzufügen",
-                "subtract":  "Abziehen",
-                "startOf":   "Anfang von",
-                "endOf":     "Ende von",
-                "timeZone":  "Zeitzone",
-                "toString":  "Konvertieren"
+                "set":        "Festlegen",
+                "add":        "Hinzufügen",
+                "subtract":   "Abziehen",
+                "numval":     "Zahlenwert",
+                "startOf":    "Anfang von",
+                "endOf":      "Ende von",
+                "timeZone":   "Zeitzone"
             },
             "convert":
             {
-                "regionalDateTime":   "Regional",
-                "regionalDate":       "Regional (nur Datum)",
-                "regionalTime":       "Regional (nur Zeit)",
-                "relativeTime":       "Relative Zeit",
-                "calendar":           "Kalender",
-                "iso8601Format":      "ISO-8601",
-                "iso8601UTCFormat":   "ISO-8601 (UTC)"
+                "regionalDateTime":  "Regional",
+                "regionalDate":      "Regional (nur Datum)",
+                "regionalTime":      "Regional (nur Zeit)",
+                "relativeTime":      "Relative Zeit",
+                "calendar":          "Kalender",
+                "textualTimespan":   "Textuelle Zeitspanne",
+                "timespan":          "Zeitspanne",
+                "timespan10th":      "Zeitspanne (Zehntelsekunden)",
+                "timespan100th":     "Zeitspanne (Hundertstelsekunden)",
+                "timespanMillis":    "Zeitspanne (Millisekunden)",
+                "iso8601":           "ISO-8601",
+                "iso8601UTC":        "ISO-8601 (UTC)"
+            },
+            "int":
+            {
+                "round":  "Runden",
+                "floor":  "Abrunden",
+                "ceil":   "Aufrunden"
             }
         },
         "status":
@@ -51,7 +75,8 @@
         "error":
         {
             "noTasks":          "Keine Regeln kongiguriert",
-            "invalidProperty":  "Ungültige Eigenschaft angegeben: __property__"
+            "invalidProperty":  "Ungültige Eigenschaft angegeben: __property__",
+            "NaN":              "Angegebener Wert ist keine Zahl"
         }
     }
 }

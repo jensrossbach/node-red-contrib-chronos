@@ -423,6 +423,74 @@ function getTime(RED, node, day, type, value)
     return ret;
 }
 
+function retrieveTime(RED, node, msg, baseTime, type, value)
+{
+    let ret = undefined;
+
+    if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
+    {
+        let ctxValue = undefined;
+
+        if (type == "env")
+        {
+            ctxValue = RED.util.evaluateNodeProperty(value, type, node);
+            if (!ctxValue)
+            {
+                ctxValue = value;
+            }
+        }
+        else if ((type == "global") || (type == "flow"))
+        {
+            const ctx = RED.util.parseContextStore(value);
+            ctxValue = node.context()[type].get(ctx.key, ctx.store);
+        }
+        else
+        {
+            ctxValue = RED.util.getMessageProperty(msg, value);
+        }
+
+        if (!ctxValue || ((typeof ctxValue != "number") && (typeof ctxValue != "string")))
+        {
+            throw new TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
+                        {type: type, value: ctxValue});
+        }
+
+        ret = getTime(
+                RED,
+                node,
+                baseTime,
+                "auto",
+                ctxValue);
+
+        if (!ret.isValid())
+        {
+            throw new TimeError(
+                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
+                        {type: type, value: ctxValue});
+        }
+    }
+    else
+    {
+        ret = getTime(
+                RED,
+                node,
+                baseTime,
+                type,
+                value);
+    }
+
+    return ret;
+}
+
+function getDuration(node, input, unit)
+{
+    const ret = moment.duration(input, unit);
+    ret.locale(node.locale);
+
+    return ret;
+}
+
 function applyOffset(time, offset, random)
 {
     if (offset)
@@ -495,6 +563,8 @@ module.exports =
     getMoonTime:               getMoonTime,
     getTime:                   getTime,
     getUserDate:               getUserDate,
+    getDuration:               getDuration,
+    retrieveTime:              retrieveTime,
     isValidUserTime:           isValidUserTime,
     isValidUserDate:           isValidUserDate,
     getJSONataExpression:      getJSONataExpression,
