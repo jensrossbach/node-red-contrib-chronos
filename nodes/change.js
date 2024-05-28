@@ -26,7 +26,9 @@ module.exports = function(RED)
 {
     function ChronosChangeNode(settings)
     {
-        let node = this;
+        const TOKENIZER_PATTERN = /(\[[^[]*\])|(y|M|w|d|hh?|mm?|ss?|SS?S?|.)/g;
+
+        const node = this;
         RED.nodes.createNode(this, settings);
 
         node.chronos = require("./common/chronos.js");
@@ -59,64 +61,102 @@ module.exports = function(RED)
             node.chronos.printNodeInfo(node);
             node.status({});
 
+            node.mode = (typeof settings.mode == "undefined") ? "moment" : settings.mode;
             node.rules = settings.rules;
 
             let valid = true;
             for (let i=0; i<node.rules.length; ++i)
             {
-                let rule = node.rules[i];
+                const rule = node.rules[i];
 
-                // backward compatibility adaptations
-                if ((rule.action == "change") && (rule.type == "toString"))
+                if (node.mode == "moment")
                 {
-                    if (!rule.formatType)  // backward compatibility to v1.19.1 and below
+                    // backward compatibility to 1.24.0 and below
+                    if (rule.action == "change")
                     {
-                        rule.formatType = "custom";
-                    }
-                    // backward compatibility to v1.21 and below
-                    else if (rule.formatType == "relative")
-                    {
-                        rule.formatType = "predefined";
-                        rule.format = "relative";
-                    }
-                    else if (rule.formatType == "calendar")
-                    {
-                        rule.formatType = "predefined";
-                        rule.format = "calendar";
-                    }
-                    else if (rule.formatType == "iso8601")
-                    {
-                        rule.formatType = "predefined";
-                        rule.format = "iso8601";
-                    }
-                    else if (rule.formatType == "iso8601utc")
-                    {
-                        rule.formatType = "predefined";
-                        rule.format = "iso8601utc";
-                    }
-                }
+                        if (rule.type == "toString")
+                        {
+                            rule.action = "convert";
+                            delete rule.type;
 
-                if ((rule.action == "set") && (rule.type == "date"))
-                {
-                    if (!node.chronos.isValidUserDate(rule.date))
+                            // backward compatibility to v1.19.1 and below
+                            if (!rule.formatType)
+                            {
+                                rule.formatType = "custom";
+                            }
+
+                            // backward compatibility to v1.21.0 and below
+                            if (rule.formatType == "relative")
+                            {
+                                rule.formatType = "predefined";
+                                rule.format = "relative";
+                            }
+                            else if (rule.formatType == "calendar")
+                            {
+                                rule.formatType = "predefined";
+                                rule.format = "calendar";
+                            }
+                            else if (rule.formatType == "iso8601")
+                            {
+                                rule.formatType = "predefined";
+                                rule.format = "iso8601";
+                            }
+                            else if (rule.formatType == "iso8601utc")
+                            {
+                                rule.formatType = "predefined";
+                                rule.format = "iso8601utc";
+                            }
+
+                            if (typeof rule.tzType == "undefined")
+                            {
+                                rule.tzType = "current";
+                                rule.tzValue = "";
+                            }
+                        }
+                        else if ((rule.type == "set") || (rule.type == "add") || (rule.type == "subtract"))
+                        {
+                            if (typeof rule.valueType == "undefined")
+                            {
+                                rule.valueType = "num";
+                            }
+                        }
+                    }
+
+                    if ((rule.action == "set") && (rule.type == "date"))
+                    {
+                        if (!node.chronos.isValidUserDate(rule.date))
+                        {
+                            valid = false;
+                            break;
+                        }
+                        if ((rule.time.type == "time") && !node.chronos.isValidUserTime(rule.time.value))
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    else if (
+                        (rule.action == "convert") &&
+                        (rule.formatType == "custom") &&
+                        !rule.format)
                     {
                         valid = false;
                         break;
                     }
-                    if ((rule.time.type == "time") && !node.chronos.isValidUserTime(rule.time.value))
+                }
+                else if (rule.action == "set")
+                {
+                    if ((rule.time1.type == "time") && !node.chronos.isValidUserTime(rule.time1.value, false))
                     {
                         valid = false;
                         break;
                     }
-                }
-                else if (
-                    (rule.action == "change") &&
-                    (rule.type == "toString") &&
-                    (rule.formatType == "custom") &&
-                    !rule.format)
-                {
-                    valid = false;
-                    break;
+
+                    if ((rule.time2.type == "time") && !node.chronos.isValidUserTime(rule.time2.value, false))
+                    {
+                        valid = false;
+                        break;
+                    }
                 }
             }
 
@@ -142,148 +182,180 @@ module.exports = function(RED)
                             {
                                 let rule = node.rules[i];
 
-                                if (rule.action == "set")
+                                if (node.mode == "moment")
                                 {
-                                    switch (rule.type)
+                                    if (rule.action == "set")
                                     {
-                                        case "now":
-                                        {
-                                            setTarget(msg, rule.target, Date.now());
-                                            break;
-                                        }
-                                        case "date":
-                                        {
-                                            setTarget(
-                                                msg,
-                                                rule.target,
-                                                node.chronos.getTime(
-                                                        RED,
-                                                        node,
-                                                        node.chronos.getUserDate(
-                                                                RED,
-                                                                node,
-                                                                rule.date),
-                                                        rule.time.type,
-                                                        rule.time.value).valueOf());
-                                            break;
-                                        }
-                                        case "jsonata":
-                                        {
-                                            let expression = null;
-                                            let result = null;
-
-                                            try
-                                            {
-                                                expression = node.chronos.getJSONataExpression(RED, node, rule.expression);
-
-                                                // time change node specific JSONata extensions
-                                                expression.assign("target", getTarget(msg, rule.target));
-
-                                                expression.registerFunction("set", (ts, part, value) =>
-                                                {
-                                                    return setPart(node.chronos.getTimeFrom(node, ts), part, value);
-                                                }, "<(sn)sn:n>");
-
-                                                expression.registerFunction("add", (ts, value, unit) =>
-                                                {
-                                                    return node.chronos.getTimeFrom(node, ts).add(value, unit).valueOf();
-                                                }, "<(sn)ns:n>");
-
-                                                expression.registerFunction("subtract", (ts, value, unit) =>
-                                                {
-                                                    return node.chronos.getTimeFrom(node, ts).subtract(value, unit).valueOf();
-                                                }, "<(sn)ns:n>");
-
-                                                expression.registerFunction("startOf", (ts, arg) =>
-                                                {
-                                                    return node.chronos.getTimeFrom(node, ts).startOf(arg).valueOf();
-                                                }, "<(sn)s:n>");
-
-                                                expression.registerFunction("endOf", (ts, arg) =>
-                                                {
-                                                    return node.chronos.getTimeFrom(node, ts).endOf(arg).valueOf();
-                                                }, "<(sn)s:n>");
-
-                                                result = await node.chronos.evaluateJSONataExpression(RED, expression, msg);
-                                            }
-                                            catch (e)
-                                            {
-                                                const details = {rule: i+1, expression: rule.expression, code: e.code, description: e.message, position: e.position, token: e.token};
-                                                if (e.value)
-                                                {
-                                                    details.value = e.value;
-                                                }
-
-                                                throw new node.chronos.TimeError(
-                                                            RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"),
-                                                            details);
-                                            }
-
-                                            if ((typeof result != "number") && (typeof result != "string"))
-                                            {
-                                                throw new node.chronos.TimeError(
-                                                            RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
-                                                            {rule: i+1, expression: rule.expression, result: result});
-                                            }
-
-                                            setTarget(msg, rule.target, result);
-                                            break;
-                                        }
-                                    }
-                                }
-                                else if (rule.action == "change")
-                                {
-                                    let input = undefined;
-                                    let property = getTarget(msg, rule.target);
-
-                                    if ((typeof property == "number") || (typeof property == "string"))
-                                    {
-                                        input = node.chronos.getTime(
-                                                                RED,
-                                                                node,
-                                                                node.chronos.getCurrentTime(node),
-                                                                (typeof property == "number")
-                                                                    ? "time"
-                                                                    : "auto",
-                                                                property);
-                                    }
-
-                                    if (input)
-                                    {
-                                        let output = undefined;
-
                                         switch (rule.type)
                                         {
-                                            case "set":
+                                            case "now":
                                             {
-                                                output = setPart(input, rule.part, rule.value);
+                                                setTarget(msg, rule.target, Date.now());
                                                 break;
                                             }
-                                            case "add":
+                                            case "date":
                                             {
-                                                input.add(rule.value, rule.unit);
-                                                output = input.valueOf();
+                                                setTarget(
+                                                    msg,
+                                                    rule.target,
+                                                    node.chronos.getTime(
+                                                            RED,
+                                                            node,
+                                                            node.chronos.getUserDate(
+                                                                    RED,
+                                                                    node,
+                                                                    rule.date),
+                                                            rule.time.type,
+                                                            rule.time.value).valueOf());
                                                 break;
                                             }
-                                            case "subtract":
+                                            case "jsonata":
                                             {
-                                                input.subtract(rule.value, rule.unit);
-                                                output = input.valueOf();
+                                                let expression = null;
+                                                let result = null;
+
+                                                try
+                                                {
+                                                    expression = node.chronos.getJSONataExpression(RED, node, rule.expression);
+
+                                                    // time change node specific JSONata extensions
+                                                    expression.assign("target", getValue(msg, rule.target.name, rule.target.type));
+
+                                                    expression.registerFunction("set", (ts, part, value) =>
+                                                    {
+                                                        return setPart(node.chronos.getTimeFrom(node, ts), part, value);
+                                                    }, "<(sn)sn:n>");
+
+                                                    expression.registerFunction("add", (ts, value, unit) =>
+                                                    {
+                                                        return node.chronos.getTimeFrom(node, ts).add(value, unit).valueOf();
+                                                    }, "<(sn)ns:n>");
+
+                                                    expression.registerFunction("subtract", (ts, value, unit) =>
+                                                    {
+                                                        return node.chronos.getTimeFrom(node, ts).subtract(value, unit).valueOf();
+                                                    }, "<(sn)ns:n>");
+
+                                                    expression.registerFunction("startOf", (ts, arg) =>
+                                                    {
+                                                        return node.chronos.getTimeFrom(node, ts).startOf(arg).valueOf();
+                                                    }, "<(sn)s:n>");
+
+                                                    expression.registerFunction("endOf", (ts, arg) =>
+                                                    {
+                                                        return node.chronos.getTimeFrom(node, ts).endOf(arg).valueOf();
+                                                    }, "<(sn)s:n>");
+
+                                                    result = await node.chronos.evaluateJSONataExpression(RED, expression, msg);
+                                                }
+                                                catch (e)
+                                                {
+                                                    if (e instanceof node.chronos.TimeError)
+                                                    {
+                                                        throw e;
+                                                    }
+                                                    else
+                                                    {
+                                                        const details = {rule: i+1, expression: rule.expression, code: e.code, description: e.message, position: e.position, token: e.token};
+                                                        if (e.value)
+                                                        {
+                                                            details.value = e.value;
+                                                        }
+
+                                                        throw new node.chronos.TimeError(
+                                                                    RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"),
+                                                                    details);
+                                                    }
+                                                }
+
+                                                if ((typeof result != "number") && (typeof result != "string"))
+                                                {
+                                                    throw new node.chronos.TimeError(
+                                                                RED._("node-red-contrib-chronos/chronos-config:common.error.notTime"),
+                                                                {rule: i+1, expression: rule.expression, result: result});
+                                                }
+
+                                                setTarget(msg, rule.target, result);
                                                 break;
                                             }
-                                            case "startOf":
+                                        }
+                                    }
+                                    else if ((rule.action == "change") || (rule.action == "convert"))
+                                    {
+                                        let input = undefined;
+                                        let property = getValue(msg, rule.target.name, rule.target.type);
+
+                                        if ((typeof property == "number") || (typeof property == "string"))
+                                        {
+                                            input = node.chronos.getTime(
+                                                                    RED,
+                                                                    node,
+                                                                    node.chronos.getCurrentTime(node),
+                                                                    (typeof property == "number")
+                                                                        ? "time"
+                                                                        : "auto",
+                                                                    property);
+                                        }
+
+                                        if (input)
+                                        {
+                                            let output = undefined;
+
+                                            if (rule.action == "change")
                                             {
-                                                input.startOf(rule.arg);
-                                                output = input.valueOf();
-                                                break;
+                                                switch (rule.type)
+                                                {
+                                                    case "set":
+                                                    {
+                                                        output = setPart(
+                                                                    input,
+                                                                    rule.part,
+                                                                    getNumber(
+                                                                        getValue(
+                                                                            msg,
+                                                                            rule.value,
+                                                                            rule.valueType)));
+                                                        break;
+                                                    }
+                                                    case "add":
+                                                    {
+                                                        output = addTime(
+                                                                    input,
+                                                                    getValue(
+                                                                        msg,
+                                                                        rule.value,
+                                                                        rule.valueType),
+                                                                    rule.unit).valueOf();
+                                                        break;
+                                                    }
+                                                    case "subtract":
+                                                    {
+                                                        output = subtractTime(
+                                                                    input,
+                                                                    getValue(
+                                                                        msg,
+                                                                        rule.value,
+                                                                        rule.valueType),
+                                                                    rule.unit).valueOf();
+                                                        break;
+                                                    }
+                                                    case "startOf":
+                                                    {
+                                                        input.startOf(rule.arg);
+                                                        output = input.valueOf();
+
+                                                        break;
+                                                    }
+                                                    case "endOf":
+                                                    {
+                                                        input.endOf(rule.arg);
+                                                        output = input.valueOf();
+
+                                                        break;
+                                                    }
+                                                }
                                             }
-                                            case "endOf":
-                                            {
-                                                input.endOf(rule.arg);
-                                                output = input.valueOf();
-                                                break;
-                                            }
-                                            case "toString":
+                                            else if (rule.action == "convert")
                                             {
                                                 if (rule.tzType == "timeZone")
                                                 {
@@ -335,8 +407,208 @@ module.exports = function(RED)
                                                         output = input.toISOString();
                                                     }
                                                 }
+                                            }
 
-                                                break;
+                                            setTarget(msg, rule.target, output);
+                                        }
+                                        else
+                                        {
+                                            let prop = rule.target.name;
+                                            if ((rule.target.type == "global") || (rule.target.type == "flow"))
+                                            {
+                                                let ctx = RED.util.parseContextStore(rule.target.name);
+                                                prop = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                                            }
+
+                                            node.error(RED._("change.error.invalidProperty", {property: rule.target.type + "." + prop}), msg);
+                                        }
+                                    }
+                                }
+                                else if (rule.action == "set")
+                                {
+                                    const now = node.chronos.getCurrentTime(node);
+                                    let time1 =
+                                            (rule.time1.type == "now")
+                                                ? now
+                                                : node.chronos.retrieveTime(
+                                                    RED,
+                                                    node,
+                                                    msg,
+                                                    now.clone(),
+                                                    rule.time1.type,
+                                                    rule.time1.value);
+                                    let time2 =
+                                            (rule.time2.type == "now")
+                                                ? now
+                                                : node.chronos.retrieveTime(
+                                                    RED,
+                                                    node,
+                                                    msg,
+                                                    now.clone(),
+                                                    rule.time2.type,
+                                                    rule.time2.value);
+
+                                    if (time1.isAfter(time2))
+                                    {
+                                        if (time1.isSame(time2, "day"))
+                                        {
+                                            if (rule.time2.type == "now")
+                                            {
+                                                // shift time1 one day into the past
+                                                time1 = node.chronos.retrieveTime(
+                                                                        RED,
+                                                                        node,
+                                                                        msg,
+                                                                        now.clone().subtract(1, "day"),
+                                                                        rule.time1.type,
+                                                                        rule.time1.value);
+                                            }
+                                            else
+                                            {
+                                                // shift time2 one day into the future
+                                                time2 = node.chronos.retrieveTime(
+                                                                        RED,
+                                                                        node,
+                                                                        msg,
+                                                                        now.clone().add(1, "day"),
+                                                                        rule.time2.type,
+                                                                        rule.time2.value);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // flip the two times
+                                            const time = time2;
+
+                                            time2 = time1;
+                                            time1 = time;
+                                        }
+                                    }
+
+                                    setTarget(
+                                        msg,
+                                        rule.target,
+                                        time2.diff(time1));
+                                }
+                                else if ((rule.action == "change") || (rule.action == "convert"))
+                                {
+                                    let input = undefined;
+                                    let property = getValue(msg, rule.target.name, rule.target.type);
+
+                                    if ((typeof property == "number") || (typeof property == "string"))
+                                    {
+                                        input = ((rule.action == "change") && (rule.type == "numval"))
+                                            ? property : node.chronos.getDuration(node, property);
+                                    }
+
+                                    if (input)
+                                    {
+                                        let output = undefined;
+
+                                        if (rule.action == "change")
+                                        {
+                                            switch (rule.type)
+                                            {
+                                                case "add":
+                                                {
+                                                    output = addTime(
+                                                                input,
+                                                                getValue(
+                                                                    msg,
+                                                                    rule.value,
+                                                                    rule.valueType),
+                                                                (rule.unit == "milliseconds")
+                                                                    ? undefined
+                                                                    : rule.unit).asMilliseconds();
+                                                    break;
+                                                }
+                                                case "subtract":
+                                                {
+                                                    output = subtractTime(
+                                                                input,
+                                                                getValue(
+                                                                    msg,
+                                                                    rule.value,
+                                                                    rule.valueType),
+                                                                (rule.unit == "milliseconds")
+                                                                    ? undefined
+                                                                    : rule.unit).asMilliseconds();
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        else if (rule.action == "convert")
+                                        {
+                                            if (rule.formatType == "custom")
+                                            {
+                                                output = formatCustomString(input, rule.format);
+                                            }
+                                            else if (rule.formatType == "string")
+                                            {
+                                                switch (rule.format)
+                                                {
+                                                    case "timespan":
+                                                    {
+                                                        output = formatTimespanString(input, 1);
+                                                        break;
+                                                    }
+                                                    case "timespan10th":
+                                                    {
+                                                        output = formatTimespanString(input, 10);
+                                                        break;
+                                                    }
+                                                    case "timespan100th":
+                                                    {
+                                                        output = formatTimespanString(input, 100);
+                                                        break;
+                                                    }
+                                                    case "timespanMillis":
+                                                    {
+                                                        output = formatTimespanString(input, 1000);
+                                                        break;
+                                                    }
+                                                    case "textualTimespan":
+                                                    {
+                                                        output = input.humanize();
+                                                        break;
+                                                    }
+                                                    case "iso8601":
+                                                    {
+                                                        output = formatISOString(input);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                output = input.as(rule.format);
+
+                                                if (rule.precisionType == "int")
+                                                {
+                                                    switch (rule.precision)
+                                                    {
+                                                        case "round":
+                                                        {
+                                                            output = Math.round(output);
+                                                            break;
+                                                        }
+                                                        case "floor":
+                                                        {
+                                                            output = Math.floor(output);
+                                                            break;
+                                                        }
+                                                        case "ceil":
+                                                        {
+                                                            output = Math.ceil(output);
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                else if ((rule.precisionType == "float") && (rule.precision > 0))
+                                                {
+                                                    const exp = Math.pow(10, rule.precision);
+                                                    output = Math.round(output * exp) / exp;
+                                                }
                                             }
                                         }
 
@@ -443,53 +715,295 @@ module.exports = function(RED)
             return input.valueOf();
         }
 
-        function getTarget(msg, target)
+        function addTime(input, value, unit)
         {
-            let value = null;
-            switch (target.type)
-            {
-                case "global":
-                case "flow":
-                {
-                    let ctx = RED.util.parseContextStore(target.name);
-                    value = node.context()[target.type].get(ctx.key, ctx.store);
-                    break;
-                }
-                case "msg":
-                {
-                    try
-                    {
-                        value = RED.util.getMessageProperty(msg, target.name);
-                    }
-                    catch
-                    {
-                        // message property is not existing
-                        value = undefined;
-                    }
+            return input.add(getNumber(value), unit);
+        }
 
-                    break;
+        function subtractTime(input, value, unit)
+        {
+            return input.subtract(getNumber(value), unit);
+        }
+
+        function getNumber(value)
+        {
+            node.debug("val: " + value + " type: " + (typeof value));
+            if ((typeof value != "number") && (typeof value != "string"))
+            {
+                throw new node.chronos.TimeError(RED._("change.error.NaN"), {value: value});
+            }
+
+            if (typeof value == "string")
+            {
+                if ((value.length > 0) && (+value === +value))
+                {
+                    value = +value;
+                }
+                else
+                {
+                    throw new node.chronos.TimeError(RED._("change.error.NaN"), {value: value});
                 }
             }
 
+            node.debug("val: " + value + " type: " + (typeof value));
             return value;
+        }
+
+        function getValue(msg, value, type)
+        {
+            let ret = undefined;
+
+            if (type == "env")
+            {
+                if (typeof value == "string")
+                {
+                    ret = RED.util.evaluateNodeProperty(value, type, node);
+                }
+
+                if ((typeof ret == "undefined") || ((typeof ret == "string") && (ret.length == 0)))
+                {
+                    ret = value;
+                }
+            }
+            else if ((type == "global") || (type == "flow"))
+            {
+                const ctx = RED.util.parseContextStore(value);
+                ret = node.context()[type].get(ctx.key, ctx.store);
+            }
+            else if (type == "msg")
+            {
+                ret = RED.util.getMessageProperty(msg, value);
+            }
+            else
+            {
+                ret = value;
+            }
+
+            return ret;
         }
 
         function setTarget(msg, target, value)
         {
-            switch (target.type)
+            if ((target.type == "global") || (target.type == "flow"))
             {
-                case "global":
-                case "flow":
+                const ctx = RED.util.parseContextStore(target.name);
+                node.context()[target.type].set(ctx.key, value, ctx.store);
+            }
+            else if (target.type == "msg")
+            {
+                RED.util.setMessageProperty(msg, target.name, value, true);
+            }
+        }
+
+        function formatTimespanString(input, precision)
+        {
+            let ret = "";
+
+            const days = Math.floor(input.asDays());
+            if (days > 0)
+            {
+                ret += days + ".";
+            }
+
+            const hours = input.hours();
+            if (hours > 0)
+            {
+                ret += String(hours).padStart(2, "0") + ":";
+            }
+            else if (ret.length > 0)
+            {
+                ret += "00:";
+            }
+
+            const minutes = input.minutes();
+            if (minutes > 0)
+            {
+                ret += String(minutes).padStart(2, "0") + ":";
+            }
+            else if (ret.length > 0)
+            {
+                ret += "00:";
+            }
+
+            const seconds = input.seconds();
+            if (seconds > 0)
+            {
+                ret += String(seconds).padStart(2, "0");
+            }
+            else if (ret.length > 0)
+            {
+                ret += "00:";
+            }
+
+            if (precision != 1)
+            {
+                if (ret.length > 0)
                 {
-                    let ctx = RED.util.parseContextStore(target.name);
-                    node.context()[target.type].set(ctx.key, value, ctx.store);
-                    break;
+                    ret += ".";
                 }
-                case "msg":
+
+                const milliseconds = input.milliseconds();
+                if (milliseconds > 0)
                 {
-                    RED.util.setMessageProperty(msg, target.name, value, true);
-                    break;
+                    switch (precision)
+                    {
+                        case 10:
+                        {
+                            ret += Math.floor(milliseconds/100);
+                            break;
+                        }
+                        case 100:
+                        {
+                            ret += Math.floor(milliseconds/10);
+                            break;
+                        }
+                        case 1000:
+                        {
+                            ret += milliseconds;
+                            break;
+                        }
+                    }
                 }
+            }
+
+            return ret;
+        }
+
+        function formatISOString(input)
+        {
+            let ret = "P";
+
+            const years = input.years();
+            if (years > 0)
+            {
+                ret += years + "Y";
+            }
+
+            const months = input.months();
+            if (months > 0)
+            {
+                ret += months + "M";
+            }
+
+            const days = input.days();
+            if (days > 0)
+            {
+                ret += days + "D";
+            }
+
+            let time = "T";
+
+            const hours = input.hours();
+            if (hours > 0)
+            {
+                time += hours + "H";
+            }
+
+            const minutes = input.minutes();
+            if (minutes > 0)
+            {
+                time += minutes + "M";
+            }
+
+            const seconds = input.seconds();
+            if (seconds > 0)
+            {
+                time += seconds;
+
+                const milliseconds = input.milliseconds();
+                if (milliseconds > 0)
+                {
+                    time += "." + String(milliseconds).padStart(3, "0");
+                }
+
+                time += "S";
+            }
+
+            if (time != "T")
+            {
+                ret += time;
+            }
+
+            if (ret == "P")
+            {
+                ret += "T0S";
+            }
+
+            return ret;
+        }
+
+        function formatCustomString(input, format)
+        {
+            let ret = "";
+
+            const tokens = format.match(TOKENIZER_PATTERN);
+            if (tokens)
+            {
+                for (const token of tokens)
+                {
+                    if (token == "y")
+                    {
+                        ret += input.years();
+                    }
+                    else if (token == "M")
+                    {
+                        ret += input.months();
+                    }
+                    else if (token == "w")
+                    {
+                        ret += input.weeks();
+                    }
+                    else if (token == "d")
+                    {
+                        ret += input.days();
+                    }
+                    else if (token == "h")
+                    {
+                        ret += input.hours();
+                    }
+                    else if (token == "hh")
+                    {
+                        ret += String(input.hours()).padStart(2, "0");
+                    }
+                    else if (token == "m")
+                    {
+                        ret += input.minutes();
+                    }
+                    else if (token == "mm")
+                    {
+                        ret += String(input.minutes()).padStart(2, "0");
+                    }
+                    else if (token == "s")
+                    {
+                        ret += input.seconds();
+                    }
+                    else if (token == "ss")
+                    {
+                        ret += String(input.seconds()).padStart(2, "0");
+                    }
+                    else if (token == "S")
+                    {
+                        ret += Math.floor(input.milliseconds() / 100);
+                    }
+                    else if (token == "SS")
+                    {
+                        ret += String(Math.floor(input.milliseconds() / 10)).padStart(2, "0");
+                    }
+                    else if (token == "SSS")
+                    {
+                        ret += String(input.milliseconds()).padStart(3, "0");
+                    }
+                    else if (token.startsWith("["))
+                    {
+                        ret += token.substring(1, token.length-1);
+                    }
+                    else
+                    {
+                        ret += token;
+                    }
+                }
+
+                return ret;
             }
         }
     }

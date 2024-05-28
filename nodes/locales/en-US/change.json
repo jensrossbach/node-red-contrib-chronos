@@ -3,45 +3,69 @@
     {
         "label":
         {
-            "node":               "time change",
-            "rules":              "Change Rules",
-            "to":                 "to",
-            "now":                "current time",
-            "date":               "date & time",
-            "format":             "Format",
-            "predefinedFormat":   "predefined format",
-            "customFormat":       "custom format",
-            "currentTZ":          "current time zone",
-            "timeZone":           "time zone",
-            "utcOffset":          "UTC offset",
-            "formatPlaceholder":  "e.g.: YYYY-MM-DD HH:mm:ss"
+            "node":              "time change",
+            "outputPort":        "changed message",
+            "mode":              "Mode",
+            "rules":             "Change Rules",
+            "setTo":             "to",
+            "convertTo":         "to",
+            "now":               "current time",
+            "date":              "date & time",
+            "number":            "number",
+            "format":            "Format",
+            "numericFormat":     "numeric format",
+            "stringFormat":      "string format",
+            "predefinedFormat":  "predefined format",
+            "customFormat":      "custom format",
+            "integer":           "integer number",
+            "float":             "floating point number",
+            "currentTZ":         "current time zone",
+            "timeZone":          "time zone",
+            "utcOffset":         "UTC offset"
         },
         "list":
         {
+            "mode":
+            {
+                "moment":    "Moment",
+                "duration":  "Duration"
+            },
             "action":
             {
-                "set":     "Set",
-                "change":  "Change"
+                "set":      "Set",
+                "change":   "Change",
+                "convert":  "Convert"
             },
             "changeType":
             {
-                "set":       "Set",
-                "add":       "Add",
-                "subtract":  "Subtract",
-                "startOf":   "Start of",
-                "endOf":     "End of",
-                "timeZone":  "Time zone",
-                "toString":  "Convert"
+                "set":        "Set",
+                "add":        "Add",
+                "subtract":   "Subtract",
+                "numval":     "Num. value",
+                "startOf":    "Start of",
+                "endOf":      "End of",
+                "timeZone":   "Time zone"
             },
             "convert":
             {
-                "regionalDateTime":   "regional",
-                "regionalDate":       "regional (date only)",
-                "regionalTime":       "regional (time only)",
-                "relativeTime":       "relative time",
-                "calendar":           "calendar",
-                "iso8601Format":      "ISO-8601",
-                "iso8601UTCFormat":   "ISO-8601 (UTC)"
+                "regionalDateTime":  "regional",
+                "regionalDate":      "regional (date only)",
+                "regionalTime":      "regional (time only)",
+                "relativeTime":      "relative time",
+                "calendar":          "calendar",
+                "textualTimespan":   "textual timespan",
+                "timespan":          "timespan",
+                "timespan10th":      "timespan (1/10 of a second)",
+                "timespan100th":     "timespan (1/100 of a second)",
+                "timespanMillis":    "timespan (milliseconds)",
+                "iso8601":           "ISO-8601",
+                "iso8601UTC":        "ISO-8601 (UTC)"
+            },
+            "int":
+            {
+                "round":  "round",
+                "floor":  "round down",
+                "ceil":   "round up"
             }
         },
         "status":
@@ -51,7 +75,8 @@
         "error":
         {
             "noTasks":          "No rules configured",
-            "invalidProperty":  "Invalid property specified: __property__"
+            "invalidProperty":  "Invalid property specified: __property__",
+            "NaN":              "Provided value is not a number"
         }
     }
 }

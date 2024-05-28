@@ -24,22 +24,14 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-change">
     <p>
-        Setzt oder ändert Zeitwerte aus Nachrichteneigenschaften, Flow-Variablen
-        oder globalen Variablen.
+        Setzt oder ändert Zeitwerte aus Nachrichteneigenschaften, Flow-Variablen oder globalen Variablen.
     </p>
     <h3>Details</h3>
     <p>
-        Dieser knoten setzt Nachrichteneigenschaften, Flow-Variablen oder globale
-        Variablen auf spezifische Zeiten oder ändert bzw. konvertiert Zeitstempel
-        aus diesen Eingabefeldern. Mehrere Aktionen, die in der angegebenen
-        Reihenfolge ausgeführt werden, können pro Knoten konfiguriert werden.
-        Es ist auch möglich, verschiedene Aktionen zu verketten, die dann auf
-        die gleiche Eigenschaft oder Variable angewendet werden.
+        Dieser Knoten setzt Nachrichteneigenschaften, Flow-Variablen oder globale Variablen auf spezifische Zeitpunkte oder Zeitspannen oder ändert bzw. konvertiert Zeitstempel oder Zeitspannen aus diesen Eingabefeldern. Mehrere Aktionen, die in der angegebenen Reihenfolge ausgeführt werden, können pro Knoten konfiguriert werden. Es ist auch möglich, verschiedene Aktionen zu verketten, die dann auf die gleiche Eigenschaft oder Variable angewendet werden.
     </p>
     <p>
-        Für weitere Informationen bitte die ausführliche Dokumentation im
-        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node">Repository-Wiki</a>
-        öffnen (nur in Englisch verfügbar).
+        Für weitere Informationen bitte die ausführliche Dokumentation im <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node">Repository-Wiki</a> öffnen (nur in Englisch verfügbar).
     </p>
     <h3>Konfiguration</h3>
     <dl>
@@ -49,179 +41,262 @@ SOFTWARE.
         <dd>
             Ein Verweis auf den zu verwendenden Konfigurationsknoten.
         </dd>
+        <dt>Modus</dt>
+        <dd>
+            Der Zeitmodus, welcher entweder <i>Zeitpunkt</i> für feste Zeitpunkte oder <i>Zeitspanne</i> für Zeitbereiche sein kann.
+        </dd>
         <dt>Änderungsregeln</dt>
         <dd>
             <p>
-                Liste der Regeln zum Setzen oder Ändern von Zielwerten. Neue
-                Einträge können über den Button unterhalb der Liste hinzugefügt
-                werden. Vorhandene Einträge können neu angeordnet oder gelöscht
-                werden. Die folgenden Aktionen können gewählt werden:
+                Liste der Regeln zum Setzen oder Ändern von Zielwerten. Neue Einträge können über den Button unterhalb der Liste hinzugefügt werden. Vorhandene Einträge können neu angeordnet oder gelöscht werden. Die folgenden Aktionen können gewählt werden:
                 <ul>
                     <li>
-                        <i>Festlegen</i>: Setzt das gewählte Ziel auf ein
-                        bestimmtes Datum und eine bestimmte Zeit.
+                        <i>Festlegen</i>: Setzt das gewählte Ziel auf ein bestimmtes Datum und eine bestimmte Zeit oder auf den Bereich zwischen zwei Zeitpunkten.
                     </li>
                     <li>
-                        <i>Ändern</i>: Ändert den Zeitstempel des gewählten Ziels
-                        anhand der gewählten Änderungs- bzw. Konvertierungsregeln.
-                        Der zu ändernde Zielwert kann eine Zahl mit den Millisekunden
-                        seit Beginn der UNIX-Zeitzählung oder eine Zeichenkette
-                        sein, die ein Datum und eine Zeit enthält, die nach den
-                        Regeln von <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js</a>
-                        geparst werden kann.
+                        <i>Ändern</i>: Ändert den Zeitstempel oder die Zeitspanne des gewählten Ziels anhand der gewählten Änderungsregeln.
+                    </li>
+                    <li>
+                        <i>Konvertieren</i>: Konvertiert den Zeitstempel oder die Zeitspanne des gewählten Ziels anhand der gewählten Konvertierungssregeln.
+                    </li>
+                </ul>
+                Im Zeitpunktmodus kann der zu ändernde/konvertierende Zielwert folgendes Format haben:
+                <ul>
+                    <li>
+                        Zahl (Zeitstempel)
+                        <ul>
+                            <li>
+                                Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung (Weltzeit)
+                            </li>
+                            <li>
+                                Anzahl Millisekunden seit Mitternacht, (lokaler Zeit) wenn Wert kleiner als 86.400.000
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        Zeichenkette
+                        <ul>
+                            <li>Uhrzeit im 12- oder 24-Stunden-Format</li>
+                            <li>Sonnenstand</li>
+                            <li>Mondstand</li>
+                            <li>Benutzerdefinierter Sonnenstand</li>
+                            <li>Datum und Uhrzeit in Region-spezifischem Format</li>
+                            <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                            <li>Datum und Sonnenstand</li>
+                            <li>Datum und Mondstand</li>
+                            <li>
+                                Datum und benutzerdefinierter Sonnenstand
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                Im Zeitspannenmodus kann der zu ändernde/konvertierende Zielwert folgendes Format haben:
+                <ul>
+                    <li>
+                        Zahl
+                        <ul>
+                            <li>Anzahl von Millisekunden</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Zeichenkette
+                        <ul>
+                            <li>Zeitspanne im ASP.NET-Stil</li>
+                            <li>Dauer im ISO 8601 Format</li>
+                        </ul>
                     </li>
                 </ul>
             </p>
             <p>
-                Rechts neben der Aktion für die Regel kann das zu setzende oder zu
-                ändernde Ziel ausgewählt werden. Das Ziel kann entweder eine
-                Nachrichteneigenschaft, eine Flow-Variable oder eine globale
-                Variable sein.
+                Rechts neben der Aktion für die Regel kann das zu setzende oder zu ändernde Ziel ausgewählt werden. Das Ziel kann entweder eine Nachrichteneigenschaft, eine Flow-Variable oder eine globale Variable sein.
             </p>
             <p>
-                Für die Aktion <i>Festlegen</i> gibt es folgende Auswahlmöglichkeiten:
+                Im Modus <i>Zeitpunkt</i> gibt es für die Aktion <i>Festlegen</i> folgende Auswahlmöglichkeiten:
                 <ul>
                     <li>
-                        <i>Aktuelle Zeit</i>: Legt das Ziel auf die aktuelle Uhrzeit
-                        des aktuellen Tages fest.
+                        <i>Aktuelle Zeit</i>: Legt das Ziel auf die aktuelle Uhrzeit des aktuellen Tages fest.
                     </li>
                     <li>
-                        <i>Datum & Uhrzeit</i>: Left das Ziel auf ein bestimmtes
-                        Datum und eine bestimmte Uhrzeit fest, siehe weiter unten
-                        für Details.
+                        <i>Datum & Uhrzeit</i>: Legt das Ziel auf ein bestimmtes Datum und eine bestimmte Uhrzeit fest, siehe weiter unten für Details.
                     </li>
                     <li>
-                        <i>JSONata</i>: Setzt das Ziel auf das Ergebnis des angegebenen
-                        JSONata-Ausdrucks. Es werden zusätzliche Zeitberechnungsfunktionen
-                        unterstützt und der aktuelle Zielwert kann über die Variable
-                        <code>$target</code> abgefragt werden.
+                        <i>JSONata</i>: Setzt das Ziel auf das Ergebnis des angegebenen JSONata-Ausdrucks. Es werden zusätzliche Zeitberechnungsfunktionen unterstützt und der aktuelle Zielwert kann über die Variable <code>$target</code> abgefragt werden.
                     </li>
                 </ul>
                 Für die Datums- und Uhrzeiteingabe muss das Datum in der Form
                 <code>JJJJ-MM-TT</code> angegeben werden und für die Zeit gilt:
                 <ul>
                     <li>
-                        <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt in der
-                        Form <code>hh:mm[:ss] [am|pm]</code> eingegeben werden.
+                        <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt im 12- oder 24-Stunden-Format eingegeben werden..
                     </li>
                     <li>
-                        <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste
-                        vorgegebener Werte ausgewählt werden.
+                        <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste vorgegebener Werte ausgewählt werden.
                     </li>
                     <li>
-                        <i>Mondstand</i>: Der Mondstand kann aus einer Liste
-                        vorgegebener Werte ausgewählt werden.
+                        <i>Mondstand</i>: Der Mondstand kann aus einer Liste vorgegebener Werte ausgewählt werden.
                     </li>
                     <li>
-                        <i>Sonnenstand (benutzerdef.)</i>: Einer der Namen für benutzerdefinierte
-                        Sonnenstände kann eingegeben werden.
+                        <i>Sonnenstand (benutzerdef.)</i>: Einer der Namen für benutzerdefinierte Sonnenstände kann eingegeben werden.
+                    </li>
+                </ul>
+                Im Modus <i>Zeitspanne</i> müssen für die Aktion <i>Festlegen</i> zwei Zeitpunkte gesetzt werden: einen Anfangs- und einen Endzeitpunkt der Zeitspanne. Jeder Zeitpunkt kann wie folgt angegeben werden:
+                <ul>
+                    <li>
+                        <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt im 12- oder 24-Stunden-Format eingegeben werden. Optional ist die Eingabe eines Datums und einer Zeit in Region-spezifischem oder ISO 8601 Format möglich.
+                    </li>
+                    <li>
+                        <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste vorgegebener Werte ausgewählt werden.
+                    </li>
+                    <li>
+                        <i>Mondstand</i>: Der Mondstand kann aus einer Liste vorgegebener Werte ausgewählt werden.
+                    </li>
+                    <li>
+                        <i>Sonnenstand (benutzerdef.)</i>: Einer der Namen für benutzerdefinierte Sonnenstände kann eingegeben werden.
+                    </li>
+                    <li>
+                        <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeit wird aus einer Umgebungs- oder Kontextvariablen oder einer Nachrichteneigenschaft gelesen. Die Variablen/Eigenschaften können folgendes Format haben:
+                        <ul>
+                            <li>
+                                Zahl (Zeitstempel)
+                                <ul>
+                                    <li>
+                                        Anzahl Millisekunden seit Beginn der UNIX-Zeitzählung (Weltzeit)
+                                    </li>
+                                    <li>
+                                        Anzahl Millisekunden seit Mitternacht, (lokaler Zeit) wenn Wert kleiner als 86.400.000
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                Zeichenkette
+                                <ul>
+                                    <li>Uhrzeit im 12- oder 24-Stunden-Format</li>
+                                    <li>Sonnenstand</li>
+                                    <li>Mondstand</li>
+                                    <li>Benutzerdefinierter Sonnenstand</li>
+                                    <li>Datum und Uhrzeit in Region-spezifischem Format</li>
+                                    <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                                    <li>Datum und Sonnenstand</li>
+                                    <li>Datum und Mondstand</li>
+                                    <li>Datum und benutzerdefinierter Sonnenstand</li>
+                                </ul>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </p>
             <p>
-                Für die Aktion <i>Ändern</i> können verschiedene Änderungs- und
-                Konvertierungsregeln ausgewählt werden:
+                Im Modus <i>Zeitpunkt</i> können für die Aktion <i>Ändern</i> folgende Konvertierungsregeln ausgewählt werden:
                 <ul>
                     <li>
-                        <i>Festlegen</i>: Ändert einen Teil des Zeitstempels
-                        von dem Ziel und setzt ihn auf den angegebenen Wert.
-                        Der zu ändernde Teil kann über die Dropdown-Box
-                        ausgewählt werden.
+                        <i>Festlegen</i>: Ändert einen Teil des Zeitstempels von dem Ziel und setzt ihn auf den angegebenen Wert. Der zu ändernde Teil kann über die Dropdown-Box ausgewählt werden. Der zu ändernde Wert kann direkt als Zahl eingegeben oder von einer Umgebungs-/Kontextvariablen oder einer Nachrichteneigenschaft abgerufen werden.
                     </li>
                     <li>
-                        <i>Hinzufügen</i>: Fügt Zeit zum Zeitstempel des Ziels
-                        in der angegeben Höhe hinzu. Die Einheit kann über die
-                        Dropdown-Box ausgewählt werden.
+                        <i>Hinzufügen</i>: Fügt Zeit zum Zeitstempel des Ziels in der angegeben Höhe hinzu. Die hinzuzufügende Zeit kann direkt als Zahl eingegeben oder von einer Umgebungs-/Kontextvariablen oder einer Nachrichteneigenschaft abgerufen werden. Die Einheit dieser Zeit kann über die Dropdown-Box ausgewählt werden.
                     </li>
                     <li>
-                        <i>Abziehen</i>: Wie <i>Hinzufügen</i>, aber zieht
-                        Zeit vom Zielzeitstempel ab.
+                        <i>Abziehen</i>: Wie <i>Hinzufügen</i>, aber zieht Zeit vom Zielzeitstempel ab.
                     </li>
                     <li>
-                        <i>Anfang von</i>: Setzt den Zeitstempel des Ziels auf
-                        den Anfang einer Zeiteinheit, die über die Dropdown-Box
-                        ausgewählt werden kann.
+                        <i>Anfang von</i>: Setzt den Zeitstempel des Ziels auf den Anfang einer Zeiteinheit, die über die Dropdown-Box ausgewählt werden kann.
                     </li>
                     <li>
-                        <i>Ende von</i>: Wie <i>Anfang von</i>, aber setzt den
-                        Zielzeitstempel auf das Ende einer Zeiteinheit.
+                        <i>Ende von</i>: Wie <i>Anfang von</i>, aber setzt den Zielzeitstempel auf das Ende einer Zeiteinheit.
+                    </li>
+                </ul>
+                Im Modus <i>Zeitspanne</i> können für die Aktion <i>Ändern</i> folgende Änderungsregeln ausgewählt werden:
+                <ul>
+                    <li>
+                        <i>Hinzufügen</i>: Fügt Zeit zur Zeitspanne des Ziels in der angegeben Höhe hinzu. Die hinzuzufügende Zeit kann direkt als Zahl eingegeben oder von einer Umgebungs-/Kontextvariablen oder einer Nachrichteneigenschaft abgerufen werden. Die Einheit dieser Zeit kann über die Dropdown-Box ausgewählt werden.
                     </li>
                     <li>
-                        <i>Konvertieren</i>: Konvertiert den Zeitstempel des
-                        Ziels in eine von mehreren möglichen Zeichenkettenrepräsentationen:
+                        <i>Abziehen</i>: Wie <i>Hinzufügen</i>, aber zieht Zeit von der Zielzeitspanne ab.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                Im Modus <i>Zeitpunkt</i> können für die Aktion <i>Konvertieren</i> folgende Konvertierungsregeln ausgewählt werden:
+                <ul>
+                    <li>
+                        <i>Vordefiniertes Format</i>: Konvertiert den Zielzeitpunkt in eine Zeichenkette deren Format von einer Liste vorgegebener Formate ausgewählt werden kann.
+                    </li>
+                    <ul>
+                        <li>
+                            <i>Regional</i>: Zeichenkette, die das Datum und die Uhrzeit in einem Region-spezifischen Format enthält.
+                        </li>
+                        <li>
+                            <i>Regional (nur Datum)</i>: Zeichenkette, die das Datum in einem Region-spezifischen Format enthält.
+                        </li>
+                        <li>
+                            <i>Regional (nur Zeit)</i>: Zeichenkette, die die Uhrzeit in einem Region-spezifischen Format enthält.
+                        </li>
+                        <li>
+                            <i>Relative Zeit</i>: Zeichenkette, die die Zeit relativ zum jetzigen Zeitpunkt darstellt und undeutlicher wird, je weiter sie entfernt ist.
+                        </li>
+                        <li>
+                            <i>Kalender</i>: Zeichenkette, die die absolute Zeit (sofern nicht weiter entfernt als eine Woche) sowie das Datum relativ zum heutigen Tag (oder absolut, falls weiter entfernt als eine Woche) enthält.
+                        </li>
+                        <li>
+                            <i>ISO-8601</i>: ISO-8601 Zeichenkette in lokaler Zeit (entsprechend der konfigurierten Zeitzone).
+                        </li>
+                        <li>
+                            <i>ISO-8601 (UTC)</i>: ISO-8601 Zeichenkette in UTC-Zeit.
+                        </li>
+                    </ul>
+                    <li>
+                        <i>Benutzerdefiniertes Format</i>: Konvertiert den Zielzeitpunkt in eine Zeichenkette, die über das Texteingabefeld beliebig formatiert werden kann. Das Format ist im Detail im <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node#cust-moment">Wiki</a> beschrieben.
+                    </li>
+                </ul>
+                In der zweiten Zeile kann die lokale Zeit des Eingangszeitstempels geändert werden:
+                <ul>
+                    <li>
+                        <i>Aktuelle Zeitzone</i>: Die ursprüngliche Zeitzone (die Zeitzone, die im verwendeten Konfigurationsknoten eingestellt wurde) wird beibehalten.
+                    </li>
+                    <li>
+                        <i>Zeitzone</i>: Ein <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">gültiger Zeitzonenname</a> kann angegeben werden und die Zeit wird in die ensprechende Zeitzone konvertiert.
+                    </li>
+                    <li>
+                        <i>UTC-Versatz</i>: Ein Versatz in Minuten und/oder Stunden kann angegeben werden. Eine Zahl zwischen -16 und 16 wird als Stunden interpretiert, alle Zahlen außerhalb dieses Bereichs als Minuten. Zusätzlich ist es möglich, Stunden und Minuten in der Form <code>+/-HH:MM</code> anzugeben. Der Wert wird als Versatz zur UTC-Zeit angewendet.
+                    </li>
+                </ul>
+                Im Modus <i>Zeitspanne</i> können für die Aktion <i>Konvertieren</i> folgende Konvertierungsregeln ausgewählt werden:
+                <ul>
+                    <li>
+                        <i>Numerisches Format</i>: Konvertiert die Zielzeitspanne in eine Zahl in auswählbarem Format. In der zweiten Zeile kann de Genauigkeit der Zahl ausgewählt werden:
                         <ul>
                             <li>
-                                <i>Vordefiniertes Format</i>: Das Format der
-                                Zeichenkette kann aus einer Liste vordefinierter
-                                Formate ausgewählt werden.
+                                <i>Ganzzahl</i>: Eine Ganzzahl als Ergebnis der gerundeten, abgerundeten oder aufgerundeten Originalzahl.
                             </li>
-                            <ul>
-                                <li>
-                                    <i>Regional</i>: Zeichenkette, die das Datum
-                                    und die Uhrzeit in einem Region-spezifischen
-                                    Format enthält.
-                                </li>
-                                <li>
-                                    <i>Regional (nur Datum)</i>: Zeichenkette, die
-                                    das Datum in einem Region-spezifischen Format
-                                    enthält.
-                                </li>
-                                <li>
-                                    <i>Regional (nur Zeit)</i>: Zeichenkette, die
-                                    die Uhrzeit in einem Region-spezifischen Format
-                                    enthält.
-                                </li>
-                                <li>
-                                    <i>Relative Zeit</i>: Zeichenkette, die die Zeit
-                                    relativ zum jetzigen Zeitpunkt darstellt und
-                                    undeutlicher wird, je weiter sie entfernt ist.
-                                </li>
-                                <li>
-                                    <i>Kalender</i>: Zeichenkette, die die absolute
-                                    Zeit (sofern nicht weiter entfernt als eine
-                                    Woche) sowie das Datum relativ zum heutigen Tag
-                                    (oder absolut, falls weiter entfernt als eine Woche)
-                                    enthält.
-                                </li>
-                                <li>
-                                    <i>ISO-8601</i>: ISO-8601 Zeichenkette in lokaler
-                                    Zeit (entsprechend der konfigurierten Zeitzone).
-                                </li>
-                                <li>
-                                    <i>ISO-8601 (UTC)</i>: ISO-8601 Zeichenkette in
-                                    UTC-Zeit.
-                                </li>
-                            </ul>
                             <li>
-                                <i>Benutzerdefiniertes Format</i>: Die Zeichenkette
-                                kann über das Texteingabefeld beliebig angepasst werden.
-                                Das Format muss den Regeln von <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js</a>
-                                entsprechen.
+                                <i>Fließkommazahl</i>: Eine Fließkommazahl, deren Anzahl Dezimalstellen angegeben werden kann (0 bedeutet keine Begrenzung).
                             </li>
                         </ul>
-                        In der zweiten Zeile kann die lokale Zeit des Eingangszeitstempels
-                        geändert werden:
+                    </li>
+                    <li>
+                        <i>Zeichenketten-Format</i>: Konvertiert die Zielzeitspanne in eine Zeichenkette deren Format von einer Liste vorgegebener Formate ausgewählt werden kann.
                         <ul>
                             <li>
-                                <i>Aktuelle Zeitzone</i>: Die ursprüngliche Zeitzone
-                                (die Zeitzone, die im verwendeten Konfigurationsknoten
-                                eingestellt wurde) wird beibehalten.
+                                <i>Zeitspanne</i>: Zeichenkette, die die Dauer als Zeitspanne im ASP.NET-Stil mit Sekundengenauigkeit enthält.
                             </li>
                             <li>
-                                <i>Zeitzone</i>: Ein <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">gültiger Zeitzonenname</a>
-                                kann angegeben werden und die Zeit wird in die ensprechende
-                                Zeitzone konvertiert.
+                                <i>Zeitspanne (Zehntelsekunden)</i>: Wie <i>Zeitspanne</i> aber zusätzlich mit Zehntelsekunden.
                             </li>
                             <li>
-                                <i>UTC-Versatz</i>: Ein Versatz in Minuten und/oder
-                                Stunden kann angegeben werden. Eine Zahl zwischen
-                                -16 und 16 wird als Stunden interpretiert, alle Zahlen
-                                außerhalb dieses Bereichs als Minuten. Zusätzlich ist
-                                es möglich, Stunden und Minuten in der Form <code>+/-HH:MM</code>
-                                anzugeben. Der Wert wird als Versatz zur UTC-Zeit
-                                angewendet.
+                                <i>Zeitspanne (Hundertstelsekunden)</i>: Wie <i>Zeitspanne</i> aber zusätzlich mit Hundertstelsekunden.
+                            </li>
+                            <li>
+                                <i>Zeitspanne (Millisekunden)</i>: Wie <i>Zeitspanne</i> aber zusätzlich mit Millisekunden.
+                            </li>
+                            <li>
+                                <i>Textuelle Zeitspanne</i>: Zeichenkette mit einer textuellen Repräsentation der Dauer, die undeutlicher wird, je länger sie ist.
+                            </li>
+                            <li>
+                                <i>ISO-8601</i>: ISO-8601 Zeichenkette.
                             </li>
                         </ul>
+                    </li>
+                    <li>
+                        <i>Benutzerdefiniertes Format</i>: Konvertiert die Zielzeitspanne in eine Zeichenkette, die über das Texteingabefeld beliebig formatiert werden kann. Das Format ist im Detail im <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node#cust-duration">Wiki</a> beschrieben.
                     </li>
                 </ul>
             </p>
@@ -229,8 +304,7 @@ SOFTWARE.
     </dl>
     <h3>Eingabe</h3>
     <p>
-        Eingehende Nachrichten werden geändert, wenn es Regeln gibt, die sich
-        auf Nachrichteneigenschaften beziehen.
+        Eingehende Nachrichten werden geändert, wenn es Regeln gibt, die sich auf Nachrichteneigenschaften beziehen.
     </p>
     <h3>Ausgaben</h3>
     <p>
