@@ -24,20 +24,14 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-change">
     <p>
-        Sets or changes time values from message properties, flow variables or
-        global variables.
+        Sets or changes time or duration values from message properties, flow variables or global variables.
     </p>
     <h3>Details</h3>
     <p>
-        This node sets message properties, flow variables or global variables
-        to specific times or manipulates and converts timestamps from these
-        input fields. Multiple actions can be configured per node which will be
-        executed in the specified order. It is also possible to chain different
-        actions for the same property or variable.
+        This node sets message properties, flow variables or global variables to specific times or durations or manipulates and converts timestamps or timespans from these input fields. Multiple actions can be configured per node which will be executed in the specified order. It is also possible to chain different actions for the same property or variable.
     </p>
     <p>
-        For more information, please refer to the detailed documentation in the
-        <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node">repository wiki</a>.
+        For more information, please refer to the detailed documentation in the <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node">repository wiki</a>.
     </p>
     <h3>Configuration</h3>
     <dl>
@@ -47,170 +41,261 @@ SOFTWARE.
         <dd>
             A reference to the configuration node to be used.
         </dd>
+        <dt>Mode</dt>
+        <dd>
+            The time mode, which can be either <i>Moment</i> for moments in time or <i>Duration</i> for timespans.
+        </dd>
         <dt>Change Rules</dt>
         <dd>
             <p>
-                The list containing the rules for setting or changing target
-                values. New entries can be added using the button below the
-                list. Existing entries can be reordered or deleted. The following
-                actions can be selected:
+                The list containing the rules for setting, changing or converting target values. New entries can be added using the button below the list. Existing entries can be reordered or deleted. The following actions can be selected:
                 <ul>
                     <li>
-                        <i>Set</i>: Sets the selected target to a specific date
-                        and time.
+                        <i>Set</i>: Sets the selected target to a specific date and time in moment mode or to a timespan in duration mode.
                     </li>
                     <li>
-                        <i>Change</i>: Modifies the timestamp value of the
-                        selected target according to the configured manipulation
-                        and conversion rules. The original target value can be
-                        either a number containing the milliseconds elapsed since
-                        the UNIX epoch or a string containing a date and time
-                        which must be parsable according to
-                        <a href="https://momentjs.com/docs/#/parsing/string/">Moment.js documentation</a>.
+                        <i>Change</i>: Modifies the timestamp or timespan value of the selected target according to the configured manipulation rules.
+                    </li>
+                    <li>
+                        <i>Convert</i>: Converts the the timestamp or timespan value of the selected target according to the configured conversion rules.
                     </li>
                 </ul>
-            </p>
-            <p>
-                To the right of the rule action, the target to set or change
-                can be selected. This can be either a message property, a flow
-                variable or a global variable.
-            </p>
-            <p>
-                For the set action, the following possibilities can be selected:
+                In moment mode, the original target value can have the following format:
                 <ul>
                     <li>
-                        <i>current time</i>: Sets the target to the current time
-                        of the current day.
-                    </li>
-                    <li>
-                        <i>date and time</i>: Sets the target to a specific date
-                        and time. See below for more details.
-                    </li>
-                    <li>
-                        <i>expression</i>: Sets the target to the result of the
-                        provided JSONata expression. Additional time calculation
-                        functions are supported and the current target value can
-                        be accessed through variable <code>$target</code>.
-                    </li>
-                </ul>
-                For the date and time input, the date has to be entered in the
-                form <code>YYYY-MM-DD</code> and the time can be provided in the
-                following ways:
-                <ul>
-                    <li>
-                        <i>time of day</i>: A specific time can be entered
-                        directly in the form <code>hh:mm[:ss] [am|pm]</code>.
-                    </li>
-                    <li>
-                        <i>sun position</i>: The sun position can be selected
-                        from a list of predefined values.
-                    </li>
-                    <li>
-                        <i>moon position</i>: The moon position can be selected
-                        from a list of predefined values.
-                    </li>
-                    <li>
-                        <i>custom sun position</i>: One of the user-defined sun position
-                        names can be entered.
-                    </li>
-                </ul>
-            </p>
-            <p>
-                For the change action, different types of manipulation and
-                conversion can be selected:
-                <ul>
-                    <li>
-                        <i>Set</i>: Modifies a part of the target timestamp.
-                        The part to be changed can be selected in the dropdown
-                        box.
-                    </li>
-                    <li>
-                        <i>Add</i>: Adds time to the target timestamp. The amount
-                        of time has to entered as number and the unit of time
-                        to be added can be selected in the dropdown box.
-                    </li>
-                    <li>
-                        <i>Subtract</i>: Similar to <i>Add</i>, but subtracts
-                        time from the target timestamp.
-                    </li>
-                    <li>
-                        <i>Start of</i>: Sets the target timestamp to the start
-                        of a unit of time. The latter can be selected in the
-                        dropdown box.
-                    </li>
-                    <li>
-                        <i>End of</i>: Similar to <i>Start of</i>, but sets the
-                        target timestamp to the end of a unit of time.
-                    </li>
-                    <li>
-                        <i>Convert</i>: Converts the target timestamp to
-                        different kind of string representations:
+                        Number (timestamp)
                         <ul>
                             <li>
-                                <i>predefined format</i>: String format can be
-                                chosen from a list of predefined formats.
+                                Number of milliseconds elapsed since the UNIX
+                                epoch (universal time)
                             </li>
-                            <ul>
-                                <li>
-                                    <i>regional</i>: String containing the date
-                                    and the time in a region-specific format.
-                                </li>
-                                <li>
-                                    <i>regional (date only)</i>: String containing
-                                    the date in a region-specific format.
-                                </li>
-                                <li>
-                                    <i>regional (time only)</i>: String containing
-                                    the time in a region-specific format.
-                                </li>
-                                <li>
-                                    <i>relative time</i>: String representing the time
-                                    relative to the current time, being less precise
-                                    the farer away it is.
-                                </li>
-                                <li>
-                                    <i>calendar</i>: String containing the absolute
-                                    time (if not farer away than one week) and the
-                                    date relative to today (or absolute if farer away
-                                    than one week).
-                                </li>
-                                <li>
-                                    <i>ISO-8601</i>: ISO-8601 string as local time
-                                    (according to configured time zone).
-                                </li>
-                                <li>
-                                    <i>ISO-8601 (UTC)</i>: ISO-8601 string as UTC
-                                    time.
-                                </li>
-                            </ul>
                             <li>
-                                <i>custom format</i>: String can be customized
-                                by specifying the format via the text box which
-                                must follow the rules from the <a href="https://momentjs.com/docs/#/displaying/format/">Moment.js documentation</a>.
+                                Number of milliseconds elapsed since midnight
+                                (local time) if value is smaller than 86.400.000
                             </li>
                         </ul>
-                        In the second row, it is possible to change the local time
-                        of the input timestamp:
+                    </li>
+                    <li>
+                        String
+                        <ul>
+                            <li>Time in 12 or 24 hour format</li>
+                            <li>Sun time</li>
+                            <li>Moon time</li>
+                            <li>Custom sun time</li>
+                            <li>Date and time in region-specific format</li>
+                            <li>Date and time in ISO 8601 format</li>
+                            <li>Date and sun time</li>
+                            <li>Date and moon time</li>
+                            <li>Date and custom sun time</li>
+                        </ul>
+                    </li>
+                </ul>
+                In duration mode, the original target value can have the following format:
+                <ul>
+                    <li>
+                        Number
+                        <ul>
+                            <li>Number of milliseconds</li>
+                        </ul>
+                    </li>
+                    <li>
+                        String
+                        <ul>
+                            <li>Timespan in ASP.NET style</li>
+                            <li>Duration in ISO 8601 format</li>
+                        </ul>
+                    </li>
+                </ul>
+            </p>
+            <p>
+                To the right of the rule action, the target to set, change or convert can be selected. This can be either a message property, a flow variable or a global variable.
+            </p>
+            <p>
+                For the set action in moment mode, the following possibilities can be selected:
+                <ul>
+                    <li>
+                        <i>current time</i>: Sets the target to the current time of the current day.
+                    </li>
+                    <li>
+                        <i>date and time</i>: Sets the target to a specific date and time, see below for more details.
+                    </li>
+                    <li>
+                        <i>expression</i>: Sets the target to the result of the provided JSONata expression. Additional time calculation functions are supported and the current target value can be accessed through variable <code>$target</code>.
+                    </li>
+                </ul>
+                For the date and time input, the date has to be entered in the form <code>YYYY-MM-DD</code> and the time can be provided in the following ways:
+                <ul>
+                    <li>
+                        <i>time of day</i>: A specific time can be entered directly in 12 or 24 hour format.
+                    </li>
+                    <li>
+                        <i>sun position</i>: The sun position can be selected from a list of predefined values.
+                    </li>
+                    <li>
+                        <i>moon position</i>: The moon position can be selected from a list of predefined values.
+                    </li>
+                    <li>
+                        <i>custom sun position</i>: One of the user-defined sun position names can be entered.
+                    </li>
+                </ul>
+                For the set action in duration mode, two times need to be selected: a start time and another time for the end of the time span. Each time can be provided in the following ways:
+                <ul>
+                    <li>
+                        <i>time of day</i>: A specific time can be entered directly in 12 or 24 hour format. Optionally it is possible to specify a date and a time using regional or ISO 8601 format.
+                    </li>
+                    <li>
+                        <i>sun position</i>: The sun position can be selected from a list of predefined values.
+                    </li>
+                    <li>
+                        <i>moon position</i>: The moon position can be selected from a list of predefined values.
+                    </li>
+                    <li>
+                        <i>custom sun position</i>: One of the user-defined sun position names can be entered.
+                    </li>
+                    <li>
+                        <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: The time is retrieved from an environment variable, a context variable or a message property. The variables/properties can have the following format:
                         <ul>
                             <li>
-                                <i>current time zone</i>: The original time zone (the
-                                time zone configured in the associated configuration
-                                node) is kept unmodified.
+                                Number (timestamp)
+                                <ul>
+                                    <li>
+                                        Number of milliseconds elapsed since the UNIX epoch (universal time)
+                                    </li>
+                                    <li>
+                                        Number of milliseconds elapsed since midnight (local time) if value is smaller than 86.400.000
+                                    </li>
+                                </ul>
                             </li>
                             <li>
-                                <i>time zone</i>: The name of a valid <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zone identifier</a>
-                                can be specified and the time is converted to that
-                                time zone.
-                            </li>
-                            <li>
-                                <i>UTC offset</i>: An offset in minutes and/or hours
-                                can be specified. A number between -16 and 16 is
-                                interpreted as hours, a number outside of that range
-                                as minutes. Additionally, it is possible to specify
-                                hours and minutes in the form <code>+/-HH:MM</code>.
-                                The value is applied as offset to the UTC time.
+                                String
+                                <ul>
+                                    <li>Time in 12 or 24 hour format</li>
+                                    <li>Sun time</li>
+                                    <li>Moon time</li>
+                                    <li>Custom sun time</li>
+                                    <li>Date and time in region-specific format</li>
+                                    <li>Date and time in ISO 8601 format</li>
+                                    <li>Date and sun time</li>
+                                    <li>Date and moon time</li>
+                                    <li>Date and custom sun time</li>
+                                </ul>
                             </li>
                         </ul>
+                    </li>
+                </ul>
+            </p>
+            <p>
+                For the change action in moment mode, the following types of manipulation can be selected:
+                <ul>
+                    <li>
+                        <i>Set</i>: Modifies a part of the target timestamp. The part to be changed can be selected in the dropdown box. The value to be set has to be entered as number or can be retrieved from an environment/context variable or message property.
+                    </li>
+                    <li>
+                        <i>Add</i>: Adds time to the target timestamp. The amount of time has to entered as number or can be retrieved from an environment/context variable or message property. The unit of time to be added can be selected in the dropdown box.
+                    </li>
+                    <li>
+                        <i>Subtract</i>: Similar to <i>Add</i>, but subtracts time from the target timestamp.
+                    </li>
+                    <li>
+                        <i>Start of</i>: Sets the target timestamp to the start of a unit of time. The latter can be selected in the dropdown box.
+                    </li>
+                    <li>
+                        <i>End of</i>: Similar to <i>Start of</i>, but sets the target timestamp to the end of a unit of time.
+                    </li>
+                </ul>
+                For the change action in duration mode, the following types of manipulation can be selected:
+                <ul>
+                    <li>
+                        <i>Add</i>: Adds time to the target timespan. The amount of time has to entered as number or can be retrieved from an environment/context variable or message property. The unit of time to be added can be selected in the dropdown box.
+                    </li>
+                    <li>
+                        <i>Subtract</i>: Similar to <i>Add</i>, but subtracts time from the target timespan.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                For the convert action in moment mode, the following types of convertion can be selected:
+                <ul>
+                    <li>
+                        <i>predefined format</i>: Converts the target timestamp to a string whose format can be chosen from a list of predefined formats.
+                    </li>
+                    <ul>
+                        <li>
+                            <i>regional</i>: String containing the date and the time in a region-specific format.
+                        </li>
+                        <li>
+                            <i>regional (date only)</i>: String containing the date in a region-specific format.
+                        </li>
+                        <li>
+                            <i>regional (time only)</i>: String containing the time in a region-specific format.
+                        </li>
+                        <li>
+                            <i>relative time</i>: String representing the time relative to the current time, being less precise the farer away it is.
+                        </li>
+                        <li>
+                            <i>calendar</i>: String containing the absolute time (if not farer away than one week) and the date relative to today (or absolute if farer away than one week).
+                        </li>
+                        <li>
+                            <i>ISO-8601</i>: ISO-8601 string as local time (according to configured time zone).
+                        </li>
+                        <li>
+                            <i>ISO-8601 (UTC)</i>: ISO-8601 string as UTC time.
+                        </li>
+                    </ul>
+                    <li>
+                        <i>custom format</i>: Converts the target timestamp to a string which can be formatted via the text box. See <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node#cust-moment">format documentation</a> in the wiki for more information</a>.
+                    </li>
+                </ul>
+                In the second row, it is possible to change the local time of the input timestamp:
+                <ul>
+                    <li>
+                        <i>current time zone</i>: The original time zone (the time zone configured in the associated configuration node) is kept unmodified.
+                    </li>
+                    <li>
+                        <i>time zone</i>: The name of a valid <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zone identifier</a> can be specified and the time is converted to that time zone.
+                    </li>
+                    <li>
+                        <i>UTC offset</i>: An offset in minutes and/or hours can be specified. A number between -16 and 16 is interpreted as hours, a number outside of that range as minutes. Additionally, it is possible to specify hours and minutes in the form <code>+/-HH:MM</code>. The value is applied as offset to the UTC time.
+                    </li>
+                </ul>
+                For the convert action in duration mode, the following types of convertion can be selected:
+                <ul>
+                    <li>
+                        <i>numeric format</i>: Converts the target timespan to a number in a selectable unit. In the second row, the precision for the numeric representation can be chosen:
+                        <ul>
+                            <li>
+                                <i>integer number</i>: An integer number that is the result of rounding, rounding down or rounding up the original number.
+                            </li>
+                            <li>
+                                <i>floating point number</i>: A floating point number whose number of decimal places can be specified (0 means no limitations).
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <i>string format</i>: Converts the target timespan to a string whose format can be chosen from a list of predefined formats.
+                        <ul>
+                            <li>
+                                <i>timespan</i>: String containing the duration as ASP.NET style timespan in seconds granularity.
+                            </li>
+                            <li>
+                                <i>timespan (1/10th of a second)</i>: Like <i>timespan</i> but additionally containing 1/10th fractional seconds.
+                            </li>
+                            <li>
+                                <i>timespan (1/100th of a second)</i>: Like <i>timespan</i> but additionally containing 1/100th fractional seconds.
+                            </li>
+                            <li>
+                                <i>timespan (milliseconds)</i>: Like <i>timespan</i> but additionally containing milliseconds.
+                            </li>
+                            <li>
+                                <i>textual timespan</i>: String containing a textual representation of the duration, being less precise the longer it is.
+                            </li>
+                            <li>
+                                <i>ISO-8601</i>: ISO-8601 duration string.
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <i>custom format</i>: Converts the target timespan to a string which can be formatted via the text box. See <a href="https://github.com/jensrossbach/node-red-contrib-chronos/wiki/Time-Change-Node#cust-duration">format documentation</a> in the wiki for more information</a>.
                     </li>
                 </ul>
             </p>
@@ -218,8 +303,7 @@ SOFTWARE.
     </dl>
     <h3>Input</h3>
     <p>
-        Incoming messages are modified if there are change rules containing
-        message property based targets.
+        Incoming messages are modified if there are change rules containing message property based targets.
     </p>
     <h3>Outputs</h3>
     <p>
