@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-chronos",
-    "version": "1.24.0",
+    "version": "1.25.0",
     "description": "Time-based Node-RED scheduling, repeating, queueing, routing, filtering and manipulating nodes",
     "author": {
         "name": "Jens-Uwe Rossbach",
@@ -9,11 +9,31 @@
     "license": "MIT",
     "keywords": [
         "node-red",
+        "schedule",
         "scheduler",
-        "timer",
+        "scheduling",
         "time",
+        "timestamp",
+        "timespan",
+        "time-switch",
+        "time-filter",
+        "time-change",
+        "timer",
+        "timers",
+        "timing",
+        "delay",
+        "repeat",
+        "repetition",
+        "cron",
+        "crontab",
         "sun",
-        "moon"
+        "suntime",
+        "moon",
+        "moontime",
+        "sunrise",
+        "sunset",
+        "smart-home",
+        "home-automation"
     ],
     "repository": {
         "type": "git",
@@ -29,15 +49,15 @@
         "suncalc": "^1.9.0"
     },
     "devDependencies": {
-        "eslint": "^9.3.0",
+        "eslint": "^9.5.0",
         "jsonata": "^2.0.5",
         "mocha": "^10.4.0",
-        "node-red": "^3.1.9",
+        "node-red": "^3.1.10",
         "node-red-node-test-helper": "^0.3.4",
-        "nyc": "^15.1.0",
+        "nyc": "^17.0.0",
         "should": "^13.2.3",
         "should-sinon": "^0.0.6",
-        "sinon": "^17.0.2"
+        "sinon": "^18.0.0"
     },
     "main": "none",
     "scripts": {
