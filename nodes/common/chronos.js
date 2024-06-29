@@ -154,7 +154,6 @@ function getTimeFrom(node, source)
     }
 
     ret.locale(node.locale);
-
     return ret;
 }
 
@@ -215,6 +214,7 @@ function getUserTime(RED, node, day, value, timeOnly = false)
         throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
     }
 
+    ret.locale(node.locale);
     return ret;
 }
 
