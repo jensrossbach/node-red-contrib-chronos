@@ -126,7 +126,6 @@ module.exports = function(RED)
 
                 if ("type" in data.config.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
                 {
-                    // check for valid output and convert according to type
                     if (data.config.output.type == "fullMsg")
                     {
                         if (data.config.output.contentType === "jsonata")
@@ -144,24 +143,6 @@ module.exports = function(RED)
                                 break;
                             }
                         }
-                        else
-                        {
-                            try
-                            {
-                                data.config.output.value = JSON.parse(data.config.output.value);
-                            }
-                            catch
-                            {
-                                valid = false;
-                                break;
-                            }
-
-                            if (typeof data.config.output.value != "object")
-                            {
-                                valid = false;
-                                break;
-                            }
-                        }
                     }
                     else
                     {
@@ -171,43 +152,14 @@ module.exports = function(RED)
                             break;
                         }
 
-                        if (data.config.output.property.type == "num")
+                        if ((data.config.output.property.type == "num") &&
+                            (+data.config.output.property.value !== +data.config.output.property.value))
                         {
-                            if (+data.config.output.property.value === +data.config.output.property.value)
-                            {
-                                data.config.output.property.value = +data.config.output.property.value;
-                            }
-                            else
-                            {
-                                valid = false;
-                                break;
-                            }
+                            valid = false;
+                            break;
                         }
-                        else if (data.config.output.property.type == "bool")
-                        {
-                            if (/^(true|false)$/.test(data.config.output.property.value))
-                            {
-                                data.config.output.property.value = (data.config.output.property.value == "true");
-                            }
-                            else
-                            {
-                                valid = false;
-                                break;
-                            }
-                        }
-                        else if (data.config.output.property.type == "json")
-                        {
-                            try
-                            {
-                                data.config.output.property.value = JSON.parse(data.config.output.property.value);
-                            }
-                            catch
-                            {
-                                valid = false;
-                                break;
-                            }
-                        }
-                        else if (data.config.output.property.type == "jsonata")
+
+                        if (data.config.output.property.type == "jsonata")
                         {
                             try
                             {
@@ -218,18 +170,6 @@ module.exports = function(RED)
                                 node.error(e.message);
                                 node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
 
-                                valid = false;
-                                break;
-                            }
-                        }
-                        else if (data.config.output.property.type == "bin")
-                        {
-                            try
-                            {
-                                data.config.output.property.value = Buffer.from(JSON.parse(data.config.output.property.value));
-                            }
-                            catch
-                            {
                                 valid = false;
                                 break;
                             }
@@ -768,34 +708,30 @@ module.exports = function(RED)
                 if ((data.config.output.type == "global") || (data.config.output.type == "flow"))
                 {
                     let value = undefined;
-
                     if (data.config.output.property.type === "jsonata")
                     {
                         value = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.property.value);
                     }
                     else
                     {
-                        value = data.config.output.property.value;
+                        value = await getOutputValue(data.config.output.property.value, data.config.output.property.type);
                     }
 
-                    let ctx = RED.util.parseContextStore(data.config.output.property.name);
+                    const ctx = RED.util.parseContextStore(data.config.output.property.name);
                     node.context()[data.config.output.type].set(ctx.key, value, ctx.store);
                 }
                 else if (data.config.output.type == "msg")
                 {
-                    let msg = {};
-                    if (data.config.output.property.type === "date")
+                    const msg = {};
+                    if (data.config.output.property.type === "jsonata")
                     {
-                        RED.util.setMessageProperty(msg, data.config.output.property.name, Date.now(), true);
-                    }
-                    else if (data.config.output.property.type === "jsonata")
-                    {
-                        let value = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.property.value);
+                        const value = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.property.value);
                         RED.util.setMessageProperty(msg, data.config.output.property.name, value, true);
                     }
                     else
                     {
-                        RED.util.setMessageProperty(msg, data.config.output.property.name, data.config.output.property.value, true);
+                        const value = await getOutputValue(data.config.output.property.value, data.config.output.property.type);
+                        RED.util.setMessageProperty(msg, data.config.output.property.name, value, true);
                     }
 
                     sendOrQueue(msg, data.port, false);
@@ -803,19 +739,19 @@ module.exports = function(RED)
                 else if (data.config.output.type == "fullMsg")
                 {
                     let msg = undefined;
-
                     if (data.config.output.contentType === "jsonata")
                     {
                         msg = await getJSONataValue(data.expression, data.id, data.config.trigger, data.config.output.value);
-                        if (typeof msg != "object")
-                        {
-                            const details = {event: data.id, expression: data.config.output.value, result: msg};
-                            throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notObject"), details);
-                        }
                     }
                     else
                     {
-                        msg = data.config.output.value;
+                        msg = await getOutputValue(data.config.output.value, data.config.output.contentType);
+                    }
+
+                    if (typeof msg != "object")
+                    {
+                        const details = {event: data.id, result: msg};
+                        throw new chronos.TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.notObject"), details);
                     }
 
                     sendOrQueue(msg, data.port, false);
@@ -829,10 +765,28 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    node.error(e.message);
-                    node.debug(e.stack);
+                    node.error(e.message, {errorDetails: {event: data.id}});
                 }
             }
+        }
+
+        async function getOutputValue(value, type)
+        {
+            let ret = undefined;
+
+            if (type)
+            {
+                ret = await chronos.evaluateNodeProperty(
+                                        RED, node,
+                                        value, type,
+                                        {});
+            }
+            else
+            {
+                ret = value;
+            }
+
+            return ret;
         }
 
         async function getJSONataValue(expression, id, trigger, source)
@@ -923,7 +877,7 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.type != "string") || !/^(time|sun|moon|custom|crontab)$/.test(data.type))
+            if ((typeof data.type != "string") || !/^time|sun|moon|custom|crontab$/.test(data.type))
             {
                 return false;
             }
@@ -972,7 +926,7 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.output.type != "string") || !/^(global|flow|msg|fullMsg)$/.test(data.output.type))
+            if ((typeof data.output.type != "string") || !/^global|flow|msg|fullMsg$/.test(data.output.type))
             {
                 return false;
             }
@@ -1005,6 +959,12 @@ module.exports = function(RED)
                 }
 
                 if ((data.output.property.type !== "date") && (typeof data.output.property.value == "undefined"))
+                {
+                    return false;
+                }
+
+                if ((data.output.property.type === "date") &&
+                    !((typeof data.output.property.value == "undefined") || /^iso|object$/.test(data.output.property.value)))
                 {
                     return false;
                 }
