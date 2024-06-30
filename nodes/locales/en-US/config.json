@@ -191,12 +191,13 @@
             "invalidCondition":    "Invalid condition",
             "invalidName":         "Invalid custom sun position specified",
             "invalidContext":      "Invalid context variable",
+            "invalidCrontab":      "Invalid cron table",
             "invalidInput":        "Invalid input message",
             "unavailableTime":     "No time available for event",
             "evaluationFailed":    "Unable to evaluate expression",
-            "notBoolean":          "Expression must result in boolean value",
-            "notTime":             "Expression must result in valid time value (number or string)",
-            "notObject":           "Expression must result in an object value",
+            "notBoolean":          "Boolean value expected",
+            "notTime":             "Time value (number or string) expected",
+            "notObject":           "Object value expected",
             "intervalOutOfRange":  "Interval must be between one second and one week"
         }
     },

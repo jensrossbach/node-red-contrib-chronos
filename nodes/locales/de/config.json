@@ -191,12 +191,13 @@
             "invalidCondition":    "Ungültige Bedingung",
             "invalidName":         "Ungültiger benutzerdefinierter Sonnenstand angegeben",
             "invalidContext":      "Ungültige Kontextvariable",
+            "invalidCrontab":      "Ungültige Cron-Tabelle",
             "invalidInput":        "Ungültige Eingangsnachricht",
             "unavailableTime":     "Kein Zeitpunkt für Ereignis verfügbar",
             "evaluationFailed":    "Fehler beim Auswerten des Ausdrucks",
-            "notBoolean":          "Ausdruck muss ein Wahrheitswert sein",
-            "notTime":             "Ausdruck muss ein gültiger Zeitwert (Zahl oder Zeichenkette) sein",
-            "notObject":           "Ausdruck muss ein Objekt sein",
+            "notBoolean":          "Wahrheitswert wurde erwartet",
+            "notTime":             "Zeitwert (Zahl oder Zeichenkette) wurde erwartet",
+            "notObject":           "Objekt wurde erwartet",
             "intervalOutOfRange":  "Interval muss zwischen einer Sekunde und einer Woche liegen"
         }
     },

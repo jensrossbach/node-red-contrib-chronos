@@ -66,35 +66,46 @@ SOFTWARE.
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("chronos-scheduler",
+    (function()
     {
-        category:     "chronos",
-        color:        "#DEB887",
-        icon:         "chronos_scheduler.svg",
-        inputs:       1,
-        outputs:      1,
-        paletteLabel: "scheduler",
-        label: function()
+        const PATTERN_TIME         = /^(?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?\s*(?:a|am|A|AM|p|pm|P|PM)?$/;
+        const PATTERN_CUSTOM_TIME  = /^[a-zA-Z][0-9a-zA-Z_]*$/;
+        const PATTERN_CRONTAB      = /^[0-9a-zA-Z ,#@*/?-]+$/;
+
+        RED.nodes.registerType("chronos-scheduler",
         {
-            return (this.name || this._("scheduler.label.node"));
-        },
-        labelStyle: function()
-        {
-            return (this.name ? "node_label_italic" : "");
-        },
-        inputLabels: function()
-        {
-            return this._("scheduler.label.inputPort");
-        },
-        outputLabels: function(index)
-        {
-            if (this.multiPort)
+            category:     "chronos",
+            color:        "#DEB887",
+            icon:         "chronos_scheduler.svg",
+            inputs:       1,
+            outputs:      1,
+            paletteLabel: "scheduler",
+            label: function()
             {
-                if (this.nextEventPort)
+                return (this.name || this._("scheduler.label.node"));
+            },
+            labelStyle: function()
+            {
+                return (this.name ? "node_label_italic" : "");
+            },
+            inputLabels: function()
+            {
+                return this._("scheduler.label.inputPort");
+            },
+            outputLabels: function(index)
+            {
+                if (this.multiPort)
                 {
-                    if (index == (this.outputs - 1))
+                    if (this.nextEventPort)
                     {
-                        return this._("scheduler.label.eventTimes");
+                        if (index == (this.outputs - 1))
+                        {
+                            return this._("scheduler.label.eventTimes");
+                        }
+                        else
+                        {
+                            return this.schedule[index] ? this.schedule[index].label : this._("scheduler.status.noSchedule");
+                        }
                     }
                     else
                     {
@@ -103,527 +114,575 @@ SOFTWARE.
                 }
                 else
                 {
-                    return this.schedule[index] ? this.schedule[index].label : this._("scheduler.status.noSchedule");
-                }
-            }
-            else
-            {
-                if (this.nextEventPort)
-                {
-                    return (index == 0) ? this._("scheduler.label.outputPort") : this._("scheduler.label.eventTimes");
-                }
-                else
-                {
-                    return this._("scheduler.label.outputPort");
-                }
-            }
-        },
-        defaults:
-        {
-            name:
-            {
-                value: ""
-            },
-            config:
-            {
-                value:    "",
-                type:     "chronos-config",
-                required: true
-            },
-            schedule:
-            {
-                value: [{
-                    trigger: {
-                        type: "time",
-                        value: "",
-                        offset: 0,
-                        random: false},
-                    output: {
-                        type: "msg",
-                        property: {
-                            name: "payload",
-                            type: "str",
-                            value: ""}}}],
-                validate: function(v)
-                {
-                    // just a simple check if there are any events, no detailed check of the content
-                    return v.length > 0;
+                    if (this.nextEventPort)
+                    {
+                        return (index == 0) ? this._("scheduler.label.outputPort") : this._("scheduler.label.eventTimes");
+                    }
+                    else
+                    {
+                        return this._("scheduler.label.outputPort");
+                    }
                 }
             },
-            disabled:
+            defaults:
             {
-                value: false
-            },
-            multiPort:
-            {
-                value: false
-            },
-            nextEventPort:
-            {
-                value: false
-            },
-            delayOnStart:
-            {
-                value: true
-            },
-            onStartDelay:
-            {
-                value:    0.1,
-                validate: RED.validators.number(true)
-            },
-            outputs:
-            {
-                value: 1
-            }
-        },
-        oneditprepare: function()
-        {
-            const node = this;
-
-            const tabs = RED.tabs.create(
-            {
-                id: "tab-row",
-                onchange: function(tab)
+                name:
                 {
-                    $("#tabs-content").children().hide();
-                    $("#" + tab.id).show();
-                    RED.tray.resize();
-                }
-            });
-
-            tabs.addTab({id: "tab-schedule", iconClass: "fa fa-calendar", label: node._("scheduler.label.schedule")});
-            tabs.addTab({id: "tab-options", iconClass: "fa fa-cogs", label: node._("scheduler.label.options")});
-            tabs.activateTab("tab-schedule");
-
-            const scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "150px").editableList(
-            {
-                removable: true,
-                sortable: true,
-                addItem: function(item, index, data)
+                    value: ""
+                },
+                config:
                 {
-                    const sunTimes =
-                    [
+                    value:    "",
+                    type:     "chronos-config",
+                    required: true
+                },
+                schedule:
+                {
+                    value: [{
+                        trigger: {
+                            type: "time",
+                            value: "",
+                            offset: 0,
+                            random: false},
+                        output: {
+                            type: "msg",
+                            property: {
+                                name: "payload",
+                                type: "str",
+                                value: ""}}}],
+                    validate: function(items, opt)
+                    {
+                        if (!items || (items.length == 0))
                         {
-                            value: "nightEnd",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
-                        },
-                        {
-                            value: "nauticalDawn",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
-                        },
-                        {
-                            value: "dawn",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
-                        },
-                        {
-                            value: "sunrise",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
-                        },
-                        {
-                            value: "sunriseEnd",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
-                        },
-                        {
-                            value: "goldenHourEnd",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
-                        },
-                        {
-                            value: "solarNoon",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
-                        },
-                        {
-                            value: "goldenHour",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
-                        },
-                        {
-                            value: "sunsetStart",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
-                        },
-                        {
-                            value: "sunset",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
-                        },
-                        {
-                            value: "dusk",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
-                        },
-                        {
-                            value: "nauticalDusk",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
-                        },
-                        {
-                            value: "night",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
-                        },
-                        {
-                            value: "nadir",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                            return this._("scheduler.error.noSchedule");
                         }
-                    ];
 
-                    const moonTimes =
-                    [
+                        const errors = [];
+                        for (const item of items)
                         {
-                            value: "rise",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
-                        },
-                        {
-                            value: "set",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
-                        }
-                    ];
-
-                    const timeInput =
-                    {
-                        value: "time",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
-                        icon: "fa fa-clock-o",
-                        hasValue: true,
-                        validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/
-                    };
-
-                    const sunTimeInput =
-                    {
-                        value: "sun",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
-                        icon: "fa fa-sun-o",
-                        options: sunTimes
-                    };
-
-                    const moonTimeInput =
-                    {
-                        value: "moon",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
-                        icon: "fa fa-moon-o",
-                        options: moonTimes
-                    };
-
-                    const customInput =
-                    {
-                        value: "custom",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
-                        icon: "fa fa-user-o",
-                        hasValue: true,
-                        validate: /^[a-zA-Z][0-9a-zA-Z_]+$/
-                    };
-
-                    const cronInput =
-                    {
-                        value: "crontab",
-                        label: node._("scheduler.label.crontab"),
-                        icon: "fa fa-table",
-                        hasValue: true,
-                        validate: /^[0-9a-zA-Z ,#@*/?-]+$/
-                    };
-
-                    const fullMessageInput =
-                    {
-                        value: "fullMsg",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
-                        hasValue: false
-                    };
-
-                    const offsetInput =
-                    {
-                        min: -300,
-                        max: 300,
-                        step: 1,
-                        change: function(event, ui)
-                        {
-                            var value = parseInt($(this).spinner("value"), 10);
-                            var min = $(this).spinner("option", "min");
-                            var max = $(this).spinner("option", "max");
-                            if (isNaN(value) ||
-                                (value < min))
+                            if ((item.trigger.type == "time") && !PATTERN_TIME.test(item.trigger.value))
                             {
-                                $(this).spinner("value", min);
+                                errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"));
                             }
-                            else if (value > max)
+                            else if ((item.trigger.type == "custom") && !PATTERN_CUSTOM_TIME.test(item.trigger.value))
                             {
-                                $(this).spinner("value", max);
+                                errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidName"));
+                            }
+                            else if ((item.trigger.type == "crontab") && !PATTERN_CRONTAB.test(item.trigger.value))
+                            {
+                                errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidCrontab"));
+                            }
+                            else if (/^env|global|flow$/.test(item.trigger.type))
+                            {
+                                const res = RED.utils.validateTypedProperty(item.trigger.value, item.trigger.type, opt)
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
+                            }
+
+                            if (/^msg|flow|global$/.test(item.output.type))
+                            {
+                                let res = RED.utils.validatePropertyExpression(item.output.property.name, opt);
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
+
+                                res = RED.utils.validateTypedProperty(item.output.property.value, item.output.property.type, opt)
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
+                            }
+                            else
+                            {
+                                const res = RED.utils.validateTypedProperty(item.output.value, item.output.contentType, opt);
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
                             }
                         }
-                    };
 
-                    const fragment = document.createDocumentFragment();
-                    const triggerRow = $("<div/>").appendTo(fragment);
-                    const outputRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+                        return (errors.length > 0) ? errors : true;
+                    }
+                },
+                disabled:
+                {
+                    value: false
+                },
+                multiPort:
+                {
+                    value: false
+                },
+                nextEventPort:
+                {
+                    value: false
+                },
+                delayOnStart:
+                {
+                    value: true
+                },
+                onStartDelay:
+                {
+                    value:    0.1,
+                    validate: RED.validators.number(true)
+                },
+                outputs:
+                {
+                    value: 1
+                }
+            },
+            oneditprepare: function()
+            {
+                const node = this;
 
-                    const triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
-                                        .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, cronInput, "env", "global", "flow"]});
-                    triggerType.typedInput("width", "280px");
-                    triggerType._prevType = "time";
-
-                    const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
-                    const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
-                                        .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
-                                        .appendTo(offsetBox);
-                    const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
-                                        .appendTo(offsetLabel)
-                                        .spinner(offsetInput);
-                    const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
-                                        .html("<i class='fa fa-random' aria-hidden='true'></i>")
-                                        .appendTo(offsetBox);
-                    const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
-                                        .appendTo(randomLabel);
-
-                    $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px;"})
-                                        .text(node._("node-red-contrib-chronos/chronos-config:common.label.output"))
-                                        .appendTo(outputRow);
-
-                    const outputBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(outputRow);
-                    const outTypeRow = $("<div/>").appendTo(outputBox);
-                    const outValueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(outputBox);
-
-                    const outType = $("<input/>", {type: "text", class: "node-input-outType"})
-                                        .appendTo(outTypeRow)
-                                        .typedInput({types: ["global", "flow", "msg", fullMessageInput]});
-                    outType.typedInput("width", "280px");
-                    outType._prevType = "global";
-                    const propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
-                                        .appendTo(outValueRow)
-                                        .typedInput({types: ["str", "num", "bool", "json", "jsonata", "bin", "date"]});
-                    propValue.typedInput("width", "280px");
-                    const msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
-                                        .appendTo(outValueRow)
-                                        .typedInput({types: ["json", "jsonata"]});
-                    msgValue.typedInput("width", "280px");
-
-                    triggerType.on("change", function()
+                const tabs = RED.tabs.create(
+                {
+                    id: "tab-row",
+                    onchange: function(tab)
                     {
-                        const type = triggerType.typedInput("type");
-                        if (type === "crontab")
+                        $("#tabs-content").children().hide();
+                        $("#" + tab.id).show();
+                        RED.tray.resize();
+                    }
+                });
+
+                tabs.addTab({id: "tab-schedule", iconClass: "fa fa-calendar", label: node._("scheduler.label.schedule")});
+                tabs.addTab({id: "tab-options", iconClass: "fa fa-cogs", label: node._("scheduler.label.options")});
+                tabs.activateTab("tab-schedule");
+
+                const scheduleList = $("#node-input-scheduleList").css("min-width", "500px").css("min-height", "150px").editableList(
+                {
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
+                    {
+                        const sunTimes =
+                        [
+                            {
+                                value: "nightEnd",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                            },
+                            {
+                                value: "nauticalDawn",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                            },
+                            {
+                                value: "dawn",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                            },
+                            {
+                                value: "sunrise",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                            },
+                            {
+                                value: "sunriseEnd",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                            },
+                            {
+                                value: "goldenHourEnd",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                            },
+                            {
+                                value: "solarNoon",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                            },
+                            {
+                                value: "goldenHour",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                            },
+                            {
+                                value: "sunsetStart",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                            },
+                            {
+                                value: "sunset",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                            },
+                            {
+                                value: "dusk",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                            },
+                            {
+                                value: "nauticalDusk",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                            },
+                            {
+                                value: "night",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                            },
+                            {
+                                value: "nadir",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                            }
+                        ];
+
+                        const moonTimes =
+                        [
+                            {
+                                value: "rise",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                            },
+                            {
+                                value: "set",
+                                label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                            }
+                        ];
+
+                        const timeInput =
                         {
-                            offsetBox.hide();
+                            value: "time",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                            icon: "fa fa-clock-o",
+                            hasValue: true,
+                            validate: PATTERN_TIME
+                        };
+
+                        const sunTimeInput =
+                        {
+                            value: "sun",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                            icon: "fa fa-sun-o",
+                            options: sunTimes
+                        };
+
+                        const moonTimeInput =
+                        {
+                            value: "moon",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                            icon: "fa fa-moon-o",
+                            options: moonTimes
+                        };
+
+                        const customInput =
+                        {
+                            value: "custom",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                            icon: "fa fa-user-o",
+                            hasValue: true,
+                            validate: PATTERN_CUSTOM_TIME
+                        };
+
+                        const cronInput =
+                        {
+                            value: "crontab",
+                            label: node._("scheduler.label.crontab"),
+                            icon: "fa fa-table",
+                            hasValue: true,
+                            validate: PATTERN_CRONTAB
+                        };
+
+                        const fullMessageInput =
+                        {
+                            value: "fullMsg",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
+                            hasValue: false
+                        };
+
+                        const offsetInput =
+                        {
+                            min: -300,
+                            max: 300,
+                            step: 1,
+                            change: function(event, ui)
+                            {
+                                var value = parseInt($(this).spinner("value"), 10);
+                                var min = $(this).spinner("option", "min");
+                                var max = $(this).spinner("option", "max");
+                                if (isNaN(value) ||
+                                    (value < min))
+                                {
+                                    $(this).spinner("value", min);
+                                }
+                                else if (value > max)
+                                {
+                                    $(this).spinner("value", max);
+                                }
+                            }
+                        };
+
+                        const fragment = document.createDocumentFragment();
+                        const triggerRow = $("<div/>").appendTo(fragment);
+                        const outputRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(fragment);
+
+                        const triggerType = $("<input/>", {type: "text", class: "node-input-triggerType"})
+                                            .appendTo(triggerRow)
+                                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, cronInput, "env", "global", "flow"]});
+                        triggerType.typedInput("width", "280px");
+                        triggerType._prevType = "time";
+
+                        const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
+                        const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                                            .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
+                                            .appendTo(offsetBox);
+                        const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
+                                            .appendTo(offsetLabel)
+                                            .spinner(offsetInput);
+                        const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                            .html("<i class='fa fa-random' aria-hidden='true'></i>")
+                                            .appendTo(offsetBox);
+                        const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                                            .appendTo(randomLabel);
+
+                        $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px;"})
+                                            .text(node._("node-red-contrib-chronos/chronos-config:common.label.output"))
+                                            .appendTo(outputRow);
+
+                        const outputBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(outputRow);
+                        const outTypeRow = $("<div/>").appendTo(outputBox);
+                        const outValueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(outputBox);
+
+                        const outType = $("<input/>", {type: "text", class: "node-input-outType"})
+                                            .appendTo(outTypeRow)
+                                            .typedInput({types: ["global", "flow", "msg", fullMessageInput]});
+                        outType.typedInput("width", "280px");
+                        outType._prevType = "global";
+                        const propValue = $("<input/>", {type: "text", class: "node-input-propValue"})
+                                            .appendTo(outValueRow)
+                                            .typedInput({types: ["str", "num", "bool", "json", "jsonata", "bin", "date"]});
+                        propValue.typedInput("width", "280px");
+                        const msgValue = $("<input/>", {type: "text", class: "node-input-msgValue"})
+                                            .appendTo(outValueRow)
+                                            .typedInput({types: ["json", "jsonata"]});
+                        msgValue.typedInput("width", "280px");
+
+                        triggerType.on("change", function()
+                        {
+                            const type = triggerType.typedInput("type");
+                            if (type === "crontab")
+                            {
+                                offsetBox.hide();
+                            }
+                            else
+                            {
+                                offsetBox.show();
+                            }
+
+                            if (type != triggerType._prevType)
+                            {
+                                triggerType._prevType = type;
+                                if ((type != "sun") && (type != "moon"))
+                                {
+                                    triggerType.typedInput("value", "");
+                                }
+                            }
+                        });
+
+                        outType.on("change", function()
+                        {
+                            const type = outType.typedInput("type");
+                            if (type === "fullMsg")
+                            {
+                                propValue.typedInput("hide");
+                                msgValue.typedInput("show");
+                            }
+                            else
+                            {
+                                propValue.typedInput("show");
+                                msgValue.typedInput("hide");
+                            }
+
+                            if (type != outType._prevType)
+                            {
+                                outType._prevType = type;
+                                outType.typedInput("value", "");
+                            }
+                        });
+
+                        if (!("trigger" in data))
+                        {
+                            data = {trigger: {type: "time", value: "", offset: 0, random: false},
+                                    output: {type: "msg", property: {name: "payload", type: "str", value: ""}}};
+                        }
+                        else if (!("type" in data.output))  // backward compatibility to v1.8.1
+                        {
+                            data.output = {type: "msg", property: {name: "payload", type: "str", value: ""}};
+                        }
+
+                        triggerType.typedInput("value", data.trigger.value);
+                        triggerType._prevType = data.trigger.type;
+                        triggerType.typedInput("type", data.trigger.type);
+
+                        if (data.trigger.type != "crontab")
+                        {
+                            triggerOffset.spinner(
+                                            "value",
+                                            (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
+                                                ? data.trigger.offset
+                                                : 0);
+                            triggerRandom.prop(
+                                            "checked",
+                                            (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
+                                                ? data.trigger.random
+                                                : false);
                         }
                         else
                         {
-                            offsetBox.show();
+                            triggerOffset.spinner("value", 0);
+                            triggerRandom.prop("checked", false);
                         }
 
-                        if (type != triggerType._prevType)
+                        if (data.output.type == "fullMsg")
                         {
-                            triggerType._prevType = type;
-                            if ((type != "sun") && (type != "moon"))
-                            {
-                                triggerType.typedInput("value", "");
-                            }
-                        }
-                    });
-
-                    outType.on("change", function()
-                    {
-                        const type = outType.typedInput("type");
-                        if (type === "fullMsg")
-                        {
-                            propValue.typedInput("hide");
-                            msgValue.typedInput("show");
+                            msgValue.typedInput("type", data.output.contentType ? data.output.contentType : "json");
+                            msgValue.typedInput("value", data.output.value);
                         }
                         else
                         {
-                            propValue.typedInput("show");
-                            msgValue.typedInput("hide");
+                            outType.typedInput("value", data.output.property.name);
+                            propValue.typedInput("type", data.output.property.type);
+                            propValue.typedInput("value", data.output.property.value);
                         }
+                        outType._prevType = data.output.type;
+                        outType.typedInput("type", data.output.type);
 
-                        if (type != outType._prevType)
-                        {
-                            outType._prevType = type;
-                            outType.typedInput("value", "");
-                        }
-                    });
-
-                    if (!("trigger" in data))
-                    {
-                        data = {trigger: {type: "time", value: "", offset: 0, random: false},
-                                output: {type: "msg", property: {name: "payload", type: "str", value: ""}}};
+                        item[0].appendChild(fragment);
                     }
-                    else if (!("type" in data.output))  // backward compatibility to v1.8.1
-                    {
-                        data.output = {type: "msg", property: {name: "payload", type: "str", value: ""}};
-                    }
+                });
 
-                    triggerType.typedInput("value", data.trigger.value);
-                    triggerType._prevType = data.trigger.type;
-                    triggerType.typedInput("type", data.trigger.type);
+                // backward compatibility to v1.23.x and earlier
+                if (typeof node.delayOnStart == "undefined")
+                {
+                    $("#node-input-delayOnStart").prop("checked", true);
+                }
+
+                $("#node-input-delayOnStart").on("change", function()
+                {
+                    $("#node-input-onStartDelay").attr("disabled", !$("#node-input-delayOnStart").prop("checked"));
+                });
+
+                node.schedule.forEach(data =>
+                {
+                    scheduleList.editableList("addItem", data);
+                });
+            },
+            oneditsave: function()
+            {
+                const node = this;
+                const multiPort = $("#node-input-multiPort").prop("checked");
+                const nextEventPort = $("#node-input-nextEventPort").prop("checked");
+
+                node.schedule = [];
+                node.outputs = 0;
+
+                $("#node-input-scheduleList").editableList("items").each(function(index)
+                {
+                    const data = {trigger: {}, output: {}};
+
+                    const triggerType = $(this).find(".node-input-triggerType");
+                    const triggerOffset = $(this).find(".node-input-triggerOffset");
+                    const triggerRandom = $(this).find(".node-input-triggerRandom");
+                    const outType = $(this).find(".node-input-outType");
+                    const propValue = $(this).find(".node-input-propValue");
+                    const msgValue = $(this).find(".node-input-msgValue");
+
+                    data.trigger.type = triggerType.typedInput("type");
+                    data.trigger.value = triggerType.typedInput("value");
 
                     if (data.trigger.type != "crontab")
                     {
-                        triggerOffset.spinner(
-                                        "value",
-                                        (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
-                                            ? data.trigger.offset
-                                            : 0);
-                        triggerRandom.prop(
-                                        "checked",
-                                        (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
-                                            ? data.trigger.random
-                                            : false);
-                    }
-                    else
-                    {
-                        triggerOffset.spinner("value", 0);
-                        triggerRandom.prop("checked", false);
+                        data.trigger.offset = triggerOffset.spinner("value");
+                        data.trigger.random = triggerRandom.prop("checked");
                     }
 
+                    data.output.type = outType.typedInput("type");
                     if (data.output.type == "fullMsg")
                     {
-                        msgValue.typedInput("type", data.output.contentType ? data.output.contentType : "json");
-                        msgValue.typedInput("value", data.output.value);
+                        data.output.contentType = msgValue.typedInput("type");
+                        data.output.value = msgValue.typedInput("value");
                     }
                     else
                     {
-                        outType.typedInput("value", data.output.property.name);
-                        propValue.typedInput("type", data.output.property.type);
-                        propValue.typedInput("value", data.output.property.value);
+                        data.output.property = {name: outType.typedInput("value"),
+                                                type: propValue.typedInput("type"),
+                                                value: propValue.typedInput("value")};
                     }
-                    outType._prevType = data.output.type;
-                    outType.typedInput("type", data.output.type);
 
-                    item[0].appendChild(fragment);
-                }
-            });
-
-            // backward compatibility to v1.23.x and earlier
-            if (typeof node.delayOnStart == "undefined")
-            {
-                $("#node-input-delayOnStart").prop("checked", true);
-            }
-
-            $("#node-input-delayOnStart").on("change", function()
-            {
-                $("#node-input-onStartDelay").attr("disabled", !$("#node-input-delayOnStart").prop("checked"));
-            });
-
-            node.schedule.forEach(data =>
-            {
-                scheduleList.editableList("addItem", data);
-            });
-        },
-        oneditsave: function()
-        {
-            const node = this;
-            const multiPort = $("#node-input-multiPort").prop("checked");
-            const nextEventPort = $("#node-input-nextEventPort").prop("checked");
-
-            node.schedule = [];
-            node.outputs = 0;
-
-            $("#node-input-scheduleList").editableList("items").each(function(index)
-            {
-                const data = {trigger: {}, output: {}};
-
-                const triggerType = $(this).find(".node-input-triggerType");
-                const triggerOffset = $(this).find(".node-input-triggerOffset");
-                const triggerRandom = $(this).find(".node-input-triggerRandom");
-                const outType = $(this).find(".node-input-outType");
-                const propValue = $(this).find(".node-input-propValue");
-                const msgValue = $(this).find(".node-input-msgValue");
-
-                data.trigger.type = triggerType.typedInput("type");
-                data.trigger.value = triggerType.typedInput("value");
-
-                if (data.trigger.type != "crontab")
-                {
-                    data.trigger.offset = triggerOffset.spinner("value");
-                    data.trigger.random = triggerRandom.prop("checked");
-                }
-
-                data.output.type = outType.typedInput("type");
-                if (data.output.type == "fullMsg")
-                {
-                    data.output.contentType = msgValue.typedInput("type");
-                    data.output.value = msgValue.typedInput("value");
-                }
-                else
-                {
-                    data.output.property = {name: outType.typedInput("value"),
-                                            type: propValue.typedInput("type"),
-                                            value: propValue.typedInput("value")};
-                }
-
-                if ((data.output.type == "msg") || (data.output.type == "fullMsg"))
-                {
-                    if (multiPort)
+                    if ((data.output.type == "msg") || (data.output.type == "fullMsg"))
                     {
-                        data.port = node.outputs++;
-
-                        if (data.trigger.type == "env")
+                        if (multiPort)
                         {
-                            if (data.trigger.value.includes("${"))
+                            data.port = node.outputs++;
+
+                            if (data.trigger.type == "env")
                             {
-                                data.label = data.trigger.value;
+                                if (data.trigger.value.includes("${"))
+                                {
+                                    data.label = data.trigger.value;
+                                }
+                                else
+                                {
+                                    data.label = "${" + data.trigger.value + "}";
+                                }
+                            }
+                            else if ((data.trigger.type == "global") || (data.trigger.type == "flow"))
+                            {
+                                let ctx = RED.utils.parseContextKey(data.trigger.value);
+                                data.label = data.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                             }
                             else
                             {
-                                data.label = "${" + data.trigger.value + "}";
+                                if ((data.trigger.type == "time") || (data.trigger.type == "custom") || (data.trigger.type == "crontab"))
+                                {
+                                    data.label = data.trigger.value;
+                                }
+                                else
+                                {
+                                    data.label = node._("node-red-contrib-chronos/chronos-config:common.list." + data.trigger.type + "." + data.trigger.value);
+                                }
+
+                                if (data.trigger.offset != 0)
+                                {
+                                    data.label += ((data.trigger.offset > 0) ? " + " : " - ");
+
+                                    if (data.trigger.random)
+                                    {
+                                        data.label += "~";
+                                    }
+
+                                    data.label += Math.abs(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                }
                             }
-                        }
-                        else if ((data.trigger.type == "global") || (data.trigger.type == "flow"))
-                        {
-                            let ctx = RED.utils.parseContextKey(data.trigger.value);
-                            data.label = data.trigger.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                         }
                         else
                         {
-                            if ((data.trigger.type == "time") || (data.trigger.type == "custom") || (data.trigger.type == "crontab"))
-                            {
-                                data.label = data.trigger.value;
-                            }
-                            else
-                            {
-                                data.label = node._("node-red-contrib-chronos/chronos-config:common.list." + data.trigger.type + "." + data.trigger.value);
-                            }
-
-                            if (data.trigger.offset != 0)
-                            {
-                                data.label += ((data.trigger.offset > 0) ? " + " : " - ");
-
-                                if (data.trigger.random)
-                                {
-                                    data.label += "~";
-                                }
-
-                                data.label += Math.abs(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
-                            }
+                            node.outputs = 1;
                         }
                     }
-                    else
+
+                    node.schedule.push(data);
+                });
+
+                if (nextEventPort)
+                {
+                    ++node.outputs;
+                }
+            },
+            oneditresize: function(size)
+            {
+                const listRow = $("#dialog-form div.list-row");
+                const otherRows = $("#dialog-form>div");
+                let height = size.height;
+
+                for (let i=0; i<otherRows.length; ++i)
+                {
+                    let row = $(otherRows[i]);
+
+                    if (row.is(":visible") && (row.attr("id") != "tabs-content"))
                     {
-                        node.outputs = 1;
+                        height -= row.outerHeight(true);
                     }
                 }
 
-                node.schedule.push(data);
-            });
+                height -= (parseInt(listRow.css("marginTop")) + parseInt(listRow.css("marginBottom")));
 
-            if (nextEventPort)
-            {
-                ++node.outputs;
-            }
-        },
-        oneditresize: function(size)
-        {
-            const listRow = $("#dialog-form div.list-row");
-            const otherRows = $("#dialog-form>div");
-            let height = size.height;
-
-            for (let i=0; i<otherRows.length; ++i)
-            {
-                let row = $(otherRows[i]);
-
-                if (row.is(":visible") && (row.attr("id") != "tabs-content"))
+                if ($("#tab-schedule").is(":visible"))
                 {
-                    height -= row.outerHeight(true);
+                    $("#node-input-scheduleList").editableList("height", height);
                 }
             }
-
-            height -= (parseInt(listRow.css("marginTop")) + parseInt(listRow.css("marginBottom")));
-
-            if ($("#tab-schedule").is(":visible"))
-            {
-                $("#node-input-scheduleList").editableList("height", height);
-            }
-        }
-    });
+        });
+    })();
 </script>

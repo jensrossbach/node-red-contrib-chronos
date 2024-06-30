@@ -26,8 +26,8 @@
 const PATTERN_TIME          = /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/;
 const PATTERN_DATE          = /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/;
 
-const PATTERN_SUNTIME       = /^(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)$/;
-const PATTERN_MOONTIME      = /^(rise|set)$/;
+const PATTERN_SUNTIME       = /^sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir$/;
+const PATTERN_MOONTIME      = /^rise|set$/;
 const PATTERN_AUTO_TIME     = /^(?:((?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?\s*(?:a|am|A|AM|p|pm|P|PM)?)|(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)|(rise|set)|(?:custom:([0-9a-zA-Z_]+)))$/;
 const PATTERN_AUTO_DATETIME = /^(?:([0-9/.\-\s\u200F]+)\s)?(?:(sunrise|sunriseEnd|sunsetStart|sunset|goldenHour|goldenHourEnd|night|nightEnd|dawn|nauticalDawn|dusk|nauticalDusk|solarNoon|nadir)|(rise|set)|(?:custom:([0-9a-zA-Z_]+)))$/;
 
@@ -536,15 +536,33 @@ function evaluateJSONataExpression(RED, expr, msg)
 {
     return new Promise((resolve, reject) =>
     {
-        RED.util.evaluateJSONataExpression(expr, msg, (error, result) =>
+        RED.util.evaluateJSONataExpression(expr, msg, (err, res) =>
         {
-            if (error)
+            if (err)
             {
-                reject(error);
+                reject(err);
             }
             else
             {
-                resolve(result);
+                resolve(res);
+            }
+        });
+    });
+}
+
+function evaluateNodeProperty(RED, node, value, type, msg)
+{
+    return new Promise((resolve, reject) =>
+    {
+        RED.util.evaluateNodeProperty(value, type, node, msg, (err, val) =>
+        {
+            if (err)
+            {
+                reject(err);
+            }
+            else
+            {
+                resolve(val);
             }
         });
     });
@@ -569,6 +587,7 @@ module.exports =
     isValidUserDate:           isValidUserDate,
     getJSONataExpression:      getJSONataExpression,
     evaluateJSONataExpression: evaluateJSONataExpression,
+    evaluateNodeProperty:      evaluateNodeProperty,
     TimeError:                 TimeError,
     PATTERN_SUNTIME:           PATTERN_SUNTIME,
     PATTERN_MOONTIME:          PATTERN_MOONTIME,
