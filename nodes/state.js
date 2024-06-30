@@ -87,69 +87,10 @@ module.exports = function(RED)
                     break;
                 }
 
-                // check for valid state and convert according to type
-                if (data.state.type == "num")
+                if ((data.state.type == "num") && (+data.state.value !== +data.state.value))
                 {
-                    if (+data.state.value === +data.state.value)
-                    {
-                        data.state.value = +data.state.value;
-                    }
-                    else
-                    {
-                        valid = false;
-                        break;
-                    }
-                }
-                else if (data.state.type == "bool")
-                {
-                    if (/^(true|false)$/.test(data.state.value))
-                    {
-                        data.state.value = (data.state.value == "true");
-                    }
-                    else
-                    {
-                        valid = false;
-                        break;
-                    }
-                }
-                else if (data.state.type == "json")
-                {
-                    try
-                    {
-                        data.state.value = JSON.parse(data.state.value);
-                    }
-                    catch
-                    {
-                        valid = false;
-                        break;
-                    }
-                }
-                else if (data.state.type == "bin")
-                {
-                    try
-                    {
-                        data.state.value = Buffer.from(JSON.parse(data.state.value));
-                    }
-                    catch
-                    {
-                        valid = false;
-                        break;
-                    }
-                }
-                else if (data.state.type == "env")
-                {
-                    if (data.state.value)
-                    {
-                        data.state.value = RED.util.evaluateNodeProperty(
-                                                    data.state.value,
-                                                    data.state.type,
-                                                    node);
-                    }
-                    else
-                    {
-                        valid = false;
-                        break;
-                    }
+                    valid = false;
+                    break;
                 }
 
                 node.states.push(data);
@@ -892,28 +833,35 @@ module.exports = function(RED)
         {
             try
             {
+                let value = undefined;
+                if (node.currentState.data.state.type)
+                {
+                    value = await chronos.evaluateNodeProperty(
+                                            RED, node,
+                                            node.currentState.data.state.value,
+                                            node.currentState.data.state.type,
+                                            {});
+                }
+                else
+                {
+                    value = node.currentState.data.state.value;
+                }
+
                 if ((node.outputType == "global") || (node.outputType == "flow"))
                 {
-                    let ctx = RED.util.parseContextStore(node.outputValue);
-                    node.context()[node.outputType].set(ctx.key, node.currentState.data.state.value, ctx.store);
+                    const ctx = RED.util.parseContextStore(node.outputValue);
+                    node.context()[node.outputType].set(ctx.key, value, ctx.store);
                 }
                 else if (node.outputType == "msg")
                 {
                     const msg = {};
-                    if (node.currentState.data.state.type === "date")
-                    {
-                        RED.util.setMessageProperty(msg, node.outputValue, Date.now(), true);
-                    }
-                    else
-                    {
-                        RED.util.setMessageProperty(msg, node.outputValue, node.currentState.data.state.value, true);
-                    }
+                    RED.util.setMessageProperty(msg, node.outputValue, value, true);
 
                     node.send(msg);
                 }
                 else if (node.outputType == "fullMsg")
                 {
-                    const msg = await getJSONataValue();
+                    const msg = await getJSONataValue(value);
                     if (typeof msg != "object")
                     {
                         throw new chronos.TimeError(
@@ -932,13 +880,12 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    node.error(e.message);
-                    node.debug(e.stack);
+                    node.error(e.message, {});
                 }
             }
         }
 
-        async function getJSONataValue()
+        async function getJSONataValue(value)
         {
             try
             {
@@ -946,7 +893,7 @@ module.exports = function(RED)
                                     "state", {
                                         id: node.currentState.data.id,
                                         trigger: node.currentState.data.trigger,
-                                        value: (node.currentState.data.state.type === "date") ? Date.now() : node.currentState.data.state.value,
+                                        value: value,
                                         since: node.currentState.since.valueOf(),
                                         until: node.currentState.until ? node.currentState.until.valueOf() : null});
 
@@ -996,7 +943,7 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.type != "string") || !/^(time|sun|moon|custom|manual)$/.test(data.type))
+            if ((typeof data.type != "string") || !/^time|sun|moon|custom|manual$/.test(data.type))
             {
                 return false;
             }
@@ -1048,6 +995,12 @@ module.exports = function(RED)
                 return false;
             }
 
+            if ((data.type === "date") &&
+                !((typeof data.value == "undefined") || /^iso|object$/.test(data.value)))
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -1057,7 +1010,8 @@ module.exports = function(RED)
             {
                 let stateValue = undefined;
 
-                if (typeof node.currentState.data.state.value == "object")
+                if ((node.currentState.data.state.type == "date") ||
+                    (typeof node.currentState.data.state.value == "object"))
                 {
                     stateValue = RED._("state.status.currentState");
                 }

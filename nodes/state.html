@@ -73,860 +73,848 @@ SOFTWARE.
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("chronos-state",
+    (function()
     {
-        category:     "chronos",
-        color:        "#DEB887",
-        icon:         "chronos_state.svg",
-        inputs:       1,
-        outputs:      1,
-        paletteLabel: "state",
-        label: function()
+        const PATTERN_TIME         = /^(?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?\s*(?:a|am|A|AM|p|pm|P|PM)?$/;
+        const PATTERN_CUSTOM_TIME  = /^[a-zA-Z][0-9a-zA-Z_]*$/;
+
+        const months =
+        [
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december"
+        ];
+
+        const weekdays =
+        [
+            "sunday",  // moment.js uses US order -> Sunday is first day of the week
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday"
+        ];
+
+        RED.nodes.registerType("chronos-state",
         {
-            return (this.name || this._("state.label.node"));
-        },
-        labelStyle: function()
-        {
-            return (this.name ? "node_label_italic" : "");
-        },
-        inputLabels: function()
-        {
-            return this._("state.label.inputPort");
-        },
-        outputLabels: function(index)
-        {
-            return this._("state.label.outputPort");
-        },
-        defaults:
-        {
-            name:
+            category:     "chronos",
+            color:        "#DEB887",
+            icon:         "chronos_state.svg",
+            inputs:       1,
+            outputs:      1,
+            paletteLabel: "state",
+            label: function()
             {
-                value: ""
+                return (this.name || this._("state.label.node"));
             },
-            config:
+            labelStyle: function()
             {
-                value:    "",
-                type:     "chronos-config",
-                required: true
+                return (this.name ? "node_label_italic" : "");
             },
-            outputValue:
+            inputLabels: function()
             {
-                value:    "payload",
-                validate: function(v, opt)
+                return this._("state.label.inputPort");
+            },
+            outputLabels: function(index)
+            {
+                return this._("state.label.outputPort");
+            },
+            defaults:
+            {
+                name:
                 {
-                    const type = $("#node-input-outputType").val();
-                    if (type == "fullMsg")
+                    value: ""
+                },
+                config:
+                {
+                    value:    "",
+                    type:     "chronos-config",
+                    required: true
+                },
+                outputValue:
+                {
+                    value:    "payload",
+                    validate: function(v, opt)
                     {
-                        if (v)
+                        const type = $("#node-input-outputType").val();
+                        return RED.utils.validateTypedProperty(v, (type == "fullMsg") ? "jsonata" : type, opt);
+                    }
+                },
+                outputType:
+                {
+                    value: "msg"
+                },
+                states:
+                {
+                    value: [{
+                        trigger: {
+                            type: "time",
+                            value: "",
+                            offset: 0,
+                            random: false},
+                        state: {
+                            type: "bool",
+                            value: true}}, {
+                        trigger: {
+                            type: "time",
+                            value: "",
+                            offset: 0,
+                            random: false},
+                        state: {
+                            type: "bool",
+                            value: false}}],
+                    validate: function(items, opt)
+                    {
+                        if (!items || (items.length == 0))
                         {
-                            try
+                            return this._("state.error.noStates");
+                        }
+
+                        const errors = [];
+                        for (const item of items)
+                        {
+                            if ((item.trigger.type == "time") && !PATTERN_TIME.test(item.trigger.value))
                             {
-                                jsonata(v);
-                                return true;
+                                errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"));
                             }
-                            catch(e)
+                            else if ((item.trigger.type == "custom") && !PATTERN_CUSTOM_TIME.test(item.trigger.value))
                             {
-                                return false;
+                                errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidName"));
                             }
+                            else if (/^env|global|flow$/.test(item.trigger.type))
+                            {
+                                const res = RED.utils.validateTypedProperty(item.trigger.value, item.trigger.type, opt)
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
+                            }
+
+                            const res = RED.utils.validateTypedProperty(item.state.value, item.state.type, opt)
+                            if (res !== true)
+                            {
+                                errors.push(res);
+                            }
+                        }
+
+                        return (errors.length > 0) ? errors : true;
+                    }
+                },
+                conditions:
+                {
+                    value: []
+                },
+                evaluation:
+                {
+                    value:    "",
+                    validate: RED.validators.typedInput("evaluationType")
+                },
+                evaluationType:
+                {
+                    value: "and"
+                },
+                outputOnStart:
+                {
+                    value: true
+                },
+                outputOnStartDelay:
+                {
+                    value:    0.1,
+                    validate: RED.validators.number(true)
+                },
+                passiveMode:
+                {
+                    value: false
+                }
+            },
+            oneditprepare: function()
+            {
+                const node = this;
+
+                const sunTimes =
+                [
+                    {
+                        value: "nightEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                    },
+                    {
+                        value: "nauticalDawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                    },
+                    {
+                        value: "dawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                    },
+                    {
+                        value: "sunrise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                    },
+                    {
+                        value: "sunriseEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                    },
+                    {
+                        value: "goldenHourEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                    },
+                    {
+                        value: "solarNoon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                    },
+                    {
+                        value: "goldenHour",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                    },
+                    {
+                        value: "sunsetStart",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                    },
+                    {
+                        value: "sunset",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                    },
+                    {
+                        value: "dusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                    },
+                    {
+                        value: "nauticalDusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                    },
+                    {
+                        value: "night",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                    },
+                    {
+                        value: "nadir",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                    }
+                ];
+
+                const moonTimes =
+                [
+                    {
+                        value: "rise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                    },
+                    {
+                        value: "set",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                    }
+                ];
+
+                const timeInput =
+                {
+                    value: "time",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                    icon: "fa fa-clock-o",
+                    hasValue: true,
+                    validate: PATTERN_TIME
+                };
+
+                const sunTimeInput =
+                {
+                    value: "sun",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                    icon: "fa fa-sun-o",
+                    options: sunTimes
+                };
+
+                const moonTimeInput =
+                {
+                    value: "moon",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                    icon: "fa fa-moon-o",
+                    options: moonTimes
+                };
+
+                const customInput =
+                {
+                    value: "custom",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                    icon: "fa fa-user-o",
+                    hasValue: true,
+                    validate: PATTERN_CUSTOM_TIME
+                };
+
+                const manualInput =
+                {
+                    value: "manual",
+                    label: node._("state.label.manualTrigger"),
+                    hasValue: false
+                };
+
+                const fullMessageInput =
+                {
+                    value: "fullMsg",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
+                    icon: "fa fa-envelope",
+                    hasValue: true,
+                    expand: function()
+                    {
+                        let me = this;
+
+                        RED.editor.editExpression(
+                        {
+                            value: this.value().replace(/\t/g, "\n"),
+                            stateId: RED.editor.generateViewStateId("typedInput", me, "fullMsg"),
+                            focus: true,
+                            complete: function(v)
+                            {
+                                me.value(v.replace(/\n/g, "\t"));
+                            }
+                        });
+                    }
+                };
+
+                const logicalAndInput =
+                {
+                    value: "and",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.evaluation.logicalAnd"),
+                    hasValue: false
+                };
+
+                const logicalOrInput =
+                {
+                    value: "or",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.list.evaluation.logicalOr"),
+                    hasValue: false
+                };
+
+                const validateNumericInput = function(event, ui)
+                {
+                    const value = parseInt($(this).spinner("value"), 10);
+                    const min = $(this).spinner("option", "min");
+                    const max = $(this).spinner("option", "max");
+                    if (isNaN(value) ||
+                        (value < min))
+                    {
+                        $(this).spinner("value", min);
+                    }
+                    else if (value > max)
+                    {
+                        $(this).spinner("value", max);
+                    }
+                }
+
+                const outputValue = $("#node-input-outputValue")
+                                        .typedInput({types: ["global", "flow", "msg", fullMessageInput], typeField: "#node-input-outputType"});
+
+                const tabs = RED.tabs.create(
+                {
+                    id: "tab-row",
+                    onchange: function(tab)
+                    {
+                        $("#tabs-content").children().hide();
+                        $("#" + tab.id).show();
+                        RED.tray.resize();
+                    }
+                });
+
+                tabs.addTab({id: "tab-states", iconClass: "fa fa-share-alt", label: node._("state.label.states")});
+                tabs.addTab({id: "tab-conditions", iconClass: "fa fa-filter", label: node._("node-red-contrib-chronos/chronos-config:common.label.conditions")});
+                tabs.activateTab("tab-states");
+
+                const stateList = $("#node-input-stateList").css("min-width", "530px").css("min-height", "150px").editableList(
+                {
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
+                    {
+                        const offsetInput =
+                        {
+                            min: -300,
+                            max: 300,
+                            step: 1,
+                            change: validateNumericInput
+                        };
+
+                        const fragment = document.createDocumentFragment();
+
+                        $("<div/>", {class: "node-input-index", style: "position: absolute; width: 22px; top: 50%; left: 30px; margin-top: -9px; font-size: 18px; text-align: right;"})
+                                            .text((index+1).toString())
+                                            .appendTo(fragment);
+                        const stateBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 40px;"}).appendTo(fragment);
+
+                        const triggerRow = $("<div/>").appendTo(stateBox);
+                        const valueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(stateBox);
+
+                        const trigger = $("<input/>", {type: "text", class: "node-input-trigger"})
+                                            .appendTo(triggerRow)
+                                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", manualInput]});
+                        trigger.typedInput("width", "280px");
+                        trigger._prevType = "time";
+
+                        const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
+                        const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                                            .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
+                                            .appendTo(offsetBox);
+                        const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
+                                            .appendTo(offsetLabel)
+                                            .spinner(offsetInput);
+                        const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                            .html("<i class='fa fa-random' aria-hidden='true'></i>")
+                                            .appendTo(offsetBox);
+                        const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                                            .appendTo(randomLabel);
+
+                        const state = $("<input/>", {type: "text", class: "node-input-state"})
+                                        .appendTo(valueRow)
+                                        .typedInput({types: ["str", "num", "bool", "json", "bin", "env", "date"]});
+                        state.typedInput("width", "280px");
+
+                        trigger.on("change", function()
+                        {
+                            let type = trigger.typedInput("type");
+                            if (type === "manual")
+                            {
+                                offsetBox.hide();
+                            }
+                            else
+                            {
+                                offsetBox.show();
+                            }
+
+                            if (type != trigger._prevType)
+                            {
+                                trigger._prevType = type;
+                                if ((type != "sun") && (type != "moon"))
+                                {
+                                    trigger.typedInput("value", "");
+                                }
+                            }
+                        });
+
+                        if (!("trigger" in data))
+                        {
+                            data = {trigger: {type: "time", value: "", offset: 0, random: false},
+                                    state: {type: "str", value: ""}};
+                        }
+
+                        if (data.trigger.type != "manual")
+                        {
+                            trigger.typedInput("value", data.trigger.value);
+                        }
+
+                        trigger._prevType = data.trigger.type;
+                        trigger.typedInput("type", data.trigger.type);
+
+                        if (data.trigger.type != "manual")
+                        {
+                            triggerOffset.spinner(
+                                            "value",
+                                            (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
+                                                ? data.trigger.offset
+                                                : 0);
+                            triggerRandom.prop(
+                                            "checked",
+                                            (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
+                                                ? data.trigger.random
+                                                : false);
                         }
                         else
                         {
-                            return false;
+                            triggerOffset.spinner("value", 0);
+                            triggerRandom.prop("checked", false);
                         }
+
+                        state.typedInput("type", data.state.type);
+                        state.typedInput("value", data.state.value);
+
+                        item[0].appendChild(fragment);
+                    },
+                    removeItem: function(item)
+                    {
+                        $("#node-input-stateList").editableList("items").each(function(index)
+                        {
+                            $(this).find(".node-input-index").text((index+1).toString());
+                        });
+                    },
+                    sortItems: function(items)
+                    {
+                        items.each(function(index)
+                        {
+                            $(this).find(".node-input-index").text((index+1).toString());
+                        });
                     }
-                    else
+                });
+
+                const conditionList = $("#node-input-conditionList").css("min-width", "530px").css("min-height", "150px").editableList(
+                {
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
                     {
-                        return RED.utils.validateTypedProperty(v, type, opt);
-                    }
-                }
-            },
-            outputType:
-            {
-                value: "msg"
-            },
-            states:
-            {
-                value: [{
-                    trigger: {
-                        type: "time",
-                        value: "",
-                        offset: 0,
-                        random: false},
-                    state: {
-                        type: "bool",
-                        value: true}}, {
-                    trigger: {
-                        type: "time",
-                        value: "",
-                        offset: 0,
-                        random: false},
-                    state: {
-                        type: "bool",
-                        value: false}}],
-                validate: function(v)
-                {
-                    // just a simple check if there are any states, no detailed check of the content
-                    return v.length > 0;
-                }
-            },
-            conditions:
-            {
-                value: []
-            },
-            evaluation:
-            {
-                value:    "",
-                validate: RED.validators.typedInput("evaluationType")
-            },
-            evaluationType:
-            {
-                value: "and"
-            },
-            outputOnStart:
-            {
-                value: true
-            },
-            outputOnStartDelay:
-            {
-                value:    0.1,
-                validate: RED.validators.number(true)
-            },
-            passiveMode:
-            {
-                value: false
-            }
-        },
-        oneditprepare: function()
-        {
-            const node = this;
-
-            const months =
-            [
-                "january",
-                "february",
-                "march",
-                "april",
-                "may",
-                "june",
-                "july",
-                "august",
-                "september",
-                "october",
-                "november",
-                "december"
-            ];
-
-            const weekdays =
-            [
-                "sunday",  // moment.js uses US order -> Sunday is first day of the week
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday"
-            ];
-
-            const sunTimes =
-            [
-                {
-                    value: "nightEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
-                },
-                {
-                    value: "nauticalDawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
-                },
-                {
-                    value: "dawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
-                },
-                {
-                    value: "sunrise",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
-                },
-                {
-                    value: "sunriseEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
-                },
-                {
-                    value: "goldenHourEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
-                },
-                {
-                    value: "solarNoon",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
-                },
-                {
-                    value: "goldenHour",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
-                },
-                {
-                    value: "sunsetStart",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
-                },
-                {
-                    value: "sunset",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
-                },
-                {
-                    value: "dusk",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
-                },
-                {
-                    value: "nauticalDusk",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
-                },
-                {
-                    value: "night",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
-                },
-                {
-                    value: "nadir",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
-                }
-            ];
-
-            const moonTimes =
-            [
-                {
-                    value: "rise",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
-                },
-                {
-                    value: "set",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
-                }
-            ];
-
-            const timeInput =
-            {
-                value: "time",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
-                icon: "fa fa-clock-o",
-                hasValue: true,
-                validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/
-            };
-
-            const sunTimeInput =
-            {
-                value: "sun",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
-                icon: "fa fa-sun-o",
-                options: sunTimes
-            };
-
-            const moonTimeInput =
-            {
-                value: "moon",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
-                icon: "fa fa-moon-o",
-                options: moonTimes
-            };
-
-            const customInput =
-            {
-                value: "custom",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
-                icon: "fa fa-user-o",
-                hasValue: true,
-                validate: /^[a-zA-Z][0-9a-zA-Z_]+$/
-            };
-
-            const manualInput =
-            {
-                value: "manual",
-                label: node._("state.label.manualTrigger"),
-                hasValue: false
-            };
-
-            const fullMessageInput =
-            {
-                value: "fullMsg",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.fullMessage"),
-                icon: "fa fa-envelope",
-                hasValue: true,
-                expand: function()
-                {
-                    let me = this;
-
-                    RED.editor.editExpression(
-                    {
-                        value: this.value().replace(/\t/g, "\n"),
-                        stateId: RED.editor.generateViewStateId("typedInput", me, "fullMsg"),
-                        focus: true,
-                        complete: function(v)
+                        const fixedDayInput =
                         {
-                            me.value(v.replace(/\n/g, "\t"));
-                        }
-                    });
-                }
-            };
+                            min: 1,
+                            max: 31,
+                            step: 1,
+                            change: validateNumericInput
+                        };
 
-            const logicalAndInput =
-            {
-                value: "and",
-                label: node._("node-red-contrib-chronos/chronos-config:common.list.evaluation.logicalAnd"),
-                hasValue: false
-            };
+                        const fragment = document.createDocumentFragment();
+                        const typeBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto;"}).appendTo(fragment);
+                        const daysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
+                        const weekdaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
+                        const monthsBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
+                        const monthsRow1 = $("<div/>").appendTo(monthsBox);
+                        const monthsRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(monthsBox);
 
-            const logicalOrInput =
-            {
-                value: "or",
-                label: node._("node-red-contrib-chronos/chronos-config:common.list.evaluation.logicalOr"),
-                hasValue: false
-            };
+                        const operator = $("<select/>", {class: "node-input-operator", style: "width: auto;"})
+                                            .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.days")))
+                                            .append($("<option></option>").val("weekdays").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.weekdays")))
+                                            .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.months")))
+                                            .appendTo(typeBox);
 
-            const validateNumericInput = function(event, ui)
-            {
-                const value = parseInt($(this).spinner("value"), 10);
-                const min = $(this).spinner("option", "min");
-                const max = $(this).spinner("option", "max");
-                if (isNaN(value) ||
-                    (value < min))
-                {
-                    $(this).spinner("value", min);
-                }
-                else if (value > max)
-                {
-                    $(this).spinner("value", max);
-                }
-            }
+                        const dayType = $("<select/>", {class: "node-input-dayType", style: "width: auto; margin-left: 4px;"})
+                                            .append($("<option></option>").val("first").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.first")))
+                                            .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.second")))
+                                            .append($("<option></option>").val("third").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.third")))
+                                            .append($("<option></option>").val("fourth").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.fourth")))
+                                            .append($("<option></option>").val("fifth").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.fifth")))
+                                            .append($("<option></option>").val("last").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.last")))
+                                            .append($("<option></option>").val("even").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.even")))
+                                            .append($("<option></option>").val("specific").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.specific")))
+                                            .appendTo(daysBox);
+                        const nthDaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(daysBox);
+                        const specificDaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(daysBox);
+                        const day = $("<select/>", {class: "node-input-day", style: "width: auto;"})
+                                            .append($("<option></option>").val("monday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.monday")))
+                                            .append($("<option></option>").val("tuesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.tuesday")))
+                                            .append($("<option></option>").val("wednesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.wednesday")))
+                                            .append($("<option></option>").val("thursday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.thursday")))
+                                            .append($("<option></option>").val("friday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.friday")))
+                                            .append($("<option></option>").val("saturday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.saturday")))
+                                            .append($("<option></option>").val("sunday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.sunday")))
+                                            .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.day")))
+                                            .append($("<option></option>").val("workday").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.workday")))
+                                            .append($("<option></option>").val("weekend").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.weekend")))
+                                            .appendTo(nthDaysBox);
+                        const fixedDay = $("<input/>", {class: "node-input-fixedDay", style: "width: 30px !important;"})
+                                            .appendTo(specificDaysBox)
+                                            .spinner(fixedDayInput);
+                        const fixedMonth = $("<select/>", {class: "node-input-fixedMonth", style: "width: auto; margin-left: 6px;"})
+                                            .append($("<option></option>").val("january").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.january")))
+                                            .append($("<option></option>").val("february").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.february")))
+                                            .append($("<option></option>").val("march").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.march")))
+                                            .append($("<option></option>").val("april").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.april")))
+                                            .append($("<option></option>").val("may").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.may")))
+                                            .append($("<option></option>").val("june").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.june")))
+                                            .append($("<option></option>").val("july").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.july")))
+                                            .append($("<option></option>").val("august").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.august")))
+                                            .append($("<option></option>").val("september").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.september")))
+                                            .append($("<option></option>").val("october").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.october")))
+                                            .append($("<option></option>").val("november").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.november")))
+                                            .append($("<option></option>").val("december").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.december")))
+                                            .append($("<option></option>").val("any").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.any")))
+                                            .appendTo(specificDaysBox);
+                        const excludeLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.exclude"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                            .html("<i class='fa fa-ban' aria-hidden='true'></i>")
+                                            .appendTo(daysBox);
+                        const exclude = $("<input/>", {type: "checkbox", class: "node-input-exclude", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                                            .appendTo(excludeLabel);
 
-            const outputValue = $("#node-input-outputValue")
-                                    .typedInput({types: ["global", "flow", "msg", fullMessageInput], typeField: "#node-input-outputType"});
+                        const weekdayInputs = new Array(6);
+                        const monthInputs = new Array(12);
 
-            const tabs = RED.tabs.create(
-            {
-                id: "tab-row",
-                onchange: function(tab)
-                {
-                    $("#tabs-content").children().hide();
-                    $("#" + tab.id).show();
-                    RED.tray.resize();
-                }
-            });
-
-            tabs.addTab({id: "tab-states", iconClass: "fa fa-share-alt", label: node._("state.label.states")});
-            tabs.addTab({id: "tab-conditions", iconClass: "fa fa-filter", label: node._("node-red-contrib-chronos/chronos-config:common.label.conditions")});
-            tabs.activateTab("tab-states");
-
-            const stateList = $("#node-input-stateList").css("min-width", "530px").css("min-height", "150px").editableList(
-            {
-                removable: true,
-                sortable: true,
-                addItem: function(item, index, data)
-                {
-                    const offsetInput =
-                    {
-                        min: -300,
-                        max: 300,
-                        step: 1,
-                        change: validateNumericInput
-                    };
-
-                    const fragment = document.createDocumentFragment();
-
-                    $("<div/>", {class: "node-input-index", style: "position: absolute; width: 22px; top: 50%; left: 30px; margin-top: -9px; font-size: 18px; text-align: right;"})
-                                        .text((index+1).toString())
-                                        .appendTo(fragment);
-                    const stateBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 40px;"}).appendTo(fragment);
-
-                    const triggerRow = $("<div/>").appendTo(stateBox);
-                    const valueRow = $("<div/>", {style: "margin-top: 5px; "}).appendTo(stateBox);
-
-                    const trigger = $("<input/>", {type: "text", class: "node-input-trigger"})
-                                        .appendTo(triggerRow)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", manualInput]});
-                    trigger.typedInput("width", "280px");
-                    trigger._prevType = "time";
-
-                    const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
-                    const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
-                                        .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
-                                        .appendTo(offsetBox);
-                    const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
-                                        .appendTo(offsetLabel)
-                                        .spinner(offsetInput);
-                    const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
-                                        .html("<i class='fa fa-random' aria-hidden='true'></i>")
-                                        .appendTo(offsetBox);
-                    const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
-                                        .appendTo(randomLabel);
-
-                    const state = $("<input/>", {type: "text", class: "node-input-state"})
-                                    .appendTo(valueRow)
-                                    .typedInput({types: ["str", "num", "bool", "json", "bin", "env", "date"]});
-                    state.typedInput("width", "280px");
-
-                    trigger.on("change", function()
-                    {
-                        let type = trigger.typedInput("type");
-                        if (type === "manual")
+                        for (let i=0; i<7; ++i)
                         {
-                            offsetBox.hide();
-                        }
-                        else
-                        {
-                            offsetBox.show();
+                            weekdayInputs[(i+1)%7] = $("<input/>", {type: "checkbox", class: "node-input-" + weekdays[(i+1)%7], style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                                    .appendTo(weekdaysBox);
+                            $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong." + weekdays[(i+1)%7]), style: "margin-left: 4px; margin-bottom: 0px; width: auto;"})
+                                                    .text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday." + weekdays[(i+1)%7])).appendTo(weekdaysBox);
                         }
 
-                        if (type != trigger._prevType)
+                        for (let i=0; i<12; ++i)
                         {
-                            trigger._prevType = type;
-                            if ((type != "sun") && (type != "moon"))
+                            const row = (i < 6) ? monthsRow1 : monthsRow2;
+
+                            monthInputs[i] = $("<input/>", {type: "checkbox", class: "node-input-" + months[i], style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                                                    .appendTo(row);
+                            $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.list.monthLong." + months[i]), style: "margin-left: 4px; margin-bottom: 0px; width: 40px;"})
+                                                    .text(node._("node-red-contrib-chronos/chronos-config:common.list.month." + months[i])).appendTo(row);
+                        }
+
+                        operator.change(function()
+                        {
+                            daysBox.hide();
+                            weekdaysBox.hide();
+                            monthsBox.hide();
+
+                            var value = $(this).val();
+                            switch (value)
                             {
-                                trigger.typedInput("value", "");
+                                case "days":
+                                {
+                                    daysBox.show();
+                                    break;
+                                }
+                                case "weekdays":
+                                {
+                                    weekdaysBox.show();
+                                    break;
+                                }
+                                case "months":
+                                {
+                                    monthsBox.show();
+                                    break;
+                                }
+                            }
+                        });
+
+                        dayType.change(function()
+                        {
+                            nthDaysBox.hide();
+                            specificDaysBox.hide();
+
+                            let value = $(this).val();
+                            if (value == "specific")
+                            {
+                                specificDaysBox.show();
+                            }
+                            else if (value != "even")
+                            {
+                                let val = day.val();
+                                day.children("option[value='day']").remove();
+                                day.children("option[value='workday']").remove();
+                                day.children("option[value='weekend']").remove();
+
+                                if ((value == "first") || (value == "last"))
+                                {
+                                    day.append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.day")));
+                                    day.append($("<option></option>").val("workday").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.workday")));
+                                    day.append($("<option></option>").val("weekend").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.weekend")));
+                                    day.val(val);
+                                }
+
+                                nthDaysBox.show();
+                            }
+                        });
+
+                        fixedMonth.change(function()
+                        {
+                            let value = $(this).val();
+                            switch (value)
+                            {
+                                case "january":
+                                case "march":
+                                case "may":
+                                case "july":
+                                case "august":
+                                case "october":
+                                case "december":
+                                case "any":
+                                {
+                                    fixedDay.spinner("option", "max", 31);
+                                    break;
+                                }
+                                case "february":
+                                {
+                                    fixedDay.spinner("option", "max", 29);
+                                    break;
+                                }
+                                case "april":
+                                case "june":
+                                case "september":
+                                case "november":
+                                {
+                                    fixedDay.spinner("option", "max", 30);
+                                    break;
+                                }
+                            }
+
+                            validateNumericInput.call(fixedDay);
+                        });
+
+                        if (!("operator" in data))
+                        {
+                            data = {operator: "days", operands: {type: "first", day: "day", exclude: false}};
+                        }
+
+                        // initial value
+                        fixedDay.spinner("value", 1);
+
+                        operator.val(data.operator);
+
+                        if (data.operator == "days")
+                        {
+                            dayType.val(data.operands.type);
+
+                            if (data.operands.type == "specific")
+                            {
+                                fixedDay.spinner("value", data.operands.day);
+                                fixedMonth.val(data.operands.month);
+                            }
+                            else if (data.operands.type != "even")
+                            {
+                                day.val(data.operands.day);
+                            }
+
+                            exclude.prop("checked", data.operands.exclude);
+                        }
+                        else if (data.operator == "weekdays")
+                        {
+                            for (let i=0; i<7; ++i)
+                            {
+                                weekdayInputs[i].prop("checked", data.operands[i]);
                             }
                         }
-                    });
+                        else if (data.operator == "months")
+                        {
+                            for (let i=0; i<12; ++i)
+                            {
+                                monthInputs[i].prop("checked", data.operands[i]);
+                            }
+                        }
 
-                    if (!("trigger" in data))
+                        operator.change();
+                        dayType.change();
+                        item[0].appendChild(fragment);
+                    }
+                });
+
+                $("#node-input-evaluation")
+                    .typedInput({types: [logicalAndInput, logicalOrInput, "jsonata"], typeField: "#node-input-evaluationType"});
+
+                $("#node-input-outputOnStart").on("change", function()
+                {
+                    $("#node-input-outputOnStartDelay").attr("disabled", !$("#node-input-outputOnStart").prop("checked"));
+                });
+
+                node.states.forEach(data =>
+                {
+                    stateList.editableList("addItem", data);
+                });
+
+                node.conditions.forEach(data =>
+                {
+                    conditionList.editableList("addItem", data);
+                });
+            },
+            oneditsave: function()
+            {
+                const node = this;
+                const stateList = $("#node-input-stateList").editableList("items");
+                const conditionList = $("#node-input-conditionList").editableList("items");
+
+                node.states = [];
+                node.conditions = [];
+
+                stateList.each(function(index)
+                {
+                    const data = {trigger: {}, state: {}};
+
+                    const trigger = $(this).find(".node-input-trigger");
+                    const state = $(this).find(".node-input-state");
+
+                    data.trigger.type = trigger.typedInput("type");
+
+                    if (data.trigger.type != "manual")
                     {
-                        data = {trigger: {type: "time", value: "", offset: 0, random: false},
-                                state: {type: "str", value: ""}};
+                        data.trigger.value = trigger.typedInput("value");
                     }
 
                     if (data.trigger.type != "manual")
                     {
-                        trigger.typedInput("value", data.trigger.value);
+                        data.trigger.offset = $(this).find(".node-input-triggerOffset").spinner("value");
+                        data.trigger.random = $(this).find(".node-input-triggerRandom").prop("checked");
                     }
 
-                    trigger._prevType = data.trigger.type;
-                    trigger.typedInput("type", data.trigger.type);
+                    data.state.type = state.typedInput("type");
+                    data.state.value = state.typedInput("value");
 
-                    if (data.trigger.type != "manual")
-                    {
-                        triggerOffset.spinner(
-                                        "value",
-                                        (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
-                                            ? data.trigger.offset
-                                            : 0);
-                        triggerRandom.prop(
-                                        "checked",
-                                        (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
-                                            ? data.trigger.random
-                                            : false);
-                    }
-                    else
-                    {
-                        triggerOffset.spinner("value", 0);
-                        triggerRandom.prop("checked", false);
-                    }
+                    node.states.push(data);
+                });
 
-                    state.typedInput("type", data.state.type);
-                    state.typedInput("value", data.state.value);
-
-                    item[0].appendChild(fragment);
-                },
-                removeItem: function(item)
+                conditionList.each(function(index)
                 {
-                    $("#node-input-stateList").editableList("items").each(function(index)
-                    {
-                        $(this).find(".node-input-index").text((index+1).toString());
-                    });
-                },
-                sortItems: function(items)
-                {
-                    items.each(function(index)
-                    {
-                        $(this).find(".node-input-index").text((index+1).toString());
-                    });
-                }
-            });
-
-            const conditionList = $("#node-input-conditionList").css("min-width", "530px").css("min-height", "150px").editableList(
-            {
-                removable: true,
-                sortable: true,
-                addItem: function(item, index, data)
-                {
-                    const fixedDayInput =
-                    {
-                        min: 1,
-                        max: 31,
-                        step: 1,
-                        change: validateNumericInput
-                    };
-
-                    const fragment = document.createDocumentFragment();
-                    const typeBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto;"}).appendTo(fragment);
-                    const daysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
-                    const weekdaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
-                    const monthsBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
-                    const monthsRow1 = $("<div/>").appendTo(monthsBox);
-                    const monthsRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(monthsBox);
-
-                    const operator = $("<select/>", {class: "node-input-operator", style: "width: auto;"})
-                                        .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.days")))
-                                        .append($("<option></option>").val("weekdays").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.weekdays")))
-                                        .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.months")))
-                                        .appendTo(typeBox);
-
-                    const dayType = $("<select/>", {class: "node-input-dayType", style: "width: auto; margin-left: 4px;"})
-                                        .append($("<option></option>").val("first").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.first")))
-                                        .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.second")))
-                                        .append($("<option></option>").val("third").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.third")))
-                                        .append($("<option></option>").val("fourth").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.fourth")))
-                                        .append($("<option></option>").val("fifth").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.fifth")))
-                                        .append($("<option></option>").val("last").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.last")))
-                                        .append($("<option></option>").val("even").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.even")))
-                                        .append($("<option></option>").val("specific").text(node._("node-red-contrib-chronos/chronos-config:common.list.dayType.specific")))
-                                        .appendTo(daysBox);
-                    const nthDaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(daysBox);
-                    const specificDaysBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(daysBox);
-                    const day = $("<select/>", {class: "node-input-day", style: "width: auto;"})
-                                        .append($("<option></option>").val("monday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.monday")))
-                                        .append($("<option></option>").val("tuesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.tuesday")))
-                                        .append($("<option></option>").val("wednesday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.wednesday")))
-                                        .append($("<option></option>").val("thursday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.thursday")))
-                                        .append($("<option></option>").val("friday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.friday")))
-                                        .append($("<option></option>").val("saturday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.saturday")))
-                                        .append($("<option></option>").val("sunday").text(node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong.sunday")))
-                                        .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.day")))
-                                        .append($("<option></option>").val("workday").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.workday")))
-                                        .append($("<option></option>").val("weekend").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.weekend")))
-                                        .appendTo(nthDaysBox);
-                    const fixedDay = $("<input/>", {class: "node-input-fixedDay", style: "width: 30px !important;"})
-                                        .appendTo(specificDaysBox)
-                                        .spinner(fixedDayInput);
-                    const fixedMonth = $("<select/>", {class: "node-input-fixedMonth", style: "width: auto; margin-left: 6px;"})
-                                        .append($("<option></option>").val("january").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.january")))
-                                        .append($("<option></option>").val("february").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.february")))
-                                        .append($("<option></option>").val("march").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.march")))
-                                        .append($("<option></option>").val("april").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.april")))
-                                        .append($("<option></option>").val("may").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.may")))
-                                        .append($("<option></option>").val("june").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.june")))
-                                        .append($("<option></option>").val("july").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.july")))
-                                        .append($("<option></option>").val("august").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.august")))
-                                        .append($("<option></option>").val("september").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.september")))
-                                        .append($("<option></option>").val("october").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.october")))
-                                        .append($("<option></option>").val("november").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.november")))
-                                        .append($("<option></option>").val("december").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.december")))
-                                        .append($("<option></option>").val("any").text(node._("node-red-contrib-chronos/chronos-config:common.list.monthLong.any")))
-                                        .appendTo(specificDaysBox);
-                    const excludeLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.exclude"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
-                                        .html("<i class='fa fa-ban' aria-hidden='true'></i>")
-                                        .appendTo(daysBox);
-                    const exclude = $("<input/>", {type: "checkbox", class: "node-input-exclude", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
-                                        .appendTo(excludeLabel);
-
-                    const weekdayInputs = new Array(6);
-                    const monthInputs = new Array(12);
-
-                    for (let i=0; i<7; ++i)
-                    {
-                        weekdayInputs[(i+1)%7] = $("<input/>", {type: "checkbox", class: "node-input-" + weekdays[(i+1)%7], style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
-                                                .appendTo(weekdaysBox);
-                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.list.weekdayLong." + weekdays[(i+1)%7]), style: "margin-left: 4px; margin-bottom: 0px; width: auto;"})
-                                                .text(node._("node-red-contrib-chronos/chronos-config:common.list.weekday." + weekdays[(i+1)%7])).appendTo(weekdaysBox);
-                    }
-
-                    for (let i=0; i<12; ++i)
-                    {
-                        const row = (i < 6) ? monthsRow1 : monthsRow2;
-
-                        monthInputs[i] = $("<input/>", {type: "checkbox", class: "node-input-" + months[i], style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
-                                                .appendTo(row);
-                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.list.monthLong." + months[i]), style: "margin-left: 4px; margin-bottom: 0px; width: 40px;"})
-                                                .text(node._("node-red-contrib-chronos/chronos-config:common.list.month." + months[i])).appendTo(row);
-                    }
-
-                    operator.change(function()
-                    {
-                        daysBox.hide();
-                        weekdaysBox.hide();
-                        monthsBox.hide();
-
-                        var value = $(this).val();
-                        switch (value)
-                        {
-                            case "days":
-                            {
-                                daysBox.show();
-                                break;
-                            }
-                            case "weekdays":
-                            {
-                                weekdaysBox.show();
-                                break;
-                            }
-                            case "months":
-                            {
-                                monthsBox.show();
-                                break;
-                            }
-                        }
-                    });
-
-                    dayType.change(function()
-                    {
-                        nthDaysBox.hide();
-                        specificDaysBox.hide();
-
-                        let value = $(this).val();
-                        if (value == "specific")
-                        {
-                            specificDaysBox.show();
-                        }
-                        else if (value != "even")
-                        {
-                            let val = day.val();
-                            day.children("option[value='day']").remove();
-                            day.children("option[value='workday']").remove();
-                            day.children("option[value='weekend']").remove();
-
-                            if ((value == "first") || (value == "last"))
-                            {
-                                day.append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.day")));
-                                day.append($("<option></option>").val("workday").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.workday")));
-                                day.append($("<option></option>").val("weekend").text(node._("node-red-contrib-chronos/chronos-config:common.list.day.weekend")));
-                                day.val(val);
-                            }
-
-                            nthDaysBox.show();
-                        }
-                    });
-
-                    fixedMonth.change(function()
-                    {
-                        let value = $(this).val();
-                        switch (value)
-                        {
-                            case "january":
-                            case "march":
-                            case "may":
-                            case "july":
-                            case "august":
-                            case "october":
-                            case "december":
-                            case "any":
-                            {
-                                fixedDay.spinner("option", "max", 31);
-                                break;
-                            }
-                            case "february":
-                            {
-                                fixedDay.spinner("option", "max", 29);
-                                break;
-                            }
-                            case "april":
-                            case "june":
-                            case "september":
-                            case "november":
-                            {
-                                fixedDay.spinner("option", "max", 30);
-                                break;
-                            }
-                        }
-
-                        validateNumericInput.call(fixedDay);
-                    });
-
-                    if (!("operator" in data))
-                    {
-                        data = {operator: "days", operands: {type: "first", day: "day", exclude: false}};
-                    }
-
-                    // initial value
-                    fixedDay.spinner("value", 1);
-
-                    operator.val(data.operator);
+                    const data = {};
+                    data.operator = $(this).find(".node-input-operator").val();
 
                     if (data.operator == "days")
                     {
-                        dayType.val(data.operands.type);
+                        data.operands = {};
+                        data.operands.type = $(this).find(".node-input-dayType").val();
 
                         if (data.operands.type == "specific")
                         {
-                            fixedDay.spinner("value", data.operands.day);
-                            fixedMonth.val(data.operands.month);
+                            data.operands.day = $(this).find(".node-input-fixedDay").spinner("value");
+                            data.operands.month = $(this).find(".node-input-fixedMonth").val();
                         }
-                        else if (data.operands.type != "even")
+                        else if (data.operands != "even")
                         {
-                            day.val(data.operands.day);
+                            data.operands.day = $(this).find(".node-input-day").val();
                         }
 
-                        exclude.prop("checked", data.operands.exclude);
+                        data.operands.exclude = $(this).find(".node-input-exclude").prop("checked");
                     }
                     else if (data.operator == "weekdays")
                     {
+                        data.operands = Array(7).fill(false);
+
                         for (let i=0; i<7; ++i)
                         {
-                            weekdayInputs[i].prop("checked", data.operands[i]);
+                            data.operands[i] = $(this).find(".node-input-" + weekdays[i]).prop("checked");
                         }
                     }
                     else if (data.operator == "months")
                     {
+                        data.operands = Array(12).fill(false);
+
                         for (let i=0; i<12; ++i)
                         {
-                            monthInputs[i].prop("checked", data.operands[i]);
+                            data.operands[i] = $(this).find(".node-input-" + months[i]).prop("checked");
                         }
                     }
 
-                    operator.change();
-                    dayType.change();
-                    item[0].appendChild(fragment);
-                }
-            });
-
-            $("#node-input-evaluation")
-                .typedInput({types: [logicalAndInput, logicalOrInput, "jsonata"], typeField: "#node-input-evaluationType"});
-
-            $("#node-input-outputOnStart").on("change", function()
+                    node.conditions.push(data);
+                });
+            },
+            oneditresize: function(size)
             {
-                $("#node-input-outputOnStartDelay").attr("disabled", !$("#node-input-outputOnStart").prop("checked"));
-            });
-
-            node.states.forEach(data =>
-            {
-                stateList.editableList("addItem", data);
-            });
-
-            node.conditions.forEach(data =>
-            {
-                conditionList.editableList("addItem", data);
-            });
-        },
-        oneditsave: function()
-        {
-            const months =
-            [
-                "january",
-                "february",
-                "march",
-                "april",
-                "may",
-                "june",
-                "july",
-                "august",
-                "september",
-                "october",
-                "november",
-                "december"
-            ];
-
-            const weekdays =
-            [
-                "sunday",  // moment.js uses US order -> Sunday is first day of the week
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday"
-            ];
-
-            const node = this;
-            const stateList = $("#node-input-stateList").editableList("items");
-            const conditionList = $("#node-input-conditionList").editableList("items");
-
-            node.states = [];
-            node.conditions = [];
-
-            stateList.each(function(index)
-            {
-                const data = {trigger: {}, state: {}};
-
-                const trigger = $(this).find(".node-input-trigger");
-                const state = $(this).find(".node-input-state");
-
-                data.trigger.type = trigger.typedInput("type");
-
-                if (data.trigger.type != "manual")
-                {
-                    data.trigger.value = trigger.typedInput("value");
-                }
-
-                if (data.trigger.type != "manual")
-                {
-                    data.trigger.offset = $(this).find(".node-input-triggerOffset").spinner("value");
-                    data.trigger.random = $(this).find(".node-input-triggerRandom").prop("checked");
-                }
-
-                data.state.type = state.typedInput("type");
-                data.state.value = state.typedInput("value");
-
-                node.states.push(data);
-            });
-
-            conditionList.each(function(index)
-            {
-                const data = {};
-                data.operator = $(this).find(".node-input-operator").val();
-
-                if (data.operator == "days")
-                {
-                    data.operands = {};
-                    data.operands.type = $(this).find(".node-input-dayType").val();
-
-                    if (data.operands.type == "specific")
-                    {
-                        data.operands.day = $(this).find(".node-input-fixedDay").spinner("value");
-                        data.operands.month = $(this).find(".node-input-fixedMonth").val();
-                    }
-                    else if (data.operands != "even")
-                    {
-                        data.operands.day = $(this).find(".node-input-day").val();
-                    }
-
-                    data.operands.exclude = $(this).find(".node-input-exclude").prop("checked");
-                }
-                else if (data.operator == "weekdays")
-                {
-                    data.operands = Array(7).fill(false);
-
-                    for (let i=0; i<7; ++i)
-                    {
-                        data.operands[i] = $(this).find(".node-input-" + weekdays[i]).prop("checked");
-                    }
-                }
-                else if (data.operator == "months")
-                {
-                    data.operands = Array(12).fill(false);
-
-                    for (let i=0; i<12; ++i)
-                    {
-                        data.operands[i] = $(this).find(".node-input-" + months[i]).prop("checked");
-                    }
-                }
-
-                node.conditions.push(data);
-            });
-        },
-        oneditresize: function(size)
-        {
-            const listRow = $("#dialog-form div.list-row");
-            const otherRows = $("#dialog-form>div");
-            let height = size.height;
-
-            for (let i=0; i<otherRows.length; ++i)
-            {
-                let row = $(otherRows[i]);
-
-                if (row.is(":visible") && (row.attr("id") != "tabs-content"))
-                {
-                    height -= row.outerHeight(true);
-                }
-            }
-
-            height -= (parseInt(listRow.css("marginTop")) + parseInt(listRow.css("marginBottom")));
-
-            if ($("#tab-states").is(":visible"))
-            {
-                $("#node-input-stateList").editableList("height", height);
-            }
-            else if ($("#tab-conditions").is(":visible"))
-            {
-                otherRows = $("#tab-conditions>div:not(.list-row)");
+                const listRow = $("#dialog-form div.list-row");
+                const otherRows = $("#dialog-form>div");
+                let height = size.height;
 
                 for (let i=0; i<otherRows.length; ++i)
                 {
-                    height -= $(otherRows[i]).outerHeight(true);
+                    let row = $(otherRows[i]);
+
+                    if (row.is(":visible") && (row.attr("id") != "tabs-content"))
+                    {
+                        height -= row.outerHeight(true);
+                    }
                 }
 
-                $("#node-input-conditionList").editableList("height", height);
+                height -= (parseInt(listRow.css("marginTop")) + parseInt(listRow.css("marginBottom")));
+
+                if ($("#tab-states").is(":visible"))
+                {
+                    $("#node-input-stateList").editableList("height", height);
+                }
+                else if ($("#tab-conditions").is(":visible"))
+                {
+                    otherRows = $("#tab-conditions>div:not(.list-row)");
+
+                    for (let i=0; i<otherRows.length; ++i)
+                    {
+                        height -= $(otherRows[i]).outerHeight(true);
+                    }
+
+                    $("#node-input-conditionList").editableList("height", height);
+                }
             }
-        }
-    });
+        });
+    })();
 </script>
