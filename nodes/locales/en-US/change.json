@@ -74,9 +74,13 @@
         },
         "error":
         {
-            "noTasks":          "No rules configured",
-            "invalidProperty":  "Invalid property specified: __property__",
-            "NaN":              "Provided value is not a number"
+            "noTasks":           "No rules configured",
+            "invalidProperty":   "Invalid property specified: __property__",
+            "invalidFormat":     "Invalid format",
+            "invalidTimeZone":   "Invalid time zone",
+            "invalidUTCOffset":  "Invalid UTC offset",
+            "invalidPrecision":  "Invalid floating point precision",
+            "invalidNumber":     "Invalid number"
         }
     }
 }
