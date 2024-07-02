@@ -54,1259 +54,1376 @@ SOFTWARE.
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("chronos-change",
+    (function()
     {
-        category:     "chronos",
-        color:        "#DEB887",
-        icon:         "chronos_change.svg",
-        inputs:       1,
-        outputs:      1,
-        paletteLabel: "time change",
-        label: function()
+        const PATTERN_TIME         = /^(?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?\s*(?:a|am|A|AM|p|pm|P|PM)?$/;
+        const PATTERN_DATETIME     = /^(?:(?:(?:(?:[1-9]\d)?\d\d)-(?:[1-9]|0[1-9]|1[0-2])-(?:[1-9]|0[1-9]|[12]\d|3[01])|(?:(?:[1-9]|0[1-9]|[12]\d|3[01])\.(?:[1-9]|0[1-9]|1[0-2])\.(?:(?:[1-9]\d)?\d\d))|(?:(?:[1-9]|0[1-9]|1[0-2])\/(?:[1-9]|0[1-9]|[12]\d|3[01])\/(?:(?:[1-9]\d)?\d\d)))\s)?(?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?(?:\s(?:a|am|A|AM|p|pm|P|PM))?$/;
+        const PATTERN_CUSTOM_TIME  = /^[a-zA-Z][0-9a-zA-Z_]*$/;
+        const PATTERN_DATE         = /^(?:[2-9]\d\d\d)-(?:[1-9]|0[1-9]|1[0-2])-(?:[1-9]|0[1-9]|[12]\d|3[01])$/;
+        const PATTERN_UTC_OFFSET   = /^(?:Z|[+-]\d\d:\d\d|-?\d+)$/;
+        const PATTERN_FP_PRECISION = /^(?:0|[1-9][0-9]*)$/;
+
+        RED.nodes.registerType("chronos-change",
         {
-            return (this.name || this._("change.label.node"));
-        },
-        labelStyle: function()
-        {
-            return (this.name ? "node_label_italic" : "");
-        },
-        inputLabels: function()
-        {
-            return this._("node-red-contrib-chronos/chronos-config:common.label.inputPort");
-        },
-        outputLabels: function(index)
-        {
-            return this._("change.label.outputPort");
-        },
-        defaults:
-        {
-            name:
+            category:     "chronos",
+            color:        "#DEB887",
+            icon:         "chronos_change.svg",
+            inputs:       1,
+            outputs:      1,
+            paletteLabel: "time change",
+            label: function()
             {
-                value: ""
+                return (this.name || this._("change.label.node"));
             },
-            config:
+            labelStyle: function()
             {
-                value:    "",
-                type:     "chronos-config",
-                required: true
+                return (this.name ? "node_label_italic" : "");
             },
-            mode:
+            inputLabels: function()
             {
-                value: "time"
+                return this._("node-red-contrib-chronos/chronos-config:common.label.inputPort");
             },
-            rules:
+            outputLabels: function(index)
             {
-                value: [{action: "set", target: {type: "msg", name: "payload"}, type: "now"}],
-                validate: function(v)
-                {
-                    // just a simple check if there are any conditions, no detailed check of the content
-                    return v.length > 0;
-                }
-            }
-        },
-        oneditprepare: function()
-        {
-            const node = this;
-
-            const sunTimes =
-            [
-                {
-                    value: "nightEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
-                },
-                {
-                    value: "nauticalDawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
-                },
-                {
-                    value: "dawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
-                },
-                {
-                    value: "sunrise",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
-                },
-                {
-                    value: "sunriseEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
-                },
-                {
-                    value: "goldenHourEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
-                },
-                {
-                    value: "solarNoon",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
-                },
-                {
-                    value: "goldenHour",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
-                },
-                {
-                    value: "sunsetStart",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
-                },
-                {
-                    value: "sunset",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
-                },
-                {
-                    value: "dusk",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
-                },
-                {
-                    value: "nauticalDusk",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
-                },
-                {
-                    value: "night",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
-                },
-                {
-                    value: "nadir",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
-                }
-            ];
-
-            const moonTimes =
-            [
-                {
-                    value: "rise",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
-                },
-                {
-                    value: "set",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
-                }
-            ];
-
-            const nowInput =
+                return this._("change.label.outputPort");
+            },
+            defaults:
             {
-                value: "now",
-                label: node._("change.label.now"),
-                hasValue: false
-            };
-
-            const dateInput =
-            {
-                value: "date",
-                label: node._("change.label.date"),
-                icon: "fa fa-calendar",
-                hasValue: true,
-                validate: /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/
-            };
-
-            const sunTimeInput =
-            {
-                value: "sun",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
-                icon: "fa fa-sun-o",
-                options: sunTimes
-            };
-
-            const moonTimeInput =
-            {
-                value: "moon",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
-                icon: "fa fa-moon-o",
-                options: moonTimes
-            };
-
-            const customInput =
-            {
-                value: "custom",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
-                icon: "fa fa-user-o",
-                hasValue: true,
-                validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
-            };
-
-            const partInput =
-            {
-                value: "num",
-                label: node._("change.label.number"),
-                icon: "red/images/typedInput/09.svg",
-                hasValue: true,
-                min: -27000,
-                max: 27000,
-                validate: function(v)
+                name:
                 {
-                    return (v >= partInput.min) && (v <= partInput.max);
-                }
-            };
-
-            const addsubInput =
-            {
-                value: "num",
-                label: node._("change.label.number"),
-                icon: "red/images/typedInput/09.svg",
-                hasValue: true,
-                validate: function(v)
+                    value: ""
+                },
+                config:
                 {
-                    return (v >= 1) && (v <= 1000000);
-                }
-            };
-
-            const timeRules = $("#node-input-momentRules").css("min-width", "510px").css("min-height", "150px").editableList(
-            {
-                removable: true,
-                sortable: true,
-                addItem: function(item, index, data)
+                    value:    "",
+                    type:     "chronos-config",
+                    required: true
+                },
+                mode:
                 {
-                    const timeInput =
+                    value: "time"
+                },
+                rules:
+                {
+                    value: [{action: "set", target: {type: "msg", name: "payload"}, type: "now"}],
+                    validate: function(items, opt)
                     {
-                        value: "time",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
-                        icon: "fa fa-clock-o",
-                        hasValue: true,
-                        validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/
-                    };
-
-                    const fragment = document.createDocumentFragment();
-                    const actionBox = $("<div/>").appendTo(fragment);
-                    const setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-                    const changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-                    const convertBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-
-                    const action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
-                                        .append($("<option></option>").val("set").text(node._("change.list.action.set")))
-                                        .append($("<option></option>").val("change").text(node._("change.list.action.change")))
-                                        .append($("<option></option>").val("convert").text(node._("change.list.action.convert")))
-                                        .appendTo(actionBox);
-
-                    $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
-                                        .text(node._("change.label.setTo"))
-                                        .appendTo(setBox);
-                    const setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
-                    const setToRow1 = $("<div/>").appendTo(setToBox);
-                    const setToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
-
-                    const property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
-                                        .appendTo(actionBox)
-                                        .typedInput({types: ["global", "flow", "msg"]});
-                    property.typedInput("width", "314px");
-
-                    const date = $("<input/>", {type: "text", class: "node-input-date"})
-                                        .appendTo(setToRow1)
-                                        .typedInput({types: [nowInput, dateInput, "jsonata"]});
-                    date.typedInput("width", "314px");
-                    date._prevType = "now";
-                    date.on("change", function()
-                    {
-                        const type = date.typedInput("type");
-
-                        if ((type === "now") || (type === "jsonata"))
+                        if (!items || (items.length == 0))
                         {
-                            setToRow2.hide();
-                        }
-                        else
-                        {
-                            setToRow2.show();
+                            return this._("state.error.noStates");
                         }
 
-                        if (type != date._prevType)
+                        const mode = $("#node-input-mode").val();
+                        const errors = [];
+                        for (const item of items)
                         {
-                            date._prevType = type;
-                            if (type != "now")
+                            let res = RED.utils.validatePropertyExpression(item.target.name, opt);
+                            if (res !== true)
                             {
-                                date.typedInput("value", "");
+                                errors.push(res);
                             }
-                        }
-                    });
 
-                    const time = $("<input/>", {type: "text", class: "node-input-time"})
-                                        .appendTo(setToRow2)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
-                    time.typedInput("width", "314px");
-                    time._prevType = "time";
-                    time.on("change", function()
-                    {
-                        const type = time.typedInput("type");
-                        if (type != time._prevType)
-                        {
-                            time._prevType = type;
-                            if ((type != "sun") && (type != "moon"))
+                            if ((mode == "moment") && (item.action == "set") && (item.type == "date"))
                             {
-                                time.typedInput("value", "");
-                            }
-                        }
-                    });
+                                if (!PATTERN_DATE.test(item.date))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDate"));
+                                }
 
-                    const changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
-                                        .append($("<option></option>").val("set").text(node._("change.list.changeType.set")))
-                                        .append($("<option></option>").val("add").text(node._("change.list.changeType.add")))
-                                        .append($("<option></option>").val("subtract").text(node._("change.list.changeType.subtract")))
-                                        .append($("<option></option>").val("startOf").text(node._("change.list.changeType.startOf")))
-                                        .append($("<option></option>").val("endOf").text(node._("change.list.changeType.endOf")))
-                                        .appendTo(changeBox);
+                                if ((item.time.type == "time") && !PATTERN_TIME.test(item.time.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"));
+                                }
+                                else if ((item.time.type == "custom") && !PATTERN_CUSTOM_TIME.test(item.time.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidName"));
+                                }
+                            }
 
-                    const setPartBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
-                    const addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
-                    const startEndOfBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                            if ((mode == "duration") && (item.action == "set"))
+                            {
+                                if ((item.time1.type == "time") && !PATTERN_DATETIME.test(item.time1.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"));
+                                }
+                                else if ((item.time1.type == "custom") && !PATTERN_CUSTOM_TIME.test(item.time1.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidName"));
+                                }
+                                else if (/^global|flow|msg$/.test(item.time1.type))
+                                {
+                                    const res = RED.utils.validateTypedProperty(item.time1.value, item.time1.type, opt)
+                                    if (res !== true)
+                                    {
+                                        errors.push(res);
+                                    }
+                                }
 
-                    const setPartType = $("<select/>", {class: "node-input-setPartType", style: "width: 118px;"})
-                                        .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
-                                        .append($("<option></option>").val("quarter").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarter")))
-                                        .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
-                                        .append($("<option></option>").val("week").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.week")))
-                                        .append($("<option></option>").val("weekday").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weekday")))
-                                        .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.day")))
-                                        .append($("<option></option>").val("hour").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hour")))
-                                        .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
-                                        .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
-                                        .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
-                                        .appendTo(setPartBox);
-                    $("<label/>", {style: "margin-bottom: 0px; width: auto; text-align: right; margin-left: 4px; margin-right: 4px;"})
-                                        .text("=")
-                                        .appendTo(setPartBox);
-                    const setPartValue = $("<input/>", {type: "text", class: "node-input-setPartValue"})
-                                        .appendTo(setPartBox)
-                                        .typedInput({types: [partInput, "env", "global", "flow", "msg"]});
-                    setPartValue.typedInput("width", "180px");
+                                if ((item.time2.type == "time") && !PATTERN_DATETIME.test(item.time2.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"));
+                                }
+                                else if ((item.time2.type == "custom") && !PATTERN_CUSTOM_TIME.test(item.time2.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidName"));
+                                }
+                                else if (/^global|flow|msg$/.test(item.time2.type))
+                                {
+                                    const res = RED.utils.validateTypedProperty(item.time2.value, item.time2.type, opt)
+                                    if (res !== true)
+                                    {
+                                        errors.push(res);
+                                    }
+                                }
+                            }
 
-                    const addsub = $("<input/>", {type: "text", class: "node-input-addsub"})
-                                        .appendTo(addsubBox)
-                                        .typedInput({types: [addsubInput, "env", "global", "flow", "msg"]});
-                    addsub.typedInput("width", "180px");
-                    const addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: 130px; margin-left: 4px"})
-                                        .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
-                                        .append($("<option></option>").val("quarters").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarters")))
-                                        .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
-                                        .append($("<option></option>").val("weeks").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")))
-                                        .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")))
-                                        .append($("<option></option>").val("hours").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")))
-                                        .append($("<option></option>").val("minutes").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")))
-                                        .append($("<option></option>").val("seconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")))
-                                        .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
-                                        .appendTo(addsubBox);
+                            if ((mode == "moment") && (item.action == "set") && (item.type == "jsonata"))
+                            {
+                                res = RED.utils.validateTypedProperty(item.expression, item.type, opt)
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
+                            }
 
-                    const startEndOfArg = $("<select/>", {class: "node-input-startEndOfArg", style: "width: 314px;"})
-                                        .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
-                                        .append($("<option></option>").val("quarter").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarter")))
-                                        .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
-                                        .append($("<option></option>").val("week").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.week")))
-                                        .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.day")))
-                                        .append($("<option></option>").val("hour").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hour")))
-                                        .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
-                                        .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
-                                        .appendTo(startEndOfBox);
+                            if ((item.action == "change") && ((item.type == "add") || (item.type == "subtract")))
+                            {
+                                const res = RED.utils.validateTypedProperty(item.value, item.valueType, opt)
+                                if (res !== true)
+                                {
+                                    errors.push(res);
+                                }
+                            }
 
-                    $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
-                                        .text(node._("change.label.convertTo"))
-                                        .appendTo(convertBox);
-                    const convertToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(convertBox);
-                    const convertToRow1 = $("<div/>").appendTo(convertToBox);
-                    const convertToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(convertToBox);
+                            if ((item.action == "convert") && (item.formatType == "custom") && !item.format)
+                            {
+                                errors.push(this._("change.error.invalidFormat"));
+                            }
 
-                    const stringFormat =
-                            $("<input/>", {
-                                type: "text",
-                                class: "node-input-stringFormat",
-                                title: node._("change.label.format"),
-                                placeholder: node._("change.label.customFormat")})
-                                    .appendTo(convertToRow1)
-                                    .typedInput({
-                                        types: [
-                                            {
-                                                value: "predefined",
-                                                label: node._("change.label.predefinedFormat"),
-                                                icon: "fa fa-calendar",
-                                                options:
-                                                [
-                                                    {
-                                                        value: "regional",
-                                                        label: node._("change.list.convert.regionalDateTime")
-                                                    },
-                                                    {
-                                                        value: "regionalDate",
-                                                        label: node._("change.list.convert.regionalDate")
-                                                    },
-                                                    {
-                                                        value: "regionalTime",
-                                                        label: node._("change.list.convert.regionalTime")
-                                                    },
-                                                    {
-                                                        value: "relative",
-                                                        label: node._("change.list.convert.relativeTime")
-                                                    },
-                                                    {
-                                                        value: "calendar",
-                                                        label: node._("change.list.convert.calendar")
-                                                    },
-                                                    {
-                                                        value: "iso8601",
-                                                        label: node._("change.list.convert.iso8601")
-                                                    },
-                                                    {
-                                                        value: "iso8601utc",
-                                                        label: node._("change.list.convert.iso8601UTC")
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                value: "custom",
-                                                label: node._("change.label.customFormat"),
-                                                icon: "fa fa-user-o",
-                                                hasValue: true,
-                                                validate: /^.+$/
-                                            }]});
-                    stringFormat.typedInput("width", "314px");
-                    stringFormat._prevType = "predefined";
-                    stringFormat.on("change", function()
-                    {
-                        const type = stringFormat.typedInput("type");
-                        if (type != stringFormat._prevType)
-                        {
-                            stringFormat._prevType = type;
-                            if (type == "custom")
+                            if ((mode == "moment") && (item.action == "convert") && (item.tzType === "timeZone") && !item.tzValue)
                             {
-                                stringFormat.typedInput("value", "");
+                                errors.push(this._("change.error.invalidTimeZone"));
                             }
-                        }
-                    });
 
-                    const timeZone =
-                            $("<input/>", {
-                                type: "text",
-                                class: "node-input-timeZone",
-                                title: node._("change.label.format")})
-                                    .appendTo(convertToRow2)
-                                    .typedInput({
-                                        types: [
-                                            {
-                                                value: "current",
-                                                label: node._("change.label.currentTZ"),
-                                                hasValue: false
-                                            },
-                                            {
-                                                value: "timeZone",
-                                                label: node._("change.label.timeZone"),
-                                                icon: "fa fa-globe",
-                                                hasValue: true,
-                                                validate: /^.+$/
-                                            },
-                                            {
-                                                value: "utcOffset",
-                                                label: node._("change.label.utcOffset"),
-                                                icon: "fa fa-expand",
-                                                hasValue: true,
-                                                validate: /^(?:Z|[+-]\d\d:\d\d|-?\d+)$/
-                                            }]});
-                    timeZone.typedInput("width", "314px");
-                    timeZone._prevType = "current";
-                    timeZone.on("change", function()
-                    {
-                        const type = timeZone.typedInput("type");
-                        if (type != timeZone._prevType)
-                        {
-                            timeZone._prevType = type;
-                            if (type != "current")
+                            if ((mode == "moment") && (item.action == "convert") && (item.tzType === "utcOffset") && !PATTERN_UTC_OFFSET.test(item.tzValue))
                             {
-                                timeZone.typedInput("value", "");
+                                errors.push(this._("change.error.invalidUTCOffset"));
                             }
-                        }
-                    });
 
-                    action.change(function()
-                    {
-                        setBox.hide();
-                        changeBox.hide();
-                        convertBox.hide();
-
-                        const value = $(this).val();
-                        switch (value)
-                        {
-                            case "set":
+                            if ((mode == "duration") && (item.action == "convert") && (item.precisionType === "float") && !PATTERN_FP_PRECISION.test(item.precision))
                             {
-                                setBox.show();
-                                break;
-                            }
-                            case "change":
-                            {
-                                changeBox.show();
-                                break;
-                            }
-                            case "convert":
-                            {
-                                convertBox.show();
-                                break;
-                            }
-                        }
-                    });
-
-                    changeType.change(function()
-                    {
-                        setPartBox.hide();
-                        addsubBox.hide();
-                        startEndOfBox.hide();
-
-                        const value = $(this).val();
-                        switch (value)
-                        {
-                            case "set":
-                            {
-                                setPartBox.show();
-                                break;
-                            }
-                            case "add":
-                            case "subtract":
-                            {
-                                addsubBox.show();
-                                break;
-                            }
-                            case "startOf":
-                            case "endOf":
-                            {
-                                startEndOfBox.show();
-                                break;
-                            }
-                        }
-                    });
-
-                    setPartType.change(function()
-                    {
-                        const value = $(this).val();
-                        switch (value)
-                        {
-                            case "year":
-                            {
-                                partInput.min = -270000;
-                                partInput.max = 270000;
-                                break;
-                            }
-                            case "quarter":
-                            {
-                                partInput.min = 1;
-                                partInput.max = 4;
-                                break;
-                            }
-                            case "month":
-                            {
-                                partInput.min = 1;
-                                partInput.max = 12;
-                                break;
-                            }
-                            case "week":
-                            {
-                                partInput.min = 1;
-                                partInput.max = 52;
-                                break;
-                            }
-                            case "weekday":
-                            {
-                                partInput.min = 1;
-                                partInput.max = 7;
-                                break;
-                            }
-                            case "day":
-                            {
-                                partInput.min = 1;
-                                partInput.max = 31;
-                                break;
-                            }
-                            case "hour":
-                            {
-                                partInput.min = 0;
-                                partInput.max = 23;
-                                break;
-                            }
-                            case "minute":
-                            {
-                                partInput.min = 0;
-                                partInput.max = 59;
-                                break;
-                            }
-                            case "second":
-                            {
-                                partInput.min = 0;
-                                partInput.max = 59;
-                                break;
-                            }
-                            case "millisecond":
-                            {
-                                partInput.min = 0;
-                                partInput.max = 999;
-                                break;
+                                errors.push(this._("change.error.invalidPrecision"));
                             }
                         }
 
-                        setPartValue.typedInput("validate");
-                    });
-
-                    const now = new Date();
-                    if (!("action" in data))
-                    {
-                        data = {action: "set", target: {type: "msg", name: "payload"}, type: "now"};
+                        return (errors.length > 0) ? errors : true;
                     }
-
-                    // backward compatibility to 1.24.0 and below
-                    if (data.action == "change")
-                    {
-                        if (data.type == "toString")
-                        {
-                            data.action = "convert";
-                            delete data.type;
-
-                            // backward compatibility to v1.19.1 and below
-                            if (!data.formatType)
-                            {
-                                data.formatType = "custom";
-                            }
-
-                            // backward compatibility to v1.21.0 and below
-                            if (data.formatType == "relative")
-                            {
-                                data.formatType = "predefined";
-                                data.format = "relative";
-                            }
-                            else if (data.formatType == "calendar")
-                            {
-                                data.formatType = "predefined";
-                                data.format = "calendar";
-                            }
-                            else if (data.formatType == "iso8601")
-                            {
-                                data.formatType = "predefined";
-                                data.format = "iso8601";
-                            }
-                            else if (data.formatType == "iso8601utc")
-                            {
-                                data.formatType = "predefined";
-                                data.format = "iso8601utc";
-                            }
-
-                            if (typeof data.tzType == "undefined")
-                            {
-                                data.tzType = "current";
-                                data.tzValue = "";
-                            }
-                        }
-                        else if ((data.type == "set") || (data.type == "add") || (data.type == "subtract"))
-                        {
-                            if (typeof data.valueType == "undefined")
-                            {
-                                data.valueType = "num";
-                            }
-                        }
-                    }
-
-                    setToRow2.hide();
-
-                    // initialize to default
-                    changeType.val("add");
-                    addsubUnit.val("years");
-                    startEndOfArg.val("year");
-                    setPartType.val("year");
-                    setPartValue.typedInput("value", now.getFullYear().toString());
-                    addsub.typedInput("value", 1);
-
-                    action.val(data.action);
-                    property.typedInput("value", data.target.name);
-                    property.typedInput("type", data.target.type);
-
-                    if (data.action == "set")
-                    {
-                        date.typedInput("type", data.type);
-                        if (data.type == "date")
-                        {
-                            date.typedInput("value", data.date);
-                            time.typedInput("type", data.time.type);
-                            time.typedInput("value", data.time.value);
-                        }
-                        else if (data.type == "jsonata")
-                        {
-                            date.typedInput("value", data.expression);
-                        }
-                    }
-                    else if (data.action == "change")
-                    {
-                        if (data.type == "set")
-                        {
-                            setPartType.val(data.part);
-                            setPartValue.typedInput("type", data.valueType);
-                            setPartValue.typedInput("value", data.value);
-                        }
-                        else if ((data.type == "add") || (data.type == "subtract"))
-                        {
-                            addsub.typedInput("type", data.valueType);
-                            addsub.typedInput("value", data.value);
-                            addsubUnit.val(data.unit);
-                        }
-                        else if ((data.type == "startOf") || (data.type == "endOf"))
-                        {
-                            startEndOfArg.val(data.arg);
-                        }
-                        changeType.val(data.type);
-                    }
-                    else if (data.action == "convert")
-                    {
-                        stringFormat.typedInput("type", data.formatType);
-                        stringFormat.typedInput("value", data.format);
-                        timeZone.typedInput("type", data.tzType);
-                        timeZone.typedInput("value", data.tzValue);
-                    }
-
-                    action.change();
-                    changeType.change();
-                    setPartType.change();
-
-                    item[0].appendChild(fragment);
                 }
-            });
-
-            const durationRules = $("#node-input-durationRules").css("min-width", "510px").css("min-height", "150px").editableList(
+            },
+            oneditprepare: function()
             {
-                removable: true,
-                sortable: true,
-                addItem: function(item, index, data)
+                const node = this;
+
+                const sunTimes =
+                [
+                    {
+                        value: "nightEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                    },
+                    {
+                        value: "nauticalDawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                    },
+                    {
+                        value: "dawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                    },
+                    {
+                        value: "sunrise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                    },
+                    {
+                        value: "sunriseEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                    },
+                    {
+                        value: "goldenHourEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                    },
+                    {
+                        value: "solarNoon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                    },
+                    {
+                        value: "goldenHour",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                    },
+                    {
+                        value: "sunsetStart",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                    },
+                    {
+                        value: "sunset",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                    },
+                    {
+                        value: "dusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                    },
+                    {
+                        value: "nauticalDusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                    },
+                    {
+                        value: "night",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                    },
+                    {
+                        value: "nadir",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                    }
+                ];
+
+                const moonTimes =
+                [
+                    {
+                        value: "rise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                    },
+                    {
+                        value: "set",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                    }
+                ];
+
+                const nowInput =
                 {
-                    const timeInput =
+                    value: "now",
+                    label: node._("change.label.now"),
+                    hasValue: false
+                };
+
+                const dateInput =
+                {
+                    value: "date",
+                    label: node._("change.label.date"),
+                    icon: "fa fa-calendar",
+                    hasValue: true,
+                    validate: PATTERN_DATE
+                };
+
+                const sunTimeInput =
+                {
+                    value: "sun",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                    icon: "fa fa-sun-o",
+                    options: sunTimes
+                };
+
+                const moonTimeInput =
+                {
+                    value: "moon",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                    icon: "fa fa-moon-o",
+                    options: moonTimes
+                };
+
+                const customInput =
+                {
+                    value: "custom",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                    icon: "fa fa-user-o",
+                    hasValue: true,
+                    validate: PATTERN_CUSTOM_TIME
+                };
+
+                const partInput =
+                {
+                    value: "num",
+                    label: node._("change.label.number"),
+                    icon: "red/images/typedInput/09.svg",
+                    hasValue: true,
+                    min: -27000,
+                    max: 27000,
+                    validate: function(v)
                     {
-                        value: "time",
-                        label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
-                        icon: "fa fa-clock-o",
-                        hasValue: true,
-                        validate: function(v) { return v; }
-                    };
+                        return (+v === +v) && (v >= partInput.min) && (v <= partInput.max);
+                    }
+                };
 
-                    const fragment = document.createDocumentFragment();
-                    const actionBox = $("<div/>").appendTo(fragment);
-                    const setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-                    const changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-                    const convertBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
-
-                    const action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
-                                        .append($("<option></option>").val("set").text(node._("change.list.action.set")))
-                                        .append($("<option></option>").val("change").text(node._("change.list.action.change")))
-                                        .append($("<option></option>").val("convert").text(node._("change.list.action.convert")))
-                                        .appendTo(actionBox);
-
-                    $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
-                                        .text(node._("change.label.setTo"))
-                                        .appendTo(setBox);
-                    const setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
-                    const setToRow1 = $("<div/>").appendTo(setToBox);
-                    const setToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
-
-                    const property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
-                                        .appendTo(actionBox)
-                                        .typedInput({types: ["global", "flow", "msg"]});
-                    property.typedInput("width", "314px");
-
-                    const time1 = $("<input/>", {type: "text", class: "node-input-time1"})
-                                        .appendTo(setToRow1)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg", nowInput]});
-                    time1.typedInput("width", "314px");
-                    time1._prevType = "time";
-                    time1.on("change", function()
+                const addsubInput =
+                {
+                    value: "num",
+                    label: node._("change.label.number"),
+                    icon: "red/images/typedInput/09.svg",
+                    hasValue: true,
+                    validate: function(v)
                     {
-                        const type = time1.typedInput("type");
-                        if (type != time1._prevType)
+                        return (+v === +v) && (v >= 1) && (v <= 1000000);
+                    }
+                };
+
+                const timeRules = $("#node-input-momentRules").css("min-width", "510px").css("min-height", "150px").editableList(
+                {
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
+                    {
+                        const timeInput =
                         {
-                            time1._prevType = type;
-                            if ((type != "sun") && (type != "moon"))
-                            {
-                                time1.typedInput("value", "");
-                            }
-                        }
-                    });
+                            value: "time",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                            icon: "fa fa-clock-o",
+                            hasValue: true,
+                            validate: PATTERN_TIME
+                        };
 
-                    const time2 = $("<input/>", {type: "text", class: "node-input-time2"})
-                                        .appendTo(setToRow2)
-                                        .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg", nowInput]});
-                    time2.typedInput("width", "314px");
-                    time2._prevType = "time";
-                    time2.on("change", function()
-                    {
-                        const type = time2.typedInput("type");
-                        if (type != time2._prevType)
+                        const fragment = document.createDocumentFragment();
+                        const actionBox = $("<div/>").appendTo(fragment);
+                        const setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                        const changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                        const convertBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+
+                        const action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
+                                            .append($("<option></option>").val("set").text(node._("change.list.action.set")))
+                                            .append($("<option></option>").val("change").text(node._("change.list.action.change")))
+                                            .append($("<option></option>").val("convert").text(node._("change.list.action.convert")))
+                                            .appendTo(actionBox);
+
+                        $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
+                                            .text(node._("change.label.setTo"))
+                                            .appendTo(setBox);
+                        const setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
+                        const setToRow1 = $("<div/>").appendTo(setToBox);
+                        const setToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
+
+                        const property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
+                                            .appendTo(actionBox)
+                                            .typedInput({types: ["global", "flow", "msg"]});
+                        property.typedInput("width", "314px");
+
+                        const date = $("<input/>", {type: "text", class: "node-input-date"})
+                                            .appendTo(setToRow1)
+                                            .typedInput({types: [nowInput, dateInput, "jsonata"]});
+                        date.typedInput("width", "314px");
+                        date._prevType = "now";
+                        date.on("change", function()
                         {
-                            time2._prevType = type;
-                            if ((type != "sun") && (type != "moon"))
+                            const type = date.typedInput("type");
+
+                            if ((type === "now") || (type === "jsonata"))
                             {
-                                time2.typedInput("value", "");
+                                setToRow2.hide();
                             }
-                        }
-                    });
+                            else
+                            {
+                                setToRow2.show();
+                            }
 
-                    const changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
-                                        .append($("<option></option>").val("add").text(node._("change.list.changeType.add")))
-                                        .append($("<option></option>").val("subtract").text(node._("change.list.changeType.subtract")))
-                                        .appendTo(changeBox);
+                            if (type != date._prevType)
+                            {
+                                date._prevType = type;
+                                if (type != "now")
+                                {
+                                    date.typedInput("value", "");
+                                }
+                            }
+                        });
 
-                    const addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                        const time = $("<input/>", {type: "text", class: "node-input-time"})
+                                            .appendTo(setToRow2)
+                                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput]});
+                        time.typedInput("width", "314px");
+                        time._prevType = "time";
+                        time.on("change", function()
+                        {
+                            const type = time.typedInput("type");
+                            if (type != time._prevType)
+                            {
+                                time._prevType = type;
+                                if ((type != "sun") && (type != "moon"))
+                                {
+                                    time.typedInput("value", "");
+                                }
+                            }
+                        });
 
-                    const addsub = $("<input/>", {type: "text", class: "node-input-addsub"})
-                                        .appendTo(addsubBox)
-                                        .typedInput({types: [addsubInput, "env", "global", "flow", "msg"]});
-                    addsub.typedInput("width", "180px");
-                    const addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: 130px; margin-left: 4px"})
-                                        .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
-                                        .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
-                                        .append($("<option></option>").val("weeks").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")))
-                                        .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")))
-                                        .append($("<option></option>").val("hours").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")))
-                                        .append($("<option></option>").val("minutes").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")))
-                                        .append($("<option></option>").val("seconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")))
-                                        .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
-                                        .appendTo(addsubBox);
+                        const changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
+                                            .append($("<option></option>").val("set").text(node._("change.list.changeType.set")))
+                                            .append($("<option></option>").val("add").text(node._("change.list.changeType.add")))
+                                            .append($("<option></option>").val("subtract").text(node._("change.list.changeType.subtract")))
+                                            .append($("<option></option>").val("startOf").text(node._("change.list.changeType.startOf")))
+                                            .append($("<option></option>").val("endOf").text(node._("change.list.changeType.endOf")))
+                                            .appendTo(changeBox);
 
-                    $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
-                                        .text(node._("change.label.convertTo"))
-                                        .appendTo(convertBox);
-                    const convertToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(convertBox);
-                    const convertToRow1 = $("<div/>").appendTo(convertToBox);
-                    const convertToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(convertToBox);
+                        const setPartBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                        const addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+                        const startEndOfBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
 
-                    const stringFormat =
-                            $("<input/>", {
-                                type: "text",
-                                class: "node-input-stringFormat",
-                                title: node._("change.label.format"),
-                                placeholder: node._("change.label.customFormat")})
-                                    .appendTo(convertToRow1)
-                                    .typedInput({
-                                        types: [
-                                            {
-                                                value: "number",
-                                                label: node._("change.label.numericFormat"),
-                                                icon: "red/images/typedInput/09.svg",
-                                                options:
-                                                [
+                        const setPartType = $("<select/>", {class: "node-input-setPartType", style: "width: 118px;"})
+                                            .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
+                                            .append($("<option></option>").val("quarter").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarter")))
+                                            .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
+                                            .append($("<option></option>").val("week").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.week")))
+                                            .append($("<option></option>").val("weekday").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weekday")))
+                                            .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.day")))
+                                            .append($("<option></option>").val("hour").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hour")))
+                                            .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
+                                            .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
+                                            .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
+                                            .appendTo(setPartBox);
+                        $("<label/>", {style: "margin-bottom: 0px; width: auto; text-align: right; margin-left: 4px; margin-right: 4px;"})
+                                            .text("=")
+                                            .appendTo(setPartBox);
+                        const setPartValue = $("<input/>", {type: "text", class: "node-input-setPartValue"})
+                                            .appendTo(setPartBox)
+                                            .typedInput({types: [partInput, "env", "global", "flow", "msg"]});
+                        setPartValue.typedInput("width", "180px");
+
+                        const addsub = $("<input/>", {type: "text", class: "node-input-addsub"})
+                                            .appendTo(addsubBox)
+                                            .typedInput({types: [addsubInput, "env", "global", "flow", "msg"]});
+                        addsub.typedInput("width", "180px");
+                        const addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: 130px; margin-left: 4px"})
+                                            .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
+                                            .append($("<option></option>").val("quarters").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarters")))
+                                            .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
+                                            .append($("<option></option>").val("weeks").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")))
+                                            .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")))
+                                            .append($("<option></option>").val("hours").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")))
+                                            .append($("<option></option>").val("minutes").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")))
+                                            .append($("<option></option>").val("seconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")))
+                                            .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
+                                            .appendTo(addsubBox);
+
+                        const startEndOfArg = $("<select/>", {class: "node-input-startEndOfArg", style: "width: 314px;"})
+                                            .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
+                                            .append($("<option></option>").val("quarter").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarter")))
+                                            .append($("<option></option>").val("month").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.month")))
+                                            .append($("<option></option>").val("week").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.week")))
+                                            .append($("<option></option>").val("day").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.day")))
+                                            .append($("<option></option>").val("hour").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hour")))
+                                            .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
+                                            .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
+                                            .appendTo(startEndOfBox);
+
+                        $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
+                                            .text(node._("change.label.convertTo"))
+                                            .appendTo(convertBox);
+                        const convertToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(convertBox);
+                        const convertToRow1 = $("<div/>").appendTo(convertToBox);
+                        const convertToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(convertToBox);
+
+                        const stringFormat =
+                                $("<input/>", {
+                                    type: "text",
+                                    class: "node-input-stringFormat",
+                                    title: node._("change.label.format"),
+                                    placeholder: node._("change.label.customFormat")})
+                                        .appendTo(convertToRow1)
+                                        .typedInput({
+                                            types: [
                                                 {
-                                                        value: "milliseconds",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")
-                                                    },
-                                                    {
-                                                        value: "seconds",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")
-                                                    },
-                                                    {
-                                                        value: "minutes",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")
-                                                    },
-                                                    {
-                                                        value: "hours",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")
-                                                    },
-                                                    {
-                                                        value: "days",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")
-                                                    },
-                                                    {
-                                                        value: "weeks",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")
-                                                    },
-                                                    {
-                                                        value: "months",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")
-                                                    },
-                                                    {
-                                                        value: "years",
-                                                        label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                value: "string",
-                                                label: node._("change.label.stringFormat"),
-                                                icon: "red/images/typedInput/az.svg",
-                                                options:
-                                                [
-                                                    {
-                                                        value: "timespan",
-                                                        label: node._("change.list.convert.timespan")
-                                                    },
-                                                    {
-                                                        value: "timespan10th",
-                                                        label: node._("change.list.convert.timespan10th")
-                                                    },
-                                                    {
-                                                        value: "timespan100th",
-                                                        label: node._("change.list.convert.timespan100th")
-                                                    },
-                                                    {
-                                                        value: "timespanMillis",
-                                                        label: node._("change.list.convert.timespanMillis")
-                                                    },
-                                                    {
-                                                        value: "textualTimespan",
-                                                        label: node._("change.list.convert.textualTimespan")
-                                                    },
-                                                    {
-                                                        value: "iso8601",
-                                                        label: node._("change.list.convert.iso8601")
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                value: "custom",
-                                                label: node._("change.label.customFormat"),
-                                                icon: "fa fa-user-o",
-                                                hasValue: true,
-                                                validate: /^.+$/
-                                            }]});
-                    stringFormat.typedInput("width", "314px");
-                    stringFormat._prevType = "string";
-                    stringFormat.on("change", function()
-                    {
-                        const type = stringFormat.typedInput("type");
-
-                        if (type == "number")
+                                                    value: "predefined",
+                                                    label: node._("change.label.predefinedFormat"),
+                                                    icon: "fa fa-calendar",
+                                                    options:
+                                                    [
+                                                        {
+                                                            value: "regional",
+                                                            label: node._("change.list.convert.regionalDateTime")
+                                                        },
+                                                        {
+                                                            value: "regionalDate",
+                                                            label: node._("change.list.convert.regionalDate")
+                                                        },
+                                                        {
+                                                            value: "regionalTime",
+                                                            label: node._("change.list.convert.regionalTime")
+                                                        },
+                                                        {
+                                                            value: "relative",
+                                                            label: node._("change.list.convert.relativeTime")
+                                                        },
+                                                        {
+                                                            value: "calendar",
+                                                            label: node._("change.list.convert.calendar")
+                                                        },
+                                                        {
+                                                            value: "iso8601",
+                                                            label: node._("change.list.convert.iso8601")
+                                                        },
+                                                        {
+                                                            value: "iso8601utc",
+                                                            label: node._("change.list.convert.iso8601UTC")
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    value: "custom",
+                                                    label: node._("change.label.customFormat"),
+                                                    icon: "fa fa-user-o",
+                                                    hasValue: true,
+                                                    validate: /^.+$/
+                                                }]});
+                        stringFormat.typedInput("width", "314px");
+                        stringFormat._prevType = "predefined";
+                        stringFormat.on("change", function()
                         {
-                            convertToRow2.show();
-                        }
-                        else
-                        {
-                            convertToRow2.hide();
-                        }
-
-                        if (type != stringFormat._prevType)
-                        {
-                            stringFormat._prevType = type;
-                            if (type == "custom")
+                            const type = stringFormat.typedInput("type");
+                            if (type != stringFormat._prevType)
                             {
-                                stringFormat.typedInput("value", "");
+                                stringFormat._prevType = type;
+                                if (type == "custom")
+                                {
+                                    stringFormat.typedInput("value", "");
+                                }
+                            }
+                        });
+
+                        const timeZone =
+                                $("<input/>", {
+                                    type: "text",
+                                    class: "node-input-timeZone",
+                                    title: node._("change.label.format")})
+                                        .appendTo(convertToRow2)
+                                        .typedInput({
+                                            types: [
+                                                {
+                                                    value: "current",
+                                                    label: node._("change.label.currentTZ"),
+                                                    hasValue: false
+                                                },
+                                                {
+                                                    value: "timeZone",
+                                                    label: node._("change.label.timeZone"),
+                                                    icon: "fa fa-globe",
+                                                    hasValue: true,
+                                                    validate: /^.+$/
+                                                },
+                                                {
+                                                    value: "utcOffset",
+                                                    label: node._("change.label.utcOffset"),
+                                                    icon: "fa fa-expand",
+                                                    hasValue: true,
+                                                    validate: PATTERN_UTC_OFFSET
+                                                }]});
+                        timeZone.typedInput("width", "314px");
+                        timeZone._prevType = "current";
+                        timeZone.on("change", function()
+                        {
+                            const type = timeZone.typedInput("type");
+                            if (type != timeZone._prevType)
+                            {
+                                timeZone._prevType = type;
+                                if (type != "current")
+                                {
+                                    timeZone.typedInput("value", "");
+                                }
+                            }
+                        });
+
+                        action.change(function()
+                        {
+                            setBox.hide();
+                            changeBox.hide();
+                            convertBox.hide();
+
+                            const value = $(this).val();
+                            switch (value)
+                            {
+                                case "set":
+                                {
+                                    setBox.show();
+                                    break;
+                                }
+                                case "change":
+                                {
+                                    changeBox.show();
+                                    break;
+                                }
+                                case "convert":
+                                {
+                                    convertBox.show();
+                                    break;
+                                }
+                            }
+                        });
+
+                        changeType.change(function()
+                        {
+                            setPartBox.hide();
+                            addsubBox.hide();
+                            startEndOfBox.hide();
+
+                            const value = $(this).val();
+                            switch (value)
+                            {
+                                case "set":
+                                {
+                                    setPartBox.show();
+                                    break;
+                                }
+                                case "add":
+                                case "subtract":
+                                {
+                                    addsubBox.show();
+                                    break;
+                                }
+                                case "startOf":
+                                case "endOf":
+                                {
+                                    startEndOfBox.show();
+                                    break;
+                                }
+                            }
+                        });
+
+                        setPartType.change(function()
+                        {
+                            const value = $(this).val();
+                            switch (value)
+                            {
+                                case "year":
+                                {
+                                    partInput.min = -270000;
+                                    partInput.max = 270000;
+                                    break;
+                                }
+                                case "quarter":
+                                {
+                                    partInput.min = 1;
+                                    partInput.max = 4;
+                                    break;
+                                }
+                                case "month":
+                                {
+                                    partInput.min = 1;
+                                    partInput.max = 12;
+                                    break;
+                                }
+                                case "week":
+                                {
+                                    partInput.min = 1;
+                                    partInput.max = 52;
+                                    break;
+                                }
+                                case "weekday":
+                                {
+                                    partInput.min = 1;
+                                    partInput.max = 7;
+                                    break;
+                                }
+                                case "day":
+                                {
+                                    partInput.min = 1;
+                                    partInput.max = 31;
+                                    break;
+                                }
+                                case "hour":
+                                {
+                                    partInput.min = 0;
+                                    partInput.max = 23;
+                                    break;
+                                }
+                                case "minute":
+                                {
+                                    partInput.min = 0;
+                                    partInput.max = 59;
+                                    break;
+                                }
+                                case "second":
+                                {
+                                    partInput.min = 0;
+                                    partInput.max = 59;
+                                    break;
+                                }
+                                case "millisecond":
+                                {
+                                    partInput.min = 0;
+                                    partInput.max = 999;
+                                    break;
+                                }
+                            }
+
+                            setPartValue.typedInput("validate");
+                        });
+
+                        const now = new Date();
+                        if (!("action" in data))
+                        {
+                            data = {action: "set", target: {type: "msg", name: "payload"}, type: "now"};
+                        }
+
+                        // backward compatibility to 1.24.0 and below
+                        if (data.action == "change")
+                        {
+                            if (data.type == "toString")
+                            {
+                                data.action = "convert";
+                                delete data.type;
+
+                                // backward compatibility to v1.19.1 and below
+                                if (!data.formatType)
+                                {
+                                    data.formatType = "custom";
+                                }
+
+                                // backward compatibility to v1.21.0 and below
+                                if (data.formatType == "relative")
+                                {
+                                    data.formatType = "predefined";
+                                    data.format = "relative";
+                                }
+                                else if (data.formatType == "calendar")
+                                {
+                                    data.formatType = "predefined";
+                                    data.format = "calendar";
+                                }
+                                else if (data.formatType == "iso8601")
+                                {
+                                    data.formatType = "predefined";
+                                    data.format = "iso8601";
+                                }
+                                else if (data.formatType == "iso8601utc")
+                                {
+                                    data.formatType = "predefined";
+                                    data.format = "iso8601utc";
+                                }
+
+                                if (typeof data.tzType == "undefined")
+                                {
+                                    data.tzType = "current";
+                                    data.tzValue = "";
+                                }
+                            }
+                            else if ((data.type == "set") || (data.type == "add") || (data.type == "subtract"))
+                            {
+                                if (typeof data.valueType == "undefined")
+                                {
+                                    data.valueType = "num";
+                                }
                             }
                         }
-                    });
 
-                    const precision =
-                            $("<input/>", {
-                                type: "text",
-                                class: "node-input-precision",
-                                title: node._("change.label.format")})
-                                    .appendTo(convertToRow2)
-                                    .typedInput({
-                                        types: [
-                                            {
-                                                value: "int",
-                                                label: node._("change.label.integer"),
-                                                icon: "fa fa-align-justify",
-                                                options:
-                                                [
-                                                    {
-                                                        value: "round",
-                                                        label: node._("change.list.int.round")
-                                                    },
-                                                    {
-                                                        value: "floor",
-                                                        label: node._("change.list.int.floor")
-                                                    },
-                                                    {
-                                                        value: "ceil",
-                                                        label: node._("change.list.int.ceil")
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                value: "float",
-                                                label: node._("change.label.float"),
-                                                icon: "fa fa-list",
-                                                hasValue: true,
-                                                validate: RED.validators.number
-                                            }]});
-                    precision.typedInput("width", "314px");
-                    precision._prevType = "int";
-                    precision.on("change", function()
-                    {
-                        const type = precision.typedInput("type");
-                        if (type != precision._prevType)
+                        setToRow2.hide();
+
+                        // initialize to default
+                        changeType.val("add");
+                        addsubUnit.val("years");
+                        startEndOfArg.val("year");
+                        setPartType.val("year");
+                        setPartValue.typedInput("value", now.getFullYear().toString());
+                        addsub.typedInput("value", 1);
+
+                        action.val(data.action);
+                        property.typedInput("value", data.target.name);
+                        property.typedInput("type", data.target.type);
+
+                        if (data.action == "set")
                         {
-                            precision._prevType = type;
-                            if (type == "float")
+                            date.typedInput("type", data.type);
+                            if (data.type == "date")
                             {
-                                precision.typedInput("value", "0");
+                                date.typedInput("value", data.date);
+                                time.typedInput("type", data.time.type);
+                                time.typedInput("value", data.time.value);
+                            }
+                            else if (data.type == "jsonata")
+                            {
+                                date.typedInput("value", data.expression);
                             }
                         }
-                    });
-
-                    action.change(function()
-                    {
-                        setBox.hide();
-                        changeBox.hide();
-                        convertBox.hide();
-
-                        const value = $(this).val();
-                        switch (value)
+                        else if (data.action == "change")
                         {
-                            case "set":
+                            if (data.type == "set")
                             {
-                                setBox.show();
-                                break;
+                                setPartType.val(data.part);
+                                setPartValue.typedInput("type", data.valueType);
+                                setPartValue.typedInput("value", data.value);
                             }
-                            case "change":
+                            else if ((data.type == "add") || (data.type == "subtract"))
                             {
-                                changeBox.show();
-                                break;
+                                addsub.typedInput("type", data.valueType);
+                                addsub.typedInput("value", data.value);
+                                addsubUnit.val(data.unit);
                             }
-                            case "convert":
+                            else if ((data.type == "startOf") || (data.type == "endOf"))
                             {
-                                convertBox.show();
-                                break;
+                                startEndOfArg.val(data.arg);
                             }
+                            changeType.val(data.type);
                         }
-                    });
-
-                    const now = new Date();
-                    if (!("action" in data))
-                    {
-                        data = {action: "set", target: {type: "msg", name: "payload"}, time1: {type: "time", value: ""}, time2: {type: "time", value: ""}};
-                    }
-
-                    // initialize to default
-                    changeType.val("add");
-                    addsubUnit.val("years");
-                    addsub.typedInput("value", 1);
-
-                    action.val(data.action);
-                    property.typedInput("value", data.target.name);
-                    property.typedInput("type", data.target.type);
-
-                    if (data.action == "set")
-                    {
-                        time1.typedInput("type", data.time1.type);
-                        time1.typedInput("value", data.time1.value);
-                        time2.typedInput("type", data.time2.type);
-                        time2.typedInput("value", data.time2.value);
-                    }
-                    else if (data.action == "change")
-                    {
-                        if ((data.type == "add") || (data.type == "subtract"))
+                        else if (data.action == "convert")
                         {
-                            addsub.typedInput("type", data.valueType);
-                            addsub.typedInput("value", data.value);
-                            addsubUnit.val(data.unit);
+                            stringFormat.typedInput("type", data.formatType);
+                            stringFormat.typedInput("value", data.format);
+                            timeZone.typedInput("type", data.tzType);
+                            timeZone.typedInput("value", data.tzValue);
                         }
-                        changeType.val(data.type);
+
+                        action.change();
+                        changeType.change();
+                        setPartType.change();
+
+                        item[0].appendChild(fragment);
                     }
-                    else if (data.action == "convert")
-                    {
-                        stringFormat.typedInput("type", data.formatType);
-                        stringFormat.typedInput("value", data.format);
-
-                        if (data.formatType == "number")
-                        {
-                            precision.typedInput("type", data.precisionType);
-                            precision.typedInput("value", data.precision);
-                        }
-                    }
-
-                    action.change();
-                    changeType.change();
-
-                    item[0].appendChild(fragment);
-                }
-            });
-
-            const mode = $("#node-input-mode");
-
-            // backward compatibility to 1.24.0 and below
-            if (typeof node.mode == "undefined")
-            {
-                node.mode = "moment";
-                mode.val("moment");
-            }
-
-            mode.change(function()
-            {
-                $("#node-input-momentRules-row").hide();
-                $("#node-input-durationRules-row").hide();
-
-                const value = $(this).val();
-                switch (value)
-                {
-                    case "moment":
-                    {
-                        $("#node-input-momentRules-row").show();
-                        break;
-                    }
-                    case "duration":
-                    {
-                        $("#node-input-durationRules-row").show();
-                        break;
-                    }
-                }
-
-                RED.tray.resize();
-            });
-
-            mode.change();
-
-            let rules = undefined;
-            if (node.mode == "moment")
-            {
-                rules = timeRules;
-                durationRules.editableList("addItem", {});
-            }
-            else
-            {
-                rules = durationRules;
-                timeRules.editableList("addItem", {});
-            }
-
-            for (data of node.rules)
-            {
-                rules.editableList("addItem", data);
-            }
-        },
-        oneditsave: function()
-        {
-            const node = this;
-            node.rules = [];
-
-            if ($("#node-input-mode").val() == "moment")
-            {
-                const rules = $("#node-input-momentRules").editableList("items");
-
-                rules.each(function(index)
-                {
-                    const data = {};
-
-                    data.action = $(this).find(".node-input-action").val();
-                    data.target = {};
-
-                    const property = $(this).find(".node-input-property");
-                    data.target.type = property.typedInput("type");
-                    data.target.name = property.typedInput("value");
-
-                    if (data.action == "set")
-                    {
-                        const date = $(this).find(".node-input-date");
-                        const time = $(this).find(".node-input-time");
-
-                        data.type = date.typedInput("type");
-                        if (data.type == "date")
-                        {
-                            data.date = date.typedInput("value");
-                            data.time = {};
-                            data.time.type = time.typedInput("type");
-                            data.time.value = time.typedInput("value");
-                        }
-                        else if (data.type == "jsonata")
-                        {
-                            data.expression = date.typedInput("value");
-                        }
-                    }
-                    else if (data.action == "change")
-                    {
-                        data.type = $(this).find(".node-input-changeType").val();
-                        if (data.type == "set")
-                        {
-                            const setPartValue = $(this).find(".node-input-setPartValue");
-                            data.part = $(this).find(".node-input-setPartType").val();
-                            data.valueType = setPartValue.typedInput("type");
-                            data.value = setPartValue.typedInput("value");
-                        }
-                        else if ((data.type == "add") || (data.type == "subtract"))
-                        {
-                            const addsub = $(this).find(".node-input-addsub");
-                            data.valueType = addsub.typedInput("type");
-                            data.value = addsub.typedInput("value");
-                            data.unit = $(this).find(".node-input-addsubUnit").val();
-                        }
-                        else if ((data.type == "startOf") || (data.type == "endOf"))
-                        {
-                            data.arg = $(this).find(".node-input-startEndOfArg").val();
-                        }
-                    }
-                    else if (data.action == "convert")
-                    {
-                        const stringFormat = $(this).find(".node-input-stringFormat");
-                        const timeZone = $(this).find(".node-input-timeZone");
-
-                        data.formatType = stringFormat.typedInput("type");
-                        data.format = stringFormat.typedInput("value");
-                        data.tzType = timeZone.typedInput("type");
-                        data.tzValue = timeZone.typedInput("value");
-                    }
-
-                    node.rules.push(data);
                 });
-            }
-            else
-            {
-                const rules = $("#node-input-durationRules").editableList("items");
 
-                rules.each(function(index)
+                const durationRules = $("#node-input-durationRules").css("min-width", "510px").css("min-height", "150px").editableList(
                 {
-                    const data = {};
-
-                    data.action = $(this).find(".node-input-action").val();
-                    data.target = {};
-
-                    const property = $(this).find(".node-input-property");
-                    data.target.type = property.typedInput("type");
-                    data.target.name = property.typedInput("value");
-
-                    if (data.action == "set")
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
                     {
-                        const time1 = $(this).find(".node-input-time1");
-                        const time2 = $(this).find(".node-input-time2");
-
-                        data.time1 = {};
-                        data.time1.type = time1.typedInput("type");
-                        data.time1.value = time1.typedInput("value");
-
-                        data.time2 = {};
-                        data.time2.type = time2.typedInput("type");
-                        data.time2.value = time2.typedInput("value");
-                    }
-                    else if (data.action == "change")
-                    {
-                        data.type = $(this).find(".node-input-changeType").val();
-                        if ((data.type == "add") || (data.type == "subtract"))
+                        const timeInput =
                         {
-                            const addsub = $(this).find(".node-input-addsub");
-                            data.valueType = addsub.typedInput("type");
-                            data.value = addsub.typedInput("value");
-                            data.unit = $(this).find(".node-input-addsubUnit").val();
-                        }
-                    }
-                    else if (data.action == "convert")
-                    {
-                        const stringFormat = $(this).find(".node-input-stringFormat");
-                        const precision = $(this).find(".node-input-precision");
+                            value: "time",
+                            label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                            icon: "fa fa-clock-o",
+                            hasValue: true,
+                            validate: PATTERN_DATETIME
+                        };
 
-                        data.formatType = stringFormat.typedInput("type");
-                        data.format = stringFormat.typedInput("value");
-                        if (data.formatType == "number")
+                        const fragment = document.createDocumentFragment();
+                        const actionBox = $("<div/>").appendTo(fragment);
+                        const setBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                        const changeBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+                        const convertBox = $("<div/>", {style: "margin-top: 5px;"}).appendTo(fragment);
+
+                        const action = $("<select/>", {class: "node-input-action", style: "width: 120px;"})
+                                            .append($("<option></option>").val("set").text(node._("change.list.action.set")))
+                                            .append($("<option></option>").val("change").text(node._("change.list.action.change")))
+                                            .append($("<option></option>").val("convert").text(node._("change.list.action.convert")))
+                                            .appendTo(actionBox);
+
+                        $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
+                                            .text(node._("change.label.setTo"))
+                                            .appendTo(setBox);
+                        const setToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(setBox);
+                        const setToRow1 = $("<div/>").appendTo(setToBox);
+                        const setToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(setToBox);
+
+                        const property = $("<input/>", {type: "text", class: "node-input-property", style: "margin-left: 8px;"})
+                                            .appendTo(actionBox)
+                                            .typedInput({types: ["global", "flow", "msg"]});
+                        property.typedInput("width", "314px");
+
+                        const time1 = $("<input/>", {type: "text", class: "node-input-time1"})
+                                            .appendTo(setToRow1)
+                                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg", nowInput]});
+                        time1.typedInput("width", "314px");
+                        time1._prevType = "time";
+                        time1.on("change", function()
                         {
-                            data.precisionType = precision.typedInput("type");
-                            data.precision = precision.typedInput("value");
-                        }
-                    }
+                            const type = time1.typedInput("type");
+                            if (type != time1._prevType)
+                            {
+                                time1._prevType = type;
+                                if ((type != "sun") && (type != "moon"))
+                                {
+                                    time1.typedInput("value", "");
+                                }
+                            }
+                        });
 
-                    node.rules.push(data);
+                        const time2 = $("<input/>", {type: "text", class: "node-input-time2"})
+                                            .appendTo(setToRow2)
+                                            .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg", nowInput]});
+                        time2.typedInput("width", "314px");
+                        time2._prevType = "time";
+                        time2.on("change", function()
+                        {
+                            const type = time2.typedInput("type");
+                            if (type != time2._prevType)
+                            {
+                                time2._prevType = type;
+                                if ((type != "sun") && (type != "moon"))
+                                {
+                                    time2.typedInput("value", "");
+                                }
+                            }
+                        });
+
+                        const changeType = $("<select/>", {class: "node-input-changeType", style: "width: 120px;"})
+                                            .append($("<option></option>").val("add").text(node._("change.list.changeType.add")))
+                                            .append($("<option></option>").val("subtract").text(node._("change.list.changeType.subtract")))
+                                            .appendTo(changeBox);
+
+                        const addsubBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(changeBox);
+
+                        const addsub = $("<input/>", {type: "text", class: "node-input-addsub"})
+                                            .appendTo(addsubBox)
+                                            .typedInput({types: [addsubInput, "env", "global", "flow", "msg"]});
+                        addsub.typedInput("width", "180px");
+                        const addsubUnit = $("<select/>", {class: "node-input-addsubUnit", style: "width: 130px; margin-left: 4px"})
+                                            .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
+                                            .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
+                                            .append($("<option></option>").val("weeks").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")))
+                                            .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")))
+                                            .append($("<option></option>").val("hours").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")))
+                                            .append($("<option></option>").val("minutes").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")))
+                                            .append($("<option></option>").val("seconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")))
+                                            .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
+                                            .appendTo(addsubBox);
+
+                        $("<label/>", {style: "margin-bottom: 0px; width: 120px; text-align: right;"})
+                                            .text(node._("change.label.convertTo"))
+                                            .appendTo(convertBox);
+                        const convertToBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 8px;"}).appendTo(convertBox);
+                        const convertToRow1 = $("<div/>").appendTo(convertToBox);
+                        const convertToRow2 = $("<div/>", {style: "margin-top: 5px;"}).appendTo(convertToBox);
+
+                        const stringFormat =
+                                $("<input/>", {
+                                    type: "text",
+                                    class: "node-input-stringFormat",
+                                    title: node._("change.label.format"),
+                                    placeholder: node._("change.label.customFormat")})
+                                        .appendTo(convertToRow1)
+                                        .typedInput({
+                                            types: [
+                                                {
+                                                    value: "number",
+                                                    label: node._("change.label.numericFormat"),
+                                                    icon: "red/images/typedInput/09.svg",
+                                                    options:
+                                                    [
+                                                    {
+                                                            value: "milliseconds",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")
+                                                        },
+                                                        {
+                                                            value: "seconds",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")
+                                                        },
+                                                        {
+                                                            value: "minutes",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")
+                                                        },
+                                                        {
+                                                            value: "hours",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")
+                                                        },
+                                                        {
+                                                            value: "days",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")
+                                                        },
+                                                        {
+                                                            value: "weeks",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")
+                                                        },
+                                                        {
+                                                            value: "months",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")
+                                                        },
+                                                        {
+                                                            value: "years",
+                                                            label: node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    value: "string",
+                                                    label: node._("change.label.stringFormat"),
+                                                    icon: "red/images/typedInput/az.svg",
+                                                    options:
+                                                    [
+                                                        {
+                                                            value: "timespan",
+                                                            label: node._("change.list.convert.timespan")
+                                                        },
+                                                        {
+                                                            value: "timespan10th",
+                                                            label: node._("change.list.convert.timespan10th")
+                                                        },
+                                                        {
+                                                            value: "timespan100th",
+                                                            label: node._("change.list.convert.timespan100th")
+                                                        },
+                                                        {
+                                                            value: "timespanMillis",
+                                                            label: node._("change.list.convert.timespanMillis")
+                                                        },
+                                                        {
+                                                            value: "textualTimespan",
+                                                            label: node._("change.list.convert.textualTimespan")
+                                                        },
+                                                        {
+                                                            value: "iso8601",
+                                                            label: node._("change.list.convert.iso8601")
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    value: "custom",
+                                                    label: node._("change.label.customFormat"),
+                                                    icon: "fa fa-user-o",
+                                                    hasValue: true,
+                                                    validate: /^.+$/
+                                                }]});
+                        stringFormat.typedInput("width", "314px");
+                        stringFormat._prevType = "string";
+                        stringFormat.on("change", function()
+                        {
+                            const type = stringFormat.typedInput("type");
+
+                            if (type == "number")
+                            {
+                                convertToRow2.show();
+                            }
+                            else
+                            {
+                                convertToRow2.hide();
+                            }
+
+                            if (type != stringFormat._prevType)
+                            {
+                                stringFormat._prevType = type;
+                                if (type == "custom")
+                                {
+                                    stringFormat.typedInput("value", "");
+                                }
+                            }
+                        });
+
+                        const precision =
+                                $("<input/>", {
+                                    type: "text",
+                                    class: "node-input-precision",
+                                    title: node._("change.label.format")})
+                                        .appendTo(convertToRow2)
+                                        .typedInput({
+                                            types: [
+                                                {
+                                                    value: "int",
+                                                    label: node._("change.label.integer"),
+                                                    icon: "fa fa-align-justify",
+                                                    options:
+                                                    [
+                                                        {
+                                                            value: "round",
+                                                            label: node._("change.list.int.round")
+                                                        },
+                                                        {
+                                                            value: "floor",
+                                                            label: node._("change.list.int.floor")
+                                                        },
+                                                        {
+                                                            value: "ceil",
+                                                            label: node._("change.list.int.ceil")
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    value: "float",
+                                                    label: node._("change.label.float"),
+                                                    icon: "fa fa-list",
+                                                    hasValue: true,
+                                                    validate: PATTERN_FP_PRECISION
+                                                }]});
+                        precision.typedInput("width", "314px");
+                        precision._prevType = "int";
+                        precision.on("change", function()
+                        {
+                            const type = precision.typedInput("type");
+                            if (type != precision._prevType)
+                            {
+                                precision._prevType = type;
+                                if (type == "float")
+                                {
+                                    precision.typedInput("value", "0");
+                                }
+                            }
+                        });
+
+                        action.change(function()
+                        {
+                            setBox.hide();
+                            changeBox.hide();
+                            convertBox.hide();
+
+                            const value = $(this).val();
+                            switch (value)
+                            {
+                                case "set":
+                                {
+                                    setBox.show();
+                                    break;
+                                }
+                                case "change":
+                                {
+                                    changeBox.show();
+                                    break;
+                                }
+                                case "convert":
+                                {
+                                    convertBox.show();
+                                    break;
+                                }
+                            }
+                        });
+
+                        const now = new Date();
+                        if (!("action" in data))
+                        {
+                            data = {action: "set", target: {type: "msg", name: "payload"}, time1: {type: "time", value: ""}, time2: {type: "time", value: ""}};
+                        }
+
+                        // initialize to default
+                        changeType.val("add");
+                        addsubUnit.val("years");
+                        addsub.typedInput("value", 1);
+
+                        action.val(data.action);
+                        property.typedInput("value", data.target.name);
+                        property.typedInput("type", data.target.type);
+
+                        if (data.action == "set")
+                        {
+                            time1.typedInput("type", data.time1.type);
+                            time1.typedInput("value", data.time1.value);
+                            time2.typedInput("type", data.time2.type);
+                            time2.typedInput("value", data.time2.value);
+                        }
+                        else if (data.action == "change")
+                        {
+                            if ((data.type == "add") || (data.type == "subtract"))
+                            {
+                                addsub.typedInput("type", data.valueType);
+                                addsub.typedInput("value", data.value);
+                                addsubUnit.val(data.unit);
+                            }
+                            changeType.val(data.type);
+                        }
+                        else if (data.action == "convert")
+                        {
+                            stringFormat.typedInput("type", data.formatType);
+                            stringFormat.typedInput("value", data.format);
+
+                            if (data.formatType == "number")
+                            {
+                                precision.typedInput("type", data.precisionType);
+                                precision.typedInput("value", data.precision);
+                            }
+                        }
+
+                        action.change();
+                        changeType.change();
+
+                        item[0].appendChild(fragment);
+                    }
                 });
-            }
-        },
-        oneditresize: function(size)
-        {
-            const conditionListRow = $("#dialog-form>div.node-input-list-row");
-            const otherRows = $("#dialog-form>div:not(.node-input-list-row)");
-            let height = size.height;
 
-            for (let i=0; i<otherRows.length; ++i)
-            {
-                const row = $(otherRows[i]);
+                const mode = $("#node-input-mode");
 
-                if (row.is(":visible"))
+                // backward compatibility to 1.24.0 and below
+                if (typeof node.mode == "undefined")
                 {
-                    height -= row.outerHeight(true);
+                    node.mode = "moment";
+                    mode.val("moment");
+                }
+
+                mode.change(function()
+                {
+                    $("#node-input-momentRules-row").hide();
+                    $("#node-input-durationRules-row").hide();
+
+                    const value = $(this).val();
+                    switch (value)
+                    {
+                        case "moment":
+                        {
+                            $("#node-input-momentRules-row").show();
+                            break;
+                        }
+                        case "duration":
+                        {
+                            $("#node-input-durationRules-row").show();
+                            break;
+                        }
+                    }
+
+                    RED.tray.resize();
+                });
+
+                mode.change();
+
+                let rules = undefined;
+                if (node.mode == "moment")
+                {
+                    rules = timeRules;
+                    durationRules.editableList("addItem", {});
+                }
+                else
+                {
+                    rules = durationRules;
+                    timeRules.editableList("addItem", {});
+                }
+
+                for (data of node.rules)
+                {
+                    rules.editableList("addItem", data);
+                }
+            },
+            oneditsave: function()
+            {
+                const node = this;
+                node.rules = [];
+
+                if ($("#node-input-mode").val() == "moment")
+                {
+                    const rules = $("#node-input-momentRules").editableList("items");
+
+                    rules.each(function(index)
+                    {
+                        const data = {};
+
+                        data.action = $(this).find(".node-input-action").val();
+                        data.target = {};
+
+                        const property = $(this).find(".node-input-property");
+                        data.target.type = property.typedInput("type");
+                        data.target.name = property.typedInput("value");
+
+                        if (data.action == "set")
+                        {
+                            const date = $(this).find(".node-input-date");
+                            const time = $(this).find(".node-input-time");
+
+                            data.type = date.typedInput("type");
+                            if (data.type == "date")
+                            {
+                                data.date = date.typedInput("value");
+                                data.time = {};
+                                data.time.type = time.typedInput("type");
+                                data.time.value = time.typedInput("value");
+                            }
+                            else if (data.type == "jsonata")
+                            {
+                                data.expression = date.typedInput("value");
+                            }
+                        }
+                        else if (data.action == "change")
+                        {
+                            data.type = $(this).find(".node-input-changeType").val();
+                            if (data.type == "set")
+                            {
+                                const setPartValue = $(this).find(".node-input-setPartValue");
+                                data.part = $(this).find(".node-input-setPartType").val();
+                                data.valueType = setPartValue.typedInput("type");
+                                data.value = setPartValue.typedInput("value");
+                            }
+                            else if ((data.type == "add") || (data.type == "subtract"))
+                            {
+                                const addsub = $(this).find(".node-input-addsub");
+                                data.valueType = addsub.typedInput("type");
+                                data.value = addsub.typedInput("value");
+                                data.unit = $(this).find(".node-input-addsubUnit").val();
+                            }
+                            else if ((data.type == "startOf") || (data.type == "endOf"))
+                            {
+                                data.arg = $(this).find(".node-input-startEndOfArg").val();
+                            }
+                        }
+                        else if (data.action == "convert")
+                        {
+                            const stringFormat = $(this).find(".node-input-stringFormat");
+                            const timeZone = $(this).find(".node-input-timeZone");
+
+                            data.formatType = stringFormat.typedInput("type");
+                            data.format = stringFormat.typedInput("value");
+                            data.tzType = timeZone.typedInput("type");
+                            data.tzValue = timeZone.typedInput("value");
+                        }
+
+                        node.rules.push(data);
+                    });
+                }
+                else
+                {
+                    const rules = $("#node-input-durationRules").editableList("items");
+
+                    rules.each(function(index)
+                    {
+                        const data = {};
+
+                        data.action = $(this).find(".node-input-action").val();
+                        data.target = {};
+
+                        const property = $(this).find(".node-input-property");
+                        data.target.type = property.typedInput("type");
+                        data.target.name = property.typedInput("value");
+
+                        if (data.action == "set")
+                        {
+                            const time1 = $(this).find(".node-input-time1");
+                            const time2 = $(this).find(".node-input-time2");
+
+                            data.time1 = {};
+                            data.time1.type = time1.typedInput("type");
+                            data.time1.value = time1.typedInput("value");
+
+                            data.time2 = {};
+                            data.time2.type = time2.typedInput("type");
+                            data.time2.value = time2.typedInput("value");
+                        }
+                        else if (data.action == "change")
+                        {
+                            data.type = $(this).find(".node-input-changeType").val();
+                            if ((data.type == "add") || (data.type == "subtract"))
+                            {
+                                const addsub = $(this).find(".node-input-addsub");
+                                data.valueType = addsub.typedInput("type");
+                                data.value = addsub.typedInput("value");
+                                data.unit = $(this).find(".node-input-addsubUnit").val();
+                            }
+                        }
+                        else if (data.action == "convert")
+                        {
+                            const stringFormat = $(this).find(".node-input-stringFormat");
+                            const precision = $(this).find(".node-input-precision");
+
+                            data.formatType = stringFormat.typedInput("type");
+                            data.format = stringFormat.typedInput("value");
+                            if (data.formatType == "number")
+                            {
+                                data.precisionType = precision.typedInput("type");
+                                data.precision = precision.typedInput("value");
+                            }
+                        }
+
+                        node.rules.push(data);
+                    });
+                }
+            },
+            oneditresize: function(size)
+            {
+                const conditionListRow = $("#dialog-form>div.node-input-list-row");
+                const otherRows = $("#dialog-form>div:not(.node-input-list-row)");
+                let height = size.height;
+
+                for (let i=0; i<otherRows.length; ++i)
+                {
+                    const row = $(otherRows[i]);
+
+                    if (row.is(":visible"))
+                    {
+                        height -= row.outerHeight(true);
+                    }
+                }
+
+                height -= (parseInt(conditionListRow.css("marginTop")) + parseInt(conditionListRow.css("marginBottom")));
+
+                if ($("#node-input-mode").val() == "time")
+                {
+                    $("#node-input-momentRules").editableList("height", height);
+                }
+                else
+                {
+                    $("#node-input-durationRules").editableList("height", height);
                 }
             }
-
-            height -= (parseInt(conditionListRow.css("marginTop")) + parseInt(conditionListRow.css("marginBottom")));
-
-            if ($("#node-input-mode").val() == "time")
-            {
-                $("#node-input-momentRules").editableList("height", height);
-            }
-            else
-            {
-                $("#node-input-durationRules").editableList("height", height);
-            }
-        }
-    });
+        });
+    })();
 </script>
