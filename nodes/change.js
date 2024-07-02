@@ -730,7 +730,7 @@ module.exports = function(RED)
             node.debug("val: " + value + " type: " + (typeof value));
             if ((typeof value != "number") && (typeof value != "string"))
             {
-                throw new node.chronos.TimeError(RED._("change.error.NaN"), {value: value});
+                throw new node.chronos.TimeError(RED._("change.error.invalidNumber"), {value: value});
             }
 
             if (typeof value == "string")
@@ -741,7 +741,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    throw new node.chronos.TimeError(RED._("change.error.NaN"), {value: value});
+                    throw new node.chronos.TimeError(RED._("change.error.invalidNumber"), {value: value});
                 }
             }
 
