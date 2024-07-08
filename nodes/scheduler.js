@@ -80,16 +80,16 @@ module.exports = function(RED)
                 {
                     node.schedule[i].port = settings.schedule[i].output.port;
                 }
+                else
+                {
+                    node.schedule[i].port = 0;
+                }
             }
 
-            if (settings.multiPort)
+            node.ports = [];
+            for (let i=0; i<settings.outputs; ++i)
             {
-                node.ports = [];
-
-                for (let i=0; i<settings.outputs; ++i)
-                {
-                    node.ports.push(null);
-                }
+                node.ports.push(null);
             }
 
             if (settings.nextEventPort)
@@ -879,15 +879,11 @@ module.exports = function(RED)
 
         function sendMessage(entry)
         {
-            if (settings.multiPort)
+            if (node.ports.length > 1)
             {
                 node.ports[entry.port] = entry.msg;
                 node.send(node.ports);
                 node.ports[entry.port] = null;
-            }
-            else if (settings.nextEventPort)
-            {
-                node.send(entry.notification ? [null, entry.msg] : [entry.msg, null]);
             }
             else
             {
