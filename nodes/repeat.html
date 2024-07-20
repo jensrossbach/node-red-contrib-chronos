@@ -97,466 +97,522 @@ SOFTWARE.
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("chronos-repeat",
+    (function()
     {
-        category:     "chronos",
-        color:        "#DEB887",
-        icon:         "chronos_repeat.svg",
-        inputs:       1,
-        outputs:      1,
-        paletteLabel: "repeat",
-        label: function()
+        const PATTERN_TIME         = /^(?:\d|0\d|1\d|2[0-3]):(?:[0-5]\d)(?::(?:[0-5]\d))?\s*(?:a|am|A|AM|p|pm|P|PM)?$/;
+        const PATTERN_DATE         = /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/;
+        const PATTERN_CUSTOM_TIME  = /^[a-zA-Z][0-9a-zA-Z_]*$/;
+        const PATTERN_CRONTAB      = /^[0-9a-zA-Z ,#@*/?-]+$/;
+
+        RED.nodes.registerType("chronos-repeat",
         {
-            if (this.name)
+            category:     "chronos",
+            color:        "#DEB887",
+            icon:         "chronos_repeat.svg",
+            inputs:       1,
+            outputs:      1,
+            paletteLabel: "repeat",
+            label: function()
             {
-                return this.name;
-            }
-            else if ((this.mode == "simple") && this.interval && this.intervalUnit)
-            {
-                return this._("repeat.label.every") + " " + this.interval + " " + this._("node-red-contrib-chronos/chronos-config:common.list.unit." + this.intervalUnit);
-            }
-            else if ((this.mode == "advanced") && this.crontab)
-            {
-                return this.crontab;
-            }
-            else if (this.mode == "custom")
-            {
-                if (typeof this.expression == "string")  // backward compatibility to v1.18.x and earlier
+                if (this.name)
                 {
-                    if (this.expression.length <= 20)
-                    {
-                        return this.expression;
-                    }
-                    else
-                    {
-                        return this.expression.substring(0, 19) + "...";
-                    }
+                    return this.name;
                 }
-                else if (this.customRepetitionType == "jsonata")
+                else if ((this.mode == "simple") && this.interval && this.intervalUnit)
                 {
-                    if (this.customRepetitionValue.length <= 20)
-                    {
-                        return this.customRepetitionValue;
-                    }
-                    else
-                    {
-                        return this.customRepetitionValue.substring(0, 19) + "...";
-                    }
+                    return this._("repeat.label.every") + " " + this.interval + " " + this._("node-red-contrib-chronos/chronos-config:common.list.unit." + this.intervalUnit);
                 }
-                else if (this.customRepetitionType == "env")
+                else if ((this.mode == "advanced") && this.crontab)
                 {
-                    if (this.customRepetitionValue.includes("${"))
+                    return this.crontab;
+                }
+                else if (this.mode == "custom")
+                {
+                    if (typeof this.expression == "string")  // backward compatibility to v1.18.x and earlier
                     {
-                        return this.customRepetitionValue;
+                        if (this.expression.length <= 20)
+                        {
+                            return this.expression;
+                        }
+                        else
+                        {
+                            return this.expression.substring(0, 19) + "...";
+                        }
+                    }
+                    else if (this.customRepetitionType == "jsonata")
+                    {
+                        if (this.customRepetitionValue.length <= 20)
+                        {
+                            return this.customRepetitionValue;
+                        }
+                        else
+                        {
+                            return this.customRepetitionValue.substring(0, 19) + "...";
+                        }
+                    }
+                    else if (this.customRepetitionType == "env")
+                    {
+                        if (this.customRepetitionValue.includes("${"))
+                        {
+                            return this.customRepetitionValue;
+                        }
+                        else
+                        {
+                            return "${" + this.customRepetitionValue + "}";
+                        }
                     }
                     else
                     {
-                        return "${" + this.customRepetitionValue + "}";
+                        return this.customRepetitionType + "." + this.customRepetitionValue;
                     }
                 }
                 else
                 {
-                    return this.customRepetitionType + "." + this.customRepetitionValue;
+                    return this._("repeat.label.node");
                 }
-            }
-            else
-            {
-                return this._("repeat.label.node");
-            }
-        },
-        labelStyle: function()
-        {
-            return (this.name ? "node_label_italic" : "");
-        },
-        inputLabels: function()
-        {
-            return this._("node-red-contrib-chronos/chronos-config:common.label.inputPort");
-        },
-        outputLabels: function(index)
-        {
-            return this._("repeat.label.outputPort");
-        },
-        defaults:
-        {
-            name:
-            {
-                value: ""
             },
-            config:
+            labelStyle: function()
             {
-                value:    "",
-                type:     "chronos-config",
-                required: true
+                return (this.name ? "node_label_italic" : "");
             },
-            mode:
+            inputLabels: function()
             {
-                value: "simple"
+                return this._("node-red-contrib-chronos/chronos-config:common.label.inputPort");
             },
-            interval:
+            outputLabels: function(index)
             {
-                value: 1
+                return this._("repeat.label.outputPort");
             },
-            intervalUnit:
+            defaults:
             {
-                value: "minutes"
-            },
-            crontab:
-            {
-                value: "",
-                validate: function(v)
+                name:
                 {
-                    if (this.mode == "advanced")
+                    value: ""
+                },
+                config:
+                {
+                    value:    "",
+                    type:     "chronos-config",
+                    required: true
+                },
+                mode:
+                {
+                    value: "simple"
+                },
+                interval:
+                {
+                    value: 1
+                },
+                intervalUnit:
+                {
+                    value: "minutes"
+                },
+                crontab:
+                {
+                    value: "",
+                    validate: function(v, opt)
                     {
-                        return /^[0-9a-zA-Z ,#@*/?-]+$/.test(v);
+                        let res = true;
+
+                        if (($("#node-input-mode").val() == "advanced") && !PATTERN_CRONTAB.test(v))
+                        {
+                            res = opt ? this._("node-red-contrib-chronos/chronos-config:common.error.invalidCrontab") : false;
+                        }
+
+                        return res;
+                    }
+                },
+                customRepetitionType:
+                {
+                    value: "jsonata"
+                },
+                customRepetitionValue:
+                {
+                    value: "",
+                    validate: function(v, opt)
+                    {
+                        let res = true;
+
+                        if ($("#node-input-mode").val() == "custom")
+                        {
+                            res = RED.utils.validateTypedProperty(v, $("#node-input-customRepetition").typedInput("type"), opt);
+                        }
+
+                        return res;
+                    }
+                },
+                untilType:
+                {
+                    value: "nextMsg"
+                },
+                untilValue:
+                {
+                    value: "",
+                    validate: function(v, opt)
+                    {
+                        let res = true;
+
+                        const untilType = $("#node-input-until").typedInput("type");
+
+                        if ((untilType == "time") && !PATTERN_TIME.test(v))
+                        {
+                            res = opt ? this._("node-red-contrib-chronos/chronos-config:common.error.invalidTime") : false;
+                        }
+                        else if ((untilType == "custom") && !PATTERN_CUSTOM_TIME.test(v))
+                        {
+                            res = opt ? this._("node-red-contrib-chronos/chronos-config:common.error.invalidName") : false;
+                        }
+                        else if (/^jsonata|env|global|flow|msg$/.test(untilType))
+                        {
+                            res = RED.utils.validateTypedProperty(v, untilType, opt);
+                        }
+
+                        return res;
+                    }
+                },
+                untilDate:
+                {
+                    value: "",
+                    validate: function(v, opt)
+                    {
+                        if (!v || PATTERN_DATE.test(v))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return opt ? this._("node-red-contrib-chronos/chronos-config:common.error.invalidDate") : false;
+                        }
+                    }
+                },
+                untilOffset:
+                {
+                    value: 0
+                },
+                untilRandom:
+                {
+                    value: false
+                },
+                msgIngress:
+                {
+                    value: "forward"
+                },
+                preserveCtrlProps:
+                {
+                    value: false
+                },
+                ignoreCtrlProps:
+                {
+                    value: false
+                }
+            },
+            oneditprepare: function()
+            {
+                const node = this;
+
+                const sunTimes =
+                [
+                    {
+                        value: "nightEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                    },
+                    {
+                        value: "nauticalDawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                    },
+                    {
+                        value: "dawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                    },
+                    {
+                        value: "sunrise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                    },
+                    {
+                        value: "sunriseEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                    },
+                    {
+                        value: "goldenHourEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                    },
+                    {
+                        value: "solarNoon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                    },
+                    {
+                        value: "goldenHour",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                    },
+                    {
+                        value: "sunsetStart",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                    },
+                    {
+                        value: "sunset",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                    },
+                    {
+                        value: "dusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                    },
+                    {
+                        value: "nauticalDusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                    },
+                    {
+                        value: "night",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                    },
+                    {
+                        value: "nadir",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                    }
+                ];
+
+                const moonTimes =
+                [
+                    {
+                        value: "rise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                    },
+                    {
+                        value: "set",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                    }
+                ];
+
+                const timeInput =
+                {
+                    value: "time",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                    icon: "fa fa-clock-o",
+                    hasValue: true,
+                    validate: PATTERN_TIME
+                };
+
+                const sunTimeInput =
+                {
+                    value: "sun",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                    icon: "fa fa-sun-o",
+                    options: sunTimes
+                };
+
+                const moonTimeInput =
+                {
+                    value: "moon",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                    icon: "fa fa-moon-o",
+                    options: moonTimes
+                };
+
+                const customInput =
+                {
+                    value: "custom",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                    icon: "fa fa-user-o",
+                    hasValue: true,
+                    validate: PATTERN_CUSTOM_TIME
+                };
+
+                const nextMsgInput =
+                {
+                    value: "nextMsg",
+                    label: node._("repeat.label.nextMsg"),
+                    hasValue: false
+                };
+
+                const validateNumericInput = function(event, ui)
+                {
+                    const value = parseInt($(this).spinner("value"), 10);
+                    const min = $(this).spinner("option", "min");
+                    const max = $(this).spinner("option", "max");
+
+                    if (isNaN(value) || (value < min))
+                    {
+                        $(this).spinner("value", min);
+                    }
+                    else if (value > max)
+                    {
+                        $(this).spinner("value", max);
+                    }
+                };
+
+                const interval =
+                        $("#node-input-interval")
+                            .spinner({
+                                min: 1,
+                                max: 59,
+                                step: 1,
+                                change: validateNumericInput});
+
+                const customRepetition =
+                        $("#node-input-customRepetition")
+                            .typedInput({
+                                types: [
+                                    "jsonata",
+                                    "env",
+                                    "global",
+                                    "flow",
+                                    "msg"],
+                                typeField: $("#node-input-customRepetitionType")});
+                customRepetition._prevType = $("#node-input-customRepetitionType").val();
+                customRepetition.on("change", function()
+                {
+                    const type = customRepetition.typedInput("type");
+                    if (type != customRepetition._prevType)
+                    {
+                        customRepetition._prevType = type;
+                        customRepetition.typedInput("value", "");
+                    }
+                });
+
+                const untilDate =
+                        $("#node-input-untilDate")
+                            .datepicker({
+                                dateFormat: "yy-mm-dd",
+                                minDate: "2000-01-01",
+                                maxDate: "9999-12-31",
+                                changeYear: true,
+                                firstDay: 1});
+
+                const until =
+                        $("#node-input-until")
+                            .typedInput({
+                                types: [
+                                    nextMsgInput,
+                                    timeInput,
+                                    sunTimeInput,
+                                    moonTimeInput,
+                                    customInput,
+                                    "jsonata",
+                                    "env",
+                                    "global",
+                                    "flow",
+                                    "msg"],
+                                typeField: $("#node-input-untilType")});
+                until._prevType = $("#node-input-untilType").val();
+                until.on("change", function()
+                {
+                    const type = until.typedInput("type");
+                    if (type != until._prevType)
+                    {
+                        until._prevType = type;
+                        if ((type != "nextMsg") && (type != "sun") && (type != "moon"))
+                        {
+                            until.typedInput("value", "");
+                        }
+                    }
+                });
+
+                const untilOffset =
+                        $("#node-input-untilOffset")
+                            .spinner({
+                                min: -300,
+                                max: 300,
+                                step: 1,
+                                change: validateNumericInput});
+
+                $("#node-input-intervalUnit").change(function()
+                {
+                    const value = $(this).val();
+                    switch (value)
+                    {
+                        case "seconds":
+                        {
+                            interval.spinner("option", "max", 59);
+                            break;
+                        }
+                        case "minutes":
+                        {
+                            interval.spinner("option", "max", 59);
+                            break;
+                        }
+                        case "hours":
+                        {
+                            interval.spinner("option", "max", 24);
+                            break;
+                        }
+                    }
+
+                    validateNumericInput.call(interval);
+                });
+
+                $("#node-input-mode").change(function()
+                {
+                    const value = $(this).val();
+                    switch (value)
+                    {
+                        case "simple":
+                        {
+                            $("#form-row-simple").show();
+                            $("#form-row-advanced").hide();
+                            $("#form-row-custom").hide();
+                            break;
+                        }
+                        case "advanced":
+                        {
+                            $("#form-row-simple").hide();
+                            $("#form-row-advanced").show();
+                            $("#form-row-custom").hide();
+                            break;
+                        }
+                        case "custom":
+                        {
+                            $("#form-row-simple").hide();
+                            $("#form-row-advanced").hide();
+                            $("#form-row-custom").show();
+                            break;
+                        }
+                    }
+                });
+
+                until.on("change", function()
+                {
+                    const type = until.typedInput("type");
+                    if ((type === "nextMsg") || (type === "jsonata"))
+                    {
+                        $("#form-row-untilDate").hide();
+                        $("#form-row-offsetBox").hide();
                     }
                     else
                     {
-                        return true;
+                        $("#form-row-untilDate").show();
+                        $("#form-row-offsetBox").show();
                     }
-                }
-            },
-            customRepetitionType:
-            {
-                value: "jsonata"
-            },
-            customRepetitionValue:
-            {
-                value: "",
-                validate: function(v)
+                });
+
+                // backward compatibility to v1.14.x and earlier
+                if (typeof node.mode == "undefined")
                 {
-                    if (this.mode == "custom")
-                    {
-                        return (v.length > 0);
-                    }
-                    else
-                    {
-                        return true;
-                    }
+                    node.mode = "simple";
+                    $("#node-input-mode").val(node.mode);
                 }
-            },
-            untilType:
-            {
-                value: "nextMsg"
-            },
-            untilValue:
-            {
-                value: ""
-            },
-            untilDate:
-            {
-                value: "",
-                validate: function(v)
+                if (typeof node.msgIngress == "undefined")
                 {
-                    if (!v)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return /^([2-9]\d\d\d)-([1-9]|0[1-9]|1[0-2])-([1-9]|0[1-9]|[12]\d|3[01])$/.test(v);
-                    }
+                    node.msgIngress = "forward:forced";
+                    $("#node-input-msgIngress").val(node.msgIngress);
                 }
+
+                // backward compatibility to v1.18.x and earlier
+                if (typeof node.customRepetitionType == "undefined")
+                {
+                    node.customRepetitionType = "jsonata";
+                    $("#node-input-customRepetitionType").val(node.customRepetitionType);
+                    node.customRepetitionValue = node.expression;
+                    $("#node-input-customRepetitionValue").val(node.customRepetitionValue);
+                }
+
+                $("#node-input-mode").change();
+                customRepetition.typedInput("value", $("#node-input-customRepetitionValue").val());
+                until.typedInput("value", $("#node-input-untilValue").val());
             },
-            untilOffset:
+            oneditsave: function()
             {
-                value: 0
-            },
-            untilRandom:
-            {
-                value: false
-            },
-            msgIngress:
-            {
-                value: "forward"
-            },
-            preserveCtrlProps:
-            {
-                value: false
-            },
-            ignoreCtrlProps:
-            {
-                value: false
+                $("#node-input-customRepetitionValue").val($("#node-input-customRepetition").typedInput("value"));
+                $("#node-input-untilValue").val($("#node-input-until").typedInput("value"));
             }
-        },
-        oneditprepare: function()
-        {
-            const node = this;
-
-            const sunTimes =
-            [
-                {
-                    value: "nightEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
-                },
-                {
-                    value: "nauticalDawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
-                },
-                {
-                    value: "dawn",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
-                },
-                {
-                    value: "sunrise",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
-                },
-                {
-                    value: "sunriseEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
-                },
-                {
-                    value: "goldenHourEnd",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
-                },
-                {
-                    value: "solarNoon",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
-                },
-                {
-                    value: "goldenHour",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
-                },
-                {
-                    value: "sunsetStart",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
-                },
-                {
-                    value: "sunset",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
-                },
-                {
-                    value: "dusk",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
-                },
-                {
-                    value: "nauticalDusk",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
-                },
-                {
-                    value: "night",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
-                },
-                {
-                    value: "nadir",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
-                }
-            ];
-
-            const moonTimes =
-            [
-                {
-                    value: "rise",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
-                },
-                {
-                    value: "set",
-                    label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
-                }
-            ];
-
-            const timeInput =
-            {
-                value: "time",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
-                icon: "fa fa-clock-o",
-                hasValue: true,
-                validate: /^(\d|0\d|1\d|2[0-3]):([0-5]\d)(:([0-5]\d))?\s*(a|am|A|AM|p|pm|P|PM)?$/
-            };
-
-            const sunTimeInput =
-            {
-                value: "sun",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
-                icon: "fa fa-sun-o",
-                options: sunTimes
-            };
-
-            const moonTimeInput =
-            {
-                value: "moon",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
-                icon: "fa fa-moon-o",
-                options: moonTimes
-            };
-
-            const customInput =
-            {
-                value: "custom",
-                label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
-                icon: "fa fa-user-o",
-                hasValue: true,
-                validate: /^[a-zA-Z][0-9a-zA-Z_]*$/
-            };
-
-            const nextMsgInput =
-            {
-                value: "nextMsg",
-                label: node._("repeat.label.nextMsg"),
-                hasValue: false
-            };
-
-            const validateNumericInput = function(event, ui)
-            {
-                const value = parseInt($(this).spinner("value"), 10);
-                const min = $(this).spinner("option", "min");
-                const max = $(this).spinner("option", "max");
-
-                if (isNaN(value) || (value < min))
-                {
-                    $(this).spinner("value", min);
-                }
-                else if (value > max)
-                {
-                    $(this).spinner("value", max);
-                }
-            };
-
-            const interval =
-                    $("#node-input-interval")
-                        .spinner({
-                            min: 1,
-                            max: 59,
-                            step: 1,
-                            change: validateNumericInput});
-            const customRepetition =
-                    $("#node-input-customRepetition")
-                        .typedInput({
-                            types: [
-                                "jsonata",
-                                "env",
-                                "global",
-                                "flow",
-                                "msg"],
-                            typeField: $("#node-input-customRepetitionType")});
-            const untilDate =
-                    $("#node-input-untilDate")
-                        .datepicker({
-                            dateFormat: "yy-mm-dd",
-                            minDate: "2000-01-01",
-                            maxDate: "9999-12-31",
-                            changeYear: true,
-                            firstDay: 1});
-            const until =
-                    $("#node-input-until")
-                        .typedInput({
-                            types: [
-                                nextMsgInput,
-                                timeInput,
-                                sunTimeInput,
-                                moonTimeInput,
-                                customInput,
-                                "jsonata",
-                                "env",
-                                "global",
-                                "flow",
-                                "msg"],
-                            typeField: $("#node-input-untilType")});
-            const untilOffset =
-                    $("#node-input-untilOffset")
-                        .spinner({
-                            min: -300,
-                            max: 300,
-                            step: 1,
-                            change: validateNumericInput});
-
-            $("#node-input-intervalUnit").change(function()
-            {
-                const value = $(this).val();
-                switch (value)
-                {
-                    case "seconds":
-                    {
-                        interval.spinner("option", "max", 59);
-                        break;
-                    }
-                    case "minutes":
-                    {
-                        interval.spinner("option", "max", 59);
-                        break;
-                    }
-                    case "hours":
-                    {
-                        interval.spinner("option", "max", 24);
-                        break;
-                    }
-                }
-
-                validateNumericInput.call(interval);
-            });
-
-            $("#node-input-mode").change(function()
-            {
-                const value = $(this).val();
-                switch (value)
-                {
-                    case "simple":
-                    {
-                        $("#form-row-simple").show();
-                        $("#form-row-advanced").hide();
-                        $("#form-row-custom").hide();
-                        break;
-                    }
-                    case "advanced":
-                    {
-                        $("#form-row-simple").hide();
-                        $("#form-row-advanced").show();
-                        $("#form-row-custom").hide();
-                        break;
-                    }
-                    case "custom":
-                    {
-                        $("#form-row-simple").hide();
-                        $("#form-row-advanced").hide();
-                        $("#form-row-custom").show();
-                        break;
-                    }
-                }
-            });
-
-            until.on("change", function()
-            {
-                const type = until.typedInput("type");
-                if ((type === "nextMsg") || (type === "jsonata"))
-                {
-                    $("#form-row-untilDate").hide();
-                    $("#form-row-offsetBox").hide();
-                }
-                else
-                {
-                    $("#form-row-untilDate").show();
-                    $("#form-row-offsetBox").show();
-                }
-            });
-
-            // backward compatibility to v1.14.x and earlier
-            if (typeof node.mode == "undefined")
-            {
-                node.mode = "simple";
-                $("#node-input-mode").val(node.mode);
-            }
-            if (typeof node.msgIngress == "undefined")
-            {
-                node.msgIngress = "forward:forced";
-                $("#node-input-msgIngress").val(node.msgIngress);
-            }
-
-            // backward compatibility to v1.18.x and earlier
-            if (typeof node.customRepetitionType == "undefined")
-            {
-                node.customRepetitionType = "jsonata";
-                $("#node-input-customRepetitionType").val(node.customRepetitionType);
-                node.customRepetitionValue = node.expression;
-                $("#node-input-customRepetitionValue").val(node.customRepetitionValue);
-            }
-
-            $("#node-input-mode").change();
-            customRepetition.typedInput("value", $("#node-input-customRepetitionValue").val());
-            until.typedInput("value", $("#node-input-untilValue").val());
-        },
-        oneditsave: function()
-        {
-            $("#node-input-customRepetitionValue").val($("#node-input-customRepetition").typedInput("value"));
-            $("#node-input-untilValue").val($("#node-input-until").typedInput("value"));
-        }
-    });
+        });
+    })();
 </script>
