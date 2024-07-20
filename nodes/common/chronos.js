@@ -146,6 +146,10 @@ function getTimeFrom(node, source)
             ret = getMoment(node, source);
         }
     }
+    else if ((typeof source == "object") && (source instanceof Date))
+    {
+        ret = getMoment(node, source);
+    }
 
     if (!ret)
     {
