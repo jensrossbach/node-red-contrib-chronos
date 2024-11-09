@@ -182,7 +182,7 @@ module.exports = function(RED)
                             {
                                 if (await scheduleMessage(msg))
                                 {
-                                    send(node.message);
+                                    send(RED.util.cloneMessage(node.message));
                                 }
 
                                 done();
