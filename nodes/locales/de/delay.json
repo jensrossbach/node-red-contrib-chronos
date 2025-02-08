@@ -9,7 +9,10 @@
             "duration":          "Dauer",
             "when":              "Wann",
             "delay":             "Verzögerung",
-            "randomizerMillis":  "Zufallswert immer in Millisekundenauflösung"
+            "randomizerMillis":  "Zufallswert immer in Millisekundenauflösung",
+            "limitQueue":        "Warteschlange begrenzen auf",
+            "queueUnit":         "Nachrichten",
+            "msgIngress":        "Beim Eintreffen einer Nachricht bei voller Warteschlange"
         },
         "list":
         {
@@ -19,6 +22,12 @@
                 "randomDuration":  "Zufällige Dauer",
                 "pointInTime":     "Zeitpunkt",
                 "custom":          "Benutzerdefiniert"
+            },
+            "msgIngress":
+            {
+                "dropIncoming":  "Eingehende Nachricht verwerfen",
+                "dropOldest":    "Älteste Nachricht verwerfen",
+                "flushOldest":   "Älteste Nachricht weiterleiten"
             }
         },
         "status":

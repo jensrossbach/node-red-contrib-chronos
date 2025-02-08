@@ -132,6 +132,32 @@ SOFTWARE.
             (properties <code>fixedDuration</code>, <code>randomDuration</code>
             and <code>when</code>).
         </dd>
+        <dt>Limit queue</dt>
+        <dd>
+            If selected, the message queue can be limited to a maximum number
+            of messages that will be queued.
+        </dd>
+        <dt>When message arrives on input and queue is full</dt>
+        <dd>
+            Specifies the behavior when a message arrives at the input port
+            and the queue limit is already reached.
+            <ul>
+                <li>
+                    <i>drop incoming message</i>: The incoming message will
+                    be dropped.
+                </li>
+                <li>
+                    <i>drop oldest message</i>: The oldest message in the
+                    queue will be dropped and the incoming message will be
+                    enqueued.
+                </li>
+                <li>
+                    <i>flush oldest message</i>: The oldest message in the
+                    queue will be sent out and the incoming message will be
+                    enqueued.
+                </li>
+            </ul>
+        </dd>
         <dt>Preserve control properties in messages</dt>
         <dd>
             If selected, control properties as described below in section

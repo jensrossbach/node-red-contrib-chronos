@@ -88,7 +88,23 @@ SOFTWARE.
         <input id="node-input-customDelayType" type="hidden">
         <input id="node-input-customDelayValue" type="hidden">
     </div>
-    <div class="form-row" style="padding-top: 10px">
+    <div class="form-row" style="padding-top: 10px;">
+        <input id="node-input-limitQueue" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+        <label for="node-input-limitQueue" style="margin-bottom: 0px; width: auto;" data-i18n="delay.label.limitQueue"></label>&nbsp;
+        <input id="node-input-queueLimit" type="text" placeholder="10" style="width: 45px; height: 28px;">&nbsp;
+        <span data-i18n="delay.label.queueUnit"></span>
+    </div>
+    <div class="form-row" style="margin-bottom: 4px;">
+        <label for="node-input-msgIngress" style="width: auto;"><i class="fa fa-sign-in"></i> <span data-i18n="delay.label.msgIngress"></span></label>
+    </div>
+    <div class="form-row">
+        <select id="node-input-msgIngress" style="margin-left: 104px; width: auto;">
+            <option value="drop:incoming" data-i18n="delay.list.msgIngress.dropIncoming"></option>
+            <option value="drop:oldest" data-i18n="delay.list.msgIngress.dropOldest"></option>
+            <option value="flush:oldest" data-i18n="delay.list.msgIngress.flushOldest"></option>
+        </select>
+    </div>
+    <div class="form-row">
         <input id="node-input-preserveCtrlProps" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-preserveCtrlProps" style="margin-bottom: 0px; width: auto;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.preserveCtrlProps"></label>
     </div>
@@ -326,6 +342,19 @@ SOFTWARE.
 
                         return res;
                     }
+                },
+                limitQueue:
+                {
+                    value: false
+                },
+                queueLimit:
+                {
+                    value:    10,
+                    validate: RED.validators.number(true)
+                },
+                msgIngress:
+                {
+                    value: "drop:incoming"
                 },
                 preserveCtrlProps:
                 {
@@ -674,6 +703,22 @@ SOFTWARE.
                 $("#node-input-delayType").change();
                 when.typedInput("value", $("#node-input-whenValue").val());
                 customDelay.typedInput("value", $("#node-input-customDelayValue").val());
+
+                // backward compatibility to v1.25.6 and earlier
+                if (typeof node.limitQueue == "undefined")
+                {
+                    $("#node-input-limitQueue").prop("checked", false);
+                }
+                if (typeof node.msgIngress == "undefined")
+                {
+                    $("#node-input-msgIngress").val("drop:incoming");
+                }
+
+                $("#node-input-limitQueue").on("change", function()
+                {
+                    $("#node-input-queueLimit").attr("disabled", !$("#node-input-limitQueue").prop("checked"));
+                    $("#node-input-msgIngress").attr("disabled", !$("#node-input-limitQueue").prop("checked"));
+                });
             },
             oneditsave: function()
             {

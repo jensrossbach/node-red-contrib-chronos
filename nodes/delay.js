@@ -126,6 +126,11 @@ module.exports = function(RED)
             node.random = settings.random;
             node.customDelayType = settings.customDelayType;
             node.customDelayValue = settings.customDelayValue;
+            node.queueLimit =
+                (settings.limitQueue === true)
+                    ? parseInt(settings.queueLimit)
+                    : 0;
+            node.msgIngress = (typeof settings.msgIngress == "undefined") ? "drop:incoming" : settings.msgIngress;
             node.preserveCtrlProps = settings.preserveCtrlProps;
             node.ignoreCtrlProps = settings.ignoreCtrlProps;
 
@@ -181,6 +186,8 @@ module.exports = function(RED)
                             if (!node.ignoreCtrlProps && ("drop" in msg))
                             {
                                 tearDownDelayTimer();
+
+                                node.debug("Drop all enqueued messages");
                                 dropQueue();
 
                                 if ("enqueue" in msg)
@@ -259,6 +266,28 @@ module.exports = function(RED)
             let whenValue = node.whenValue;
             let whenOffset = node.offset;
             let whenRandom = node.random;
+
+            if ((node.queueLimit > 0) && (node.msgQueue.length >= node.queueLimit))
+            {
+                if (node.msgIngress == "drop:incoming")
+                {
+                    node.debug("Queue is full - drop incoming message");
+
+                    done();
+                    return;
+                }
+
+                if (node.msgIngress == "drop:oldest")
+                {
+                    node.debug("Queue is full - drop oldest message");
+                    dropOldestItem();
+                }
+                else
+                {
+                    node.debug("Queue is full - flush oldest message");
+                    flushOldestItem();
+                }
+            }
 
             if (node.ignoreCtrlProps)
             {
@@ -405,16 +434,28 @@ module.exports = function(RED)
             updateStatus();
         }
 
+        function dropOldestItem()
+        {
+            const item = node.msgQueue.shift();
+            item.done();
+        }
+
+        function flushOldestItem()
+        {
+            const item = node.msgQueue.shift();
+
+            node.send(item.msg);
+            item.done();
+        }
+
         function dropQueue()
         {
-            node.debug("Drop all enqueued messages");
-
-            while (node.msgQueue.length > 0)
+            for (const item of node.msgQueue)
             {
-                let item = node.msgQueue.shift();
                 item.done();
             }
 
+            node.msgQueue = [];
             updateStatus();
         }
 
@@ -422,15 +463,14 @@ module.exports = function(RED)
         {
             node.debug("Flush all enqueued messages");
 
-            while (node.msgQueue.length > 0)
+            const msgs = [];
+            for (const item of node.msgQueue)
             {
-                let item = node.msgQueue.shift();
-
-                node.send(item.msg);
-                item.done();
+                msgs.push(item.msg);
             }
 
-            updateStatus();
+            node.send([msgs]);
+            dropQueue();
         }
 
         function setupFixedDurationDelayTimer(value, unit)
