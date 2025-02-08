@@ -50,7 +50,7 @@ Each node has a built-in help that is displayed in the help tab of the Node-RED 
 **&rarr; [Documentation](https://github.com/jensrossbach/node-red-contrib-chronos/wiki)**
 
 ## License
-Copyright (c) 2024 Jens-Uwe Rossbach
+Copyright (c) 2020 - 2025 Jens-Uwe Rossbach
 
 This code is licensed under the MIT License.
 
