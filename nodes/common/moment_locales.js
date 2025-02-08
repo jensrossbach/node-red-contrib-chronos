@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2024 Jens-Uwe Rossbach
+ * Copyright (c) 2020 - 2025 Jens-Uwe Rossbach
  *
  * This code is licensed under the MIT License.
  *
