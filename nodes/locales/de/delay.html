@@ -137,6 +137,32 @@ SOFTWARE.
             des Variablenformats (Eigenschaften <code>fixedDuration</code>,
             <code>randomDuration</code> und <code>when</code>).
         </dd>
+        <dt>Warteschlange begrenzen</dt>
+        <dd>
+            Wenn aktiviert, kann die Nachrichten-Warteschlange auf eine
+            maximale Anzahl zu puffernde Nachrichten begrenzt werden.
+        </dd>
+        <dt>Beim Eintreffen einer Nachricht bei voller Warteschlange</dt>
+        <dd>
+            Gibt an, was passieren soll, wenn eine Nachricht eintrifft und
+            die Nachrichten-Warteschlange bereits die Obergrenze erreicht hat.
+            <ul>
+                <li>
+                    <i>Eingehende Nachricht verwerfen</i>: Die eingehende
+                    Nachricht wird verworfen.
+                </li>
+                <li>
+                    <i>Älteste Nachricht verwerfen</i>: Die älteste Nachricht
+                    in der Warteschlange wird verworfen und die eingehende
+                    Nachricht wird gepuffert.
+                </li>
+                <li>
+                    <i>Älteste Nachricht weiterleiten</i>: Die älteste
+                    Nachricht in der Warteschlange wird weitergeleitet und
+                    die eingehende Nachricht wird gepuffert.
+                </li>
+            </ul>
+        </dd>
         <dt>Steuereigenschaften in Nachrichten beibehalten</dt>
         <dd>
             Wenn aktiviert, werden Steuereigenschaften, wie unten in Abschnitt

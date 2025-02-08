@@ -9,7 +9,10 @@
             "duration":          "Duration",
             "when":              "When",
             "delay":             "Delay",
-            "randomizerMillis":  "Random value always in milliseconds granularity"
+            "randomizerMillis":  "Random value always in milliseconds granularity",
+            "limitQueue":        "Limit queue to",
+            "queueUnit":         "messages",
+            "msgIngress":        "When message arrives on input and queue is full"
         },
         "list":
         {
@@ -19,6 +22,12 @@
                 "randomDuration":  "Random Duration",
                 "pointInTime":     "Point in Time",
                 "custom":          "Custom"
+            },
+            "msgIngress":
+            {
+                "dropIncoming":  "drop incoming message",
+                "dropOldest":    "drop oldest message",
+                "flushOldest":   "flush oldest message"
             }
         },
         "status":
