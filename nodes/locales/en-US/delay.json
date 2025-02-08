@@ -21,7 +21,8 @@
                 "fixedDuration":   "Fixed Duration",
                 "randomDuration":  "Random Duration",
                 "pointInTime":     "Point in Time",
-                "custom":          "Custom"
+                "custom":          "Custom",
+                "unlimited":       "Unlimited"
             },
             "msgIngress":
             {
@@ -32,9 +33,10 @@
         },
         "status":
         {
-            "queuedFor":    "queued for",
-            "queuedUntil":  "queued until",
-            "error":        "error"
+            "queuedFor":        "queued for",
+            "queuedUntil":      "queued until",
+            "queuedUnlimited":  "queued unlimited",
+            "error":            "error"
         }
     }
 }

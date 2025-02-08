@@ -424,9 +424,13 @@ module.exports = function(RED)
                 {
                     setupTimePointDelayTimer(whenType, whenValue, whenOffset, whenRandom);
                 }
-                else
+                else if (delayType == "custom")
                 {
                     await setupCustomDelayTimer(msg);
+                }
+                else
+                {
+                    node.debug("No timer setup due to unlimited delay");
                 }
             }
 
@@ -814,6 +818,10 @@ module.exports = function(RED)
                     });
 
                     node.status({fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queuedUntil") + " " + when});
+                }
+                else
+                {
+                    node.status({fill: "blue", shape: "dot", text: node.msgQueue.length + " " + RED._("delay.status.queuedUnlimited")});
                 }
             }
             else
