@@ -49,7 +49,7 @@ SOFTWARE.
         <dd>
             Ein Verweis auf den zu verwendenden Konfigurationsknoten.
         </dd>
-        <dt>Zeitplan</dt>
+        <dt>Reiter Zeitplan</dt>
         <dd>
             Liste der geplanten Zeitereignisse. Neue Einträge können über den
             Button unterhalb der Liste hinzugefügt werden. Vorhandene Einträge
@@ -118,6 +118,16 @@ SOFTWARE.
                 </li>
             </ul>
         </dd>
+        <dt>Reiter Optionen</dt>
+        <dd>
+            Allgemeine Optionen, die konfiguriert werden können und nachfolgend
+            beschrieben sind.
+        </dd>
+        <dt>Mit inaktivem Zeitplan starten</dt>
+        <dd>
+            Wenn aktiviert, wird der Zeitplan beim Starten des Knotens initial
+            deaktiviert.
+        </dd>
         <dt>Separate Ausgabe-Ports für Zeitereignisse</dt>
         <dd>
             Wenn aktiviert, wird für jedes Zeitereignis, das eine Nachricht als
@@ -136,10 +146,11 @@ SOFTWARE.
             <code>msg.payload</code> und ein Array mit Zeitstempeln aller
             Zeitereignisse in <code>msg.events</code>.
         </dd>
-        <dt>Mit inaktivem Zeitplan starten</dt>
+        <dt>Beim Starten Nachrichten verzögern</dt>
         <dd>
-            Wenn aktiviert, wird der Zeitplan beim Starten des Knotens initial
-            deaktiviert.
+            Wenn aktiviert, werden alle Nachrichten, die zum Startzeitpunkt des
+            Knotens versendet werden sollen, um die angegebene Zeitspanne
+            verzögert (standardmäßig um 0,1 Sekunden).
         </dd>
     </dl>
     <h3>Eingabe</h3>

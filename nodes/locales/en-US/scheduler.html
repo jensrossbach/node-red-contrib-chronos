@@ -46,9 +46,9 @@ SOFTWARE.
         <dd>
             A reference to the configuration node to be used.
         </dd>
-        <dt>Schedule</dt>
+        <dt>Schedule tab</dt>
         <dd>
-            The list containing the scheduled events. New entries can be added
+            List containing the scheduled events. New entries can be added
             using the button below the list. Existing entries can be reordered
             or deleted. For each entry, a schedule time and an output can be
             configured:
@@ -110,6 +110,15 @@ SOFTWARE.
                 </li>
             </ul>
         </dd>
+        <dt>Options tab</dt>
+        <dd>
+            General options that can be configured and are described below.
+        </dd>
+        <dt>Start with disabled schedule</dt>
+        <dd>
+            If selected, the configured schedule will be initially disabled when
+            the node starts.
+        </dd>
         <dt>Dedicated output ports for schedule events</dt>
         <dd>
             If selected, for each event which produces a message as output, a
@@ -128,10 +137,10 @@ SOFTWARE.
             the next schedule event in <code>msg.payload</code> and an array
             with timestamps from all schedule events in <code>msg.events</code>.
         </dd>
-        <dt>Start with disabled schedule</dt>
+        <dt>Delay messages on start</dt>
         <dd>
-            If selected, the configured schedule will be initially disabled when
-            the node starts.
+            If selected, any message that is to be sent directly when the node
+            starts is delayed by the specified time (defaults to 0.1 seconds).
         </dd>
     </dl>
     <h3>Input</h3>
