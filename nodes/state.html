@@ -884,7 +884,7 @@ SOFTWARE.
             oneditresize: function(size)
             {
                 const listRow = $("#dialog-form div.list-row");
-                const otherRows = $("#dialog-form>div");
+                let otherRows = $("#dialog-form>div");
                 let height = size.height;
 
                 for (let i=0; i<otherRows.length; ++i)
