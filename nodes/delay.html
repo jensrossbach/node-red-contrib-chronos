@@ -92,7 +92,7 @@ SOFTWARE.
     <div class="form-row" style="padding-top: 10px;">
         <input id="node-input-limitQueue" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
         <label for="node-input-limitQueue" style="margin-bottom: 0px; width: auto;" data-i18n="delay.label.limitQueue"></label>&nbsp;
-        <input id="node-input-queueLimit" type="text" placeholder="10" style="width: 45px; height: 28px;">&nbsp;
+        <input id="node-input-queueLimit" type="text" placeholder="#" style="width: 45px; height: 28px;">&nbsp;
         <span data-i18n="delay.label.queueUnit"></span>
     </div>
     <div class="form-row" style="margin-bottom: 4px;">
@@ -351,7 +351,16 @@ SOFTWARE.
                 queueLimit:
                 {
                     value:    10,
-                    validate: RED.validators.number(true)
+                    validate: function(v, opt)
+                    {
+                        let res = true;
+                        if ((+v !== +v) || (v <= 0))
+                        {
+                            res = opt ? this._("delay.error.invalidQueueLimit") : false;
+                        }
+
+                        return res;
+                    }
                 },
                 msgIngress:
                 {
