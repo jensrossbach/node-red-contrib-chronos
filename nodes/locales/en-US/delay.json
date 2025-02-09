@@ -31,6 +31,10 @@
                 "flushOldest":   "flush oldest message"
             }
         },
+        "error":
+        {
+            "invalidQueueLimit":  "invalid queue limit"
+        },
         "status":
         {
             "queuedFor":        "queued for",
