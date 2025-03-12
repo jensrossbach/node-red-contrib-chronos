@@ -381,27 +381,21 @@ SOFTWARE.
                             hasValue: false
                         };
 
-                        const offsetInput =
+                        const validateNumericInput = function(event, ui)
                         {
-                            min: -300,
-                            max: 300,
-                            step: 1,
-                            change: function(event, ui)
+                            const value = parseInt($(this).spinner("value"), 10);
+                            const min = $(this).spinner("option", "min");
+                            const max = $(this).spinner("option", "max");
+                            if (isNaN(value) ||
+                                (value < min))
                             {
-                                var value = parseInt($(this).spinner("value"), 10);
-                                var min = $(this).spinner("option", "min");
-                                var max = $(this).spinner("option", "max");
-                                if (isNaN(value) ||
-                                    (value < min))
-                                {
-                                    $(this).spinner("value", min);
-                                }
-                                else if (value > max)
-                                {
-                                    $(this).spinner("value", max);
-                                }
+                                $(this).spinner("value", min);
                             }
-                        };
+                            else if (value > max)
+                            {
+                                $(this).spinner("value", max);
+                            }
+                        }
 
                         const fragment = document.createDocumentFragment();
                         const triggerRow = $("<div/>").appendTo(fragment);
@@ -415,16 +409,19 @@ SOFTWARE.
 
                         const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
                         const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
-                                            .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
+                                            .html("<span style='margin-left: 6px; margin-right: 6px;'>⇔</span>")
                                             .appendTo(offsetBox);
-                        const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
+                        const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 35px !important;"})
                                             .appendTo(offsetLabel)
-                                            .spinner(offsetInput);
-                        const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                            .spinner({min: -300, max: 300, step: 1, change: validateNumericInput});
+                        const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.random"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                             .appendTo(offsetBox);
-                        const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                        const triggerRandomBox = $("<div/>", {style: "display: inline-block; width: auto; margin-left: 6px;"})
                                             .appendTo(randomLabel);
+                        const triggerRandom = $("<input/>", {class: "node-input-triggerRandom", style: "width: 35px !important;"})
+                                            .appendTo(triggerRandomBox)
+                                            .spinner({min: 0, max: 300, step: 1, change: validateNumericInput});
 
                         $("<div/>", {style: "display: inline-block; width: auto; margin-left: 20px;"})
                                             .text(node._("node-red-contrib-chronos/chronos-config:common.label.output"))
@@ -496,7 +493,7 @@ SOFTWARE.
                             data = {trigger: {type: "time", value: "", offset: 0, random: false},
                                     output: {type: "msg", property: {name: "payload", type: "str", value: ""}}};
                         }
-                        else if (!("type" in data.output))  // backward compatibility to v1.8.1
+                        else if (!("type" in data.output))  // backward compatibility to v1.8 and earlier
                         {
                             data.output = {type: "msg", property: {name: "payload", type: "str", value: ""}};
                         }
@@ -507,21 +504,34 @@ SOFTWARE.
 
                         if (data.trigger.type != "crontab")
                         {
-                            triggerOffset.spinner(
-                                            "value",
-                                            (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
-                                                ? data.trigger.offset
-                                                : 0);
-                            triggerRandom.prop(
-                                            "checked",
-                                            (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
-                                                ? data.trigger.random
-                                                : false);
+                            let offset = (typeof data.trigger.offset != "undefined") ? data.trigger.offset : 0;
+                            let random = 0;
+
+                            if (data.trigger.random === true)  // backward compatibility to v1.26 and earlier
+                            {
+                                if (offset < 0)
+                                {
+                                    random = -offset;
+                                    offset = Math.floor(offset / 2);
+                                }
+                                else
+                                {
+                                    random = offset;
+                                    offset = Math.ceil(random / 2);
+                                }
+                            }
+                            else if (typeof data.trigger.random == "number")  // backward compatibility to v1.23 and earlier
+                            {
+                                random = data.trigger.random;
+                            }
+
+                            triggerOffset.spinner("value", offset);
+                            triggerRandom.spinner("value", random);
                         }
                         else
                         {
                             triggerOffset.spinner("value", 0);
-                            triggerRandom.prop("checked", false);
+                            triggerRandom.spinner("value", 0);
                         }
 
                         if (data.output.type == "fullMsg")
@@ -542,7 +552,7 @@ SOFTWARE.
                     }
                 });
 
-                // backward compatibility to v1.23.x and earlier
+                // backward compatibility to v1.23 and earlier
                 if (typeof node.delayOnStart == "undefined")
                 {
                     $("#node-input-delayOnStart").prop("checked", true);
@@ -584,7 +594,7 @@ SOFTWARE.
                     if (data.trigger.type != "crontab")
                     {
                         data.trigger.offset = triggerOffset.spinner("value");
-                        data.trigger.random = triggerRandom.prop("checked");
+                        data.trigger.random = triggerRandom.spinner("value");
                     }
 
                     data.output.type = outType.typedInput("type");
@@ -624,6 +634,8 @@ SOFTWARE.
                             }
                             else
                             {
+                                function fmtOffset(offset) { return (offset > 0) ? ("+" + offset) : offset; }
+
                                 if ((data.trigger.type == "time") || (data.trigger.type == "custom") || (data.trigger.type == "crontab"))
                                 {
                                     data.label = data.trigger.value;
@@ -633,16 +645,13 @@ SOFTWARE.
                                     data.label = node._("node-red-contrib-chronos/chronos-config:common.list." + data.trigger.type + "." + data.trigger.value);
                                 }
 
-                                if (data.trigger.offset != 0)
+                                if (data.trigger.random > 0)
                                 {
-                                    data.label += ((data.trigger.offset > 0) ? " + " : " - ");
-
-                                    if (data.trigger.random)
-                                    {
-                                        data.label += "~";
-                                    }
-
-                                    data.label += Math.abs(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                    data.label += " ⇔ " + fmtOffset(data.trigger.offset - data.trigger.random / 2) + "/" + fmtOffset(data.trigger.offset + data.trigger.random / 2) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                }
+                                else if (data.trigger.offset != 0)
+                                {
+                                    data.label += " ⇔ " + fmtOffset(data.trigger.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
                                 }
                             }
                         }

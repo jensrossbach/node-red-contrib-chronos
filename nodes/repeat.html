@@ -69,12 +69,10 @@ SOFTWARE.
         <input type="text" id="node-input-untilDate" style="width: 70%;" data-i18n="[placeholder]repeat.label.datePlaceholder">
     </div>
     <div class="form-row" id="form-row-offsetBox">
-        <label for="node-input-untilOffset"><i class="fa fa-arrows-h"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
-        <input id="node-input-untilOffset" style="width: 60px !important;">
-        <span style="padding-left: 10px;">
-            <input id="node-input-untilRandom" type="checkbox" style="width: auto; margin-top: 0px; margin-bottom: 1px;">
-            <label for="node-input-untilRandom" style="width: auto; margin-bottom: 0px;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.random"></label>
-        </span>
+        <label for="node-input-untilOffset">⇔ <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
+        <input id="node-input-untilOffset" style="width: 35px !important;">
+        <label for="node-input-untilRandom" style="width: auto;"><i class='fa fa-random' aria-hidden='true'></i></label>
+        <input id="node-input-untilRandom" style="width: 35px !important;">
     </div>
     <div class="form-row" style="margin-bottom: 4px; padding-top: 10px">
         <label for="node-input-msgIngress" style="width: auto;"><i class="fa fa-sign-in"></i> <span data-i18n="repeat.label.msgIngress"></span></label>
@@ -287,11 +285,11 @@ SOFTWARE.
                 },
                 untilOffset:
                 {
-                    value: 0
+                    value: "0"
                 },
                 untilRandom:
                 {
-                    value: false
+                    value: "0"
                 },
                 msgIngress:
                 {
@@ -514,6 +512,14 @@ SOFTWARE.
                                 step: 1,
                                 change: validateNumericInput});
 
+                const untilRandom =
+                        $("#node-input-untilRandom")
+                            .spinner({
+                                min: 0,
+                                max: 300,
+                                step: 1,
+                                change: validateNumericInput});
+
                 $("#node-input-intervalUnit").change(function()
                 {
                     const value = $(this).val();
@@ -583,7 +589,7 @@ SOFTWARE.
                     }
                 });
 
-                // backward compatibility to v1.14.x and earlier
+                // backward compatibility to v1.14 and earlier
                 if (typeof node.mode == "undefined")
                 {
                     node.mode = "simple";
@@ -595,13 +601,38 @@ SOFTWARE.
                     $("#node-input-msgIngress").val(node.msgIngress);
                 }
 
-                // backward compatibility to v1.18.x and earlier
+                // backward compatibility to v1.18 and earlier
                 if (typeof node.customRepetitionType == "undefined")
                 {
                     node.customRepetitionType = "jsonata";
                     $("#node-input-customRepetitionType").val(node.customRepetitionType);
                     node.customRepetitionValue = node.expression;
                     $("#node-input-customRepetitionValue").val(node.customRepetitionValue);
+                }
+
+                // backward compatibility to v1.26 and earlier
+                if (typeof node.untilRandom == "boolean")
+                {
+                    if (node.untilRandom)
+                    {
+                        if (node.untilOffset < 0)
+                        {
+                            node.untilRandom = -node.untilOffset;
+                            node.untilOffset = Math.floor(node.untilOffset / 2);
+                        }
+                        else
+                        {
+                            node.untilRandom = node.untilOffset;
+                            node.untilOffset = Math.ceil(node.untilRandom / 2);
+                        }
+                    }
+                    else
+                    {
+                        node.untilRandom = 0;
+                    }
+
+                    untilOffset.spinner("value", node.untilOffset);
+                    untilRandom.spinner("value", node.untilRandom);
                 }
 
                 $("#node-input-mode").change();

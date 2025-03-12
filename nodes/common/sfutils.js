@@ -287,18 +287,11 @@ function validateOperand(RED, node, operand, num)
                     {condition: num, error: "Operand: Invalid value", value: operand.value});
     }
 
-    if ((typeof operand.offset != "number") || (operand.offset < -300) || (operand.offset > 300))
+    if (!node.chronos.validateOffset(operand))
     {
         throw new node.chronos.TimeError(
                     RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
-                    {condition: num, error: "Operand: Invalid offset", value: operand.offset});
-    }
-
-    if (typeof operand.random != "boolean")
-    {
-        throw new node.chronos.TimeError(
-                    RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCondition"),
-                    {condition: num, error: "Operand: Invalid random flag", value: operand.random});
+                    {condition: num, error: "Operand: Invalid offset", value: operand});
     }
 
     if (((typeof operand.precision != "undefined") && (typeof operand.precision != "string")) ||
@@ -340,11 +333,11 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type,
                                         value: value,
                                         offset: (typeof offset != "undefined") ? offset : 0,
-                                        random: (typeof random != "undefined") ? random : false,
+                                        random: (typeof random != "undefined") ? random : 0,
                                         precision: precision}},
                                 id),
                             id);
-            }, "<(sn)ssn?b?s?:b>");
+            }, "<(sn)ssn?(nb)?s?:b>");
 
             expression.registerFunction("isBefore", (ts, type, value, offset, random, precision) =>
             {
@@ -361,11 +354,11 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type,
                                         value: value,
                                         offset: (typeof offset != "undefined") ? offset : 0,
-                                        random: (typeof random != "undefined") ? random : false,
+                                        random: (typeof random != "undefined") ? random : 0,
                                         precision: precision}},
                                 id),
                             id);
-            }, "<(sn)ssn?b?s?:b>");
+            }, "<(sn)ssn?(nb)?s?:b>");
 
             expression.registerFunction("isAfter", async(ts, type, value, offset, random, precision) =>
             {
@@ -382,11 +375,11 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         type: type,
                                         value: value,
                                         offset: (typeof offset != "undefined") ? offset : 0,
-                                        random: (typeof random != "undefined") ? random : false,
+                                        random: (typeof random != "undefined") ? random : 0,
                                         precision: precision}},
                                 id),
                             id);
-            }, "<(sn)ssn?b?s?:b>");
+            }, "<(sn)ssn?(nb)?s?:b>");
 
             expression.registerFunction("isBetween", (ts, type1, value1, offset1, random1, precision1, type2, value2, offset2, random2, precision2) =>
             {
@@ -412,7 +405,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         precision: precision2}]},
                                 id),
                             id);
-            }, "<(sn)ssnbsssnbs:b>");
+            }, "<(sn)ssn(nb)sssn(nb)s:b>");
 
             expression.registerFunction("isOutside", (ts, type1, value1, offset1, random1, precision1, type2, value2, offset2, random2, precision2) =>
             {
@@ -438,7 +431,7 @@ async function evaluateCondition(RED, node, msg, baseTime, cond, id)
                                         precision: precision2}]},
                                 id),
                             id);
-            }, "<(sn)ssnbsssnbs:b>");
+            }, "<(sn)ssn(nb)sssn(nb)s:b>");
 
             expression.registerFunction("isFirstDay", (ts, day) =>
             {
@@ -722,13 +715,9 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
         (cond.operator == "after"))
     {
         const precision = (cond.operands.precision == "millisecond") ? undefined : cond.operands.precision;
-        const targetTime = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands.type, cond.operands.value);
 
-        if (cond.operands.offset != 0)
-        {
-            let offset = cond.operands.random ? Math.round(Math.random() * cond.operands.offset) : cond.operands.offset;
-            targetTime.add(offset, "minutes");
-        }
+        const targetTime = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands.type, cond.operands.value);
+        targetTime.add(node.chronos.getRandomizedOffset(cond.operands.offset, cond.operands.random), "minutes");
 
         switch (cond.operator)
         {
@@ -768,19 +757,12 @@ function evalCondition(RED, node, msg, baseTime, cond, id)
     {
         const precision1 = (cond.operands[0].precision == "millisecond") ? undefined : cond.operands[0].precision;
         const precision2 = (cond.operands[1].precision == "millisecond") ? undefined : cond.operands[1].precision;
-        const time1 = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
-        const time2 = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
 
-        if (cond.operands[0].offset != 0)
-        {
-            const offset = cond.operands[0].random ? Math.round(Math.random() * cond.operands[0].offset) : cond.operands[0].offset;
-            time1.add(offset, "minutes");
-        }
-        if (cond.operands[1].offset != 0)
-        {
-            const offset = cond.operands[1].random ? Math.round(Math.random() * cond.operands[1].offset) : cond.operands[1].offset;
-            time2.add(offset, "minutes");
-        }
+        const time1 = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands[0].type, cond.operands[0].value);
+        time1.add(node.chronos.getRandomizedOffset(cond.operands[0].offset, cond.operands[0].random), "minutes");
+
+        const time2 = node.chronos.retrieveTime(RED, node, msg, baseTime.clone(), cond.operands[1].type, cond.operands[1].value);
+        time2.add(node.chronos.getRandomizedOffset(cond.operands[1].offset, cond.operands[1].random), "minutes");
 
         if (time1.isSame(time2, "day"))
         {

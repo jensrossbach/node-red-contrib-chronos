@@ -106,9 +106,10 @@ SOFTWARE.
                     oder davon abgezogen.
                 </li>
                 <li>
-                    Ist die Checkbox auf der rechten Seite aktiviert, wird der
-                    Versatz im Bereich zwischen 0 und dem angegeben Wert
-                    zufällig ausgewählt.
+                    Wird eine Zufälligkeit zwischen 1 und 300 Minuten angegeben,
+                    wird der Versatz zufällig aus einem Bereich mit der angegebenen
+                    Breite gewählt. Der Versatzwert stellt dabei die Mitte der
+                    Zufälligkeitsspanne da.
                 </li>
                 <li>
                     Die Ausgabe kann entweder eine vollständige Nachricht sein,
@@ -238,9 +239,9 @@ SOFTWARE.
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Auslösezeitpunkt; der Inhalt ist abhängig von der Auslöseart</dd>
         <dt class="optional">offset<span class="property-type">number</span></dt>
-        <dd>Zeitlicher Versatz zum Auslösezeitpunkt (nicht zutreffend auf Auslöseart "crontab")</dd>
-        <dt class="optional">random<span class="property-type">boolean</span></dt>
-        <dd>Zufälliger Zeitversatz (nicht zutreffend auf Auslöseart "crontab")</dd>
+        <dd>Zeitlicher Versatz zum Auslösezeitpunkt in Minuten (nicht zutreffend auf Auslöseart "crontab")</dd>
+        <dt class="optional">random<span class="property-type">number</span></dt>
+        <dd>Zufälligkeitsspanne des Zeitversatzes in Minuten (nicht zutreffend auf Auslöseart "crontab")</dd>
     </dl>
     <dd>
         Außerdem ist es möglich, die Ausgaben der Zeitereignisse zu überschreiben.

@@ -244,7 +244,7 @@ SOFTWARE.
                 let baseTime = $("#node-input-baseTime")
                                 .typedInput({types: [msgIngressInput, "global", "flow", "msg"], typeField: "#node-input-baseTimeType"});
 
-                let conditionList = $("#node-input-conditionList").css("min-width", "510px").css("min-height", "150px").editableList(
+                let conditionList = $("#node-input-conditionList").css("min-width", "545px").css("min-height", "150px").editableList(
                 {
                     removable: true,
                     sortable: true,
@@ -380,6 +380,14 @@ SOFTWARE.
                             change: validateNumericInput
                         };
 
+                        const randomInput =
+                        {
+                            min: 0,
+                            max: 300,
+                            step: 1,
+                            change: validateNumericInput
+                        };
+
                         const fixedDayInput =
                         {
                             min: 1,
@@ -434,7 +442,7 @@ SOFTWARE.
                         const time1 = $("<input/>", {type: "text", class: "node-input-time1"})
                                             .appendTo(time1Row1)
                                             .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
-                        time1.typedInput("width", "280px");
+                        time1.typedInput("width", "315px");
                         time1._prevType = "time";
                         const extend1 = $("<a/>", {href: "#", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.expand"), style: "margin-left: 6px;"})
                                             .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
@@ -443,27 +451,30 @@ SOFTWARE.
                         const time2 = $("<input/>", {type: "text", class: "node-input-time2"})
                                             .appendTo(time2Row1)
                                             .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
-                        time2.typedInput("width", "280px");
+                        time2.typedInput("width", "315px");
                         time2._prevType = "time";
                         const extend2 = $("<a/>", {href: "#", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.expand"), style: "margin-left: 6px;"})
                                             .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
                                             .appendTo(time2Row1);
 
-                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
-                                            .html("<span style='margin-right: 6px;'>&#8597;</span>")
+                        const offset1Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                                            .html("<span style='margin-right: 6px;'>⇔</span>")
                                             .appendTo(time1Row2);
-                        const offset1 = $("<input/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), class: "node-input-offset1", style: "width: 50px !important;"})
-                                            .appendTo(time1Row2)
+                        const offset1 = $("<input/>", {class: "node-input-offset1", style: "width: 35px !important;"})
+                                            .appendTo(offset1Label)
                                             .spinner(offsetInput);
-                        const random1Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                        const random1Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.random"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                             .appendTo(time1Row2);
-                        const random1 = $("<input/>", {type: "checkbox", class: "node-input-random1", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                        const random1Box = $("<div/>", {style: "display: inline-block; width: auto; margin-left: 6px;"})
                                             .appendTo(random1Label);
-                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                        const random1 = $("<input/>", {class: "node-input-random1", style: "width: 35px !important;"})
+                                            .appendTo(random1Box)
+                                            .spinner(randomInput);
+                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-bullseye' aria-hidden='true'></i>")
                                             .appendTo(time1Row2);
-                        const precision1 = $("<select/>", {class: "node-input-precision1", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 117px; margin-left: 4px;"})
+                        const precision1 = $("<select/>", {class: "node-input-precision1", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 115px; margin-left: 4px;"})
                                             .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
                                             .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
                                             .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
@@ -473,21 +484,24 @@ SOFTWARE.
                                             .append($("<option></option>").val("year").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.year")))
                                             .appendTo(time1Row2);
 
-                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
-                                            .html("<span style='margin-right: 6px;'>&#8597;</span>")
+                        const offset2Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
+                                            .html("<span style='margin-right: 6px;'>⇔</span>")
                                             .appendTo(time2Row2);
-                        const offset2 = $("<input/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), class: "node-input-offset2", style: "width: 50px !important;"})
-                                            .appendTo(time2Row2)
+                        const offset2 = $("<input/>", {class: "node-input-offset2", style: "width: 35px !important;"})
+                                            .appendTo(offset2Label)
                                             .spinner(offsetInput);
-                        const random2Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                        const random2Label = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.random"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                             .appendTo(time2Row2);
-                        const random2 = $("<input/>", {type: "checkbox", class: "node-input-random2", style: "width: auto; margin-top: 0px; margin-bottom: 1px; margin-left: 6px;"})
+                        const random2Box = $("<div/>", {style: "display: inline-block; width: auto; margin-left: 6px;"})
                                             .appendTo(random2Label);
-                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                        const random2 = $("<input/>", {class: "node-input-random2", style: "width: 35px !important;"})
+                                            .appendTo(random2Box)
+                                            .spinner(randomInput);
+                        $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-bullseye' aria-hidden='true'></i>")
                                             .appendTo(time2Row2);
-                        const precision2 = $("<select/>", {class: "node-input-precision2", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 117px; margin-left: 4px;"})
+                        const precision2 = $("<select/>", {class: "node-input-precision2", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 115px; margin-left: 4px;"})
                                             .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
                                             .append($("<option></option>").val("second").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.second")))
                                             .append($("<option></option>").val("minute").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minute")))
@@ -569,12 +583,12 @@ SOFTWARE.
                         const expression = $("<input/>", {type: "text", class: "node-input-expression"})
                                             .appendTo(expressionBox)
                                             .typedInput({types: ["jsonata"]});
-                        expression.typedInput("width", "280px");
+                        expression.typedInput("width", "315px");
 
                         const context = $("<input/>", {type: "text", class: "node-input-context"})
                                             .appendTo(contextBox)
                                             .typedInput({types: ["env", "global", "flow"]});
-                        context.typedInput("width", "280px");
+                        context.typedInput("width", "315px");
 
                         operator.change(function()
                         {
@@ -674,7 +688,7 @@ SOFTWARE.
                             extend1.html("<i class='fa fa-angle-right' aria-hidden='true'></i>");
 
                             offset1.spinner("value", 0);
-                            random1.prop("checked", false);
+                            random1.spinner("value", 0);
                         }
 
                         function showExtensionRow2()
@@ -689,7 +703,7 @@ SOFTWARE.
                             extend2.html("<i class='fa fa-angle-right' aria-hidden='true'></i>");
 
                             offset2.spinner("value", 0);
-                            random2.prop("checked", false);
+                            random2.spinner("value", 0);
                         }
 
                         extend1.click(function()
@@ -800,43 +814,67 @@ SOFTWARE.
                             (data.operator == "since") ||
                             (data.operator == "after"))
                         {
-                            // backward compatibility to v1.0.2 and below
+                            // backward compatibility to v1.0.2 and earlier
                             if (typeof data.operands.offset == "undefined")
                             {
                                 data.operands.offset = 0;
-                                data.operands.random = false;
+                                data.operands.random = 0;
                             }
-                            // backward compatibility to v1.24.0 and below
+
+                            // backward compatibility to v1.24.0 and earlier
                             if (typeof data.operands.precision == "undefined")
                             {
                                 data.operands.precision = "millisecond";
+                            }
+
+                            // backward compatibility to v1.26 and earlier
+                            if (typeof data.operands.random == "boolean")
+                            {
+                                if (data.operands.random)
+                                {
+                                    if (data.operands.offset < 0)
+                                    {
+                                        data.operands.random = -data.operands.offset;
+                                        data.operands.offset = Math.floor(data.operands.offset / 2);
+                                    }
+                                    else
+                                    {
+                                        data.operands.random = data.operands.offset;
+                                        data.operands.offset = Math.ceil(data.operands.random / 2);
+                                    }
+                                }
+                                else
+                                {
+                                    data.operands.random = 0;
+                                }
                             }
 
                             time1._prevType = data.operands.type;
                             time1.typedInput("type", data.operands.type);
                             time1.typedInput("value", data.operands.value);
                             offset1.spinner("value", data.operands.offset);
-                            random1.prop("checked", data.operands.random);
+                            random1.spinner("value", data.operands.random);
                             precision1.val(data.operands.precision);
-                            if ((data.operands.offset != 0) || (data.operands.precision != "millisecond"))
+                            if ((data.operands.offset != 0) || (data.operands.random > 0) || (data.operands.precision != "millisecond"))
                             {
                                 showExtensionRow1();
                             }
                         }
                         else if ((data.operator == "between") || (data.operator == "outside"))
                         {
-                            // backward compatibility to v1.0.2 and below
+                            // backward compatibility to v1.0.2 and earlier
                             if (typeof data.operands[0].offset == "undefined")
                             {
                                 data.operands[0].offset = 0;
-                                data.operands[0].random = false;
+                                data.operands[0].random = 0;
                             }
                             if (typeof data.operands[1].offset == "undefined")
                             {
                                 data.operands[1].offset = 0;
-                                data.operands[1].random = false;
+                                data.operands[1].random = 0;
                             }
-                            // backward compatibility to v1.24.0 and below
+
+                            // backward compatibility to v1.24 and earlier
                             if (typeof data.operands[0].precision == "undefined")
                             {
                                 data.operands[0].precision = "millisecond";
@@ -846,23 +884,65 @@ SOFTWARE.
                                 data.operands[1].precision = "millisecond";
                             }
 
+                            // backward compatibility to v1.26 and earlier
+                            if (typeof data.operands[0].random == "boolean")
+                            {
+                                if (data.operands[0].random)
+                                {
+                                    if (data.operands[0].offset < 0)
+                                    {
+                                        data.operands[0].random = -data.operands[0].offset;
+                                        data.operands[0].offset = Math.floor(data.operands[0].offset / 2);
+                                    }
+                                    else
+                                    {
+                                        data.operands[0].random = data.operands[0].offset;
+                                        data.operands[0].offset = Math.ceil(data.operands[0].random / 2);
+                                    }
+                                }
+                                else
+                                {
+                                    data.operands[0].random = 0;
+                                }
+                            }
+                            if (typeof data.operands[1].random == "boolean")
+                            {
+                                if (data.operands[1].random)
+                                {
+                                    if (data.operands[1].offset < 0)
+                                    {
+                                        data.operands[1].random = -data.operands[1].offset;
+                                        data.operands[1].offset = Math.floor(data.operands[1].offset / 2);
+                                    }
+                                    else
+                                    {
+                                        data.operands[1].random = data.operands[1].offset;
+                                        data.operands[1].offset = Math.ceil(data.operands[1].random / 2);
+                                    }
+                                }
+                                else
+                                {
+                                    data.operands[1].random = 0;
+                                }
+                            }
+
                             time1._prevType = data.operands[0].type;
                             time1.typedInput("type", data.operands[0].type);
                             time1.typedInput("value", data.operands[0].value);
                             offset1.spinner("value", data.operands[0].offset);
-                            random1.prop("checked", data.operands[0].random);
+                            random1.spinner("value", data.operands[0].random);
                             precision1.val(data.operands[0].precision);
                             time2._prevType = data.operands[1].type;
                             time2.typedInput("type", data.operands[1].type);
                             time2.typedInput("value", data.operands[1].value);
                             offset2.spinner("value", data.operands[1].offset);
-                            random2.prop("checked", data.operands[1].random);
+                            random2.spinner("value", data.operands[1].random);
                             precision2.val(data.operands[1].precision);
-                            if ((data.operands[0].offset != 0) || (data.operands[0].precision != "millisecond"))
+                            if ((data.operands[0].offset != 0) || (data.operands[0].random > 0) || (data.operands[0].precision != "millisecond"))
                             {
                                 showExtensionRow1();
                             }
-                            if ((data.operands[1].offset != 0) || (data.operands[1].precision != "millisecond"))
+                            if ((data.operands[1].offset != 0) || (data.operands[1].random > 0) || (data.operands[1].precision != "millisecond"))
                             {
                                 showExtensionRow2();
                             }
@@ -969,6 +1049,8 @@ SOFTWARE.
                 node.conditions = [];
                 node.outputs = 0;
 
+                function fmtOffset(offset) { return (offset > 0) ? ("+" + offset) : offset; }
+
                 conditionList.each(function(index)
                 {
                     const data = {};
@@ -996,48 +1078,46 @@ SOFTWARE.
                         data.operands.type = time1.typedInput("type");
                         data.operands.value = time1.typedInput("value");
                         data.operands.offset = offset1.spinner("value");
-                        data.operands.random = random1.prop("checked");
+                        data.operands.random = random1.spinner("value");
                         data.operands.precision = precision1.val();
 
+                        data.label += " ";
                         if ((data.operands.type == "time") || (data.operands.type == "custom"))
                         {
-                            data.label += " " + data.operands.value;
+                            data.label += data.operands.value;
                         }
                         else if (data.operands.type == "env")
                         {
                             if (data.operands.value.includes("${"))
                             {
-                                data.label += " " + data.operands.value;
+                                data.label += data.operands.value;
                             }
                             else
                             {
-                                data.label += " " + "${" + data.operands.value + "}";
+                                data.label += "${" + data.operands.value + "}";
                             }
                         }
                         else if ((data.operands.type == "global") || (data.operands.type == "flow"))
                         {
                             const ctx = RED.utils.parseContextKey(data.operands.value);
-                            data.label += " " + data.operands.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                            data.label += data.operands.type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                         }
                         else if (data.operands.type == "msg")
                         {
-                            data.label += " msg." + data.operands.value;
+                            data.label += "msg." + data.operands.value;
                         }
                         else
                         {
-                            data.label += " " + node._("node-red-contrib-chronos/chronos-config:common.list." + data.operands.type + "." + data.operands.value);
+                            data.label += node._("node-red-contrib-chronos/chronos-config:common.list." + data.operands.type + "." + data.operands.value);
                         }
 
-                        if (data.operands.offset != 0)
+                        if (data.operands.random > 0)
                         {
-                            data.label += ((data.operands.offset > 0) ? " + " : " - ");
-
-                            if (data.operands.random)
-                            {
-                                data.label += "~";
-                            }
-
-                            data.label += Math.abs(data.operands.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                            data.label += " ⇔ " + fmtOffset(data.operands.offset - data.operands.random / 2) + "/" + fmtOffset(data.operands.offset + data.operands.random / 2) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                        }
+                        else if (data.operands.offset != 0)
+                        {
+                            data.label += " ⇔ " + fmtOffset(data.operands.offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
                         }
                     }
                     else if ((data.operator == "between") || (data.operator == "outside"))
@@ -1046,12 +1126,12 @@ SOFTWARE.
                         data.operands[0].type = time1.typedInput("type");
                         data.operands[0].value = time1.typedInput("value");
                         data.operands[0].offset = offset1.spinner("value");
-                        data.operands[0].random = random1.prop("checked");
+                        data.operands[0].random = random1.spinner("value");
                         data.operands[0].precision = precision1.val();
                         data.operands[1].type = time2.typedInput("type");
                         data.operands[1].value = time2.typedInput("value");
                         data.operands[1].offset = offset2.spinner("value");
-                        data.operands[1].random = random2.prop("checked");
+                        data.operands[1].random = random2.spinner("value");
                         data.operands[1].precision = precision2.val();
 
                         data.label += " ";
@@ -1063,37 +1143,34 @@ SOFTWARE.
                         {
                             if (data.operands[0].value.includes("${"))
                             {
-                                data.label += " " + data.operands[0].value;
+                                data.label += data.operands[0].value;
                             }
                             else
                             {
-                                data.label += " " + "${" + data.operands[0].value + "}";
+                                data.label += "${" + data.operands[0].value + "}";
                             }
                         }
                         else if ((data.operands[0].type == "global") || (data.operands[0].type == "flow"))
                         {
                             const ctx = RED.utils.parseContextKey(data.operands[0].value);
-                            data.label += " " + data.operands[0].type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                            data.label += data.operands[0].type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                         }
                         else if (data.operands[0].type == "msg")
                         {
-                            data.label += " msg." + data.operands[0].value;
+                            data.label += "msg." + data.operands[0].value;
                         }
                         else
                         {
                             data.label += node._("node-red-contrib-chronos/chronos-config:common.list." + data.operands[0].type + "." + data.operands[0].value);
                         }
 
-                        if (data.operands[0].offset != 0)
+                        if (data.operands[0].random > 0)
                         {
-                            data.label += ((data.operands[0].offset > 0) ? " + " : " - ");
-
-                            if (data.operands[0].random)
-                            {
-                                data.label += "~";
-                            }
-
-                            data.label += Math.abs(data.operands[0].offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                            data.label += " ⇔ " + fmtOffset(data.operands[0].offset - data.operands[0].random / 2) + "/" + fmtOffset(data.operands[0].offset + data.operands[0].random / 2) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                        }
+                        else if (data.operands[0].offset != 0)
+                        {
+                            data.label += " ⇔ " + fmtOffset(data.operands[0].offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
                         }
 
                         data.label += " " + node._("switch.label.and") + " ";
@@ -1105,37 +1182,34 @@ SOFTWARE.
                         {
                             if (data.operands[1].value.includes("${"))
                             {
-                                data.label += " " + data.operands[1].value;
+                                data.label += data.operands[1].value;
                             }
                             else
                             {
-                                data.label += " " + "${" + data.operands[1].value + "}";
+                                data.label += "${" + data.operands[1].value + "}";
                             }
                         }
                         else if ((data.operands[1].type == "global") || (data.operands[1].type == "flow"))
                         {
                             const ctx = RED.utils.parseContextKey(data.operands[1].value);
-                            data.label += " " + data.operands[1].type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                            data.label += data.operands[1].type + "." + ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                         }
                         else if (data.operands[1].type == "msg")
                         {
-                            data.label += " msg." + data.operands[1].value;
+                            data.label += "msg." + data.operands[1].value;
                         }
                         else
                         {
                             data.label += node._("node-red-contrib-chronos/chronos-config:common.list." + data.operands[1].type + "." + data.operands[1].value);
                         }
 
-                        if (data.operands[1].offset != 0)
+                        if (data.operands[1].random > 0)
                         {
-                            data.label += ((data.operands[1].offset > 0) ? " + " : " - ");
-
-                            if (data.operands[1].random)
-                            {
-                                data.label += "~";
-                            }
-
-                            data.label += Math.abs(data.operands[1].offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                            data.label += " ⇔ " + fmtOffset(data.operands[1].offset - data.operands[1].random / 2) + "/" + fmtOffset(data.operands[1].offset + data.operands[1].random / 2) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
+                        }
+                        else if (data.operands[1].offset != 0)
+                        {
+                            data.label += " ⇔ " + fmtOffset(data.operands[1].offset) + " " + node._("node-red-contrib-chronos/chronos-config:common.label.min");
                         }
                     }
                     else if (data.operator == "days")

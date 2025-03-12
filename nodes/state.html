@@ -431,14 +431,6 @@ SOFTWARE.
                     sortable: true,
                     addItem: function(item, index, data)
                     {
-                        const offsetInput =
-                        {
-                            min: -300,
-                            max: 300,
-                            step: 1,
-                            change: validateNumericInput
-                        };
-
                         const fragment = document.createDocumentFragment();
 
                         $("<div/>", {class: "node-input-index", style: "position: absolute; width: 22px; top: 50%; left: 30px; margin-top: -9px; font-size: 18px; text-align: right;"})
@@ -457,16 +449,19 @@ SOFTWARE.
 
                         const offsetBox = $("<div/>", {style: "display: inline-block;"}).appendTo(triggerRow);
                         const offsetLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.offset"), style: "display: inline-block; width: auto; margin-bottom: 0px;"})
-                                            .html("<span style='margin-left: 6px; margin-right: 6px;'>&#8597;</span>")
+                                            .html("<span style='margin-left: 6px; margin-right: 6px;'>⇔</span>")
                                             .appendTo(offsetBox);
-                        const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 50px !important;"})
+                        const triggerOffset = $("<input/>", {class: "node-input-triggerOffset", style: "width: 35px !important;"})
                                             .appendTo(offsetLabel)
-                                            .spinner(offsetInput);
-                        const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.label.random"), style: "width: auto; margin-left: 10px; margin-bottom: 0px;"})
+                                            .spinner({min: -300, max: 300, step: 1, change: validateNumericInput});
+                        const randomLabel = $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.random"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-random' aria-hidden='true'></i>")
                                             .appendTo(offsetBox);
-                        const triggerRandom = $("<input/>", {type: "checkbox", class: "node-input-triggerRandom", style: "width: auto; margin-left: 4px; margin-top: 0px; margin-bottom: 3px;"})
+                        const triggerRandomBox = $("<div/>", {style: "display: inline-block; width: auto; margin-left: 6px;"})
                                             .appendTo(randomLabel);
+                        const triggerRandom = $("<input/>", {class: "node-input-triggerRandom", style: "width: 35px !important;"})
+                                            .appendTo(triggerRandomBox)
+                                            .spinner({min: 0, max: 300, step: 1, change: validateNumericInput});
 
                         const state = $("<input/>", {type: "text", class: "node-input-state"})
                                         .appendTo(valueRow)
@@ -511,16 +506,29 @@ SOFTWARE.
 
                         if (data.trigger.type != "manual")
                         {
-                            triggerOffset.spinner(
-                                            "value",
-                                            (typeof data.trigger.offset != "undefined")  // backward compatibility to v1.23.0 and below
-                                                ? data.trigger.offset
-                                                : 0);
-                            triggerRandom.prop(
-                                            "checked",
-                                            (typeof data.trigger.random != "undefined")  // backward compatibility to v1.23.0 and below
-                                                ? data.trigger.random
-                                                : false);
+                            let offset = (typeof data.trigger.offset != "undefined") ? data.trigger.offset : 0;
+                            let random = 0;
+
+                            if (data.trigger.random === true)  // backward compatibility to v1.26 and earlier
+                            {
+                                if (offset < 0)
+                                {
+                                    random = -offset;
+                                    offset = Math.floor(offset / 2);
+                                }
+                                else
+                                {
+                                    random = offset;
+                                    offset = Math.ceil(random / 2);
+                                }
+                            }
+                            else if (typeof data.trigger.random == "number")  // backward compatibility to v1.23 and earlier
+                            {
+                                random = data.trigger.random;
+                            }
+
+                            triggerOffset.spinner("value", offset);
+                            triggerRandom.spinner("value", random);
                         }
                         else
                         {
@@ -828,7 +836,7 @@ SOFTWARE.
                     if (data.trigger.type != "manual")
                     {
                         data.trigger.offset = $(this).find(".node-input-triggerOffset").spinner("value");
-                        data.trigger.random = $(this).find(".node-input-triggerRandom").prop("checked");
+                        data.trigger.random = $(this).find(".node-input-triggerRandom").spinner("value");
                     }
 
                     data.state.type = state.typedInput("type");

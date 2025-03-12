@@ -497,12 +497,7 @@ function getDuration(node, input, unit)
 
 function applyOffset(time, offset, random)
 {
-    if (offset)
-    {
-        time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
-    }
-
-    return time;
+    return time.add(getRandomizedOffset(offset, random), "minutes");
 }
 
 function getJSONataExpression(RED, node, expr)
@@ -529,9 +524,9 @@ function getJSONataExpression(RED, node, expr)
     expression.registerFunction("month", ts => { return getMoment(node, ts).month() + 1; }, "<(sn):n>");
     expression.registerFunction("quarter", ts => { return getMoment(node, ts).quarter(); }, "<(sn):n>");
     expression.registerFunction("year", ts => { return getMoment(node, ts).year(); }, "<(sn):n>");
-    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?b?:n>");
-    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
-    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?b?:n>");
+    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?(nb)?:n>");
+    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?(nb)?:n>");
+    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?(nb)?:n>");
 
     return expression;
 }
@@ -572,11 +567,54 @@ function evaluateNodeProperty(RED, node, value, type, msg)
     });
 }
 
+function getRandomizedOffset(offset, random)
+{
+    let ret = (typeof offset == "number") ? offset : 0;
+
+    if (random === true)  // backward compatibility to v1.26.1 and below
+    {
+        ret = Math.round(Math.random() * offset);
+    }
+    else if ((typeof random == "number") && (random > 0))
+    {
+        ret = Math.round(offset - (random / 2) + (Math.random() * random));
+    }
+
+    return ret;
+}
+
+function validateOffset(data)
+{
+    if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
+    {
+        return false;
+    }
+
+    if ((typeof data.offset == "number") && ((data.offset < -300) || (data.offset > 300)))
+    {
+        return false;
+    }
+
+    if ((typeof data.random != "undefined") &&
+        (typeof data.random != "boolean") &&
+        (typeof data.random != "number"))
+    {
+        return false;
+    }
+
+    if ((typeof data.random == "number") && ((data.random < 0) || (data.random > 300)))
+    {
+        return false;
+    }
+
+    return true;
+}
 
 module.exports =
 {
     initCustomTimes:           initCustomTimes,
     validateTimeZone:          validateTimeZone,
+    validateOffset:            validateOffset,
     printNodeInfo:             printNodeInfo,
     getCurrentTime:            getCurrentTime,
     getTimeFrom:               getTimeFrom,
@@ -592,6 +630,7 @@ module.exports =
     getJSONataExpression:      getJSONataExpression,
     evaluateJSONataExpression: evaluateJSONataExpression,
     evaluateNodeProperty:      evaluateNodeProperty,
+    getRandomizedOffset:       getRandomizedOffset,
     TimeError:                 TimeError,
     PATTERN_SUNTIME:           PATTERN_SUNTIME,
     PATTERN_MOONTIME:          PATTERN_MOONTIME,

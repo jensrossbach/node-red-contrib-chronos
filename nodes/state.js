@@ -473,15 +473,13 @@ module.exports = function(RED)
 
                 if (typeof data.offset == "number")
                 {
-                    trigger.offset = data.random
-                        ? Math.round(data.offset * Math.random())
-                        : data.offset;
+                    trigger.offset = chronos.getRandomizedOffset(data.offset, data.random);
                     trigger.random = data.random;
                 }
                 else
                 {
                     trigger.offset = 0;
-                    trigger.random = false;
+                    trigger.random = 0;
                 }
             }
 
@@ -960,17 +958,7 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
-            {
-                return false;
-            }
-
-            if ((typeof data.offset == "number") && ((data.offset < -300) || (data.offset > 300)))
-            {
-                return false;
-            }
-
-            if ((typeof data.random != "undefined") && (typeof data.random != "boolean"))
+            if (!chronos.validateOffset(data))
             {
                 return false;
             }
