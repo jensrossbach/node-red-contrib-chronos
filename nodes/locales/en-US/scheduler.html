@@ -100,8 +100,10 @@ SOFTWARE.
                     time.
                 </li>
                 <li>
-                    If the checkbox on the right side is selected, the offset
-                    will be randomized between 0 and the specified value.
+                    If a randomization value between 1 and 300 minutes is
+                    specified, the offset will be randomly choosen from a
+                    time span of the entered width. The offset value denotes
+                    the center of the randomization span in this case.
                 </li>
                 <li>
                     The output can either be a full message, expressed in JSON
@@ -223,9 +225,9 @@ SOFTWARE.
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Trigger value; content is depending on trigger type</dd>
         <dt class="optional">offset<span class="property-type">number</span></dt>
-        <dd>Offset to the trigger time (not applicable to type "crontab")</dd>
-        <dt class="optional">random<span class="property-type">boolean</span></dt>
-        <dd>Randomized offset (not applicable to type "crontab")</dd>
+        <dd>Offset to the trigger time in minutes (not applicable to type "crontab")</dd>
+        <dt class="optional">random<span class="property-type">number</span></dt>
+        <dd>Offset randomization span in minutes (not applicable to type "crontab")</dd>
     </dl>
     <dd>
         Additionally it is possible to override the output of the schedule. In

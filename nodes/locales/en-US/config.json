@@ -18,7 +18,6 @@
             "custom":             "custom sun position",
             "exclude":            "exclude",
             "offset":             "Offset",
-            "random":             "randomized",
             "min":                "min.",
             "preserveCtrlProps":  "Preserve control properties in messages",
             "ignoreCtrlProps":    "Ignore control properties in messages"
@@ -26,6 +25,7 @@
         "tooltip":
         {
             "offset":     "offset (in minutes)",
+            "random":     "randomization (in minutes)",
             "precision":  "precision",
             "expand":     "expand/collapse"
         },

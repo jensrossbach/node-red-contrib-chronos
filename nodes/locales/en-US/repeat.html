@@ -138,10 +138,12 @@ SOFTWARE.
             An offset between -300 and +300 can be specified in minutes. The offset
             will be added to or subtracted from the repetition ending time.
         </dd>
-        <dt>Randomized</dt>
+        <dt>Randomization</dt>
         <dd>
-            When selected, the offset will be randomized between 0 and the
-            specified value.
+            If a randomization value between 1 and 300 minutes is specified, the
+            offset will be randomly choosen from a time span of the entered width.
+            The offset value denotes the center of the randomization span in this
+            case.
         </dd>
         <dt>When message arrives on input</dt>
         <dd>
@@ -236,9 +238,9 @@ SOFTWARE.
         <dt class="optional">date<span class="property-type">string</span></dt>
         <dd>Ending date in the form <code>YYYY-MM-DD</code></dd>
         <dt class="optional">offset<span class="property-type">number</span></dt>
-        <dd>Offset to the ending time</dd>
-        <dt class="optional">random<span class="property-type">boolean</span></dt>
-        <dd>Randomized offset</dd>
+        <dd>Offset to the ending time in minutes</dd>
+        <dt class="optional">random<span class="property-type">number</span></dt>
+        <dd>Offset randomization span in minutes</dd>
     </dl>
     <p>
         Environment and context variables for the repetition ending time can be

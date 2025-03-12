@@ -18,7 +18,6 @@
             "custom":             "Sonnenstand (benutzerdef.)",
             "exclude":            "Ausschließen",
             "offset":             "Versatz",
-            "random":             "Zufällig",
             "min":                "min.",
             "preserveCtrlProps":  "Steuereigenschaften in Nachrichten beibehalten",
             "ignoreCtrlProps":    "Steuereigenschaften in Nachrichten ignorieren"
@@ -26,6 +25,7 @@
         "tooltip":
         {
             "offset":     "Versatz (in Minuten)",
+            "random":     "Zufälligkeit (in Minuten)",
             "precision":  "Genauigkeit",
             "expand":     "Aus-/Einklappen"
         },

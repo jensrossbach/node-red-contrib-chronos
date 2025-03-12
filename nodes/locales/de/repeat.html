@@ -149,10 +149,11 @@ SOFTWARE.
             werden. Der Versatz wird zur Endezeit hinzuaddiert oder davon
             abgezogen.
         </dd>
-        <dt>Zufällig</dt>
+        <dt>Zufälligkeit</dt>
         <dd>
-            Wenn aktiviert, wird der Versatz im Bereich zwischen 0 und dem
-            angegeben Wert zufällig ausgewählt.
+            Wird eine Zufälligkeit zwischen 1 und 300 Minuten angegeben, wird der
+            Versatz zufällig aus einem Bereich mit der angegebenen Breite gewählt.
+            Der Versatzwert stellt dabei die Mitte der Zufälligkeitsspanne da.
         </dd>
         <dt>Beim Eintreffen einer Nachricht</dt>
         <dd>
@@ -251,9 +252,9 @@ SOFTWARE.
         <dt class="optional">date<span class="property-type">string</span></dt>
         <dd>Datum des Endzeitpunkts in der Form <code>JJJJ-MM-TT</code></dd>
         <dt class="optional">offset<span class="property-type">number</span></dt>
-        <dd>Zeitlicher Versatz zum Endzeitpunkt</dd>
-        <dt class="optional">random<span class="property-type">boolean</span></dt>
-        <dd>Zufälliger Zeitversatz</dd>
+        <dd>Zeitlicher Versatz zum Endzeitpunkt in Minuten</dd>
+        <dt class="optional">random<span class="property-type">number</span></dt>
+        <dd>Zufälligkeitsspanne des Zeitversatzes in Minuten</dd>
     </dl>
     <p>
         Umgebungs- und Kontextvariablen für den Endzeitpunkt der periodischen

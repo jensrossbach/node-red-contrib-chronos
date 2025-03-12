@@ -104,8 +104,8 @@ module.exports = function(RED)
             node.untilType = settings.untilType;
             node.untilValue = settings.untilValue;
             node.untilDate = settings.untilDate;
-            node.untilOffset = settings.untilOffset;
-            node.untilRandom = settings.untilRandom;
+            node.untilOffset = parseInt(settings.untilOffset);
+            node.untilRandom = (typeof settings.untilRandom == "boolean") ? settings.untilRandom : parseInt(settings.untilRandom);
             node.msgIngress = settings.msgIngress;
             node.preserveCtrlProps = settings.preserveCtrlProps;
             node.ignoreCtrlProps = settings.ignoreCtrlProps;
@@ -518,16 +518,21 @@ module.exports = function(RED)
             else
             {
                 const base = date ? chronos.getUserDate(RED, node, date) : now.clone();
-                ret.time = chronos.getTime(RED, node, base, type, value);
 
-                if (offset != 0)
-                {
-                    ret.time.add(random ? Math.round(Math.random() * offset) : offset, "minutes");
-                }
+                ret.time = chronos.getTime(RED, node, base, type, value);
+                ret.time.add(chronos.getRandomizedOffset(offset, random), "minutes");
 
                 if (!date && !ret.time.hasUserDate() && ret.time.isBefore(now))
                 {
-                    ret.time.add(1, "days");
+                    if (type == "time")
+                    {
+                        ret.time.add(1, "days");
+                    }
+                    else
+                    {
+                        ret.time = chronos.getTime(RED, node, ret.time.add(1, "days"), type, value);
+                        ret.time.add(chronos.getRandomizedOffset(offset, random), "minutes");
+                    }
                 }
 
                 ret.isExceededAt = async function(next)
@@ -808,17 +813,7 @@ module.exports = function(RED)
                     return false;
                 }
 
-                if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
-                {
-                    return false;
-                }
-
-                if ((typeof data.offset == "number") && ((data.offset < -300) || (data.offset > 300)))
-                {
-                    return false;
-                }
-
-                if ((typeof data.random != "undefined") && (typeof data.random != "boolean"))
+                if (!chronos.validateOffset(data))
                 {
                     return false;
                 }

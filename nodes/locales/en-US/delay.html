@@ -118,10 +118,12 @@ SOFTWARE.
             An offset between -300 and +300 can be specified in minutes. The offset
             will be added to or subtracted from the target time.
         </dd>
-        <dt>Randomized</dt>
+        <dt>Randomization</dt>
         <dd>
-            When selected, the offset will be randomized between 0 and the
-            specified value.
+            If a randomization value between 1 and 300 minutes is specified, the
+            offset will be randomly choosen from a time span of the entered width.
+            The offset value denotes the center of the randomization span in this
+            case.
         </dd>
         <dt>Delay</dt>
         <dd>
@@ -253,9 +255,9 @@ SOFTWARE.
         <dt>value<span class="property-type">string | number</span></dt>
         <dd>Target time value; content is depending on target time type</dd>
         <dt class="optional">offset<span class="property-type">number</span></dt>
-        <dd>Offset to the target time</dd>
-        <dt class="optional">random<span class="property-type">boolean</span></dt>
-        <dd>Randomized offset</dd>
+        <dd>Offset to the target time in minutes</dd>
+        <dt class="optional">random<span class="property-type">number</span></dt>
+        <dd>Offset randomization span in minutes</dd>
     </dl>
     <h3>Outputs</h3>
     <p>

@@ -76,12 +76,10 @@ SOFTWARE.
         <input id="node-input-whenValue" type="hidden">
     </div>
     <div id="form-row-offset" class="form-row">
-        <label for="node-input-offset"><i class="fa fa-arrows-h"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
-        <input id="node-input-offset" style="width: 60px !important;">
-        <span style="padding-left: 10px;">
-            <input id="node-input-random" type="checkbox" style="width: auto; margin-top: 0px; margin-bottom: 1px;">
-            <label for="node-input-random" style="width: auto; margin-bottom: 0px;" data-i18n="node-red-contrib-chronos/chronos-config:common.label.random"></label>
-        </span>
+        <label for="node-input-offset">⇔ <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.offset"></span></label>
+        <input id="node-input-offset" style="width: 35px !important;">
+        <label for="node-input-random" style="width: auto;"><i class='fa fa-random' aria-hidden='true'></i></label>
+        <input id="node-input-random" style="width: 35px !important;">
     </div>
     <div id="form-row-custom" class="form-row">
         <label for="node-input-customDelay"><i class="fa fa-hourglass-end"></i> <span data-i18n="delay.label.delay"></span></label>
@@ -177,16 +175,34 @@ SOFTWARE.
                                 label = this._("node-red-contrib-chronos/chronos-config:common.list." + this.whenType + "." + this.whenValue);
                             }
 
-                            if (this.offset != 0)
+                            function fmtOffset(offset) { return (offset > 0) ? ("+" + offset) : offset; }
+
+                            if (typeof this.random == "boolean")  // backward compatibility to v1.26.1 and earlier
                             {
-                                label += ((this.offset > 0) ? " + " : " - ");
+                                const offset = parseInt(this.offset);
 
-                                if (this.random)
+                                if ((this.offset != 0) && this.random)
                                 {
-                                    label += "~";
+                                    label += " ⇔ " + ((offset > 0) ? ("0/" + fmtOffset(offset)) : (fmtOffset(offset) + "/0")) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
                                 }
+                                else if (this.offset != 0)
+                                {
+                                    label += " ⇔ " + fmtOffset(offset) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                }
+                            }
+                            else if ((this.offset != 0) || (this.random != 0))
+                            {
+                                const offset = parseInt(this.offset);
+                                const random = parseInt(this.random);
 
-                                label += Math.abs(this.offset) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                if (this.random > 0)
+                                {
+                                    label += " ⇔ " + fmtOffset(offset - random / 2) + "/" + fmtOffset(offset + random / 2) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                }
+                                else
+                                {
+                                    label += " ⇔ " + fmtOffset(offset) + " " + this._("node-red-contrib-chronos/chronos-config:common.label.min");
+                                }
                             }
                         }
                     }
@@ -323,7 +339,7 @@ SOFTWARE.
                 },
                 random:
                 {
-                    value: false
+                    value: "0"
                 },
                 customDelayType:
                 {
@@ -615,6 +631,14 @@ SOFTWARE.
                                 step: 1,
                                 change: validateNumericInput});
 
+                const random =
+                        $("#node-input-random")
+                            .spinner({
+                                min: 0,
+                                max: 300,
+                                step: 1,
+                                change: validateNumericInput});
+
                 const customDelay =
                         $("#node-input-customDelay")
                             .typedInput({
@@ -710,9 +734,30 @@ SOFTWARE.
                     $("#node-input-customDelayValue").val(node.customDelayValue);
                 }
 
-                $("#node-input-delayType").change();
-                when.typedInput("value", $("#node-input-whenValue").val());
-                customDelay.typedInput("value", $("#node-input-customDelayValue").val());
+                // backward compatibility to v1.26.x and earlier
+                if (typeof node.random == "boolean")
+                {
+                    if (node.random)
+                    {
+                        if (node.offset < 0)
+                        {
+                            node.random = -node.offset;
+                            node.offset = Math.floor(node.offset / 2);
+                        }
+                        else
+                        {
+                            node.random = node.offset;
+                            node.offset = Math.ceil(node.random / 2);
+                        }
+                    }
+                    else
+                    {
+                        node.random = 0;
+                    }
+
+                    offset.spinner("value", node.offset);
+                    random.spinner("value", node.random);
+                }
 
                 // backward compatibility to v1.25.6 and earlier
                 if (typeof node.limitQueue == "undefined")
@@ -723,6 +768,10 @@ SOFTWARE.
                 {
                     $("#node-input-msgIngress").val("drop:incoming");
                 }
+
+                $("#node-input-delayType").change();
+                when.typedInput("value", $("#node-input-whenValue").val());
+                customDelay.typedInput("value", $("#node-input-customDelayValue").val());
 
                 $("#node-input-limitQueue").on("change", function()
                 {

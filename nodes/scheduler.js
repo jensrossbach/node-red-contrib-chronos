@@ -578,9 +578,9 @@ module.exports = function(RED)
                     const now = chronos.getCurrentTime(node);
                     data.triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
-                    if ((typeof data.config.trigger.offset == "number") && (data.config.trigger.offset != 0))
+                    if (typeof data.config.trigger.offset == "number")
                     {
-                        const offset = (data.config.trigger.random === true) ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
+                        const offset = chronos.getRandomizedOffset(data.config.trigger.offset, data.config.trigger.random);
                         data.triggerTime.add(offset, "minutes");
                     }
 
@@ -596,9 +596,9 @@ module.exports = function(RED)
                         {
                             data.triggerTime = chronos.getTime(RED, node, data.triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
 
-                            if ((typeof data.config.trigger.offset == "number") && (data.config.trigger.offset != 0))
+                            if (typeof data.config.trigger.offset == "number")
                             {
-                                const offset = (data.config.trigger.random === true) ? Math.round(Math.random() * data.config.trigger.offset) : data.config.trigger.offset;
+                                const offset = chronos.getRandomizedOffset(data.config.trigger.offset, data.config.trigger.random);
                                 data.triggerTime.add(offset, "minutes");
                             }
                         }
@@ -890,17 +890,7 @@ module.exports = function(RED)
                 return false;
             }
 
-            if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
-            {
-                return false;
-            }
-
-            if ((typeof data.offset == "number") && ((data.offset < -300) || (data.offset > 300)))
-            {
-                return false;
-            }
-
-            if ((typeof data.random != "undefined") && (typeof data.random != "boolean"))
+            if (!chronos.validateOffset(data))
             {
                 return false;
             }
