@@ -455,8 +455,7 @@ module.exports = function(RED)
                 if (validateFlatContextData(ctxData))
                 {
                     data.orig = {trigger: data.config.trigger};
-                    data.config.trigger.type = "auto:time";
-                    data.config.trigger.value = ctxData;
+                    data.config.trigger = {type: "auto:time", value: ctxData};
                 }
                 else if (validateFullStructuredContextData(ctxData))
                 {
