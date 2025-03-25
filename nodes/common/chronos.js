@@ -253,7 +253,7 @@ function isValidUserDate(value)
 
 function getSunTime(RED, node, day, type)
 {
-    let sunTimes = sunCalc.getTimes(day.toDate(), node.config.latitude, node.config.longitude);
+    let sunTimes = sunCalc.getTimes(day.toDate(), getLatitude(RED, node), getLongitude(RED, node));
 
     if (!(type in sunTimes))
     {
@@ -289,7 +289,7 @@ function getSunTime(RED, node, day, type)
 
 function getMoonTime(RED, node, day, type)
 {
-    let moonTimes = sunCalc.getMoonTimes(day.toDate(), node.config.latitude, node.config.longitude);
+    let moonTimes = sunCalc.getMoonTimes(day.toDate(), getLatitude(RED, node), getLongitude(RED, node));
 
     let ret = null;
     if (moonTimes[type])
@@ -495,6 +495,63 @@ function getDuration(node, input, unit)
     return ret;
 }
 
+function getLatitude(RED, node)
+{
+    let ret = undefined;
+
+    if (typeof node.config.latitude == "number")
+    {
+        ret = node.config.latitude;
+    }
+    else
+    {
+        ret = getCoordinateFromContext(RED, node, node.config.latitude, -90, 90);
+    }
+
+    return ret;
+}
+
+function getLongitude(RED, node)
+{
+    let ret = undefined;
+
+    if (typeof node.config.longitude == "number")
+    {
+        ret = node.config.longitude;
+    }
+    else
+    {
+        ret = getCoordinateFromContext(RED, node, node.config.longitude, -180, 180);
+    }
+
+    return ret;
+}
+
+function getCoordinateFromContext(RED, node, variable, min, max)
+{
+    const ctx = RED.util.parseContextStore(variable);
+    const value = node.context().global.get(ctx.key, ctx.store);
+    let ret = undefined;
+
+    if (typeof value == "number")
+    {
+        ret = value;
+    }
+    else if (typeof value == "string")
+    {
+        ret = parseFloat(value);
+    }
+
+    if ((ret === undefined) || Number.isNaN(ret) || (ret < min) || (ret > max))
+    {
+        throw new TimeError(
+            RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCoordinate"),
+            {variable: ctx.key, value: value});
+    }
+
+    return ret;
+}
+
 function applyOffset(time, offset, random)
 {
     return time.add(getRandomizedOffset(offset, random), "minutes");
@@ -583,6 +640,30 @@ function getRandomizedOffset(offset, random)
     return ret;
 }
 
+function validateConfiguration(RED, node)
+{
+    if (((typeof node.config.latitude != "number") && (typeof node.config.latitude != "string")) ||
+        ((typeof node.config.latitude == "number") && (Number.isNaN(node.config.latitude) || (node.config.latitude < -90) || (node.config.latitude > 90))) ||
+        ((typeof node.config.latitude == "string") && !node.config.latitude))
+    {
+        return false;
+    }
+
+    if (((typeof node.config.longitude != "number") && (typeof node.config.longitude != "string")) ||
+        ((typeof node.config.longitude == "number") && (Number.isNaN(node.config.longitude) || (node.config.longitude < -180) || (node.config.longitude > 180))) ||
+        ((typeof node.config.longitude == "string") && !node.config.longitude))
+    {
+        return false;
+    }
+
+    if (!validateTimeZone(node))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 function validateOffset(data)
 {
     if ((typeof data.offset != "undefined") && (typeof data.offset != "number"))
@@ -612,28 +693,33 @@ function validateOffset(data)
 
 module.exports =
 {
-    initCustomTimes:           initCustomTimes,
-    validateTimeZone:          validateTimeZone,
-    validateOffset:            validateOffset,
-    printNodeInfo:             printNodeInfo,
-    getCurrentTime:            getCurrentTime,
-    getTimeFrom:               getTimeFrom,
-    getUserTime:               getUserTime,
-    getSunTime:                getSunTime,
-    getMoonTime:               getMoonTime,
-    getTime:                   getTime,
-    getUserDate:               getUserDate,
-    getDuration:               getDuration,
-    retrieveTime:              retrieveTime,
-    isValidUserTime:           isValidUserTime,
-    isValidUserDate:           isValidUserDate,
-    getJSONataExpression:      getJSONataExpression,
+    // functions
     evaluateJSONataExpression: evaluateJSONataExpression,
     evaluateNodeProperty:      evaluateNodeProperty,
+    initCustomTimes:           initCustomTimes,
+    isValidUserTime:           isValidUserTime,
+    isValidUserDate:           isValidUserDate,
+    getCurrentTime:            getCurrentTime,
+    getDuration:               getDuration,
+    getJSONataExpression:      getJSONataExpression,
+    getMoonTime:               getMoonTime,
     getRandomizedOffset:       getRandomizedOffset,
+    getSunTime:                getSunTime,
+    getTime:                   getTime,
+    getTimeFrom:               getTimeFrom,
+    getUserDate:               getUserDate,
+    getUserTime:               getUserTime,
+    printNodeInfo:             printNodeInfo,
+    retrieveTime:              retrieveTime,
+    validateConfiguration:     validateConfiguration,
+    validateOffset:            validateOffset,
+
+    // classes
     TimeError:                 TimeError,
-    PATTERN_SUNTIME:           PATTERN_SUNTIME,
-    PATTERN_MOONTIME:          PATTERN_MOONTIME,
+
+    // constants
+    PATTERN_AUTO_DATETIME:     PATTERN_AUTO_DATETIME,
     PATTERN_AUTO_TIME:         PATTERN_AUTO_TIME,
-    PATTERN_AUTO_DATETIME:     PATTERN_AUTO_DATETIME
+    PATTERN_MOONTIME:          PATTERN_MOONTIME,
+    PATTERN_SUNTIME:           PATTERN_SUNTIME
 };

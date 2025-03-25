@@ -40,199 +40,191 @@ module.exports = function(RED)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+
+            return;
         }
-        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+
+        if (!node.chronos.validateConfiguration(RED, node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if (!node.chronos.validateTimeZone(node))
-        {
-            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-        }
-        else if (settings.conditions.length == 0)
+
+        if (settings.conditions.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConditions"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConditions"));
+
+            return;
+        }
+
+        node.chronos.printNodeInfo(node);
+        node.status({});
+
+        node.baseTime = settings.baseTime;
+        node.baseTimeType = settings.baseTimeType;
+        node.conditions = settings.conditions;
+
+        node.evaluation = (typeof settings.evaluation != "undefined") ? settings.evaluation : "";
+        if (typeof settings.evaluationType == "undefined")  // backward compatibility to v1.11.1
+        {
+            if (settings.annotateOnly)
+            {
+                node.evaluationType = "annotation";
+            }
+            else if (settings.allMustMatch)
+            {
+                node.evaluationType = "and";
+            }
+            else
+            {
+                node.evaluationType = "or";
+            }
         }
         else
         {
-            node.chronos.printNodeInfo(node);
-            node.status({});
+            node.evaluationType = settings.evaluationType;
+        }
 
-            node.baseTime = settings.baseTime;
-            node.baseTimeType = settings.baseTimeType;
-            node.conditions = settings.conditions;
+        // backward compatibility to v1.5.0
+        if (!node.baseTimeType)
+        {
+            node.baseTimeType = "msgIngress";
+        }
 
-            node.evaluation = (typeof settings.evaluation != "undefined") ? settings.evaluation : "";
-            if (typeof settings.evaluationType == "undefined")  // backward compatibility to v1.11.1
+        let valid = true;
+        if ((node.baseTimeType != "msgIngress") && !node.baseTime)
+        {
+            valid = false;
+        }
+        else
+        {
+            for (let i=0; i<node.conditions.length; ++i)
             {
-                if (settings.annotateOnly)
+                if (!sfUtils.validateCondition(node, node.conditions[i]))
                 {
-                    node.evaluationType = "annotation";
-                }
-                else if (settings.allMustMatch)
-                {
-                    node.evaluationType = "and";
-                }
-                else
-                {
-                    node.evaluationType = "or";
+                    valid = false;
+                    break;
                 }
             }
-            else
-            {
-                node.evaluationType = settings.evaluationType;
-            }
+        }
 
-            // backward compatibility to v1.5.0
-            if (!node.baseTimeType)
+        if (valid && (node.evaluationType == "jsonata"))
+        {
+            try
             {
-                node.baseTimeType = "msgIngress";
+                node.expression = RED.util.prepareJSONataExpression(node.evaluation, node);
             }
-
-            let valid = true;
-            if ((node.baseTimeType != "msgIngress") && !node.baseTime)
+            catch (e)
             {
+                node.error(e.message);
+                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
                 valid = false;
             }
-            else
+        }
+
+        if (!valid)
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
+        }
+
+        node.on("input", async(msg, send, done) =>
+        {
+            if (msg)
             {
-                for (let i=0; i<node.conditions.length; ++i)
+                if (!send || !done)  // Node-RED 0.x not supported anymore
                 {
-                    if (!sfUtils.validateCondition(node, node.conditions[i]))
+                    return;
+                }
+
+                let baseTime = sfUtils.getBaseTime(RED, node, msg);
+                if (baseTime)
+                {
+                    node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+
+                    let result = false;
+                    let condResults = [];
+
+                    for (let i=0; i<node.conditions.length; ++i)
                     {
-                        valid = false;
-                        break;
-                    }
-                }
-            }
-
-            if (valid && (node.evaluationType == "jsonata"))
-            {
-                try
-                {
-                    node.expression = RED.util.prepareJSONataExpression(node.evaluation, node);
-                }
-                catch (e)
-                {
-                    node.error(e.message);
-                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
-
-                    valid = false;
-                }
-            }
-
-            if (!valid)
-            {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
-            else
-            {
-                node.on("input", async(msg, send, done) =>
-                {
-                    if (msg)
-                    {
-                        if (!send || !done)  // Node-RED 0.x not supported anymore
+                        try
                         {
-                            return;
+                            result = await sfUtils.evaluateCondition(RED, node, msg, baseTime, node.conditions[i], i+1);
+                        }
+                        catch (e)
+                        {
+                            if (e instanceof node.chronos.TimeError)
+                            {
+                                const errMsg = RED.util.cloneMessage(msg);
+
+                                if (e.details)
+                                {
+                                    if ("errorDetails" in errMsg)
+                                    {
+                                        errMsg._errorDetails = errMsg.errorDetails;
+                                    }
+                                    errMsg.errorDetails = e.details;
+                                }
+
+                                node.error(e.message, errMsg);
+                            }
+                            else
+                            {
+                                node.error(e.message);
+                                node.debug(e.stack);
+                            }
+
+                            // if time cannot be calculated, the condition counts as not fulfilled
+                            result = false;
                         }
 
-                        let baseTime = sfUtils.getBaseTime(RED, node, msg);
-                        if (baseTime)
+                        if ((node.evaluationType == "annotation") || (node.evaluationType == "jsonata"))
                         {
-                            node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                            condResults.push(result);
+                        }
+                        else if (((node.evaluationType == "and") && !result)
+                                    || ((node.evaluationType == "or") && result))
+                        {
+                            break;
+                        }
+                    }
 
-                            let result = false;
-                            let condResults = [];
+                    if (node.evaluationType == "annotation")
+                    {
+                        if ("evaluation" in msg)
+                        {
+                            msg._evaluation = msg.evaluation;
+                        }
+                        msg.evaluation = condResults;
 
-                            for (let i=0; i<node.conditions.length; ++i)
+                        send(msg);
+                        done();
+                    }
+                    else if (node.evaluationType == "jsonata")
+                    {
+                        node.expression.assign("condition", condResults);
+
+                        node.debug("Evaluating: " + node.evaluation + " -> " + JSON.stringify(condResults));
+                        RED.util.evaluateJSONataExpression(node.expression, msg, (err, value) =>
+                        {
+                            if (err)
                             {
-                                try
-                                {
-                                    result = await sfUtils.evaluateCondition(RED, node, msg, baseTime, node.conditions[i], i+1);
-                                }
-                                catch (e)
-                                {
-                                    if (e instanceof node.chronos.TimeError)
-                                    {
-                                        const errMsg = RED.util.cloneMessage(msg);
+                                node.error(err.message);
+                                node.debug("JSONata code: " + err.code + "  position: " + err.position + "  token: " + err.token);
 
-                                        if (e.details)
-                                        {
-                                            if ("errorDetails" in errMsg)
-                                            {
-                                                errMsg._errorDetails = errMsg.errorDetails;
-                                            }
-                                            errMsg.errorDetails = e.details;
-                                        }
-
-                                        node.error(e.message, errMsg);
-                                    }
-                                    else
-                                    {
-                                        node.error(e.message);
-                                        node.debug(e.stack);
-                                    }
-
-                                    // if time cannot be calculated, the condition counts as not fulfilled
-                                    result = false;
-                                }
-
-                                if ((node.evaluationType == "annotation") || (node.evaluationType == "jsonata"))
-                                {
-                                    condResults.push(result);
-                                }
-                                else if (((node.evaluationType == "and") && !result)
-                                            || ((node.evaluationType == "or") && result))
-                                {
-                                    break;
-                                }
+                                done(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"));
                             }
-
-                            if (node.evaluationType == "annotation")
+                            else if (typeof value != "boolean")
                             {
-                                if ("evaluation" in msg)
-                                {
-                                    msg._evaluation = msg.evaluation;
-                                }
-                                msg.evaluation = condResults;
-
-                                send(msg);
-                                done();
+                                done(RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"));
                             }
-                            else if (node.evaluationType == "jsonata")
-                            {
-                                node.expression.assign("condition", condResults);
-
-                                node.debug("Evaluating: " + node.evaluation + " -> " + JSON.stringify(condResults));
-                                RED.util.evaluateJSONataExpression(node.expression, msg, (err, value) =>
-                                {
-                                    if (err)
-                                    {
-                                        node.error(err.message);
-                                        node.debug("JSONata code: " + err.code + "  position: " + err.position + "  token: " + err.token);
-
-                                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.evaluationFailed"));
-                                    }
-                                    else if (typeof value != "boolean")
-                                    {
-                                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.notBoolean"));
-                                    }
-                                    else if (value)
-                                    {
-                                        send(msg);
-                                        done();
-                                    }
-                                    else
-                                    {
-                                        done();
-                                    }
-                                });
-                            }
-                            else if (result)
+                            else if (value)
                             {
                                 send(msg);
                                 done();
@@ -241,22 +233,31 @@ module.exports = function(RED)
                             {
                                 done();
                             }
-                        }
-                        else
-                        {
-                            let variable = node.baseTime;
-                            if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
-                            {
-                                let ctx = RED.util.parseContextStore(node.baseTime);
-                                variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
-                            }
-
-                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
-                        }
+                        });
                     }
-                });
+                    else if (result)
+                    {
+                        send(msg);
+                        done();
+                    }
+                    else
+                    {
+                        done();
+                    }
+                }
+                else
+                {
+                    let variable = node.baseTime;
+                    if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
+                    {
+                        let ctx = RED.util.parseContextStore(node.baseTime);
+                        variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                    }
+
+                    done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
+                }
             }
-        }
+        });
     }
 
     RED.nodes.registerType("chronos-filter", ChronosFilterNode);

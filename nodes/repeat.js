@@ -74,147 +74,151 @@ module.exports = function(RED)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+
+            return;
         }
-        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+
+        if (!chronos.validateConfiguration(RED, node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if (!chronos.validateTimeZone(node))
+
+        if ((settings.mode == "advanced") && !cronosjs.validate(settings.crontab))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if ((settings.mode == "advanced") && !cronosjs.validate(settings.crontab))
+
+        chronos.printNodeInfo(node);
+        node.status({});
+
+        node.mode = settings.mode;
+        node.interval = settings.interval;
+        node.intervalUnit = settings.intervalUnit;
+        node.crontab = settings.crontab;
+        node.customRepetitionType = settings.customRepetitionType;
+        node.customRepetitionValue = settings.customRepetitionValue;
+        node.untilType = settings.untilType;
+        node.untilValue = settings.untilValue;
+        node.untilDate = settings.untilDate;
+        node.untilOffset = parseInt(settings.untilOffset);
+        node.untilRandom = (typeof settings.untilRandom == "boolean") ? settings.untilRandom : parseInt(settings.untilRandom);
+        node.msgIngress = settings.msgIngress;
+        node.preserveCtrlProps = settings.preserveCtrlProps;
+        node.ignoreCtrlProps = settings.ignoreCtrlProps;
+
+        node.sendTime = null;
+
+        let valid = true;
+        if ((node.mode == "custom") && (node.customRepetitionType == "jsonata"))
+        {
+            try
+            {
+                node.expression = chronos.getJSONataExpression(RED, node, node.customRepetitionValue);
+            }
+            catch(e)
+            {
+                node.error(e.message);
+                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                valid = false;
+            }
+        }
+
+        if (valid && (node.untilType == "jsonata"))
+        {
+            try
+            {
+                node.untilExpression = chronos.getJSONataExpression(RED, node, node.untilValue);
+            }
+            catch(e)
+            {
+                node.error(e.message);
+                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                valid = false;
+            }
+        }
+
+        if (!valid)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else
+
+        if ((node.untilType == "time") && !chronos.isValidUserTime(node.untilValue))
         {
-            chronos.printNodeInfo(node);
-            node.status({});
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
 
-            node.mode = settings.mode;
-            node.interval = settings.interval;
-            node.intervalUnit = settings.intervalUnit;
-            node.crontab = settings.crontab;
-            node.customRepetitionType = settings.customRepetitionType;
-            node.customRepetitionValue = settings.customRepetitionValue;
-            node.untilType = settings.untilType;
-            node.untilValue = settings.untilValue;
-            node.untilDate = settings.untilDate;
-            node.untilOffset = parseInt(settings.untilOffset);
-            node.untilRandom = (typeof settings.untilRandom == "boolean") ? settings.untilRandom : parseInt(settings.untilRandom);
-            node.msgIngress = settings.msgIngress;
-            node.preserveCtrlProps = settings.preserveCtrlProps;
-            node.ignoreCtrlProps = settings.ignoreCtrlProps;
+            return;
+        }
 
-            node.sendTime = null;
+        node.on("close", () =>
+        {
+            tearDownRepeatTimer();
+        });
 
-            let valid = true;
-            if ((node.mode == "custom") && (node.customRepetitionType == "jsonata"))
+        node.on("input", async(msg, send, done) =>
+        {
+            if (msg)
             {
-                try
+                if (!send || !done)  // Node-RED 0.x not supported anymore
                 {
-                    node.expression = chronos.getJSONataExpression(RED, node, node.customRepetitionValue);
+                    return;
                 }
-                catch(e)
-                {
-                    node.error(e.message);
-                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
 
-                    valid = false;
+                tearDownRepeatTimer();
+
+                if (!node.ignoreCtrlProps && ("stop" in msg))
+                {
+                    updateStatus();
+                    done();
                 }
-            }
-
-            if (valid && (node.untilType == "jsonata"))
-            {
-                try
+                else
                 {
-                    node.untilExpression = chronos.getJSONataExpression(RED, node, node.untilValue);
-                }
-                catch(e)
-                {
-                    node.error(e.message);
-                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
-
-                    valid = false;
-                }
-            }
-
-            if (!valid)
-            {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
-            else if ((node.untilType == "time") && !chronos.isValidUserTime(node.untilValue))
-            {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
-            else
-            {
-                node.on("close", () =>
-                {
-                    tearDownRepeatTimer();
-                });
-
-                node.on("input", async(msg, send, done) =>
-                {
-                    if (msg)
+                    try
                     {
-                        if (!send || !done)  // Node-RED 0.x not supported anymore
+                        if (await scheduleMessage(msg))
                         {
-                            return;
+                            send(RED.util.cloneMessage(node.message));
                         }
 
-                        tearDownRepeatTimer();
-
-                        if (!node.ignoreCtrlProps && ("stop" in msg))
+                        done();
+                    }
+                    catch (e)
+                    {
+                        if (e instanceof chronos.TimeError)
                         {
-                            updateStatus();
-                            done();
+                            if (e.details)
+                            {
+                                if ("errorDetails" in msg)
+                                {
+                                    msg._errorDetails = msg.errorDetails;
+                                }
+                                msg.errorDetails = e.details;
+                            }
+
+                            done(e.message);
                         }
                         else
                         {
-                            try
-                            {
-                                if (await scheduleMessage(msg))
-                                {
-                                    send(RED.util.cloneMessage(node.message));
-                                }
-
-                                done();
-                            }
-                            catch (e)
-                            {
-                                if (e instanceof chronos.TimeError)
-                                {
-                                    if (e.details)
-                                    {
-                                        if ("errorDetails" in msg)
-                                        {
-                                            msg._errorDetails = msg.errorDetails;
-                                        }
-                                        msg.errorDetails = e.details;
-                                    }
-
-                                    done(e.message);
-                                }
-                                else
-                                {
-                                    node.error(e.message);
-                                    node.debug(e.stack);
-                                    done();
-                                }
-                            }
-
+                            node.error(e.message);
+                            node.debug(e.stack);
+                            done();
                         }
                     }
-                });
+
+                }
             }
-        }
+        });
 
         async function scheduleMessage(msg)
         {

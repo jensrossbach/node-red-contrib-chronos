@@ -43,314 +43,315 @@ module.exports = function(RED)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+
+            return;
         }
-        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+
+        if (!chronos.validateConfiguration(RED, node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if (!chronos.validateTimeZone(node))
-        {
-            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-        }
-        else if (settings.schedule.length == 0)
+
+        if (settings.schedule.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "scheduler.status.noSchedule"});
             node.error(RED._("scheduler.error.noSchedule"));
+
+            return;
         }
-        else
+
+        chronos.printNodeInfo(node);
+        node.status({});
+
+        node.disabledSchedule = (typeof settings.disabled == "undefined") ? false : settings.disabled;
+        node.delayMessages = (typeof settings.delayOnStart == "undefined") ? true : settings.delayOnStart;
+
+        node.schedule = [];
+        for (let i=0; i<settings.schedule.length; ++i)
         {
-            chronos.printNodeInfo(node);
-            node.status({});
+            node.schedule.push({id: i+1, config: {trigger: settings.schedule[i].trigger, output: settings.schedule[i].output}});
 
-            node.disabledSchedule = (typeof settings.disabled == "undefined") ? false : settings.disabled;
-            node.delayMessages = (typeof settings.delayOnStart == "undefined") ? true : settings.delayOnStart;
-
-            node.schedule = [];
-            for (let i=0; i<settings.schedule.length; ++i)
+            if ("port" in settings.schedule[i])
             {
-                node.schedule.push({id: i+1, config: {trigger: settings.schedule[i].trigger, output: settings.schedule[i].output}});
+                node.schedule[i].port = settings.schedule[i].port;
+            }
+            else if ("port" in settings.schedule[i].output)  // backward compatibility to v1.8.1 and below
+            {
+                node.schedule[i].port = settings.schedule[i].output.port;
+            }
+            else
+            {
+                node.schedule[i].port = 0;
+            }
+        }
 
-                if ("port" in settings.schedule[i])
+        node.ports = [];
+        for (let i=0; i<settings.outputs; ++i)
+        {
+            node.ports.push(null);
+        }
+
+        if (settings.nextEventPort)
+        {
+            node.nextEventMsg = {payload: undefined};
+            node.nextEventMsg.events = Array(node.schedule.length).fill(undefined);
+        }
+
+        let valid = true;
+        for (let i=0; i<node.schedule.length; ++i)
+        {
+            let data = node.schedule[i];
+
+            // check for presence of variable name
+            if (((data.config.trigger.type == "env") || (data.config.trigger.type == "global") || (data.config.trigger.type == "flow"))
+                    && !data.config.trigger.value)
+            {
+                valid = false;
+                break;
+            }
+
+            // check for valid user time
+            if ((data.config.trigger.type == "time") && !chronos.isValidUserTime(data.config.trigger.value))
+            {
+                valid = false;
+                break;
+            }
+
+            if ((data.config.trigger.type == "crontab") && !cronosjs.validate(data.config.trigger.value, {strict: true}))
+            {
+                valid = false;
+                break;
+            }
+
+            if ("type" in data.config.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
+            {
+                if (data.config.output.type == "fullMsg")
                 {
-                    node.schedule[i].port = settings.schedule[i].port;
-                }
-                else if ("port" in settings.schedule[i].output)  // backward compatibility to v1.8.1 and below
-                {
-                    node.schedule[i].port = settings.schedule[i].output.port;
+                    if (data.config.output.contentType === "jsonata")
+                    {
+                        try
+                        {
+                            data.expression = chronos.getJSONataExpression(RED, node, data.config.output.value);
+                        }
+                        catch (e)
+                        {
+                            node.error(e.message);
+                            node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                            valid = false;
+                            break;
+                        }
+                    }
                 }
                 else
                 {
-                    node.schedule[i].port = 0;
-                }
-            }
-
-            node.ports = [];
-            for (let i=0; i<settings.outputs; ++i)
-            {
-                node.ports.push(null);
-            }
-
-            if (settings.nextEventPort)
-            {
-                node.nextEventMsg = {payload: undefined};
-                node.nextEventMsg.events = Array(node.schedule.length).fill(undefined);
-            }
-
-            let valid = true;
-            for (let i=0; i<node.schedule.length; ++i)
-            {
-                let data = node.schedule[i];
-
-                // check for presence of variable name
-                if (((data.config.trigger.type == "env") || (data.config.trigger.type == "global") || (data.config.trigger.type == "flow"))
-                        && !data.config.trigger.value)
-                {
-                    valid = false;
-                    break;
-                }
-
-                // check for valid user time
-                if ((data.config.trigger.type == "time") && !chronos.isValidUserTime(data.config.trigger.value))
-                {
-                    valid = false;
-                    break;
-                }
-
-                if ((data.config.trigger.type == "crontab") && !cronosjs.validate(data.config.trigger.value, {strict: true}))
-                {
-                    valid = false;
-                    break;
-                }
-
-                if ("type" in data.config.output)  // backward compatibility, v1.8.x configurations have empty output or only port property under output
-                {
-                    if (data.config.output.type == "fullMsg")
+                    if (!data.config.output.property.name)
                     {
-                        if (data.config.output.contentType === "jsonata")
-                        {
-                            try
-                            {
-                                data.expression = chronos.getJSONataExpression(RED, node, data.config.output.value);
-                            }
-                            catch (e)
-                            {
-                                node.error(e.message);
-                                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
-
-                                valid = false;
-                                break;
-                            }
-                        }
+                        valid = false;
+                        break;
                     }
-                    else
+
+                    if ((data.config.output.property.type == "num") &&
+                        (+data.config.output.property.value !== +data.config.output.property.value))
                     {
-                        if (!data.config.output.property.name)
+                        valid = false;
+                        break;
+                    }
+
+                    if (data.config.output.property.type == "jsonata")
+                    {
+                        try
                         {
+                            data.expression = chronos.getJSONataExpression(RED, node, data.config.output.property.value);
+                        }
+                        catch (e)
+                        {
+                            node.error(e.message);
+                            node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
                             valid = false;
                             break;
-                        }
-
-                        if ((data.config.output.property.type == "num") &&
-                            (+data.config.output.property.value !== +data.config.output.property.value))
-                        {
-                            valid = false;
-                            break;
-                        }
-
-                        if (data.config.output.property.type == "jsonata")
-                        {
-                            try
-                            {
-                                data.expression = chronos.getJSONataExpression(RED, node, data.config.output.property.value);
-                            }
-                            catch (e)
-                            {
-                                node.error(e.message);
-                                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
-
-                                valid = false;
-                                break;
-                            }
                         }
                     }
                 }
             }
+        }
 
-            if (!valid)
+        if (!valid)
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
+        }
+
+        updateStatus();
+
+        node.on("close", () =>
+        {
+            stopEvents();
+        });
+
+        node.on("input", async(msg, send, done) =>
+        {
+            if (!send || !done)  // Node-RED 0.x not supported anymore
             {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+                return;
+            }
+
+            if (typeof msg.payload == "boolean")
+            {
+                if (msg.payload)
+                {
+                    node.disabledSchedule = false;
+                    startEvents();
+                }
+                else
+                {
+                    stopEvents();
+                    node.disabledSchedule = true;
+                }
+
+                updateStatus();
+                done();
+            }
+            else if (typeof msg.payload == "string")
+            {
+                if (msg.payload == "toggle")
+                {
+                    toggleEvents();
+                }
+                else if (msg.payload == "reload")
+                {
+                    resetNextEventMsg();
+                    reloadEvents();
+                }
+                else if (msg.payload == "trigger")
+                {
+                    await triggerEvents(false);
+                }
+                else if (msg.payload == "trigger:forced")
+                {
+                    await triggerEvents(true);
+                }
+                else if (msg.payload == "trigger:next")
+                {
+                    let nextEvent = getNextEvent();
+                    if (nextEvent)
+                    {
+                        await triggerEvent(nextEvent, false);
+                    }
+                }
+
+                updateStatus();
+                done();
+            }
+            else if (Array.isArray(msg.payload))
+            {
+                let numEnabled = 0;
+                for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
+                {
+                    if (typeof msg.payload[i] == "boolean")
+                    {
+                        if (msg.payload[i])
+                        {
+                            startEvent(node.schedule[i]);
+                        }
+                        else
+                        {
+                            stopEvent(node.schedule[i]);
+                        }
+                    }
+                    else if (typeof msg.payload[i] == "string")
+                    {
+                        if (msg.payload[i] == "toggle")
+                        {
+                            toggleEvent(node.schedule[i]);
+                        }
+                        else if (msg.payload[i] == "reload")
+                        {
+                            resetNextEventMsg(i);
+                            reloadEvent(node.schedule[i]);
+                        }
+                        else if (msg.payload[i] == "trigger")
+                        {
+                            await triggerEvent(node.schedule[i], false);
+                        }
+                        else if (msg.payload[i] == "trigger:forced")
+                        {
+                            await triggerEvent(node.schedule[i], true);
+                        }
+                    }
+                    else if ((typeof msg.payload[i] == "object") && (msg.payload[i] != null))
+                    {
+                        let data = node.schedule[i];
+
+                        if (validateFullStructuredContextData(msg.payload[i]))
+                        {
+                            data.orig = {trigger: data.config.trigger, output: data.config.output};
+                            data.config.trigger = msg.payload[i].trigger;
+                            data.config.output = msg.payload[i].output;
+
+                            startEvent(data, true);
+                        }
+                        else if (validateStructuredContextData(msg.payload[i]))
+                        {
+                            data.orig = {trigger: data.config.trigger};
+                            data.config.trigger = msg.payload[i];
+
+                            startEvent(data, true);
+                        }
+                        else
+                        {
+                            msg.errorDetails = {property: "msg.payload[" + i + "]"};
+                            node.error(RED._("scheduler.error.invalidMsgEvent"), msg);
+                        }
+                    }
+
+                    if ("triggerTime" in node.schedule[i])
+                    {
+                        numEnabled++;
+                    }
+                }
+
+                node.disabledSchedule = (numEnabled == 0);
+                startTimer();
+
+                updateStatus();
+                done();
             }
             else
             {
                 updateStatus();
-
-                node.on("close", () =>
-                {
-                    stopEvents();
-                });
-
-                node.on("input", async(msg, send, done) =>
-                {
-                    if (!send || !done)  // Node-RED 0.x not supported anymore
-                    {
-                        return;
-                    }
-
-                    if (typeof msg.payload == "boolean")
-                    {
-                        if (msg.payload)
-                        {
-                            node.disabledSchedule = false;
-                            startEvents();
-                        }
-                        else
-                        {
-                            stopEvents();
-                            node.disabledSchedule = true;
-                        }
-
-                        updateStatus();
-                        done();
-                    }
-                    else if (typeof msg.payload == "string")
-                    {
-                        if (msg.payload == "toggle")
-                        {
-                            toggleEvents();
-                        }
-                        else if (msg.payload == "reload")
-                        {
-                            resetNextEventMsg();
-                            reloadEvents();
-                        }
-                        else if (msg.payload == "trigger")
-                        {
-                            await triggerEvents(false);
-                        }
-                        else if (msg.payload == "trigger:forced")
-                        {
-                            await triggerEvents(true);
-                        }
-                        else if (msg.payload == "trigger:next")
-                        {
-                            let nextEvent = getNextEvent();
-                            if (nextEvent)
-                            {
-                                await triggerEvent(nextEvent, false);
-                            }
-                        }
-
-                        updateStatus();
-                        done();
-                    }
-                    else if (Array.isArray(msg.payload))
-                    {
-                        let numEnabled = 0;
-                        for (let i=0; (i<msg.payload.length) && (i<node.schedule.length); ++i)
-                        {
-                            if (typeof msg.payload[i] == "boolean")
-                            {
-                                if (msg.payload[i])
-                                {
-                                    startEvent(node.schedule[i]);
-                                }
-                                else
-                                {
-                                    stopEvent(node.schedule[i]);
-                                }
-                            }
-                            else if (typeof msg.payload[i] == "string")
-                            {
-                                if (msg.payload[i] == "toggle")
-                                {
-                                    toggleEvent(node.schedule[i]);
-                                }
-                                else if (msg.payload[i] == "reload")
-                                {
-                                    resetNextEventMsg(i);
-                                    reloadEvent(node.schedule[i]);
-                                }
-                                else if (msg.payload[i] == "trigger")
-                                {
-                                    await triggerEvent(node.schedule[i], false);
-                                }
-                                else if (msg.payload[i] == "trigger:forced")
-                                {
-                                    await triggerEvent(node.schedule[i], true);
-                                }
-                            }
-                            else if ((typeof msg.payload[i] == "object") && (msg.payload[i] != null))
-                            {
-                                let data = node.schedule[i];
-
-                                if (validateFullStructuredContextData(msg.payload[i]))
-                                {
-                                    data.orig = {trigger: data.config.trigger, output: data.config.output};
-                                    data.config.trigger = msg.payload[i].trigger;
-                                    data.config.output = msg.payload[i].output;
-
-                                    startEvent(data, true);
-                                }
-                                else if (validateStructuredContextData(msg.payload[i]))
-                                {
-                                    data.orig = {trigger: data.config.trigger};
-                                    data.config.trigger = msg.payload[i];
-
-                                    startEvent(data, true);
-                                }
-                                else
-                                {
-                                    msg.errorDetails = {property: "msg.payload[" + i + "]"};
-                                    node.error(RED._("scheduler.error.invalidMsgEvent"), msg);
-                                }
-                            }
-
-                            if ("triggerTime" in node.schedule[i])
-                            {
-                                numEnabled++;
-                            }
-                        }
-
-                        node.disabledSchedule = (numEnabled == 0);
-                        startTimer();
-
-                        updateStatus();
-                        done();
-                    }
-                    else
-                    {
-                        updateStatus();
-                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
-                    }
-                });
-
-                if (node.delayMessages)
-                {
-                    setTimeout(() =>
-                    {
-                        node.delayMessages = false;
-
-                        if (node.startQueue)
-                        {
-                            for (let entry of node.startQueue)
-                            {
-                                sendMessage(entry);
-                            }
-
-                            delete node.startQueue;
-                        }
-                    }, (settings.onStartDelay || 0.1) * 1000);
-                }
-
-                if (!node.disabledSchedule)
-                {
-                    startEvents();
-                    updateStatus();
-                }
+                done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
             }
+        });
+
+        if (node.delayMessages)
+        {
+            setTimeout(() =>
+            {
+                node.delayMessages = false;
+
+                if (node.startQueue)
+                {
+                    for (let entry of node.startQueue)
+                    {
+                        sendMessage(entry);
+                    }
+
+                    delete node.startQueue;
+                }
+            }, (settings.onStartDelay || 0.1) * 1000);
+        }
+
+        if (!node.disabledSchedule)
+        {
+            startEvents();
+            updateStatus();
         }
 
         function startEvents()

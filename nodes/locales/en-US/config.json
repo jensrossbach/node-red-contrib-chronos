@@ -188,6 +188,7 @@
             "invalidConfig":       "Configuration contains invalid values",
             "invalidTime":         "Invalid time",
             "invalidDate":         "Invalid date",
+            "invalidCoordinate":   "Invalid location coordinate",
             "invalidBaseTime":     "Invalid base time: __baseTime__",
             "invalidCondition":    "Invalid condition",
             "invalidName":         "Invalid custom sun position",
