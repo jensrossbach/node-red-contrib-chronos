@@ -381,18 +381,18 @@ module.exports = function(RED)
         {
             node.debug("Toggling events");
 
-            let numEnabled = 0;
+            let enabled = true;
             for (let data of node.schedule)
             {
                 toggleEvent(data);
 
                 if ("triggerTime" in data)
                 {
-                    numEnabled++;
+                    enabled = false;
                 }
             }
 
-            node.disabledSchedule = (numEnabled == 0);
+            node.disabledSchedule = enabled;
             startTimer();
         }
 
@@ -481,7 +481,7 @@ module.exports = function(RED)
 
         function stopEvent(data, keepOrig = false)
         {
-            if (("orig" in data) && (!keepOrig))
+            if (("orig" in data) && !keepOrig)
             {
                 if ("trigger" in data.orig)
                 {
@@ -624,7 +624,8 @@ module.exports = function(RED)
                     node.debug(e.stack);
                 }
 
-                delete data.triggerTime;
+                // set to null in order distinguish from disabled / not started state
+                data.triggerTime = null;
             }
         }
 
