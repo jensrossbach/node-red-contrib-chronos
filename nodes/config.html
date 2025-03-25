@@ -155,9 +155,9 @@ SOFTWARE.
             let noMapUpdate = false;
 
             let latitudeInput = $("#node-config-input-latitude")
-                                    .typedInput({types: ["num", "env"], typeField: "#node-config-input-latitudeType"});
+                                    .typedInput({types: ["num", "env", "global"], typeField: "#node-config-input-latitudeType"});
             let longitudeInput = $("#node-config-input-longitude")
-                                    .typedInput({types: ["num", "env"], typeField: "#node-config-input-longitudeType"});
+                                    .typedInput({types: ["num", "env", "global"], typeField: "#node-config-input-longitudeType"});
 
             const updateMap = function()
             {

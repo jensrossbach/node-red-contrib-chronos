@@ -40,187 +40,188 @@ module.exports = function(RED)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+
+            return;
         }
-        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+
+        if (!node.chronos.validateConfiguration(RED, node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if (!node.chronos.validateTimeZone(node))
-        {
-            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-        }
-        else if (settings.conditions.length == 0)
+
+        if (settings.conditions.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConditions"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConditions"));
+
+            return;
+        }
+
+        node.chronos.printNodeInfo(node);
+        node.status({});
+
+        node.baseTime = settings.baseTime;
+        node.baseTimeType = settings.baseTimeType;
+        node.conditions = settings.conditions;
+        node.stopOnFirstMatch = settings.stopOnFirstMatch;
+
+        // backward compatibility to v1.5.0
+        if (!node.baseTimeType)
+        {
+            node.baseTimeType = "msgIngress";
+        }
+
+        let valid = true;
+        if ((node.baseTimeType != "msgIngress") && !node.baseTime)
+        {
+            valid = false;
         }
         else
         {
-            node.chronos.printNodeInfo(node);
-            node.status({});
-
-            node.baseTime = settings.baseTime;
-            node.baseTimeType = settings.baseTimeType;
-            node.conditions = settings.conditions;
-            node.stopOnFirstMatch = settings.stopOnFirstMatch;
-
-            // backward compatibility to v1.5.0
-            if (!node.baseTimeType)
+            let otherwise = false;
+            for (let i=0; i<node.conditions.length; ++i)
             {
-                node.baseTimeType = "msgIngress";
-            }
+                let cond = node.conditions[i];
 
-            let valid = true;
-            if ((node.baseTimeType != "msgIngress") && !node.baseTime)
-            {
-                valid = false;
-            }
-            else
-            {
-                let otherwise = false;
-                for (let i=0; i<node.conditions.length; ++i)
+                if (cond.operator == "otherwise")
                 {
-                    let cond = node.conditions[i];
-
-                    if (cond.operator == "otherwise")
-                    {
-                        // only one otherwise condition is allowed
-                        if (otherwise)
-                        {
-                            valid = false;
-                            break;
-                        }
-
-                        otherwise = true;
-                    }
-                    else if (!sfUtils.validateCondition(node, cond))
+                    // only one otherwise condition is allowed
+                    if (otherwise)
                     {
                         valid = false;
                         break;
                     }
-                }
 
-                // otherwise condition must not be the only one
-                if ((node.conditions.length == 1) && otherwise)
+                    otherwise = true;
+                }
+                else if (!sfUtils.validateCondition(node, cond))
                 {
                     valid = false;
+                    break;
                 }
             }
 
-            if (!valid)
+            // otherwise condition must not be the only one
+            if ((node.conditions.length == 1) && otherwise)
             {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
-            else
-            {
-                node.on("input", async(msg, send, done) =>
-                {
-                    if (msg)
-                    {
-                        if (!send || !done)  // Node-RED 0.x not supported anymore
-                        {
-                            return;
-                        }
-
-                        let baseTime = sfUtils.getBaseTime(RED, node, msg);
-                        if (baseTime)
-                        {
-                            node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
-
-                            let ports = [];
-
-                            for (let i=0; i<node.conditions.length; ++i)
-                            {
-                                ports.push(null);
-                            }
-
-                            let numMatches = 0;
-                            let otherwiseIndex = -1;
-                            for (let i=0; i<node.conditions.length; ++i)
-                            {
-                                try
-                                {
-                                    let cond = node.conditions[i];
-
-                                    if (cond.operator == "otherwise")
-                                    {
-                                        node.debug("[Condition:" + (i+1) + "] Otherwise");
-                                        otherwiseIndex = i;
-                                    }
-                                    else if (await sfUtils.evaluateCondition(RED, node, msg, baseTime, cond, i+1))
-                                    {
-                                        ports[i] = true;
-                                        numMatches++;
-                                    }
-
-                                    if (ports[i] && node.stopOnFirstMatch)
-                                    {
-                                        break;
-                                    }
-                                }
-                                catch (e)
-                                {
-                                    if (e instanceof node.chronos.TimeError)
-                                    {
-                                        let errMsg = RED.util.cloneMessage(msg);
-
-                                        if (e.details)
-                                        {
-                                            if ("errorDetails" in errMsg)
-                                            {
-                                                errMsg._errorDetails = errMsg.errorDetails;
-                                            }
-                                            errMsg.errorDetails = e.details;
-                                        }
-
-                                        node.error(e.message, errMsg);
-                                    }
-                                    else
-                                    {
-                                        node.error(e.message);
-                                        node.debug(e.stack);
-                                    }
-                                }
-                            }
-
-                            if ((numMatches == 0) && (otherwiseIndex >= 0))
-                            {
-                                ports[otherwiseIndex] = msg;
-                            }
-                            else if (numMatches > 0)
-                            {
-                                let firstPort = true;
-                                for (let i=0; i<node.conditions.length; ++i)
-                                {
-                                    if (ports[i])
-                                    {
-                                        ports[i] = firstPort ? msg : RED.util.cloneMessage(msg);
-                                        firstPort = false;
-                                    }
-                                }
-                            }
-
-                            send(ports);
-                            done();
-                        }
-                        else
-                        {
-                            let variable = node.baseTime;
-                            if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
-                            {
-                                let ctx = RED.util.parseContextStore(node.baseTime);
-                                variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
-                            }
-
-                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
-                        }
-                    }
-                });
+                valid = false;
             }
         }
+
+        if (!valid)
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
+        }
+
+        node.on("input", async(msg, send, done) =>
+        {
+            if (msg)
+            {
+                if (!send || !done)  // Node-RED 0.x not supported anymore
+                {
+                    return;
+                }
+
+                let baseTime = sfUtils.getBaseTime(RED, node, msg);
+                if (baseTime)
+                {
+                    node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+
+                    let ports = [];
+
+                    for (let i=0; i<node.conditions.length; ++i)
+                    {
+                        ports.push(null);
+                    }
+
+                    let numMatches = 0;
+                    let otherwiseIndex = -1;
+                    for (let i=0; i<node.conditions.length; ++i)
+                    {
+                        try
+                        {
+                            let cond = node.conditions[i];
+
+                            if (cond.operator == "otherwise")
+                            {
+                                node.debug("[Condition:" + (i+1) + "] Otherwise");
+                                otherwiseIndex = i;
+                            }
+                            else if (await sfUtils.evaluateCondition(RED, node, msg, baseTime, cond, i+1))
+                            {
+                                ports[i] = true;
+                                numMatches++;
+                            }
+
+                            if (ports[i] && node.stopOnFirstMatch)
+                            {
+                                break;
+                            }
+                        }
+                        catch (e)
+                        {
+                            if (e instanceof node.chronos.TimeError)
+                            {
+                                let errMsg = RED.util.cloneMessage(msg);
+
+                                if (e.details)
+                                {
+                                    if ("errorDetails" in errMsg)
+                                    {
+                                        errMsg._errorDetails = errMsg.errorDetails;
+                                    }
+                                    errMsg.errorDetails = e.details;
+                                }
+
+                                node.error(e.message, errMsg);
+                            }
+                            else
+                            {
+                                node.error(e.message);
+                                node.debug(e.stack);
+                            }
+                        }
+                    }
+
+                    if ((numMatches == 0) && (otherwiseIndex >= 0))
+                    {
+                        ports[otherwiseIndex] = msg;
+                    }
+                    else if (numMatches > 0)
+                    {
+                        let firstPort = true;
+                        for (let i=0; i<node.conditions.length; ++i)
+                        {
+                            if (ports[i])
+                            {
+                                ports[i] = firstPort ? msg : RED.util.cloneMessage(msg);
+                                firstPort = false;
+                            }
+                        }
+                    }
+
+                    send(ports);
+                    done();
+                }
+                else
+                {
+                    let variable = node.baseTime;
+                    if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
+                    {
+                        let ctx = RED.util.parseContextStore(node.baseTime);
+                        variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                    }
+
+                    done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
+                }
+            }
+        });
     }
 
     RED.nodes.registerType("chronos-switch", ChronosSwitchNode);

@@ -97,161 +97,162 @@ module.exports = function(RED)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+
+            return;
         }
-        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+
+        if (!chronos.validateConfiguration(RED, node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if (!chronos.validateTimeZone(node))
+
+        chronos.printNodeInfo(node);
+        node.status({});
+
+        node.delayType = settings.delayType;
+        node.fixedDuration = parseInt(settings.fixedDuration);
+        node.randomDuration1 = parseInt(settings.randomDuration1);
+        node.randomDuration2 = parseInt(settings.randomDuration2);
+        node.fixedDurationUnit = settings.fixedDurationUnit;
+        node.randomDurationUnit = settings.randomDurationUnit;
+        node.randomizerMillis = settings.randomizerMillis;
+        node.whenType = settings.whenType;
+        node.whenValue = settings.whenValue;
+        node.offset = parseInt(settings.offset);
+        node.random = (typeof settings.random == "boolean") ? settings.random : parseInt(settings.random);
+        node.customDelayType = settings.customDelayType;
+        node.customDelayValue = settings.customDelayValue;
+        node.queueLimit =
+            (settings.limitQueue === true)
+                ? parseInt(settings.queueLimit)
+                : 0;
+        node.msgIngress = (typeof settings.msgIngress == "undefined") ? "drop:incoming" : settings.msgIngress;
+        node.preserveCtrlProps = settings.preserveCtrlProps;
+        node.ignoreCtrlProps = settings.ignoreCtrlProps;
+
+        node.queueDuration = -1;
+        node.sendTime = null;
+
+        let valid = true;
+        if ((node.delayType == "custom") && (node.customDelayType == "jsonata"))
         {
-            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-        }
-        else
-        {
-            chronos.printNodeInfo(node);
-            node.status({});
-
-            node.delayType = settings.delayType;
-            node.fixedDuration = parseInt(settings.fixedDuration);
-            node.randomDuration1 = parseInt(settings.randomDuration1);
-            node.randomDuration2 = parseInt(settings.randomDuration2);
-            node.fixedDurationUnit = settings.fixedDurationUnit;
-            node.randomDurationUnit = settings.randomDurationUnit;
-            node.randomizerMillis = settings.randomizerMillis;
-            node.whenType = settings.whenType;
-            node.whenValue = settings.whenValue;
-            node.offset = parseInt(settings.offset);
-            node.random = (typeof settings.random == "boolean") ? settings.random : parseInt(settings.random);
-            node.customDelayType = settings.customDelayType;
-            node.customDelayValue = settings.customDelayValue;
-            node.queueLimit =
-                (settings.limitQueue === true)
-                    ? parseInt(settings.queueLimit)
-                    : 0;
-            node.msgIngress = (typeof settings.msgIngress == "undefined") ? "drop:incoming" : settings.msgIngress;
-            node.preserveCtrlProps = settings.preserveCtrlProps;
-            node.ignoreCtrlProps = settings.ignoreCtrlProps;
-
-            node.queueDuration = -1;
-            node.sendTime = null;
-
-            let valid = true;
-            if ((node.delayType == "custom") && (node.customDelayType == "jsonata"))
+            try
             {
+                node.expression = chronos.getJSONataExpression(RED, node, node.customDelayValue);
+            }
+            catch(e)
+            {
+                node.error(e.message);
+                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
+
+                valid = false;
+            }
+        }
+
+        if (!valid)
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
+        }
+
+        if ((node.delayType == "pointInTime") && (node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
+        }
+
+        node.msgQueue = [];
+
+        node.on("close", () =>
+        {
+            tearDownDelayTimer();
+        });
+
+        node.on("input", async(msg, send, done) =>
+        {
+            if (msg)
+            {
+                if (!send || !done)  // Node-RED 0.x not supported anymore
+                {
+                    return;
+                }
+
                 try
                 {
-                    node.expression = chronos.getJSONataExpression(RED, node, node.customDelayValue);
-                }
-                catch(e)
-                {
-                    node.error(e.message);
-                    node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
-
-                    valid = false;
-                }
-            }
-
-            if (!valid)
-            {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
-            else if ((node.delayType == "pointInTime") && (node.whenType == "time") && !chronos.isValidUserTime(node.whenValue))
-            {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
-            else
-            {
-                node.msgQueue = [];
-
-                node.on("close", () =>
-                {
-                    tearDownDelayTimer();
-                });
-
-                node.on("input", async(msg, send, done) =>
-                {
-                    if (msg)
+                    if (!node.ignoreCtrlProps && ("drop" in msg))
                     {
-                        if (!send || !done)  // Node-RED 0.x not supported anymore
+                        tearDownDelayTimer();
+
+                        node.debug("Drop all enqueued messages");
+                        dropQueue();
+
+                        if ("enqueue" in msg)
                         {
-                            return;
+                            if (!node.preserveCtrlProps)
+                            {
+                                delete msg.drop;
+                                delete msg.enqueue;
+                            }
+
+                            await enqueueMessage(msg, done);
                         }
-
-                        try
+                        else
                         {
-                            if (!node.ignoreCtrlProps && ("drop" in msg))
-                            {
-                                tearDownDelayTimer();
-
-                                node.debug("Drop all enqueued messages");
-                                dropQueue();
-
-                                if ("enqueue" in msg)
-                                {
-                                    if (!node.preserveCtrlProps)
-                                    {
-                                        delete msg.drop;
-                                        delete msg.enqueue;
-                                    }
-
-                                    await enqueueMessage(msg, done);
-                                }
-                                else
-                                {
-                                    // we're done with the message as it gets discarded
-                                    done();
-                                }
-                            }
-                            else if (!node.ignoreCtrlProps && ("flush" in msg))
-                            {
-                                tearDownDelayTimer();
-                                flushQueue();
-
-                                if ("enqueue" in msg)
-                                {
-                                    if (!node.preserveCtrlProps)
-                                    {
-                                        delete msg.flush;
-                                        delete msg.enqueue;
-                                    }
-
-                                    await enqueueMessage(msg, done);
-                                }
-                                else
-                                {
-                                    // we're done with the message as it gets discarded
-                                    done();
-                                }
-                            }
-                            else
-                            {
-                                await enqueueMessage(msg, done);
-                            }
-                        }
-                        catch (e)
-                        {
-                            if (e instanceof chronos.TimeError)
-                            {
-                                node.error(e.message, {errorDetails: e.details});
-                                node.status({fill: "red", shape: "dot", text: "delay.status.error"});
-                            }
-                            else
-                            {
-                                node.error(e.message);
-                                node.debug(e.stack);
-                            }
-
-                            // we're done with the message as we do not enqueue it
+                            // we're done with the message as it gets discarded
                             done();
                         }
                     }
-                });
+                    else if (!node.ignoreCtrlProps && ("flush" in msg))
+                    {
+                        tearDownDelayTimer();
+                        flushQueue();
+
+                        if ("enqueue" in msg)
+                        {
+                            if (!node.preserveCtrlProps)
+                            {
+                                delete msg.flush;
+                                delete msg.enqueue;
+                            }
+
+                            await enqueueMessage(msg, done);
+                        }
+                        else
+                        {
+                            // we're done with the message as it gets discarded
+                            done();
+                        }
+                    }
+                    else
+                    {
+                        await enqueueMessage(msg, done);
+                    }
+                }
+                catch (e)
+                {
+                    if (e instanceof chronos.TimeError)
+                    {
+                        node.error(e.message, {errorDetails: e.details});
+                        node.status({fill: "red", shape: "dot", text: "delay.status.error"});
+                    }
+                    else
+                    {
+                        node.error(e.message);
+                        node.debug(e.stack);
+                    }
+
+                    // we're done with the message as we do not enqueue it
+                    done();
+                }
             }
-        }
+        });
 
         async function enqueueMessage(msg, done)
         {

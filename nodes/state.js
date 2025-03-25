@@ -40,91 +40,76 @@ module.exports = function(RED)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.noConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.noConfig"));
+
+            return;
         }
-        else if (Number.isNaN(node.config.latitude) || Number.isNaN(node.config.longitude))
+
+        if (!chronos.validateConfiguration(RED, node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if (!chronos.validateTimeZone(node))
+
+        if ((settings.outputType != "fullMsg") && !settings.outputValue)
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
         }
-        else if ((settings.outputType != "fullMsg") && !settings.outputValue)
-        {
-            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-        }
-        else if (settings.states.length == 0)
+
+        if (settings.states.length == 0)
         {
             node.status({fill: "red", shape: "dot", text: "state.status.noStates"});
             node.error(RED._("state.error.noStates"));
+
+            return;
         }
-        else
+
+        chronos.printNodeInfo(node);
+        node.status({});
+
+        let valid = true;
+        node.states = [];
+
+        for (let i=0; i<settings.states.length; ++i)
         {
-            chronos.printNodeInfo(node);
-            node.status({});
+            let data = undefined;
 
-            let valid = true;
-            node.states = [];
-
-            for (let i=0; i<settings.states.length; ++i)
+            const trigger = loadTrigger(settings.states[i].trigger);
+            if (trigger)
             {
-                let data = undefined;
+                data = {id: i+1, trigger: trigger, state: settings.states[i].state, triggerConfig: settings.states[i].trigger};
 
-                const trigger = loadTrigger(settings.states[i].trigger);
-                if (trigger)
-                {
-                    data = {id: i+1, trigger: trigger, state: settings.states[i].state, triggerConfig: settings.states[i].trigger};
-
-                    node.trace("[State:" + data.id + "] Trigger configuration: " + JSON.stringify(data.triggerConfig));
-                    node.trace("[State:" + data.id + "] Trigger specification: " + JSON.stringify(data.trigger));
-                }
-                else
-                {
-                    valid = false;
-                    break;
-                }
-
-                if ((data.state.type == "num") && (+data.state.value !== +data.state.value))
-                {
-                    valid = false;
-                    break;
-                }
-
-                node.states.push(data);
+                node.trace("[State:" + data.id + "] Trigger configuration: " + JSON.stringify(data.triggerConfig));
+                node.trace("[State:" + data.id + "] Trigger specification: " + JSON.stringify(data.trigger));
+            }
+            else
+            {
+                valid = false;
+                break;
             }
 
-            if (valid)
+            if ((data.state.type == "num") && (+data.state.value !== +data.state.value))
             {
-                node.outputType = settings.outputType;
-
-                if (settings.outputType == "fullMsg")
-                {
-                    try
-                    {
-                        node.outputValue = chronos.getJSONataExpression(RED, node, settings.outputValue);
-                    }
-                    catch (e)
-                    {
-                        node.error(e.message);
-                        node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
-
-                        valid = false;
-                    }
-                }
-                else
-                {
-                    node.outputValue = settings.outputValue;
-                }
+                valid = false;
+                break;
             }
 
-            if (valid && (settings.evaluationType == "jsonata"))
+            node.states.push(data);
+        }
+
+        if (valid)
+        {
+            node.outputType = settings.outputType;
+
+            if (settings.outputType == "fullMsg")
             {
                 try
                 {
-                    node.evaluationExpression = RED.util.prepareJSONataExpression(settings.evaluation, node);
+                    node.outputValue = chronos.getJSONataExpression(RED, node, settings.outputValue);
                 }
                 catch (e)
                 {
@@ -134,273 +119,292 @@ module.exports = function(RED)
                     valid = false;
                 }
             }
-
-            if (!valid)
-            {
-                node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
-                node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
-            }
             else
             {
-                node.conditions = settings.conditions;
-                node.evaluation = settings.evaluation;
-                node.evaluationType = settings.evaluationType;
-                node.passiveMode = settings.passiveMode;
-                node.paused = false;
+                node.outputValue = settings.outputValue;
+            }
+        }
 
-                node.currentState = {};
+        if (valid && (settings.evaluationType == "jsonata"))
+        {
+            try
+            {
+                node.evaluationExpression = RED.util.prepareJSONataExpression(settings.evaluation, node);
+            }
+            catch (e)
+            {
+                node.error(e.message);
+                node.debug("JSONata code: " + e.code + "  position: " + e.position + "  token: " + e.token + "  value: " + e.value);
 
-                node.on("close", () =>
+                valid = false;
+            }
+        }
+
+        if (!valid)
+        {
+            node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
+            node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
+
+            return;
+        }
+
+        node.conditions = settings.conditions;
+        node.evaluation = settings.evaluation;
+        node.evaluationType = settings.evaluationType;
+        node.passiveMode = settings.passiveMode;
+        node.paused = false;
+
+        node.currentState = {};
+
+        node.on("close", () =>
+        {
+            cancelTimer();
+        });
+
+        restoreCurrentState(false).then(() =>
+        {
+            node.on("input", async(msg, send, done) =>
+            {
+                if (!send || !done)  // Node-RED 0.x not supported anymore
                 {
-                    cancelTimer();
-                });
+                    return;
+                }
 
-                restoreCurrentState(false).then(() =>
+                if (msg.topic === "trigger")
                 {
-                    node.on("input", async(msg, send, done) =>
+                    if (node.passiveMode)
                     {
-                        if (!send || !done)  // Node-RED 0.x not supported anymore
-                        {
-                            return;
-                        }
+                        const triggerTime = chronos.getCurrentTime(node);
 
-                        if (msg.topic === "trigger")
+                        if ((typeof msg.payload == "number") &&
+                            (msg.payload >= 1) &&
+                            (msg.payload <= node.states.length))
                         {
-                            if (node.passiveMode)
+                            const targetState = node.states[msg.payload-1];
+
+                            if ((!node.currentState.data || (node.currentState.data.id != targetState.id)) &&
+                                (await evalConditions(triggerTime)))
                             {
-                                const triggerTime = chronos.getCurrentTime(node);
+                                await switchState({data: targetState, triggerTime: triggerTime});
 
-                                if ((typeof msg.payload == "number") &&
-                                    (msg.payload >= 1) &&
-                                    (msg.payload <= node.states.length))
-                                {
-                                    const targetState = node.states[msg.payload-1];
-
-                                    if ((!node.currentState.data || (node.currentState.data.id != targetState.id)) &&
-                                        (await evalConditions(triggerTime)))
-                                    {
-                                        await switchState({data: targetState, triggerTime: triggerTime});
-
-                                        outputCurrentState();
-                                        updateStatus();
-                                    }
-                                }
-                                else if (node.currentState.data)
-                                {
-                                    const targetState = getState(triggerTime, triggerTime, false, true);
-
-                                    if (targetState &&
-                                        (targetState.data.id != node.currentState.data.id) &&
-                                        (await evalConditions(targetState.triggerTime)))
-                                    {
-                                        await switchState(targetState);
-
-                                        outputCurrentState();
-                                        updateStatus();
-                                    }
-                                }
+                                outputCurrentState();
+                                updateStatus();
                             }
-
-                            done();
                         }
-                        else if (msg.topic === "get")
+                        else if (node.currentState.data)
                         {
-                            outputCurrentState();
-                            done();
+                            const targetState = getState(triggerTime, triggerTime, false, true);
+
+                            if (targetState &&
+                                (targetState.data.id != node.currentState.data.id) &&
+                                (await evalConditions(targetState.triggerTime)))
+                            {
+                                await switchState(targetState);
+
+                                outputCurrentState();
+                                updateStatus();
+                            }
                         }
-                        else if (msg.topic === "getid")
+                    }
+
+                    done();
+                }
+                else if (msg.topic === "get")
+                {
+                    outputCurrentState();
+                    done();
+                }
+                else if (msg.topic === "getid")
+                {
+                    if (node.currentState.data)
+                    {
+                        msg.payload = node.currentState.data.id;
+                        send(msg);
+                    }
+
+                    done();
+                }
+                else if (msg.topic === "set")
+                {
+                    if ((typeof msg.payload == "number") &&
+                        (msg.payload >= 1) &&
+                        (msg.payload <= node.states.length))
+                    {
+                        const targetState = node.states[msg.payload-1];
+
+                        if (!node.currentState.data ||
+                            (node.currentState.data.id != targetState.id))
                         {
                             if (node.currentState.data)
                             {
-                                msg.payload = node.currentState.data.id;
-                                send(msg);
+                                // reload trigger of old state before new state is activated
+                                reloadTrigger(node.currentState.data);
                             }
 
-                            done();
-                        }
-                        else if (msg.topic === "set")
-                        {
-                            if ((typeof msg.payload == "number") &&
-                                (msg.payload >= 1) &&
-                                (msg.payload <= node.states.length))
+                            node.currentState.data = targetState;
+                            node.currentState.since = chronos.getCurrentTime(node);
+
+                            if ("timeout" in msg)
                             {
-                                const targetState = node.states[msg.payload-1];
+                                let timeout = 0;
 
-                                if (!node.currentState.data ||
-                                    (node.currentState.data.id != targetState.id))
+                                if (typeof msg.timeout == "number")
                                 {
-                                    if (node.currentState.data)
-                                    {
-                                        // reload trigger of old state before new state is activated
-                                        reloadTrigger(node.currentState.data);
-                                    }
-
-                                    node.currentState.data = targetState;
-                                    node.currentState.since = chronos.getCurrentTime(node);
-
-                                    if ("timeout" in msg)
-                                    {
-                                        let timeout = 0;
-
-                                        if (typeof msg.timeout == "number")
-                                        {
-                                            // msg.timeout number is interpreted as minutes
-                                            timeout = msg.timeout * 60000;
-                                        }
-                                        else if (typeof msg.timeout == "object")
-                                        {
-                                            if (typeof msg.timeout.hours == "number")
-                                            {
-                                                timeout += msg.timeout.hours * 3600000;
-                                            }
-
-                                            if (typeof msg.timeout.minutes == "number")
-                                            {
-                                                timeout += msg.timeout.minutes * 60000;
-                                            }
-
-                                            if (typeof msg.timeout.seconds == "number")
-                                            {
-                                                timeout += msg.timeout.seconds * 1000;
-                                            }
-                                        }
-
-                                        if ((timeout >= 1000) && (timeout <= 86400000))
-                                        {
-                                            cancelTimer();
-
-                                            node.debug("[State:" + node.currentState.data.id + "] Starting timer for timeout of " + timeout + " milliseconds");
-                                            node.currentState.timer = setTimeout(resetCurrentState, timeout);
-                                            node.debug("[State:" + node.currentState.data.id + "] Successfully started timer with ID " + node.currentState.timer);
-
-                                            node.currentState.until = node.currentState.since.clone();
-                                            node.currentState.until.add(timeout, "milliseconds");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        node.currentState.until = await getNextTrigger();
-                                    }
-
-                                    outputCurrentState();
-                                    updateStatus();
+                                    // msg.timeout number is interpreted as minutes
+                                    timeout = msg.timeout * 60000;
                                 }
-                            }
-
-                            done();
-                        }
-                        else if (msg.topic === "reset")
-                        {
-                            resetCurrentState();
-                            done();
-                        }
-                        else if (msg.topic === "reload")
-                        {
-                            reload();
-                            done();
-                        }
-                        else if (msg.topic === "pause")
-                        {
-                            pause();
-                            done();
-                        }
-                        else if (msg.topic === "resume")
-                        {
-                            resume();
-                            done();
-                        }
-                        else if (msg.topic === "configure")
-                        {
-                            let reset = false;
-
-                            if (msg.payload && (typeof msg.payload == "object"))
-                            {
-                                if ("states" in msg.payload)
+                                else if (typeof msg.timeout == "object")
                                 {
-                                    if (msg.payload.states && Array.isArray(msg.payload.states))
+                                    if (typeof msg.timeout.hours == "number")
                                     {
-                                        for (let i=0; (i<msg.payload.states.length) && (i<node.states.length); ++i)
-                                        {
-                                            if (msg.payload.states[i] && (typeof msg.payload.states[i] == "object"))
-                                            {
-                                                if (("trigger" in msg.payload.states[i]) && validateStructuredTriggerData(msg.payload.states[i].trigger))
-                                                {
-                                                    node.states[i].triggerConfig = msg.payload.states[i].trigger;
-                                                    node.states[i].trigger = prepareTrigger(msg.payload.states[i].trigger);
-                                                    reset = true;
-                                                }
+                                        timeout += msg.timeout.hours * 3600000;
+                                    }
 
-                                                if (("state" in msg.payload.states[i]) && validateStateData(msg.payload.states[i].state))
-                                                {
-                                                    node.states[i].state = msg.payload.states[i].state;
-                                                    reset = true;
-                                                }
-                                            }
-                                        }
+                                    if (typeof msg.timeout.minutes == "number")
+                                    {
+                                        timeout += msg.timeout.minutes * 60000;
+                                    }
+
+                                    if (typeof msg.timeout.seconds == "number")
+                                    {
+                                        timeout += msg.timeout.seconds * 1000;
                                     }
                                 }
 
-                                if ("conditions" in msg.payload)
+                                if ((timeout >= 1000) && (timeout <= 86400000))
                                 {
-                                    if (msg.payload.conditions && Array.isArray(msg.payload.conditions))
-                                    {
-                                        for (let i=0; (i<msg.payload.conditions.length) && (i<node.conditions.length); ++i)
-                                        {
-                                            try
-                                            {
-                                                node.conditions[i] = sfUtils.convertCondition(RED, node, msg.payload.conditions[i], i+1);
-                                                reset = true;
-                                            }
-                                            catch (e)
-                                            {
-                                                if (e instanceof node.chronos.TimeError)
-                                                {
-                                                    const errMsg = RED.util.cloneMessage(msg);
+                                    cancelTimer();
 
-                                                    if (e.details)
-                                                    {
-                                                        errMsg.errorDetails = e.details;
-                                                    }
+                                    node.debug("[State:" + node.currentState.data.id + "] Starting timer for timeout of " + timeout + " milliseconds");
+                                    node.currentState.timer = setTimeout(resetCurrentState, timeout);
+                                    node.debug("[State:" + node.currentState.data.id + "] Successfully started timer with ID " + node.currentState.timer);
 
-                                                    node.error(e.message, errMsg);
-                                                }
-                                                else
-                                                {
-                                                    node.error(e.message);
-                                                    node.debug(e.stack);
-                                                }
-                                            }
-                                        }
-                                    }
+                                    node.currentState.until = node.currentState.since.clone();
+                                    node.currentState.until.add(timeout, "milliseconds");
                                 }
                             }
-
-                            if (reset)
+                            else
                             {
-                                resetCurrentState();
+                                node.currentState.until = await getNextTrigger();
                             }
 
-                            done();
+                            outputCurrentState();
+                            updateStatus();
                         }
-                        else
-                        {
-                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
-                        }
-                    });
-
-                    setUpTimer();
-                    updateStatus();
-
-                    if (settings.outputOnStart)
-                    {
-                        setTimeout(() =>
-                        {
-                            node.receive({topic: "get"});
-                        }, (settings.outputOnStartDelay || 0.1) * 1000);
                     }
-                });
+
+                    done();
+                }
+                else if (msg.topic === "reset")
+                {
+                    resetCurrentState();
+                    done();
+                }
+                else if (msg.topic === "reload")
+                {
+                    reload();
+                    done();
+                }
+                else if (msg.topic === "pause")
+                {
+                    pause();
+                    done();
+                }
+                else if (msg.topic === "resume")
+                {
+                    resume();
+                    done();
+                }
+                else if (msg.topic === "configure")
+                {
+                    let reset = false;
+
+                    if (msg.payload && (typeof msg.payload == "object"))
+                    {
+                        if ("states" in msg.payload)
+                        {
+                            if (msg.payload.states && Array.isArray(msg.payload.states))
+                            {
+                                for (let i=0; (i<msg.payload.states.length) && (i<node.states.length); ++i)
+                                {
+                                    if (msg.payload.states[i] && (typeof msg.payload.states[i] == "object"))
+                                    {
+                                        if (("trigger" in msg.payload.states[i]) && validateStructuredTriggerData(msg.payload.states[i].trigger))
+                                        {
+                                            node.states[i].triggerConfig = msg.payload.states[i].trigger;
+                                            node.states[i].trigger = prepareTrigger(msg.payload.states[i].trigger);
+                                            reset = true;
+                                        }
+
+                                        if (("state" in msg.payload.states[i]) && validateStateData(msg.payload.states[i].state))
+                                        {
+                                            node.states[i].state = msg.payload.states[i].state;
+                                            reset = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ("conditions" in msg.payload)
+                        {
+                            if (msg.payload.conditions && Array.isArray(msg.payload.conditions))
+                            {
+                                for (let i=0; (i<msg.payload.conditions.length) && (i<node.conditions.length); ++i)
+                                {
+                                    try
+                                    {
+                                        node.conditions[i] = sfUtils.convertCondition(RED, node, msg.payload.conditions[i], i+1);
+                                        reset = true;
+                                    }
+                                    catch (e)
+                                    {
+                                        if (e instanceof node.chronos.TimeError)
+                                        {
+                                            const errMsg = RED.util.cloneMessage(msg);
+
+                                            if (e.details)
+                                            {
+                                                errMsg.errorDetails = e.details;
+                                            }
+
+                                            node.error(e.message, errMsg);
+                                        }
+                                        else
+                                        {
+                                            node.error(e.message);
+                                            node.debug(e.stack);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (reset)
+                    {
+                        resetCurrentState();
+                    }
+
+                    done();
+                }
+                else
+                {
+                    done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidInput"));
+                }
+            });
+
+            setUpTimer();
+            updateStatus();
+
+            if (settings.outputOnStart)
+            {
+                setTimeout(() =>
+                {
+                    node.receive({topic: "get"});
+                }, (settings.outputOnStartDelay || 0.1) * 1000);
             }
-        }
+        });
 
         function loadTrigger(source)
         {

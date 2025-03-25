@@ -42,7 +42,11 @@ module.exports = function(RED)
         this.name = config.name;
         this.timezone = config.timezone;
 
-        if (config.latitudeType === "env")
+        if (config.latitudeType === "global")
+        {
+            this.latitude = this.credentials.latitude;
+        }
+        else if (config.latitudeType === "env")
         {
             this.latitude = parseFloat(
                                 RED.util.evaluateNodeProperty(
@@ -55,7 +59,11 @@ module.exports = function(RED)
             this.latitude = parseFloat(this.credentials.latitude);
         }
 
-        if (config.longitudeType === "env")
+        if (config.longitudeType === "global")
+        {
+            this.longitude = this.credentials.longitude;
+        }
+        else if (config.longitudeType === "env")
         {
             this.longitude = parseFloat(
                                 RED.util.evaluateNodeProperty(

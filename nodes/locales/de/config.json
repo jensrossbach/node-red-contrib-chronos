@@ -188,6 +188,7 @@
             "invalidConfig":       "Konfiguration enthält ungültige Werte",
             "invalidTime":         "Ungültige Uhrzeit",
             "invalidDate":         "Ungültiges Datum",
+            "invalidCoordinate":   "Ungültige Positionskoordinate",
             "invalidBaseTime":     "Ungültige Basiszeit: __baseTime__",
             "invalidCondition":    "Ungültige Bedingung",
             "invalidName":         "Ungültiger benutzerdefinierter Sonnenstand",
