@@ -49,7 +49,8 @@ SOFTWARE.
     </div>
     <div class="form-row">
         <label for="node-config-input-timezone"><i class="fa fa-globe"></i> <span data-i18n="config.label.timezone"></span></label>
-        <input type="text" id="node-config-input-timezone" data-i18n="[placeholder]config.label.hostTZ">
+        <input type="text" id="node-config-input-timezone" style="width: 70%;">
+        <input id="node-config-input-timezoneType" type="hidden">
     </div>
     <div class="form-row node-input-sunPositionList-row" style="padding-top: 10px">
         <label for="node-input-sunPositionList" style="width: auto;"><i class="fa fa-calendar-o"></i> <span data-i18n="config.label.sunPositions"></span></label>
@@ -60,336 +61,365 @@ SOFTWARE.
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType("chronos-config",
+    (function()
     {
-        category: "config",
-        icon:     "chronos_config.svg",
-        label:    function()
+        RED.nodes.registerType("chronos-config",
         {
-            return (this.name || ((this.credentials && this.credentials.latitude && this.credentials.longitude) ? (this.credentials.latitude + ", " + this.credentials.longitude) : this._("config.label.node")));
-        },
-        defaults:
-        {
-            name:
+            category: "config",
+            icon:     "chronos_config.svg",
+            label:    function()
             {
-                value: ""
+                return (this.name || ((this.credentials && (this.latitudeType == "num") && (this.longitudeType == "num") && this.credentials.latitude && this.credentials.longitude) ? (this.credentials.latitude + ", " + this.credentials.longitude) : this._("config.label.node")));
             },
-            latitudeType:
+            defaults:
             {
-                value: "num"
-            },
-            longitudeType:
-            {
-                value: "num"
-            },
-            timezone:
-            {
-                value: ""
-            },
-            sunPositions:
-            {
-                value: [],
-                validate: function(v)
+                name:
                 {
-                    if (v && (v.length > 0))
+                    value: ""
+                },
+                latitudeType:
+                {
+                    value: "num"
+                },
+                longitudeType:
+                {
+                    value: "num"
+                },
+                timezone:
+                {
+                    value: "",
+                    validate: function(v, opt)
                     {
-                        const EXP = /^[0-9a-zA-Z_]+$/;
-                        let valid = true;
-                        let names = [];
+                        let res = true;
 
-                        // check for invalid names
-                        for (let i=0; i<v.length; ++i)
+                        if ((this.timezoneType != "str") && !v)
                         {
-                            if (!EXP.test(v[i].riseName) || !EXP.test(v[i].setName))
-                            {
-                                valid = false;
-                                break;
-                            }
-
-                            names.push(v[i].riseName);
-                            names.push(v[i].setName);
-                            if (hasDuplicates(names))
-                            {
-                                valid = false;
-                                break;
-                            }
+                            res = opt ? this._("node-red-contrib-chronos/chronos-config:common.error.invalidTimeZone") : false;
                         }
 
-                        return valid;
+                        return res;
+                    }
+                },
+                timezoneType:
+                {
+                    value: "str"
+                },
+                sunPositions:
+                {
+                    value: [],
+                    validate: function(v)
+                    {
+                        if (v && (v.length > 0))
+                        {
+                            const EXP = /^[0-9a-zA-Z_]+$/;
+                            let valid = true;
+                            let names = [];
+
+                            // check for invalid names
+                            for (let i=0; i<v.length; ++i)
+                            {
+                                if (!EXP.test(v[i].riseName) || !EXP.test(v[i].setName))
+                                {
+                                    valid = false;
+                                    break;
+                                }
+
+                                names.push(v[i].riseName);
+                                names.push(v[i].setName);
+                                if (hasDuplicates(names))
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+
+                            return valid;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+
+                        function hasDuplicates(arr)
+                        {
+                            return arr.some(item =>
+                            {
+                                return (arr.indexOf(item) !== arr.lastIndexOf(item));
+                            });
+                        }
+                    }
+                }
+            },
+            credentials:
+            {
+                latitude:
+                {
+                    type: "text",
+                    value: ""
+                },
+                longitude:
+                {
+                    type: "text",
+                    value: ""
+                }
+            },
+            oneditprepare: function()
+            {
+                const node = this;
+
+                let latitude = undefined;
+                let longitude = undefined;
+                let noMapUpdate = false;
+
+                const latitudeInput = $("#node-config-input-latitude")
+                                        .typedInput({types: ["num", "env", "global"], typeField: "#node-config-input-latitudeType"});
+                const longitudeInput = $("#node-config-input-longitude")
+                                        .typedInput({types: ["num", "env", "global"], typeField: "#node-config-input-longitudeType"});
+
+                const timezoneInput = $("#node-config-input-timezone")
+                                        .typedInput({types: ["str", "env", "global"], typeField: "#node-config-input-timezoneType"});
+
+                const updateMap = function(force = false)
+                {
+                    let prevLatitude = latitude;
+                    let prevLongitude = longitude;
+
+                    if (latitudeInput.typedInput("type") == "num")
+                    {
+                        latitude = parseFloat(latitudeInput.typedInput("value"));
+                    }
+                    else if (latitudeInput.typedInput("type") == "env")
+                    {
+                        $.getJSON(
+                            "chronos_config", {
+                                command: "getenv",
+                                varname: latitudeInput.typedInput("value")})
+                                .done(result =>
+                        {
+                            latitude = parseFloat(result);
+
+                            if ((latitude != prevLatitude) || (longitude != prevLongitude))
+                            {
+                                relocateMap();
+                            }
+                        });
+                    }
+                    else if (latitudeInput.typedInput("type") == "global")
+                    {
+                        latitude = undefined;
+                    }
+
+                    if (longitudeInput.typedInput("type") == "num")
+                    {
+                        longitude = parseFloat(longitudeInput.typedInput("value"));
+                    }
+                    else if (longitudeInput.typedInput("type") == "env")
+                    {
+                        $.getJSON(
+                            "chronos_config", {
+                                command: "getenv",
+                                varname: longitudeInput.typedInput("value")})
+                                .done(result =>
+                        {
+                            longitude = parseFloat(result);
+
+                            if ((latitude != prevLatitude) || (longitude != prevLongitude))
+                            {
+                                relocateMap();
+                            }
+                        });
+                    }
+                    else if (longitudeInput.typedInput("type") == "global")
+                    {
+                        longitude = undefined;
+                    }
+
+                    if ((latitude != prevLatitude) || (longitude != prevLongitude) || force)
+                    {
+                        relocateMap();
+                    }
+                };
+
+                const relocateMap = function()
+                {
+                    const map = $("#node-config-input-map");
+
+                    if ((latitude !== undefined) && (longitude !== undefined) &&
+                        !Number.isNaN(latitude) && !Number.isNaN(longitude))
+                    {
+                        map.attr("src", "https://www.openstreetmap.org/export/embed.html?bbox="
+                                            + (longitude - 0.001) + ","
+                                            + (latitude - 0.001) + ","
+                                            + (longitude + 0.001) + ","
+                                            + (latitude + 0.001)
+                                            + "&layer=mapnik&marker="
+                                            + latitude + ","
+                                            + longitude);
+                        map.show();
                     }
                     else
                     {
-                        return true;
+                        map.hide();
                     }
+                };
 
-                    function hasDuplicates(arr)
+                const validateInput = function(event, ui)
+                {
+                    if (/^(\+|-)?\d+(\.\d+)?$/.test($(this).spinner("value")))
                     {
-                        return arr.some(item =>
+                        let value = parseFloat($(this).spinner("value"));
+                        let min = $(this).spinner("option", "min");
+                        let max = $(this).spinner("option", "max");
+
+                        if (value < min)
                         {
-                            return (arr.indexOf(item) !== arr.lastIndexOf(item));
+                            $(this).spinner("value", min);
+                        }
+                        else if (value > max)
+                        {
+                            $(this).spinner("value", max);
+                        }
+                    }
+                    else
+                    {
+                        $(this).spinner("value", 0);
+                    }
+                };
+
+                const sunAngleInput =
+                {
+                    min: -90,
+                    max: 90,
+                    step: 0.001,
+                    numberFormat: "n",
+                    change: validateInput
+                };
+
+                if (navigator.geolocation)
+                {
+                    $("#node-config-input-locationDetection").click(function()
+                    {
+                        navigator.geolocation.getCurrentPosition(pos =>
+                        {
+                            noMapUpdate = true;
+                            latitudeInput.typedInput("value", pos.coords.latitude);
+                            longitudeInput.typedInput("value", pos.coords.longitude);
+                            latitudeInput.typedInput("type", "num");
+                            longitudeInput.typedInput("type", "num");
+                            noMapUpdate = false;
+
+                            updateMap();
                         });
-                    }
-                }
-            }
-        },
-        credentials:
-        {
-            latitude:
-            {
-                type: "text",
-                value: "",
-                required: true
-            },
-            longitude:
-            {
-                type: "text",
-                value: "",
-                required: true
-            }
-        },
-        oneditprepare: function()
-        {
-            let node = this;
-            let latitude = undefined;
-            let longitude = undefined;
-            let noMapUpdate = false;
-
-            let latitudeInput = $("#node-config-input-latitude")
-                                    .typedInput({types: ["num", "env", "global"], typeField: "#node-config-input-latitudeType"});
-            let longitudeInput = $("#node-config-input-longitude")
-                                    .typedInput({types: ["num", "env", "global"], typeField: "#node-config-input-longitudeType"});
-
-            const updateMap = function()
-            {
-                let prevLatitude = latitude;
-                let prevLongitude = longitude;
-
-                if (latitudeInput.typedInput("type") == "num")
-                {
-                    latitude = parseFloat(latitudeInput.typedInput("value"));
+                    });
                 }
                 else
                 {
-                    $.getJSON(
-                        "chronos_config", {
-                            command: "getenv",
-                            varname: latitudeInput.typedInput("value")})
-                            .done(result =>
-                    {
-                        latitude = parseFloat(result);
+                    $("#node-config-input-locationDetection").hide();
+                }
 
-                        if ((latitude != prevLatitude) || (longitude != prevLongitude))
+                updateMap(true);
+
+                let sunPositionList = $("#node-input-sunPositionList").css("min-width", "500px").css("min-height", "150px").editableList(
+                {
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
+                    {
+                        const fragment = document.createDocumentFragment();
+
+                        const angleLabel = $("<label/>", {style: "width: auto; margin-left: 5px; margin-bottom: 0px;"})
+                                            .text(node._("config.label.angle") + " ")
+                                            .appendTo(fragment);
+                        const angle = $("<input/>", {class: "node-input-angle", style: "width: 60px !important; margin-left: 4px;"})
+                                            .appendTo(angleLabel)
+                                            .spinner(sunAngleInput);
+                        const riseLabel = $("<label/>", {title: node._("config.label.riseName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
+                                            .html("<i class='fa fa-arrow-up' aria-hidden='true'></i>")
+                                            .appendTo(fragment);
+                        const riseName = $("<input/>", {type: "text", class: "node-input-riseName", placeholder: node._("config.label.riseName"), style: "width: 110px; margin-left: 4px;"})
+                                            .appendTo(riseLabel);
+                        const setLabel = $("<label/>", {title: node._("config.label.setName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
+                                            .html("<i class='fa fa-arrow-down' aria-hidden='true'></i>")
+                                            .appendTo(fragment);
+                        const setName = $("<input/>", {type: "text", class: "node-input-setName", placeholder: node._("config.label.setName"), style: "width: 110px; margin-left: 4px;"})
+                                            .appendTo(setLabel);
+
+                        if (!("angle" in data))
                         {
-                            relocateMap();
+                            data = {angle: 0, riseName: "", setName: ""};
                         }
-                    });
-                }
 
-                if (longitudeInput.typedInput("type") == "num")
-                {
-                    longitude = parseFloat(longitudeInput.typedInput("value"));
-                }
-                else
-                {
-                    $.getJSON(
-                        "chronos_config", {
-                            command: "getenv",
-                            varname: longitudeInput.typedInput("value")})
-                            .done(result =>
-                    {
-                        longitude = parseFloat(result);
+                        angle.spinner("value", data.angle);
+                        riseName.val(data.riseName);
+                        setName.val(data.setName);
 
-                        if ((latitude != prevLatitude) || (longitude != prevLongitude))
-                        {
-                            relocateMap();
-                        }
-                    });
-                }
-
-                if ((latitude != prevLatitude) || (longitude != prevLongitude))
-                {
-                    relocateMap();
-                }
-            };
-
-            const relocateMap = function()
-            {
-                let map = $("#node-config-input-map");
-
-                if (!Number.isNaN(latitude) && !Number.isNaN(longitude))
-                {
-                    map.attr("src", "https://www.openstreetmap.org/export/embed.html?bbox="
-                                        + (longitude - 0.001) + ","
-                                        + (latitude - 0.001) + ","
-                                        + (longitude + 0.001) + ","
-                                        + (latitude + 0.001)
-                                        + "&layer=mapnik&marker="
-                                        + latitude + ","
-                                        + longitude);
-                    map.show();
-                }
-                else
-                {
-                    map.hide();
-                }
-            };
-
-            const validateInput = function(event, ui)
-            {
-                if (/^(\+|-)?\d+(\.\d+)?$/.test($(this).spinner("value")))
-                {
-                    let value = parseFloat($(this).spinner("value"));
-                    let min = $(this).spinner("option", "min");
-                    let max = $(this).spinner("option", "max");
-
-                    if (value < min)
-                    {
-                        $(this).spinner("value", min);
+                        item[0].appendChild(fragment);
                     }
-                    else if (value > max)
-                    {
-                        $(this).spinner("value", max);
-                    }
-                }
-                else
-                {
-                    $(this).spinner("value", 0);
-                }
-            };
-
-            const sunAngleInput =
-            {
-                min: -90,
-                max: 90,
-                step: 0.001,
-                numberFormat: "n",
-                change: validateInput
-            };
-
-            if (navigator.geolocation)
-            {
-                $("#node-config-input-locationDetection").click(function()
-                {
-                    navigator.geolocation.getCurrentPosition(pos =>
-                    {
-                        noMapUpdate = true;
-                        latitudeInput.typedInput("value", pos.coords.latitude);
-                        longitudeInput.typedInput("value", pos.coords.longitude);
-                        latitudeInput.typedInput("type", "num");
-                        longitudeInput.typedInput("type", "num");
-                        noMapUpdate = false;
-
-                        updateMap();
-                    });
                 });
-            }
-            else
-            {
-                $("#node-config-input-locationDetection").hide();
-            }
 
-            updateMap();
-
-            let sunPositionList = $("#node-input-sunPositionList").css("min-width", "500px").css("min-height", "150px").editableList(
-            {
-                removable: true,
-                sortable: true,
-                addItem: function(item, index, data)
+                latitudeInput.on("change", function(event, type, value)
                 {
-                    let fragment = document.createDocumentFragment();
-
-                    let angleLabel = $("<label/>", {style: "width: auto; margin-left: 5px; margin-bottom: 0px;"})
-                                        .text(node._("config.label.angle") + " ")
-                                        .appendTo(fragment);
-                    let angle = $("<input/>", {class: "node-input-angle", style: "width: 60px !important; margin-left: 4px;"})
-                                        .appendTo(angleLabel)
-                                        .spinner(sunAngleInput);
-                    let riseLabel = $("<label/>", {title: node._("config.label.riseName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
-                                        .html("<i class='fa fa-arrow-up' aria-hidden='true'></i>")
-                                        .appendTo(fragment);
-                    let riseName = $("<input/>", {type: "text", class: "node-input-riseName", placeholder: node._("config.label.riseName"), style: "width: 110px; margin-left: 4px;"})
-                                        .appendTo(riseLabel);
-                    let setLabel = $("<label/>", {title: node._("config.label.setName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
-                                        .html("<i class='fa fa-arrow-down' aria-hidden='true'></i>")
-                                        .appendTo(fragment);
-                    let setName = $("<input/>", {type: "text", class: "node-input-setName", placeholder: node._("config.label.setName"), style: "width: 110px; margin-left: 4px;"})
-                                        .appendTo(setLabel);
-
-                    if (!("angle" in data))
+                    if (!noMapUpdate)
                     {
-                        data = {angle: 0, riseName: "", setName: ""};
+                        updateMap();
                     }
+                });
 
-                    angle.spinner("value", data.angle);
-                    riseName.val(data.riseName);
-                    setName.val(data.setName);
-
-                    item[0].appendChild(fragment);
-                }
-            });
-
-            latitudeInput.on("change", function(event, type, value)
-            {
-                if (!noMapUpdate)
+                longitudeInput.on("change", function(event, type, value)
                 {
-                    updateMap();
-                }
-            });
+                    if (!noMapUpdate)
+                    {
+                        updateMap();
+                    }
+                });
 
-            longitudeInput.on("change", function(event, type, value)
-            {
-                if (!noMapUpdate)
+                if (!node.sunPositions)  // backward compatibility to v1.1.0
                 {
-                    updateMap();
+                    node.sunPositions = [];
                 }
-            });
 
-            if (!node.sunPositions)  // backward compatibility to v1.1.0
+                node.sunPositions.forEach(data =>
+                {
+                    sunPositionList.editableList("addItem", data);
+                });
+            },
+            oneditsave: function()
             {
+                const node = this;
+                const sunPositionList = $("#node-input-sunPositionList").editableList("items");
+
                 node.sunPositions = [];
+                sunPositionList.each(function(index)
+                {
+                    const data = {};
+
+                    const angle = $(this).find(".node-input-angle");
+                    const riseName = $(this).find(".node-input-riseName");
+                    const setName = $(this).find(".node-input-setName");
+
+                    data.angle = angle.spinner("value");
+                    data.riseName = riseName.val();
+                    data.setName = setName.val();
+
+                    node.sunPositions.push(data);
+                });
+            },
+            oneditresize: function(size)
+            {
+                let height = size.height;
+                const sunPositionListRow = $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row");
+                const otherRows = $("#node-config-dialog-edit-form>div:not(.node-input-sunPositionList-row)");
+
+                for (let i=0; i<otherRows.length; ++i)
+                {
+                    height -= $(otherRows[i]).outerHeight(true);
+                }
+
+                height -= (parseInt(sunPositionListRow.css("marginTop")) + parseInt(sunPositionListRow.css("marginBottom")));
+                height -= $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row>label").outerHeight(true);
+
+                $("#node-input-sunPositionList").editableList("height", height);
             }
-
-            node.sunPositions.forEach(data =>
-            {
-                sunPositionList.editableList("addItem", data);
-            });
-        },
-        oneditsave: function()
-        {
-            let node = this;
-            let sunPositionList = $("#node-input-sunPositionList").editableList("items");
-
-            node.sunPositions = [];
-            sunPositionList.each(function(index)
-            {
-                let data = {};
-
-                let angle = $(this).find(".node-input-angle");
-                let riseName = $(this).find(".node-input-riseName");
-                let setName = $(this).find(".node-input-setName");
-
-                data.angle = angle.spinner("value");
-                data.riseName = riseName.val();
-                data.setName = setName.val();
-
-                node.sunPositions.push(data);
-            });
-        },
-        oneditresize: function(size)
-        {
-            let height = size.height;
-            let sunPositionListRow = $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row");
-            let otherRows = $("#node-config-dialog-edit-form>div:not(.node-input-sunPositionList-row)");
-
-            for (let i=0; i<otherRows.length; ++i)
-            {
-                height -= $(otherRows[i]).outerHeight(true);
-            }
-
-            height -= (parseInt(sunPositionListRow.css("marginTop")) + parseInt(sunPositionListRow.css("marginBottom")));
-            height -= $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row>label").outerHeight(true);
-
-            $("#node-input-sunPositionList").editableList("height", height);
-        }
-    });
+        });
+    })();
 </script>

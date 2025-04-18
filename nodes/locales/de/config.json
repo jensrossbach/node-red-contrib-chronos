@@ -189,6 +189,7 @@
             "invalidTime":         "Ungültige Uhrzeit",
             "invalidDate":         "Ungültiges Datum",
             "invalidCoordinate":   "Ungültige Positionskoordinate",
+            "invalidTimeZone":     "Ungültige Zeitzone",
             "invalidBaseTime":     "Ungültige Basiszeit: __baseTime__",
             "invalidCondition":    "Ungültige Bedingung",
             "invalidName":         "Ungültiger benutzerdefinierter Sonnenstand",

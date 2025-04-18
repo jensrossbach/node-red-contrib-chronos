@@ -77,7 +77,6 @@
             "noTasks":           "Keine Regeln kongiguriert",
             "invalidProperty":   "Ungültige Eigenschaft angegeben: __property__",
             "invalidFormat":     "Ungültiges Format",
-            "invalidTimeZone":   "Ungültige Zeitzone",
             "invalidUTCOffset":  "Ungültiger UTC-Versatz",
             "invalidPrecision":  "Ungültige Genauigkeit der Fließkommazahl",
             "invalidNumber":     "Ungültige Zahl"

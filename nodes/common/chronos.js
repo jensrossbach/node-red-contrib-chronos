@@ -50,31 +50,40 @@ require("./moment_locales.js");
 
 function getMoment()
 {
+    const node = arguments[0];
     const args = Array.prototype.slice.call(arguments, 1);
     let ret = undefined;
 
-    if (arguments[0].config.timezone)
+    try
     {
-        args.push(arguments[0].config.timezone);
-        ret = moment.tz.apply(null, args);
-    }
-    else
-    {
-        ret = moment.apply(null, args);
-    }
-
-    ret._hasUserDate = false;
-    ret.hasUserDate = function(flag)
-    {
-        if (flag === undefined)
+        const tz = getTimeZone(node);
+        if (tz)
         {
-            return this._hasUserDate;
+            args.push(tz);
+            ret = moment.tz.apply(null, args);
         }
         else
         {
-            this._hasUserDate = flag;
+            ret = moment.apply(null, args);
         }
-    };
+
+        ret._hasUserDate = false;
+        ret.hasUserDate = function(flag)
+        {
+            if (flag === undefined)
+            {
+                return this._hasUserDate;
+            }
+            else
+            {
+                this._hasUserDate = flag;
+            }
+        };
+    }
+    catch
+    {
+        ret = moment.invalid();
+    }
 
     return ret;
 }
@@ -89,13 +98,21 @@ function initCustomTimes(times)
 
 function validateTimeZone(node)
 {
-    if (node.config.timezone)
+    try
     {
-        return (moment.tz.zone(node.config.timezone) != null);
+        const tz = getTimeZone(node);
+        if (tz)
+        {
+            return (moment.tz.zone(tz) != null);
+        }
+        else
+        {
+            return true;
+        }
     }
-    else
+    catch
     {
-        return true;
+        return false;
     }
 }
 
@@ -161,7 +178,7 @@ function getTimeFrom(node, source)
     return ret;
 }
 
-function getUserTime(RED, node, day, value, timeOnly = false)
+function getUserTime(node, day, value, timeOnly = false)
 {
     let ret = undefined;
 
@@ -215,14 +232,14 @@ function getUserTime(RED, node, day, value, timeOnly = false)
 
     if (!ret || !ret.isValid())
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
+        throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
     }
 
     ret.locale(node.locale);
     return ret;
 }
 
-function getUserDate(RED, node, value)
+function getUserDate(node, value)
 {
     let ret = undefined;
 
@@ -234,7 +251,7 @@ function getUserDate(RED, node, value)
 
     if (!ret || !ret.isValid())
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidDate"), {type: "date", value: value});
+        throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidDate"), {type: "date", value: value});
     }
 
     return ret;
@@ -251,13 +268,13 @@ function isValidUserDate(value)
     return PATTERN_DATE.test(value);
 }
 
-function getSunTime(RED, node, day, type)
+function getSunTime(node, day, type)
 {
-    let sunTimes = sunCalc.getTimes(day.toDate(), getLatitude(RED, node), getLongitude(RED, node));
+    let sunTimes = sunCalc.getTimes(day.toDate(), getLatitude(node), getLongitude(node));
 
     if (!(type in sunTimes))
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidName"), {type: "sun", value: type});
+        throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidName"), {type: "sun", value: type});
     }
 
     let ret = null;
@@ -270,9 +287,10 @@ function getSunTime(RED, node, day, type)
         }
         else
         {
-            if (node.config.timezone)
+            const tz = getTimeZone(node);
+            if (tz)
             {
-                ret.tz(node.config.timezone);
+                ret.tz(tz);
             }
 
             ret.locale(node.locale);
@@ -281,15 +299,15 @@ function getSunTime(RED, node, day, type)
 
     if (!ret)
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {type: "sun", value: type});
+        throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {type: "sun", value: type});
     }
 
     return ret;
 }
 
-function getMoonTime(RED, node, day, type)
+function getMoonTime(node, day, type)
 {
-    let moonTimes = sunCalc.getMoonTimes(day.toDate(), getLatitude(RED, node), getLongitude(RED, node));
+    let moonTimes = sunCalc.getMoonTimes(day.toDate(), getLatitude(node), getLongitude(node));
 
     let ret = null;
     if (moonTimes[type])
@@ -301,9 +319,10 @@ function getMoonTime(RED, node, day, type)
         }
         else
         {
-            if (node.config.timezone)
+            const tz = getTimeZone(node);
+            if (tz)
             {
-                ret.tz(node.config.timezone);
+                ret.tz(tz);
             }
 
             ret.locale(node.locale);
@@ -312,27 +331,27 @@ function getMoonTime(RED, node, day, type)
 
     if (!ret)
     {
-        throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {type: "moon", value: type, alwaysUp: moonTimes.alwaysUp, alwaysDown: moonTimes.alwaysDown});
+        throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.unavailableTime"), {type: "moon", value: type, alwaysUp: moonTimes.alwaysUp, alwaysDown: moonTimes.alwaysDown});
     }
 
     return ret;
 }
 
-function getTime(RED, node, day, type, value)
+function getTime(node, day, type, value)
 {
     let ret = undefined;
 
     if (type == "time")
     {
-        ret = getUserTime(RED, node, day, value);
+        ret = getUserTime(node, day, value);
     }
     else if ((type == "sun") || (type == "custom"))
     {
-        ret = getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
+        ret = getSunTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), (type == "custom") ? "__cust_" + value : value);
     }
     else if (type == "moon")
     {
-        ret = getMoonTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
+        ret = getMoonTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), value);
     }
     else if (type == "auto")
     {
@@ -366,27 +385,27 @@ function getTime(RED, node, day, type, value)
 
                 if (matches[2])  // time part (sun time)
                 {
-                    ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                    ret = getSunTime(node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
                 }
                 else if (matches[3])  // time part (moon time)
                 {
-                    ret = getMoonTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                    ret = getMoonTime(node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
                 }
                 else if (matches[4])  // time part (custom sun time)
                 {
-                    ret = getSunTime(RED, node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
+                    ret = getSunTime(node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
                 }
 
                 ret.hasUserDate(hasUserDate);
             }
             else
             {
-                ret = getUserTime(RED, node, day, value);
+                ret = getUserTime(node, day, value);
             }
         }
         else
         {
-            ret = getUserTime(RED, node, day, value);
+            ret = getUserTime(node, day, value);
         }
     }
     else if (type == "auto:time")
@@ -398,36 +417,36 @@ function getTime(RED, node, day, type, value)
             {
                 if (matches[1])  // specific time
                 {
-                    ret = getUserTime(RED, node, day, value, true);
+                    ret = getUserTime(node, day, value, true);
                 }
                 else if (matches[2])  // sun time
                 {
-                    ret = getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                    ret = getSunTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
                 }
                 else if (matches[3])  // moon time
                 {
-                    ret = getMoonTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                    ret = getMoonTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
                 }
                 else if (matches[4])  // custom sun time
                 {
-                    ret = getSunTime(RED, node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
+                    ret = getSunTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), "__cust_" + matches[4]);
                 }
             }
             else
             {
-                throw new TimeError(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
+                throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
             }
         }
         else
         {
-            ret = getUserTime(RED, node, day, value, true);
+            ret = getUserTime(node, day, value, true);
         }
     }
 
     return ret;
 }
 
-function retrieveTime(RED, node, msg, baseTime, type, value)
+function retrieveTime(node, msg, baseTime, type, value)
 {
     let ret = undefined;
 
@@ -437,7 +456,7 @@ function retrieveTime(RED, node, msg, baseTime, type, value)
 
         if (type == "env")
         {
-            ctxValue = RED.util.evaluateNodeProperty(value, type, node);
+            ctxValue = node.RED.util.evaluateNodeProperty(value, type, node);
             if (!ctxValue)
             {
                 ctxValue = value;
@@ -445,23 +464,22 @@ function retrieveTime(RED, node, msg, baseTime, type, value)
         }
         else if ((type == "global") || (type == "flow"))
         {
-            const ctx = RED.util.parseContextStore(value);
+            const ctx = node.RED.util.parseContextStore(value);
             ctxValue = node.context()[type].get(ctx.key, ctx.store);
         }
         else
         {
-            ctxValue = RED.util.getMessageProperty(msg, value);
+            ctxValue = node.RED.util.getMessageProperty(msg, value);
         }
 
         if (!ctxValue || ((typeof ctxValue != "number") && (typeof ctxValue != "string")))
         {
             throw new TimeError(
-                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
+                        node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
                         {type: type, value: ctxValue});
         }
 
         ret = getTime(
-                RED,
                 node,
                 baseTime,
                 "auto",
@@ -470,14 +488,13 @@ function retrieveTime(RED, node, msg, baseTime, type, value)
         if (!ret.isValid())
         {
             throw new TimeError(
-                        RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
+                        node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"),
                         {type: type, value: ctxValue});
         }
     }
     else
     {
         ret = getTime(
-                RED,
                 node,
                 baseTime,
                 type,
@@ -495,7 +512,7 @@ function getDuration(node, input, unit)
     return ret;
 }
 
-function getLatitude(RED, node)
+function getLatitude(node)
 {
     let ret = undefined;
 
@@ -505,13 +522,13 @@ function getLatitude(RED, node)
     }
     else
     {
-        ret = getCoordinateFromContext(RED, node, node.config.latitude, -90, 90);
+        ret = getCoordinateFromContext(node, node.config.latitude, -90, 90);
     }
 
     return ret;
 }
 
-function getLongitude(RED, node)
+function getLongitude(node)
 {
     let ret = undefined;
 
@@ -521,15 +538,15 @@ function getLongitude(RED, node)
     }
     else
     {
-        ret = getCoordinateFromContext(RED, node, node.config.longitude, -180, 180);
+        ret = getCoordinateFromContext(node, node.config.longitude, -180, 180);
     }
 
     return ret;
 }
 
-function getCoordinateFromContext(RED, node, variable, min, max)
+function getCoordinateFromContext(node, variable, min, max)
 {
-    const ctx = RED.util.parseContextStore(variable);
+    const ctx = node.RED.util.parseContextStore(variable);
     const value = node.context().global.get(ctx.key, ctx.store);
     let ret = undefined;
 
@@ -545,8 +562,32 @@ function getCoordinateFromContext(RED, node, variable, min, max)
     if ((ret === undefined) || Number.isNaN(ret) || (ret < min) || (ret > max))
     {
         throw new TimeError(
-            RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCoordinate"),
+            node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidCoordinate"),
             {variable: ctx.key, value: value});
+    }
+
+    return ret;
+}
+
+function getTimeZone(node)
+{
+    let ret = undefined;
+
+    if (node.config.tzFromContext)
+    {
+        const ctx = node.RED.util.parseContextStore(node.config.timezone);
+        ret = node.context().global.get(ctx.key, ctx.store);
+
+        if (typeof ret != "string")
+        {
+            throw new TimeError(
+                node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTimeZone"),
+                {variable: ctx.key, value: ret});
+        }
+    }
+    else
+    {
+        ret = node.config.timezone;
     }
 
     return ret;
@@ -557,19 +598,22 @@ function applyOffset(time, offset, random)
     return time.add(getRandomizedOffset(offset, random), "minutes");
 }
 
-function getJSONataExpression(RED, node, expr)
+function getJSONataExpression(node, expr)
 {
-    const expression = RED.util.prepareJSONataExpression(expr, node);
+    const expression = node.RED.util.prepareJSONataExpression(expr, node);
 
     expression.assign("node", node.name || "");
     expression.assign(
         "config", {
             name: node.config.name,
-            latitude: node.config.latitude,
-            longitude: node.config.longitude,
-            timezone: node.config.timezone,
+            latitude: (typeof node.config.latitude == "number") ? node.config.latitude : null,
+            longitude: (typeof node.config.longitude == "number") ? node.config.longitude : null,
+            timezone: node.config.tzFromContext ? null : node.config.timezone,
             locale: node.locale});
 
+    expression.registerFunction("getLatitude", () => { return getLatitude(node); }, "<:n>");
+    expression.registerFunction("getLongitude", () => { return getLongitude(node); }, "<:n>");
+    expression.registerFunction("getTimeZone", () => { return getTimeZone(node); }, "<:s>");
     expression.registerFunction("millisecond", ts => { return getMoment(node, ts).millisecond(); }, "<(sn):n>");
     expression.registerFunction("second", ts => { return getMoment(node, ts).second(); }, "<(sn):n>");
     expression.registerFunction("minute", ts => { return getMoment(node, ts).minute(); }, "<(sn):n>");
@@ -581,9 +625,9 @@ function getJSONataExpression(RED, node, expr)
     expression.registerFunction("month", ts => { return getMoment(node, ts).month() + 1; }, "<(sn):n>");
     expression.registerFunction("quarter", ts => { return getMoment(node, ts).quarter(); }, "<(sn):n>");
     expression.registerFunction("year", ts => { return getMoment(node, ts).year(); }, "<(sn):n>");
-    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?(nb)?:n>");
-    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?(nb)?:n>");
-    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(RED, node, getMoment(node, ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?(nb)?:n>");
+    expression.registerFunction("time", (ts, time, offset, random) => { return applyOffset(getTime(node, getMoment(node, ts), "time", time), offset, random).valueOf(); }, "<(sn)(sn)n?(nb)?:n>");
+    expression.registerFunction("sunTime", (ts, pos, offset, random) => { return applyOffset(getTime(node, getMoment(node, ts), "sun", pos), offset, random).valueOf(); }, "<(sn)sn?(nb)?:n>");
+    expression.registerFunction("moonTime", (ts, pos, offset, random) => { return applyOffset(getTime(node, getMoment(node, ts), "moon", pos), offset, random).valueOf(); }, "<(sn)sn?(nb)?:n>");
 
     return expression;
 }
@@ -606,11 +650,11 @@ function evaluateJSONataExpression(RED, expr, msg)
     });
 }
 
-function evaluateNodeProperty(RED, node, value, type, msg)
+function evaluateNodeProperty(node, value, type, msg)
 {
     return new Promise((resolve, reject) =>
     {
-        RED.util.evaluateNodeProperty(value, type, node, msg, (err, val) =>
+        node.RED.util.evaluateNodeProperty(value, type, node, msg, (err, val) =>
         {
             if (err)
             {
@@ -640,7 +684,7 @@ function getRandomizedOffset(offset, random)
     return ret;
 }
 
-function validateConfiguration(RED, node)
+function validateConfiguration(node)
 {
     if (((typeof node.config.latitude != "number") && (typeof node.config.latitude != "string")) ||
         ((typeof node.config.latitude == "number") && (Number.isNaN(node.config.latitude) || (node.config.latitude < -90) || (node.config.latitude > 90))) ||

@@ -42,6 +42,7 @@ module.exports = function(RED)
         let node = this;
         RED.nodes.createNode(node, settings);
 
+        node.RED = RED;
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
         node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
@@ -101,7 +102,7 @@ module.exports = function(RED)
             return;
         }
 
-        if (!chronos.validateConfiguration(RED, node))
+        if (!chronos.validateConfiguration(node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -141,7 +142,7 @@ module.exports = function(RED)
         {
             try
             {
-                node.expression = chronos.getJSONataExpression(RED, node, node.customDelayValue);
+                node.expression = chronos.getJSONataExpression(node, node.customDelayValue);
             }
             catch(e)
             {
@@ -537,7 +538,7 @@ module.exports = function(RED)
 
             const now = chronos.getCurrentTime(node);
 
-            node.sendTime = chronos.getTime(RED, node, now.clone(), type, value);
+            node.sendTime = chronos.getTime(node, now.clone(), type, value);
             node.sendTime.add(chronos.getRandomizedOffset(offset, random), "minutes");
 
             if (node.sendTime.isBefore(now))
@@ -550,7 +551,7 @@ module.exports = function(RED)
                 }
                 else
                 {
-                    node.sendTime = chronos.getTime(RED, node, node.sendTime.add(1, "days"), type, value);
+                    node.sendTime = chronos.getTime(node, node.sendTime.add(1, "days"), type, value);
                     node.sendTime.add(chronos.getRandomizedOffset(offset, random), "minutes");
                 }
             }

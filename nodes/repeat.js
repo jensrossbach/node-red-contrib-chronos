@@ -35,6 +35,7 @@ module.exports = function(RED)
         const node = this;
         RED.nodes.createNode(node, settings);
 
+        node.RED = RED;
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
         node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
@@ -78,7 +79,7 @@ module.exports = function(RED)
             return;
         }
 
-        if (!chronos.validateConfiguration(RED, node))
+        if (!chronos.validateConfiguration(node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -119,7 +120,7 @@ module.exports = function(RED)
         {
             try
             {
-                node.expression = chronos.getJSONataExpression(RED, node, node.customRepetitionValue);
+                node.expression = chronos.getJSONataExpression(node, node.customRepetitionValue);
             }
             catch(e)
             {
@@ -134,7 +135,7 @@ module.exports = function(RED)
         {
             try
             {
-                node.untilExpression = chronos.getJSONataExpression(RED, node, node.untilValue);
+                node.untilExpression = chronos.getJSONataExpression(node, node.untilValue);
             }
             catch(e)
             {
@@ -521,9 +522,9 @@ module.exports = function(RED)
             }
             else
             {
-                const base = date ? chronos.getUserDate(RED, node, date) : now.clone();
+                const base = date ? chronos.getUserDate(node, date) : now.clone();
 
-                ret.time = chronos.getTime(RED, node, base, type, value);
+                ret.time = chronos.getTime(node, base, type, value);
                 ret.time.add(chronos.getRandomizedOffset(offset, random), "minutes");
 
                 if (!date && !ret.time.hasUserDate() && ret.time.isBefore(now))
@@ -534,7 +535,7 @@ module.exports = function(RED)
                     }
                     else
                     {
-                        ret.time = chronos.getTime(RED, node, ret.time.add(1, "days"), type, value);
+                        ret.time = chronos.getTime(node, ret.time.add(1, "days"), type, value);
                         ret.time.add(chronos.getRandomizedOffset(offset, random), "minutes");
                     }
                 }

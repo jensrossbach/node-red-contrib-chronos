@@ -31,6 +31,7 @@ module.exports = function(RED)
         const node = this;
         RED.nodes.createNode(this, settings);
 
+        node.RED = RED;
         node.chronos = require("./common/chronos.js");
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
@@ -44,7 +45,7 @@ module.exports = function(RED)
             return;
         }
 
-        if (!node.chronos.validateConfiguration(RED, node))
+        if (!node.chronos.validateConfiguration(node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -202,10 +203,8 @@ module.exports = function(RED)
                                             msg,
                                             rule.target,
                                             node.chronos.getTime(
-                                                    RED,
                                                     node,
                                                     node.chronos.getUserDate(
-                                                            RED,
                                                             node,
                                                             rule.date),
                                                     rule.time.type,
@@ -219,7 +218,7 @@ module.exports = function(RED)
 
                                         try
                                         {
-                                            expression = node.chronos.getJSONataExpression(RED, node, rule.expression);
+                                            expression = node.chronos.getJSONataExpression(node, rule.expression);
 
                                             // time change node specific JSONata extensions
                                             expression.assign("target", getValue(msg, rule.target.name, rule.target.type));
@@ -291,7 +290,6 @@ module.exports = function(RED)
                                 if ((typeof property == "number") || (typeof property == "string"))
                                 {
                                     input = node.chronos.getTime(
-                                                            RED,
                                                             node,
                                                             node.chronos.getCurrentTime(node),
                                                             (typeof property == "number")
@@ -434,7 +432,6 @@ module.exports = function(RED)
                                     (rule.time1.type == "now")
                                         ? now
                                         : node.chronos.retrieveTime(
-                                            RED,
                                             node,
                                             msg,
                                             now.clone(),
@@ -444,7 +441,6 @@ module.exports = function(RED)
                                     (rule.time2.type == "now")
                                         ? now
                                         : node.chronos.retrieveTime(
-                                            RED,
                                             node,
                                             msg,
                                             now.clone(),
@@ -459,7 +455,6 @@ module.exports = function(RED)
                                     {
                                         // shift time1 one day into the past
                                         time1 = node.chronos.retrieveTime(
-                                                                RED,
                                                                 node,
                                                                 msg,
                                                                 now.clone().subtract(1, "day"),
@@ -470,7 +465,6 @@ module.exports = function(RED)
                                     {
                                         // shift time2 one day into the future
                                         time2 = node.chronos.retrieveTime(
-                                                                RED,
                                                                 node,
                                                                 msg,
                                                                 now.clone().add(1, "day"),

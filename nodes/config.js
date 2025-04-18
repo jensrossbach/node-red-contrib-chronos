@@ -39,8 +39,25 @@ module.exports = function(RED)
 
         RED.nodes.createNode(this, config);
 
+        this.RED = RED;
         this.name = config.name;
-        this.timezone = config.timezone;
+
+        if (config.timezoneType == "env")
+        {
+            this.timezone = RED.util.evaluateNodeProperty(
+                                        config.timezone,
+                                        config.timezoneType,
+                                        this);
+        }
+        else
+        {
+            this.timezone = config.timezone;
+        }
+
+        this.tzFromContext =
+            (config.timezoneType == "global")
+                ? true
+                : false;
 
         if (config.latitudeType === "global")
         {
