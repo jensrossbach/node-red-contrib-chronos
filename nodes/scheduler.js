@@ -32,6 +32,7 @@ module.exports = function(RED)
         const node = this;
         RED.nodes.createNode(node, settings);
 
+        node.RED = RED;
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
         node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
@@ -47,7 +48,7 @@ module.exports = function(RED)
             return;
         }
 
-        if (!chronos.validateConfiguration(RED, node))
+        if (!chronos.validateConfiguration(node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -134,7 +135,7 @@ module.exports = function(RED)
                     {
                         try
                         {
-                            data.expression = chronos.getJSONataExpression(RED, node, data.config.output.value);
+                            data.expression = chronos.getJSONataExpression(node, data.config.output.value);
                         }
                         catch (e)
                         {
@@ -165,7 +166,7 @@ module.exports = function(RED)
                     {
                         try
                         {
-                            data.expression = chronos.getJSONataExpression(RED, node, data.config.output.property.value);
+                            data.expression = chronos.getJSONataExpression(node, data.config.output.property.value);
                         }
                         catch (e)
                         {
@@ -577,7 +578,7 @@ module.exports = function(RED)
                 else
                 {
                     const now = chronos.getCurrentTime(node);
-                    data.triggerTime = chronos.getTime(RED, node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
+                    data.triggerTime = chronos.getTime(node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
                     if (typeof data.config.trigger.offset == "number")
                     {
@@ -595,7 +596,7 @@ module.exports = function(RED)
                         }
                         else
                         {
-                            data.triggerTime = chronos.getTime(RED, node, data.triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
+                            data.triggerTime = chronos.getTime(node, data.triggerTime.add(1, "days"), data.config.trigger.type, data.config.trigger.value);
 
                             if (typeof data.config.trigger.offset == "number")
                             {
@@ -777,10 +778,7 @@ module.exports = function(RED)
 
             if (type)
             {
-                ret = await chronos.evaluateNodeProperty(
-                                        RED, node,
-                                        value, type,
-                                        {});
+                ret = await chronos.evaluateNodeProperty(node, value, type, {});
             }
             else
             {

@@ -32,6 +32,7 @@ module.exports = function(RED)
         const node = this;
         RED.nodes.createNode(node, settings);
 
+        node.RED = RED;
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
         node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
@@ -44,7 +45,7 @@ module.exports = function(RED)
             return;
         }
 
-        if (!chronos.validateConfiguration(RED, node))
+        if (!chronos.validateConfiguration(node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -109,7 +110,7 @@ module.exports = function(RED)
             {
                 try
                 {
-                    node.outputValue = chronos.getJSONataExpression(RED, node, settings.outputValue);
+                    node.outputValue = chronos.getJSONataExpression(node, settings.outputValue);
                 }
                 catch (e)
                 {
@@ -354,7 +355,7 @@ module.exports = function(RED)
                                 {
                                     try
                                     {
-                                        node.conditions[i] = sfUtils.convertCondition(RED, node, msg.payload.conditions[i], i+1);
+                                        node.conditions[i] = sfUtils.convertCondition(node, msg.payload.conditions[i], i+1);
                                         reset = true;
                                     }
                                     catch (e)
@@ -605,7 +606,7 @@ module.exports = function(RED)
                     {
                         try
                         {
-                            let triggerTime = chronos.getTime(RED, node, baseTime.clone(), data.trigger.type, data.trigger.value);
+                            let triggerTime = chronos.getTime(node, baseTime.clone(), data.trigger.type, data.trigger.value);
 
                             if ((data.trigger.offset != 0) && (!data.trigger.random || !ignoreRandomOffset))
                             {
@@ -839,7 +840,7 @@ module.exports = function(RED)
                 if (node.currentState.data.state.type)
                 {
                     value = await chronos.evaluateNodeProperty(
-                                            RED, node,
+                                            node,
                                             node.currentState.data.state.value,
                                             node.currentState.data.state.type,
                                             {});

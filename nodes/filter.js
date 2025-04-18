@@ -31,6 +31,7 @@ module.exports = function(RED)
         let node = this;
         RED.nodes.createNode(this, settings);
 
+        node.RED = RED;
         node.chronos = require("./common/chronos.js");
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
@@ -44,7 +45,7 @@ module.exports = function(RED)
             return;
         }
 
-        if (!node.chronos.validateConfiguration(RED, node))
+        if (!node.chronos.validateConfiguration(node))
         {
             node.status({fill: "red", shape: "dot", text: "node-red-contrib-chronos/chronos-config:common.status.invalidConfig"});
             node.error(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidConfig"));
@@ -143,7 +144,7 @@ module.exports = function(RED)
                     return;
                 }
 
-                let baseTime = sfUtils.getBaseTime(RED, node, msg);
+                let baseTime = sfUtils.getBaseTime(node, msg);
                 if (baseTime)
                 {
                     node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
@@ -155,7 +156,7 @@ module.exports = function(RED)
                     {
                         try
                         {
-                            result = await sfUtils.evaluateCondition(RED, node, msg, baseTime, node.conditions[i], i+1);
+                            result = await sfUtils.evaluateCondition(node, msg, baseTime, node.conditions[i], i+1);
                         }
                         catch (e)
                         {
