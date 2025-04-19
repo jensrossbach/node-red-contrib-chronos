@@ -98,22 +98,24 @@ function initCustomTimes(times)
 
 function validateTimeZone(node)
 {
-    try
+    if (node.config.tzFromContext)
     {
-        const tz = getTimeZone(node);
-        if (tz)
+        // only check for non-empty key in case of context variable
+        const ctx = node.RED.util.parseContextStore(node.config.timezone);
+        if (!ctx.key)
         {
-            return (moment.tz.zone(tz) != null);
+            return false;
         }
-        else
-        {
-            return true;
-        }
+
+        return true;
     }
-    catch
+
+    if (node.config.timezone)
     {
-        return false;
+        return (moment.tz.zone(node.config.timezone) != null);
     }
+
+    return true;
 }
 
 function printNodeInfo(node)
