@@ -1,0 +1,77 @@
+name: Problem Report
+description: Create a report to help improve the software
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report.
+  - type: textarea
+    attributes:
+      label: Current behavior
+      description: A concise description of what you're experiencing
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A concise description of what you expected to happen
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the observed behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Logs
+      description: Logs on debug level or higher to help analyze your problem
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Configuration
+      description: Node-RED flow configuration containing the node-red-contrib-chronos nodes
+      render: json
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Platform & OS
+      description: |
+        Platform and operating system, e.g., Windows 11 on x86-64
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node-RED Chronos version
+      description: |
+        Version of the node-red-contrib-chronos package
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node-RED version
+      description: |
+        Version of the Node-RED instance
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node.js version
+      description: |
+        Version of the Node.js framework
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: Add any other information about the problem here
+    validations:
+      required: false

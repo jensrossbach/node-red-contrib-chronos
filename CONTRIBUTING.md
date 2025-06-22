@@ -8,10 +8,8 @@ Please do not collect multiple problems in one issue, but instead enter one issu
 
 Please always use the Problem Report template in the issue tracker as it provides some prefilled hints about which information you should provide in your report.
 
-## 💡 Requesting Features
-In case you need a new feature or think that some existing functionality requires modifications, please first discuss your idea on the [discussion forum](https://github.com/jensrossbach/node-red-contrib-chronos/discussions/categories/ideas) in the **Ideas** category. If the consensus is that this idea is worth being implemented, then and only then create a **Feature Request** in the [issue tracker](https://github.com/jensrossbach/node-red-contrib-chronos/issues).
-
-Please always use the Feature Request template in the issue tracker as it provides some prefilled hints about which information you should provide in your request.
+## 💡 Requesting Features or Changes
+In case you need a new feature or think that some existing functionality requires modifications, please enter a new item in the category [Ideas & Requests](https://github.com/jensrossbach/node-red-contrib-chronos/discussions/categories/ideas-requests) in the discussion forum.
 
 ## 👍 Providing Feedback
 Your comments and feedback are welcome, please share your opinion on the [discussion forum](https://github.com/jensrossbach/node-red-contrib-chronos/discussions/categories/feedback) in the **Feedback** category.
