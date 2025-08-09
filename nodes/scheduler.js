@@ -478,7 +478,7 @@ module.exports = function(RED)
                 }
             }
 
-            setUpEvent(data, false);
+            setUpEvent(data);
         }
 
         function stopEvent(data, keepOrig = false)
@@ -537,7 +537,7 @@ module.exports = function(RED)
             }
         }
 
-        function setUpEvent(data, repeat)
+        function setUpEvent(data, prevTriggerTime = undefined)
         {
             try
             {
@@ -578,7 +578,7 @@ module.exports = function(RED)
                 else
                 {
                     const now = chronos.getCurrentTime(node);
-                    data.triggerTime = chronos.getTime(node, repeat ? now.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
+                    data.triggerTime = chronos.getTime(node, prevTriggerTime ? prevTriggerTime.clone().add(1, "days") : now.clone(), data.config.trigger.type, data.config.trigger.value);
 
                     if (typeof data.config.trigger.offset == "number")
                     {
@@ -609,7 +609,7 @@ module.exports = function(RED)
                     node.debug("[Event:" + data.id + "] Event triggers at " + data.triggerTime.format("YYYY-MM-DD HH:mm:ss.SSS (Z)"));
                 }
 
-                if (repeat)
+                if (prevTriggerTime)
                 {
                     updateStatus();
                 }
@@ -674,20 +674,34 @@ module.exports = function(RED)
                     }
 
                     node.debug("Starting timer for trigger at " + next.format("YYYY-MM-DD HH:mm:ss.SSS (Z)"));
+
+                    const sched = chronos.getCurrentTime(node);
+                    const delay = next.diff(sched);
+
                     node.timer = setTimeout(async() =>
                     {
-                        node.trace("Timer with ID " + node.timer + " expired");
+                        node.debug("Timer with ID " + node.timer + " expired");
 
-                        for (let data of events)
+                        const now = chronos.getCurrentTime(node);
+                        if (now.isBefore(next))
                         {
-                            await produceOutput(data);
-                            setUpEvent(data, true);
+                            // when running is a docker environment, it can happen that timers
+                            // run too fast and therefore expire too early
+                            node.debug("Timer expired too early, ignoring");
+                        }
+                        else
+                        {
+                            for (let data of events)
+                            {
+                                await produceOutput(data);
+                                setUpEvent(data, next);
+                            }
                         }
 
                         startTimer();
-                    }, next.diff(chronos.getCurrentTime(node)));
+                    }, (delay > 0) ? delay : 0);
 
-                    node.debug("Successfully started timer with ID " + node.timer);
+                    node.debug("Successfully started timer with ID " + node.timer + " at " + sched.format("YYYY-MM-DD HH:mm:ss.SSS (Z)") + " waiting " + delay + " milliseconds");
                 }
             }
         }

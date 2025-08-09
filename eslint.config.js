@@ -19,17 +19,18 @@ module.exports =
         ignores: ["test/**"],
         rules:
         {
-            "no-trailing-spaces":   "error",
-            "no-lonely-if":         "error",
-            "no-tabs":              "error",
-            "new-cap":              "error",
-            "space-in-parens":      "error",
-            "space-unary-ops":      "error",
-            "semi-spacing":         "error",
-            "func-call-spacing":    "error",
-            "switch-colon-spacing": "error",
-            "arrow-spacing":        "error",
-            "camelcase":            "error",
+            "multiline-comment-style": "off",
+            "no-trailing-spaces":      "error",
+            "no-lonely-if":            "error",
+            "no-tabs":                 "error",
+            "new-cap":                 "error",
+            "space-in-parens":         "error",
+            "space-unary-ops":         "error",
+            "semi-spacing":            "error",
+            "func-call-spacing":       "error",
+            "switch-colon-spacing":    "error",
+            "arrow-spacing":           "error",
+            "camelcase":               "error",
             "indent":
             [
                 "error", 4,
@@ -88,11 +89,6 @@ module.exports =
             [
                 "error",
                 "unix"
-            ],
-            "multiline-comment-style":
-            [
-                "error",
-                "starred-block"
             ],
             "spaced-comment":
             [

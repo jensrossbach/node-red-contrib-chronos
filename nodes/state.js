@@ -794,9 +794,13 @@ module.exports = function(RED)
                     cancelTimer();
 
                     node.debug("[State:" + state.data.id + "] Starting timer for trigger at " + state.triggerTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+
+                    const now = chronos.getCurrentTime(node);
+                    const delay = state.triggerTime.diff(now);
+
                     node.currentState.timer = setTimeout(async() =>
                     {
-                        node.trace("[State:" + state.data.id + "] Timer with ID " + node.currentState.timer + " expired");
+                        node.debug("[State:" + state.data.id + "] Timer with ID " + node.currentState.timer + " expired");
                         delete node.currentState.timer;
 
                         if (await evalConditions(state.triggerTime))
@@ -814,9 +818,9 @@ module.exports = function(RED)
 
                         setUpTimer();
                         updateStatus();
-                    }, state.triggerTime.diff(chronos.getCurrentTime(node)));
+                    }, delay);
 
-                    node.debug("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer);
+                    node.debug("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer + " at " + now.format("YYYY-MM-DD HH:mm:ss.SSS (Z)") + " waiting " + delay + " milliseconds");
                 }
             }
         }
