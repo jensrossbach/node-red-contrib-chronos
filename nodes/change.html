@@ -38,15 +38,15 @@ SOFTWARE.
             <option value="duration" data-i18n="change.list.mode.duration"></option>
         </select>
     </div>
-    <div class="form-row" style="padding-top: 10px">
+    <div class="form-row" style="padding-top: 10px; margin-bottom: 0px;">
         <label style="width: auto;"><i class="fa fa-random"></i> <span data-i18n="change.label.rules"></span></label>
     </div>
-    <div id="node-input-momentRules-row" class="form-row node-input-list-row">
+    <div id="node-input-momentRules-row" class="form-row node-input-list-row" style="margin-bottom: 0px;">
         <div class="form-row">
             <ol id="node-input-momentRules"></ol>
         </div>
     </div>
-    <div id="node-input-durationRules-row" class="form-row node-input-list-row">
+    <div id="node-input-durationRules-row" class="form-row node-input-list-row" style="margin-bottom: 0px;">
         <div class="form-row">
             <ol id="node-input-durationRules"></ol>
         </div>
@@ -363,7 +363,7 @@ SOFTWARE.
                     }
                 };
 
-                const timeRules = $("#node-input-momentRules").css("min-width", "510px").css("min-height", "150px").editableList(
+                const momentRules = $("#node-input-momentRules").css("min-width", "510px").css("min-height", "150px").editableList(
                 {
                     removable: true,
                     sortable: true,
@@ -1252,13 +1252,13 @@ SOFTWARE.
                 let rules = undefined;
                 if (node.mode == "moment")
                 {
-                    rules = timeRules;
+                    rules = momentRules;
                     durationRules.editableList("addItem", {});
                 }
                 else
                 {
                     rules = durationRules;
-                    timeRules.editableList("addItem", {});
+                    momentRules.editableList("addItem", {});
                 }
 
                 for (data of node.rules)
@@ -1399,28 +1399,22 @@ SOFTWARE.
             },
             oneditresize: function(size)
             {
-                const conditionListRow = $("#dialog-form>div.node-input-list-row");
                 const otherRows = $("#dialog-form>div:not(.node-input-list-row)");
                 let height = size.height;
 
                 for (let i=0; i<otherRows.length; ++i)
                 {
-                    const row = $(otherRows[i]);
-
-                    if (row.is(":visible"))
-                    {
-                        height -= row.outerHeight(true);
-                    }
+                    height -= $(otherRows[i]).outerHeight(true);
                 }
 
-                height -= (parseInt(conditionListRow.css("marginTop")) + parseInt(conditionListRow.css("marginBottom")));
-
-                if ($("#node-input-mode").val() == "time")
+                if ($("#node-input-mode").val() == "moment")
                 {
+                    height -= (parseInt($("#node-input-momentRules-row").css("marginTop")) + parseInt($("#node-input-momentRules-row").css("marginBottom")));
                     $("#node-input-momentRules").editableList("height", height);
                 }
                 else
                 {
+                    height -= (parseInt($("#node-input-durationRules-row").css("marginTop")) + parseInt($("#node-input-durationRules-row").css("marginBottom")));
                     $("#node-input-durationRules").editableList("height", height);
                 }
             }
