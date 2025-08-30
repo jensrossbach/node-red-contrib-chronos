@@ -373,8 +373,7 @@ module.exports = function(RED)
                                         }
                                         else
                                         {
-                                            node.error(e.message);
-                                            node.debug(e.stack);
+                                            throw e;
                                         }
                                     }
                                 }
@@ -653,8 +652,7 @@ module.exports = function(RED)
                             }
                             else
                             {
-                                node.error(e.message);
-                                node.debug(e.stack);
+                                throw e;
                             }
                         }
                     }
