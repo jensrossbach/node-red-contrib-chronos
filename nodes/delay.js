@@ -240,17 +240,13 @@ module.exports = function(RED)
                 {
                     if (e instanceof chronos.TimeError)
                     {
-                        node.error(e.message, {errorDetails: e.details});
+                        done(e.message, {errorDetails: e.details});
                         node.status({fill: "red", shape: "dot", text: "delay.status.error"});
                     }
                     else
                     {
-                        node.error(e.message);
-                        node.debug(e.stack);
+                        throw e;
                     }
-
-                    // we're done with the message as we do not enqueue it
-                    done();
                 }
             }
         });
