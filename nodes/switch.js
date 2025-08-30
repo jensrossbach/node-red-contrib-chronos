@@ -64,16 +64,12 @@ module.exports = function(RED)
         node.chronos.printNodeInfo(node);
         node.status({});
 
-        node.baseTime = settings.baseTime;
-        node.baseTimeType = settings.baseTimeType;
+        node.reference = settings.reference || "";
+        node.referenceType = settings.referenceType || "absTime";
+        node.baseTime = settings.baseTime || "";
+        node.baseTimeType = settings.baseTimeType || "msgIngress";
         node.conditions = settings.conditions;
         node.stopOnFirstMatch = settings.stopOnFirstMatch;
-
-        // backward compatibility to v1.5.0
-        if (!node.baseTimeType)
-        {
-            node.baseTimeType = "msgIngress";
-        }
 
         let valid = true;
         if ((node.baseTimeType != "msgIngress") && !node.baseTime)
@@ -98,7 +94,7 @@ module.exports = function(RED)
 
                     otherwise = true;
                 }
-                else if (!sfUtils.validateCondition(node, cond))
+                else if (!sfUtils.validateCondition(node, cond, node.referenceType == "absTime"))
                 {
                     valid = false;
                     break;
@@ -129,97 +125,141 @@ module.exports = function(RED)
                     return;
                 }
 
-                let baseTime = sfUtils.getBaseTime(node, msg);
-                if (baseTime)
+                try
                 {
-                    node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
-
-                    let ports = [];
-
-                    for (let i=0; i<node.conditions.length; ++i)
+                    const reference = sfUtils.getReference(node, msg);
+                    if (reference)
                     {
-                        ports.push(null);
-                    }
-
-                    let numMatches = 0;
-                    let otherwiseIndex = -1;
-                    for (let i=0; i<node.conditions.length; ++i)
-                    {
-                        try
+                        if (reference == "absTime")
                         {
-                            let cond = node.conditions[i];
-
-                            if (cond.operator == "otherwise")
-                            {
-                                node.debug("[Condition:" + (i+1) + "] Otherwise");
-                                otherwiseIndex = i;
-                            }
-                            else if (await sfUtils.evaluateCondition(node, msg, baseTime, cond, i+1))
-                            {
-                                ports[i] = true;
-                                numMatches++;
-                            }
-
-                            if (ports[i] && node.stopOnFirstMatch)
-                            {
-                                break;
-                            }
+                            node.debug("Absolute time reference");
                         }
-                        catch (e)
+                        else
                         {
-                            if (e instanceof node.chronos.TimeError)
-                            {
-                                let errMsg = RED.util.cloneMessage(msg);
+                            node.debug("Reference time: " + reference.format("YYYY-MM-DD HH:mm:ss (Z)"));
+                        }
 
-                                if (e.details)
+                        const baseTime = sfUtils.getBaseTime(node, msg);
+                        if (baseTime)
+                        {
+                            node.debug("Base time: " + baseTime.format("YYYY-MM-DD HH:mm:ss (Z)"));
+
+                            const ports = [];
+
+                            for (let i=0; i<node.conditions.length; ++i)
+                            {
+                                ports.push(null);
+                            }
+
+                            let numMatches = 0;
+                            let otherwiseIndex = -1;
+                            for (let i=0; i<node.conditions.length; ++i)
+                            {
+                                try
                                 {
-                                    if ("errorDetails" in errMsg)
+                                    let cond = node.conditions[i];
+
+                                    if (cond.operator == "otherwise")
                                     {
-                                        errMsg._errorDetails = errMsg.errorDetails;
+                                        otherwiseIndex = i;
                                     }
-                                    errMsg.errorDetails = e.details;
+                                    else if (await sfUtils.evaluateCondition(node, msg, reference, baseTime, cond, i+1))
+                                    {
+                                        ports[i] = true;
+                                        numMatches++;
+                                    }
+
+                                    if (ports[i] && node.stopOnFirstMatch)
+                                    {
+                                        break;
+                                    }
                                 }
+                                catch (e)
+                                {
+                                    if (e instanceof node.chronos.TimeError)
+                                    {
+                                        const errMsg = RED.util.cloneMessage(msg);
 
-                                node.error(e.message, errMsg);
+                                        if (e.details)
+                                        {
+                                            if ("errorDetails" in errMsg)
+                                            {
+                                                errMsg._errorDetails = errMsg.errorDetails;
+                                            }
+                                            errMsg.errorDetails = e.details;
+                                        }
+
+                                        node.error(e.message, errMsg);
+                                    }
+                                    else
+                                    {
+                                        throw e;
+                                    }
+                                }
                             }
-                            else
+
+                            if ((numMatches == 0) && (otherwiseIndex >= 0))
                             {
-                                node.error(e.message);
-                                node.debug(e.stack);
+                                ports[otherwiseIndex] = msg;
                             }
-                        }
-                    }
+                            else if (numMatches > 0)
+                            {
+                                let firstPort = true;
+                                for (let i=0; i<node.conditions.length; ++i)
+                                {
+                                    if (ports[i])
+                                    {
+                                        ports[i] = firstPort ? msg : RED.util.cloneMessage(msg);
+                                        firstPort = false;
+                                    }
+                                }
+                            }
 
-                    if ((numMatches == 0) && (otherwiseIndex >= 0))
-                    {
-                        ports[otherwiseIndex] = msg;
-                    }
-                    else if (numMatches > 0)
-                    {
-                        let firstPort = true;
-                        for (let i=0; i<node.conditions.length; ++i)
+                            send(ports);
+                            done();
+                        }
+                        else
                         {
-                            if (ports[i])
+                            let variable = node.baseTime;
+                            if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
                             {
-                                ports[i] = firstPort ? msg : RED.util.cloneMessage(msg);
-                                firstPort = false;
+                                let ctx = RED.util.parseContextStore(node.baseTime);
+                                variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
                             }
+
+                            done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
                         }
                     }
-
-                    send(ports);
-                    done();
-                }
-                else
-                {
-                    let variable = node.baseTime;
-                    if ((node.baseTimeType == "global") || (node.baseTimeType == "flow"))
+                    else
                     {
-                        let ctx = RED.util.parseContextStore(node.baseTime);
-                        variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
-                    }
+                        let variable = node.reference;
+                        if ((node.referenceType == "global") || (node.referenceType == "flow"))
+                        {
+                            let ctx = RED.util.parseContextStore(node.reference);
+                            variable = ctx.key + (ctx.store ? " (" + ctx.store + ")" : "");
+                        }
 
-                    done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidBaseTime", {baseTime: node.baseTimeType + "." + variable}));
+                        done(RED._("node-red-contrib-chronos/chronos-config:common.error.invalidReference", {reference: node.referenceType + "." + variable}));
+                    }
+                }
+                catch (e)
+                {
+                    if (e instanceof node.chronos.TimeError)
+                    {
+                        let errMsg = RED.util.cloneMessage(msg);
+
+                        if ("errorDetails" in errMsg)
+                        {
+                            errMsg._errorDetails = errMsg.errorDetails;
+                        }
+                        errMsg.errorDetails = e.details;
+
+                        done(e.message, errMsg);
+                    }
+                    else
+                    {
+                        throw e;
+                    }
                 }
             }
         });

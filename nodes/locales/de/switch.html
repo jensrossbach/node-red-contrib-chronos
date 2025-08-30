@@ -24,15 +24,16 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-switch">
     <p>
-        Leitet Nachrichten anhand eines bestimmten Zeitpunkts an unterschiedliche
-        Ausgabe-Ports.
+        Leitet Nachrichten anhand eines bestimmten Zeitpunkts oder einer bestimmten
+        Zeitspanne an unterschiedliche Ausgabe-Ports.
     </p>
     <h3>Details</h3>
     <p>
         Dieser Knoten leitet eingehende Nachrichten anhand des Zeitpunkts beim
         Eintreffen oder eines Zeitstempels aus einer Nachrichteneigenschaft,
         einer globalen Variable oder einer Flow-Variable an davon abhängige
-        Ausgabe-Ports um.
+        Ausgabe-Ports um. Alternativ können Zeitspannen basierend auf einer
+        bestimmten Zeitreferenz verglichen werden.
     </p>
     <p>
         Für weitere Informationen bitte die ausführliche Dokumentation im
@@ -46,6 +47,78 @@ SOFTWARE.
         <dt>Konfiguration</dt>
         <dd>
             Ein Verweis auf den zu verwendenden Konfigurationsknoten.
+        </dd>
+        <dt>Referenz</dt>
+        <dd>
+            Die Zeitreferenz für die Basiszeit (siehe unten). Der Knoten befindet sich
+            im Zeitpunktmodus, wenn <i>Absolute Zeit</i> ausgewählt wird und alle
+            Bedingungen werden mit der absoluten Basiszeit verglichen. Ansonsten
+            befindet sich der Knoten im Zeitspannenmodus und alle Bedinungen werden
+            mit der Zeitspanne zwischen Referenzzeit und Basiszeit (Basiszeitspanne)
+            verglichen. Für die Referenzzeit des Zeitspannenmodus gibt es folgende
+            Möglichkeiten:
+            <ul>
+                <li>
+                    <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt im 12-
+                    oder 24-Stunden-Format eingegeben werden. Optional ist die
+                    Eingabe eines Datums und einer Zeit in Region-spezifischem
+                    oder ISO 8601 Format möglich.
+                </li>
+                <li>
+                    <i>Sonnenstand</i>: Der Sonnenstand kann aus einer Liste
+                    vorgegebener Werte ausgewählt werden.
+                </li>
+                <li>
+                    <i>Mondstand</i>: Der Mondstand kann aus einer Liste
+                    vorgegebener Werte ausgewählt werden.
+                </li>
+                <li>
+                    <i>Sonnenstand (benutzerdef.)</i>: Einer der Namen für benutzerdefinierte
+                    Sonnenstände kann eingegeben werden.
+                </li>
+                <li>
+                    <i>Umgebungsvariable</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeit
+                    wird aus einer Umgebungs- oder Kontextvariablen oder einer
+                    Nachrichteneigenschaft gelesen. Die Variablen/Eigenschaften
+                    können folgendes Format haben:
+                    <ul>
+                        <li>
+                            Zahl (Zeitstempel)
+                            <ul>
+                                <li>
+                                    Anzahl Millisekunden seit Beginn der
+                                    UNIX-Zeitzählung (Weltzeit)
+                                </li>
+                                <li>
+                                    Anzahl Millisekunden seit Mitternacht,
+                                    (lokaler Zeit) wenn Wert kleiner als
+                                    86.400.000
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            Zeichenkette
+                            <ul>
+                                <li>Uhrzeit im 12- oder 24-Stunden-Format</li>
+                                <li>Sonnenstand</li>
+                                <li>Mondstand</li>
+                                <li>Benutzerdefinierter Sonnenstand</li>
+                                <li>
+                                    Datum und Uhrzeit in Region-spezifischem
+                                    Format
+                                </li>
+                                <li>Datum und Uhrzeit im ISO 8601 Format</li>
+                                <li>Datum und Sonnenstand</li>
+                                <li>Datum und Mondstand</li>
+                                <li>
+                                    Datum und benutzerdefinierter
+                                    Sonnenstand
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </dd>
         <dt>Basiszeit</dt>
         <dd>
@@ -83,7 +156,7 @@ SOFTWARE.
                                     Datum und Uhrzeit in Region-spezifischem
                                     Format
                                 </li>
-                                <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                                <li>Datum und Uhrzeit im ISO 8601 Format</li>
                             </ul>
                         </li>
                     </ul>
@@ -92,18 +165,22 @@ SOFTWARE.
         </dd>
         <dt>Bedingungen</dt>
         <dd>
-            Liste der Bedingungen zum Umleiten der Nachrichten. Neue Einträge
-            können über den Button unterhalb der Liste hinzugefügt werden.
-            Vorhandene Einträge können neu angeordnet oder gelöscht werden.
-            Abhängig vom gewählten Operator oder der gewählten Quelle auf der
-            linken Seite gibt es die folgenden Möglichkeiten:
+            <p>
+                Liste der Bedingungen zum Umleiten der Nachrichten. Neue Einträge
+                können über den Button unterhalb der Liste hinzugefügt werden.
+                Vorhandene Einträge können neu angeordnet oder gelöscht werden.
+            </p>
+            <p>
+                Im Zeitpunktmodus gibt es die folgenden Möglichkeiten abhängig vom
+                gewählten Operator oder der gewählten Quelle auf der linken Seite:
+            </p>
             <ul>
                 <li>
-                    Operator <i>==</i>: Prüft ob die Basiszeit mit der spezifizierten
+                    Operator <i>&equals;</i>: Prüft ob die Basiszeit mit der spezifizierten
                     Zeit identisch ist.
                 </li>
                 <li>
-                    Operator <i>!=</i>: Prüft ob die Basiszeit nicht mit der
+                    Operator <i>&ne;</i>: Prüft ob die Basiszeit nicht mit der
                     spezifizierten Zeit identisch ist.
                 </li>
                 <li>
@@ -164,8 +241,10 @@ SOFTWARE.
                     Variable.
                 </li>
             </ul>
-            Für die Zeiteingabe, abhängig von der Auswahl auf der linken Seite,
-            gibt es folgende Möglichkeiten:
+            <p>
+                Für die Zeiteingabe, abhängig von der Auswahl auf der linken Seite,
+                gibt es folgende Möglichkeiten:
+            </p>
             <ul>
                 <li>
                     <i>Uhrzeit</i>: Eine beliebige Uhrzeit kann direkt im 12-
@@ -186,7 +265,7 @@ SOFTWARE.
                     Sonnenstände kann eingegeben werden.
                 </li>
                 <li>
-                    <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeit
+                    <i>Umgebungsvariable</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeit
                     wird aus einer Umgebungs- oder Kontextvariablen oder einer
                     Nachrichteneigenschaft gelesen. Die Variablen/Eigenschaften
                     können folgendes Format haben:
@@ -216,7 +295,7 @@ SOFTWARE.
                                     Datum und Uhrzeit in Region-spezifischem
                                     Format
                                 </li>
-                                <li>Datum und Uhrzeit in ISO 8601 Format</li>
+                                <li>Datum und Uhrzeit im ISO 8601 Format</li>
                                 <li>Datum und Sonnenstand</li>
                                 <li>Datum und Mondstand</li>
                                 <li>
@@ -228,11 +307,102 @@ SOFTWARE.
                     </ul>
                 </li>
             </ul>
-            Die spezifizierten Zeitpunkte können zusätzlich mittels eines
-            (wahlweise zufälligen) Versatzes verschoben werden und die
-            Genauigkeit der Zeitpunkte für den Vergleich kann festgelegt
-            werden. Die entsprechenden Eingabefelder können über den
-            Pfeil-Knopf auf der rechten Seite ausgeklappt werden.
+            <p>
+                Die spezifizierten Zeitpunkte können zusätzlich mittels eines
+                (wahlweise zufälligen) Versatzes verschoben werden und die
+                Genauigkeit der Zeitpunkte für den Vergleich kann festgelegt
+                werden. Die entsprechenden Eingabefelder können über den
+                Pfeil-Knopf auf der rechten Seite ausgeklappt werden.
+            </p>
+            <p>
+                Im Zeitspannenmodus gibt es die folgenden Möglichkeiten abhängig vom
+                gewählten Operator oder der gewählten Quelle auf der linken Seite:
+            </p>
+            <ul>
+                <li>
+                    Operator <i>&equals;</i>: Prüft ob die Basiszeitspanne mit der
+                    spezifizierten Zeitspanne identisch ist.
+                </li>
+                <li>
+                    Operator <i>&ne;</i>: Prüft ob die Basiszeitspanne nicht mit der
+                    spezifizierten Zeitspanne identisch ist.
+                </li>
+                <li>
+                    Operator <i>&lt;</i>: Prüft ob die Basiszeitspanne kleiner als die
+                    spezifizierte Zeitspanne ist.
+                </li>
+                <li>
+                    Operator <i>&le;</i>: Prüft ob die Basiszeitspanne kleiner als oder
+                    gleich wie die spezifizierte Zeitspanne ist.
+                </li>
+                <li>
+                    Operator <i>&ge;</i>: Prüft ob die Basiszeitspanne gleich wie oder
+                    größer als die spezifizierte Zeitspanne ist.
+                </li>
+                <li>
+                    Operator <i>&gt;</i>: Prüft ob die Basiszeitspanne größer als die
+                    spezifizierte Zeitspanne ist.
+                </li>
+                <li>
+                    Operator <i>Zwischen</i>: Prüft ob die Basiszeitspanne gleich wie
+                    oder größer als die erste und kleiner als oder gleich wie die zweite
+                    spezifizierte Zeitspanne ist.
+                </li>
+                <li>
+                    Operator <i>Außerhalb</i>: Prüft ob die Basiszeitspanne kleiner als
+                    die erste oder größer als die zweite spezifizierte Zeitspanne ist.
+                </li>
+                <li>
+                    Operator <i>Sonst</i>: Wird angewendet wenn alle anderen Bedingungen
+                    nicht zutreffen.
+                </li>
+                <li>
+                    Quelle <i>Ausdruck</i>: Das Ergebnis der Bedingung wird von
+                    dem angegebenen JSONata-Ausdruck abgeleitet. Die Referenzzeit kann
+                    über die Variable <code>$refTime</code> und die Basiszeit über die
+                    Variable <code>$baseTime</code> abgefragt werden. Zusätzlich kann
+                    die Zeitspanne zwischen Referenzzeit und Basiszeit über die Variable
+                    <code>$duration</code> abgerufen werden.
+                </li>
+                <li>
+                    Quelle <i>Kontext</i>: Lädt die Bedingung aus der angegebenen
+                    Umgebungs- bzw. Kontextvariable. Siehe Abschnitt <i>Eingabe</i>
+                    weiter unten für eine Beschreibung der benötigten Struktur der
+                    Variable.
+                </li>
+            </ul>
+            <p>
+                Für die Zeitspanneneingabe, abhängig von der Auswahl auf der linken Seite,
+                gibt es folgende Möglichkeiten:
+            </p>
+            <ul>
+                <li>
+                    <i>number</i>: Die Zeitspanne kann als Zahl eingegeben werden. Die
+                    Einheit muss über die Auswahlbox auf der rechten Seite gewählt werden.
+                </li>
+                <li>
+                    <i>string</i>: Die Zeitspanne kann im ASP.NET-Stil oder im ISO 8601
+                    Format angegeben werden.
+                </li>
+                <li>
+                    <i>Umgebungsvariable</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Die Zeitspanne
+                    wird aus einer Umgebungs- oder Kontextvariablen oder einer
+                    Nachrichteneigenschaft gelesen. Die Variablen/Eigenschaften
+                    können folgendes Format haben:
+                    <ul>
+                        <li>
+                            Zahl (Zeitspanne in Millisekunden)
+                        </li>
+                        <li>
+                            Zeichenkette
+                            <ul>
+                                <li>Zeitspanne im ASP.NET-Stil</li>
+                                <li>Zeitspanne im ISO 8601 Format</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </dd>
         <dt>Bei erster Übereinstimmung aufhören</dt>
         <dd>
@@ -251,15 +421,17 @@ SOFTWARE.
     <p>
         Bedingungen können dynamisch programmiert werden, indem diese so
         konfiguriert werden, dass die entsprechenden Daten aus einer Kontextvariablen
-        gelesen werden (siehe Abschnitt <i>Konfiguration</i> oben). Die Variablen
-        müssen Objekte sein und die folgenden Eigenschaften enthalten:
+        gelesen werden (siehe Abschnitt <i>Konfiguration</i> oben).
+    </p>
+    <p>
+        Im Zeitpunktmodus müssen die Variablen Objekte sein und die folgenden
+        Eigenschaften enthalten:
     </p>
     <dl class="message-properties">
         <dt>operator<span class="property-type">string</span></dt>
         <dd>
             Operator für den Vergleich; entweder "equal", "notEqual", "before", "until",
-            "since", "after", "between", "outside", "days", "weekdays", "months"
-            oder "otherwise"
+            "since", "after", "between", "outside", "days", "weekdays", oder "months"
         </dd>
         <dt class="optional">operands<span class="property-type">object | array</span></dt>
         <dd>Operanden für den Vergleich; der Inhalt ist abhängig vom Operator</dd>
@@ -324,12 +496,31 @@ SOFTWARE.
         Wert der Eigenschaft falsch ist oder die Eigenschaft fehlt.
     </p>
     <p>
-        Wenn <code>operator</code> "otherwise" enthält, wird <code>operands</code>
-        nicht benötigt.
+        Im Zeitspannenmodus müssen die Variablen Objekte sein und die folgenden
+        Eigenschaften enthalten:
+    </p>
+    <dl class="message-properties">
+        <dt>operator<span class="property-type">string</span></dt>
+        <dd>
+            Operator für den Vergleich; entweder "equal", "notEqual", "less", "lessOrEqual",
+            "greater", "greaterOrEqual", "between", oder "outside"
+        </dd>
+        <dt class="optional">operands<span class="property-type">number | string | array</span></dt>
+        <dd>Operanden für den Vergleich; der Inhalt ist abhängig vom Operator</dd>
+    </dl>
+    <p>
+        Wenn <code>operator</code> folgendes enthält:
+        <ul>
+            <li>"equal", "notEqual", "less", "lessOrEqual", "greater" oder "greaterOrEqual", muss <code>operands</code> eine Zahl oder eine Zeichenkette sein</li>
+            <li>"between" oder "outside", muss <code>operands</code> ein Array mit zwei Elementen sein, die eine Zahl oder eine Zeichenkette sind</li>
+        </ul>
+        Wenn der Operand eine Zahl ist, stellt diese die Zeitspanne in Millisekunden
+        da. Ist der Operand dagegen eine Zeichenkette, kann die Zeitspanne im ASP.NET-Stil
+        oder im ISO 8601 Format angegeben werden.
     </p>
     <h3>Ausgaben</h3>
     <p>
         Jeder Ausgabe-Port gehört zu einer konfigurierten Bedingung, welche mit
-        der Basiszeit verglichen wird.
+        der Basiszeit oder Basiszeitspanne verglichen wird.
     </p>
 </script>

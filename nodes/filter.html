@@ -38,6 +38,11 @@ SOFTWARE.
         <input type="text" id="node-input-config" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.config">
     </div>
     <div class="form-row" style="padding-top: 4px;">
+        <label for="node-input-reference"><i class="fa fa-dot-circle-o"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.reference"></span></label>
+        <input type="text" id="node-input-reference" style="width: 70%;">
+        <input id="node-input-referenceType" type="hidden">
+    </div>
+    <div class="form-row">
         <label for="node-input-baseTime"><i class="fa fa-clock-o"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.baseTime"></span></label>
         <input type="text" id="node-input-baseTime" style="width: 70%;">
         <input id="node-input-baseTimeType" type="hidden">
@@ -47,10 +52,17 @@ SOFTWARE.
         <input type="text" id="node-input-evaluation" style="width: 70%;">
         <input id="node-input-evaluationType" type="hidden">
     </div>
-    <div class="form-row node-input-conditionList-row" style="padding-top: 10px">
-        <label for="node-input-conditionList"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
+    <div class="form-row" style="padding-top: 10px; margin-bottom: 0px;">
+        <label style="width: auto;"><i class="fa fa-sliders"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.conditions"></span></label>
+    </div>
+    <div id="node-input-momentConditions-row" class="form-row node-input-list-row" style="margin-bottom: 0px;">
         <div class="form-row">
-            <ol id="node-input-conditionList"></ol>
+            <ol id="node-input-momentConditions"></ol>
+        </div>
+    </div>
+    <div id="node-input-durationConditions-row" class="form-row node-input-list-row" style="margin-bottom: 0px;">
+        <div class="form-row">
+            <ol id="node-input-durationConditions"></ol>
         </div>
     </div>
 </script>
@@ -124,6 +136,15 @@ SOFTWARE.
                     type:     "chronos-config",
                     required: true
                 },
+                reference:
+                {
+                    value:    "",
+                    validate: RED.validators.typedInput("referenceType")
+                },
+                referenceType:
+                {
+                    value: "absTime"
+                },
                 baseTime:
                 {
                     value:    "",
@@ -144,7 +165,7 @@ SOFTWARE.
                 },
                 conditions:
                 {
-                    value: [{operator: "before", operands: {type: "time", value: ""}}],
+                    value: [{operator: "before", operands: {type: "time", value: "", offset: 0, random: 0, precision: "milliseconds"}}],
                     validate: function(items, opt)
                     {
                         if (!items || (items.length == 0))
@@ -155,7 +176,7 @@ SOFTWARE.
                         const errors = [];
                         for (const item of items)
                         {
-                            if (/^equal|notEqual|before|until|since|after$/.test(item.operator))
+                            if ((this.referenceType == "absTime") && /^equal|notEqual|before|until|since|after$/.test(item.operator))
                             {
                                 if ((item.operands.type == "time") && !PATTERN_DATETIME.test(item.operands.value))
                                 {
@@ -174,7 +195,7 @@ SOFTWARE.
                                     }
                                 }
                             }
-                            else if (/^between|outside$/.test(item.operator))
+                            else if ((this.referenceType == "absTime") && /^between|outside$/.test(item.operator))
                             {
                                 if ((item.operands[0].type == "time") && !PATTERN_DATETIME.test(item.operands[0].value))
                                 {
@@ -200,6 +221,61 @@ SOFTWARE.
                                 else if ((item.operands[1].type == "custom") && !PATTERN_CUSTOM_TIME.test(item.operands[1].value))
                                 {
                                     errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidName"));
+                                }
+                                else if (/^env|global|flow|msg$/.test(item.operands[1].type))
+                                {
+                                    const res = RED.utils.validateTypedProperty(item.operands[1].value, item.operands[1].type, opt)
+                                    if (res !== true)
+                                    {
+                                        errors.push(res);
+                                    }
+                                }
+                            }
+                            else if ((this.referenceType != "absTime") && /^equal|notEqual|less|lessOrEqual|greaterOrEqual|greater$/.test(item.operator))
+                            {
+                                if ((item.operands.type == "num") && (+item.operands.value !== +item.operands.value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDuration"));
+                                }
+                                else if ((item.operands.type == "str") && !item.operands.value)
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDuration"));
+                                }
+                                else if (/^env|global|flow|msg$/.test(item.operands.type))
+                                {
+                                    const res = RED.utils.validateTypedProperty(item.operands.value, item.operands.type, opt)
+                                    if (res !== true)
+                                    {
+                                        errors.push(res);
+                                    }
+                                }
+                            }
+                            else if ((this.referenceType != "absTime") && /^between|outside$/.test(item.operator))
+                            {
+                                if ((item.operands[0].type == "num") && (+item.operands[0].value !== +item.operands[0].value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDuration"));
+                                }
+                                else if ((item.operands[0].type == "str") && !item.operands[0].value)
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDuration"));
+                                }
+                                else if (/^env|global|flow|msg$/.test(item.operands[0].type))
+                                {
+                                    const res = RED.utils.validateTypedProperty(item.operands[0].value, item.operands[0].type, opt)
+                                    if (res !== true)
+                                    {
+                                        errors.push(res);
+                                    }
+                                }
+
+                                if ((item.operands[1].type == "num") && (+item.operands[1].value !== +item.operands[1].value))
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDuration"));
+                                }
+                                else if ((item.operands[1].type == "str") && !item.operands[1].value)
+                                {
+                                    errors.push(this._("node-red-contrib-chronos/chronos-config:common.error.invalidDuration"));
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands[1].type))
                                 {
@@ -236,11 +312,140 @@ SOFTWARE.
             {
                 let node = this;
 
+                const sunTimes =
+                [
+                    {
+                        value: "nightEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
+                    },
+                    {
+                        value: "nauticalDawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
+                    },
+                    {
+                        value: "dawn",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
+                    },
+                    {
+                        value: "sunrise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
+                    },
+                    {
+                        value: "sunriseEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
+                    },
+                    {
+                        value: "goldenHourEnd",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
+                    },
+                    {
+                        value: "solarNoon",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
+                    },
+                    {
+                        value: "goldenHour",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
+                    },
+                    {
+                        value: "sunsetStart",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
+                    },
+                    {
+                        value: "sunset",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
+                    },
+                    {
+                        value: "dusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
+                    },
+                    {
+                        value: "nauticalDusk",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
+                    },
+                    {
+                        value: "night",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
+                    },
+                    {
+                        value: "nadir",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
+                    }
+                ];
+
+                const moonTimes =
+                [
+                    {
+                        value: "rise",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
+                    },
+                    {
+                        value: "set",
+                        label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
+                    }
+                ];
+
+                const timeInput =
+                {
+                    value: "time",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
+                    icon: "fa fa-clock-o",
+                    hasValue: true,
+                    validate: PATTERN_DATETIME
+                };
+
+                const sunTimeInput =
+                {
+                    value: "sun",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
+                    icon: "fa fa-sun-o",
+                    options: sunTimes
+                };
+
+                const moonTimeInput =
+                {
+                    value: "moon",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
+                    icon: "fa fa-moon-o",
+                    options: moonTimes
+                };
+
+                const customInput =
+                {
+                    value: "custom",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
+                    icon: "fa fa-user-o",
+                    hasValue: true,
+                    validate: PATTERN_CUSTOM_TIME
+                };
+
+                const absTimeInput =
+                {
+                    value: "absTime",
+                    label: node._("node-red-contrib-chronos/chronos-config:common.label.absTime"),
+                    hasValue: false
+                };
+
                 const msgIngressInput =
                 {
                     value: "msgIngress",
                     label: node._("node-red-contrib-chronos/chronos-config:common.label.msgIngress"),
                     hasValue: false
+                };
+
+                const validateNumericInput = function(event, ui)
+                {
+                    const value = parseInt($(this).spinner("value"), 10);
+                    const min = $(this).spinner("option", "min");
+                    const max = $(this).spinner("option", "max");
+                    if (isNaN(value) ||
+                        (value < min))
+                    {
+                        $(this).spinner("value", min);
+                    }
+                    else if (value > max)
+                    {
+                        $(this).spinner("value", max);
+                    }
                 };
 
                 const logicalOrInput =
@@ -264,140 +469,61 @@ SOFTWARE.
                     hasValue: false
                 };
 
-                let baseTime = $("#node-input-baseTime")
+                const handleTypeChange = function(event, type, value)
+                {
+                    if (type != this._prevType)
+                    {
+                        this._prevType = type;
+                        if ((type != "sun") && (type != "moon"))
+                        {
+                            $(this).typedInput("value", "");
+                        }
+                    }
+                };
+
+                const reference = $("#node-input-reference")
+                    .typedInput({
+                        types: [
+                            absTimeInput,
+                            timeInput,
+                            sunTimeInput,
+                            moonTimeInput,
+                            customInput,
+                            "env",
+                            "global",
+                            "flow",
+                            "msg"],
+                        typeField: "#node-input-referenceType"});
+                reference.on("change", function(event, type, value)
+                {
+                    $("#node-input-momentConditions-row").hide();
+                    $("#node-input-durationConditions-row").hide();
+
+                    if (type == "absTime")
+                    {
+                        $("#node-input-momentConditions-row").show();
+                    }
+                    else
+                    {
+                        $("#node-input-durationConditions-row").show();
+                    }
+
+                    RED.tray.resize();
+                    handleTypeChange.call(this, event, type, value);
+                });
+
+                $("#node-input-baseTime")
                                 .typedInput({types: [msgIngressInput, "global", "flow", "msg"], typeField: "#node-input-baseTimeType"});
 
-                let evaluation = $("#node-input-evaluation")
+                $("#node-input-evaluation")
                                 .typedInput({types: [logicalOrInput, logicalAndInput, annotationInput, "jsonata"], typeField: "#node-input-evaluationType"});
 
-                let conditionList = $("#node-input-conditionList").css("min-width", "535px").css("min-height", "150px").editableList(
+                const momentConditions = $("#node-input-momentConditions").css("min-width", "535px").css("min-height", "150px").editableList(
                 {
                     removable: true,
                     sortable: true,
                     addItem: function(item, index, data)
                     {
-                        const sunTimes =
-                        [
-                            {
-                                value: "nightEnd",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nightEnd")
-                            },
-                            {
-                                value: "nauticalDawn",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDawn")
-                            },
-                            {
-                                value: "dawn",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dawn")
-                            },
-                            {
-                                value: "sunrise",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunrise")
-                            },
-                            {
-                                value: "sunriseEnd",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunriseEnd")
-                            },
-                            {
-                                value: "goldenHourEnd",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHourEnd")
-                            },
-                            {
-                                value: "solarNoon",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.solarNoon")
-                            },
-                            {
-                                value: "goldenHour",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.goldenHour")
-                            },
-                            {
-                                value: "sunsetStart",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunsetStart")
-                            },
-                            {
-                                value: "sunset",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.sunset")
-                            },
-                            {
-                                value: "dusk",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.dusk")
-                            },
-                            {
-                                value: "nauticalDusk",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nauticalDusk")
-                            },
-                            {
-                                value: "night",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.night")
-                            },
-                            {
-                                value: "nadir",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.sun.nadir")
-                            }
-                        ];
-
-                        const moonTimes =
-                        [
-                            {
-                                value: "rise",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.rise")
-                            },
-                            {
-                                value: "set",
-                                label: node._("node-red-contrib-chronos/chronos-config:common.list.moon.set")
-                            }
-                        ];
-
-                        const timeInput =
-                        {
-                            value: "time",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.label.time"),
-                            icon: "fa fa-clock-o",
-                            hasValue: true,
-                            validate: PATTERN_DATETIME
-                        };
-
-                        const sunTimeInput =
-                        {
-                            value: "sun",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.label.sun"),
-                            icon: "fa fa-sun-o",
-                            options: sunTimes
-                        };
-
-                        const moonTimeInput =
-                        {
-                            value: "moon",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.label.moon"),
-                            icon: "fa fa-moon-o",
-                            options: moonTimes
-                        };
-
-                        const customInput =
-                        {
-                            value: "custom",
-                            label: node._("node-red-contrib-chronos/chronos-config:common.label.custom"),
-                            icon: "fa fa-user-o",
-                            hasValue: true,
-                            validate: PATTERN_CUSTOM_TIME
-                        };
-
-                        const validateNumericInput = function(event, ui)
-                        {
-                            const value = parseInt($(this).spinner("value"), 10);
-                            const min = $(this).spinner("option", "min");
-                            const max = $(this).spinner("option", "max");
-                            if (isNaN(value) ||
-                                (value < min))
-                            {
-                                $(this).spinner("value", min);
-                            }
-                            else if (value > max)
-                            {
-                                $(this).spinner("value", max);
-                            }
-                        };
-
                         const offsetInput =
                         {
                             min: -300,
@@ -433,9 +559,9 @@ SOFTWARE.
 
                         const operator = $("<select/>", {class: "node-input-operator", style: "width: auto;"})
                                             .appendTo(operatorBox);
-                        const operGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.operators"))
-                                            .append($("<option></option>").val("equal").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.equal")))
-                                            .append($("<option></option>").val("notEqual").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.notEqual")))
+                        $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.operators"))
+                                            .append($("<option></option>").val("equal").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.equal")))
+                                            .append($("<option></option>").val("notEqual").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.notEqual")))
                                             .append($("<option></option>").val("before").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.before")))
                                             .append($("<option></option>").val("until").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.until")))
                                             .append($("<option></option>").val("since").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.since")))
@@ -446,7 +572,7 @@ SOFTWARE.
                                             .append($("<option></option>").val("weekdays").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.weekdays")))
                                             .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.months")))
                                             .appendTo(operator);
-                        const fromGrp = $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.sources"))
+                        $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.sources"))
                                             .append($("<option></option>").val("expression").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.expression")))
                                             .append($("<option></option>").val("context").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.context")))
                                             .appendTo(operator);
@@ -464,8 +590,9 @@ SOFTWARE.
                         const time1 = $("<input/>", {type: "text", class: "node-input-time1"})
                                             .appendTo(time1Row1)
                                             .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
-                        time1.typedInput("width", "315px");
-                        time1._prevType = "time";
+                        time1.typedInput("width", "317px");
+                        time1[0]._prevType = "time";
+                        time1.on("change", handleTypeChange);
                         const extend1 = $("<a/>", {href: "#", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.expand"), style: "margin-left: 6px;"})
                                             .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
                                             .appendTo(time1Row1);
@@ -473,8 +600,9 @@ SOFTWARE.
                         const time2 = $("<input/>", {type: "text", class: "node-input-time2"})
                                             .appendTo(time2Row1)
                                             .typedInput({types: [timeInput, sunTimeInput, moonTimeInput, customInput, "env", "global", "flow", "msg"]});
-                        time2.typedInput("width", "315px");
-                        time2._prevType = "time";
+                        time2.typedInput("width", "317px");
+                        time2[0]._prevType = "time";
+                        time2.on("change", handleTypeChange);
                         const extend2 = $("<a/>", {href: "#", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.expand"), style: "margin-left: 6px;"})
                                             .html("<i class='fa fa-angle-right' aria-hidden='true'></i>")
                                             .appendTo(time2Row1);
@@ -494,7 +622,7 @@ SOFTWARE.
                                             .appendTo(random1Box)
                                             .spinner(randomInput);
                         $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
-                                            .html("<i class='fa fa-bullseye' aria-hidden='true'></i>")
+                                            .html("<i class='fa fa-signal' aria-hidden='true'></i>")
                                             .appendTo(time1Row2);
                         const precision1 = $("<select/>", {class: "node-input-precision1", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 115px; margin-left: 4px;"})
                                             .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
@@ -521,7 +649,7 @@ SOFTWARE.
                                             .appendTo(random2Box)
                                             .spinner(randomInput);
                         $("<label/>", {title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: auto; margin-left: 6px; margin-bottom: 0px;"})
-                                            .html("<i class='fa fa-bullseye' aria-hidden='true'></i>")
+                                            .html("<i class='fa fa-signal' aria-hidden='true'></i>")
                                             .appendTo(time2Row2);
                         const precision2 = $("<select/>", {class: "node-input-precision2", title: node._("node-red-contrib-chronos/chronos-config:common.tooltip.precision"), style: "width: 115px; margin-left: 4px;"})
                                             .append($("<option></option>").val("millisecond").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.millisecond")))
@@ -605,12 +733,12 @@ SOFTWARE.
                         const expression = $("<input/>", {type: "text", class: "node-input-expression"})
                                             .appendTo(expressionBox)
                                             .typedInput({types: ["jsonata"]});
-                        expression.typedInput("width", "315px");
+                        expression.typedInput("width", "317px");
 
                         const context = $("<input/>", {type: "text", class: "node-input-context"})
                                             .appendTo(contextBox)
                                             .typedInput({types: ["env", "global", "flow"]});
-                        context.typedInput("width", "315px");
+                        context.typedInput("width", "317px");
 
                         operator.change(function()
                         {
@@ -666,34 +794,6 @@ SOFTWARE.
                                 {
                                     contextBox.show();
                                     break;
-                                }
-                            }
-                        });
-
-                        time1.on("change", function()
-                        {
-                            let type = time1.typedInput("type");
-
-                            if (type != time1._prevType)
-                            {
-                                time1._prevType = type;
-                                if ((type != "sun") && (type != "moon"))
-                                {
-                                    time1.typedInput("value", "");
-                                }
-                            }
-                        });
-
-                        time2.on("change", function()
-                        {
-                            let type = time2.typedInput("type");
-
-                            if (type != time2._prevType)
-                            {
-                                time2._prevType = type;
-                                if ((type != "sun") && (type != "moon"))
-                                {
-                                    time2.typedInput("value", "");
                                 }
                             }
                         });
@@ -821,7 +921,7 @@ SOFTWARE.
 
                         if (!("operator" in data))
                         {
-                            data = {operator: "before", operands: {type: "time", value: "", offset: 0, random: false}};
+                            data = {operator: "before", operands: {type: "time", value: "", offset: 0, random: 0, precision: "millisecond"}};
                         }
 
                         // initial value
@@ -871,12 +971,18 @@ SOFTWARE.
                                 }
                             }
 
-                            time1._prevType = data.operands.type;
+                            time1[0]._prevType = data.operands.type;
                             time1.typedInput("type", data.operands.type);
                             time1.typedInput("value", data.operands.value);
                             offset1.spinner("value", data.operands.offset);
                             random1.spinner("value", data.operands.random);
                             precision1.val(data.operands.precision);
+                            time2[0]._prevType = "time";
+                            time2.typedInput("type", "time");
+                            time2.typedInput("value", "");
+                            offset2.spinner("value", 0);
+                            random2.spinner("value", 0);
+                            precision2.val("millisecond");
                             if ((data.operands.offset != 0) || (data.operands.random > 0) || (data.operands.precision != "millisecond"))
                             {
                                 showExtensionRow1();
@@ -948,13 +1054,13 @@ SOFTWARE.
                                 }
                             }
 
-                            time1._prevType = data.operands[0].type;
+                            time1[0]._prevType = data.operands[0].type;
                             time1.typedInput("type", data.operands[0].type);
                             time1.typedInput("value", data.operands[0].value);
                             offset1.spinner("value", data.operands[0].offset);
                             random1.spinner("value", data.operands[0].random);
                             precision1.val(data.operands[0].precision);
-                            time2._prevType = data.operands[1].type;
+                            time2[0]._prevType = data.operands[1].type;
                             time2.typedInput("type", data.operands[1].type);
                             time2.typedInput("value", data.operands[1].value);
                             offset2.spinner("value", data.operands[1].offset);
@@ -1016,116 +1122,394 @@ SOFTWARE.
                     }
                 });
 
-                node.conditions.forEach(data =>
+                const durationConditions = $("#node-input-durationConditions").css("min-width", "545px").css("min-height", "150px").editableList(
                 {
-                    conditionList.editableList("addItem", data);
+                    removable: true,
+                    sortable: true,
+                    addItem: function(item, index, data)
+                    {
+                        const fragment = document.createDocumentFragment();
+                        const operatorBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto;"}).appendTo(fragment);
+                        const durationBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 2px;"}).appendTo(fragment);
+                        const expressionBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(fragment);
+                        const contextBox = $("<div/>", {style: "display: inline-block; vertical-align: middle; width: auto; margin-left: 6px;"}).appendTo(fragment);
+                        $("<div/>", {class: "node-input-index", style: "position: absolute; width: auto; top: 50%; right: 26px; margin-top: -9px;"})
+                                            .html("&#8594; " + (index + 1))
+                                            .appendTo(fragment);
+
+                        const operator = $("<select/>", {class: "node-input-operator", style: "width: auto;"})
+                                            .appendTo(operatorBox);
+                        $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.operators"))
+                                            .append($("<option></option>").val("equal").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.equal")))
+                                            .append($("<option></option>").val("notEqual").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.notEqual")))
+                                            .append($("<option></option>").val("less").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.less")))
+                                            .append($("<option></option>").val("lessOrEqual").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.lessOrEqual")))
+                                            .append($("<option></option>").val("greaterOrEqual").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.greaterOrEqual")))
+                                            .append($("<option></option>").val("greater").html(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.greater")))
+                                            .append($("<option></option>").val("between").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.between")))
+                                            .append($("<option></option>").val("outside").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator.outside")))
+                                            .appendTo(operator);
+                        $("<optgroup></optgroup>").attr("label", node._("node-red-contrib-chronos/chronos-config:common.list.condition.sources"))
+                                            .append($("<option></option>").val("expression").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.expression")))
+                                            .append($("<option></option>").val("context").text(node._("node-red-contrib-chronos/chronos-config:common.list.condition.source.context")))
+                                            .appendTo(operator);
+
+                        const duration1Box = $("<div/>", {style: "margin-left: 4px;"}).appendTo(durationBox);
+                        const duration2Box = $("<div/>", {style: "margin-left: 4px; margin-top: 5px;"}).appendTo(durationBox);
+
+                        const duration1 = $("<input/>", {type: "text", class: "node-input-duration1"})
+                                            .appendTo(duration1Box)
+                                            .typedInput({types: ["num", "str", "env", "global", "flow", "msg"]});
+                        const duration1Unit = $("<select/>", {class: "node-input-duration1Unit", style: "width: 131px; margin-left: 6px"})
+                                                .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
+                                                .append($("<option></option>").val("quarters").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarters")))
+                                                .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
+                                                .append($("<option></option>").val("weeks").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")))
+                                                .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")))
+                                                .append($("<option></option>").val("hours").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")))
+                                                .append($("<option></option>").val("minutes").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")))
+                                                .append($("<option></option>").val("seconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")))
+                                                .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
+                                                .appendTo(duration1Box);
+                        duration1.on("change", function(event, type, value)
+                        {
+                            if (type == "num")
+                            {
+                                duration1.typedInput("width", "178px");
+                                duration1Unit.show();
+                            }
+                            else
+                            {
+                                duration1.typedInput("width", "315px");
+                                duration1Unit.hide();
+                            }
+                        });
+
+                        const duration2 = $("<input/>", {type: "text", class: "node-input-duration2"})
+                                            .appendTo(duration2Box)
+                                            .typedInput({types: ["num", "str", "env", "global", "flow", "msg"]});
+                        const duration2Unit = $("<select/>", {class: "node-input-duration2Unit", style: "width: 131px; margin-left: 6px"})
+                                                .append($("<option></option>").val("years").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.years")))
+                                                .append($("<option></option>").val("quarters").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.quarters")))
+                                                .append($("<option></option>").val("months").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.months")))
+                                                .append($("<option></option>").val("weeks").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.weeks")))
+                                                .append($("<option></option>").val("days").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.days")))
+                                                .append($("<option></option>").val("hours").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.hours")))
+                                                .append($("<option></option>").val("minutes").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.minutes")))
+                                                .append($("<option></option>").val("seconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.seconds")))
+                                                .append($("<option></option>").val("milliseconds").text(node._("node-red-contrib-chronos/chronos-config:common.list.unit.milliseconds")))
+                                                .appendTo(duration2Box);
+                        duration2.on("change", function(event, type, value)
+                        {
+                            if (type == "num")
+                            {
+                                duration2.typedInput("width", "178px");
+                                duration2Unit.show();
+                            }
+                            else
+                            {
+                                duration2.typedInput("width", "315px");
+                                duration2Unit.hide();
+                            }
+                        });
+
+                        const expression = $("<input/>", {type: "text", class: "node-input-expression"})
+                                            .appendTo(expressionBox)
+                                            .typedInput({types: ["jsonata"]});
+                        expression.typedInput("width", "315px");
+
+                        const context = $("<input/>", {type: "text", class: "node-input-context"})
+                                            .appendTo(contextBox)
+                                            .typedInput({types: ["env", "global", "flow"]});
+                        context.typedInput("width", "315px");
+
+                        operator.change(function()
+                        {
+                            durationBox.hide();
+                            duration2Box.hide();
+                            expressionBox.hide();
+                            contextBox.hide();
+
+                            var value = $(this).val();
+                            switch (value)
+                            {
+                                case "equal":
+                                case "notEqual":
+                                case "less":
+                                case "lessOrEqual":
+                                case "greaterOrEqual":
+                                case "greater":
+                                {
+                                    durationBox.show();
+                                    break;
+                                }
+                                case "between":
+                                case "outside":
+                                {
+                                    durationBox.show();
+                                    duration2Box.show();
+                                    break;
+                                }
+                                case "expression":
+                                {
+                                    expressionBox.show();
+                                    break;
+                                }
+                                case "context":
+                                {
+                                    contextBox.show();
+                                    break;
+                                }
+                            }
+                        });
+
+                        if (!("operator" in data))
+                        {
+                            data = {operator: "less", operands: {type: "num", value: "", unit: "minutes"}};
+                        }
+
+                        // initial value
+                        operator.val(data.operator);
+
+                        if ((data.operator == "equal") ||
+                            (data.operator == "notEqual") ||
+                            (data.operator == "less") ||
+                            (data.operator == "lessOrEqual") ||
+                            (data.operator == "greaterOrEqual") ||
+                            (data.operator == "greater"))
+                        {
+                            duration1.typedInput("type", data.operands.type);
+                            duration1.typedInput("value", data.operands.value);
+                            duration1Unit.val(data.operands.unit || "minutes");
+                            duration2.typedInput("type", "num");
+                            duration2.typedInput("value", "");
+                            duration2Unit.val("minutes");
+                        }
+                        else if ((data.operator == "between") || (data.operator == "outside"))
+                        {
+                            duration1.typedInput("type", data.operands[0].type);
+                            duration1.typedInput("value", data.operands[0].value);
+                            duration1Unit.val(data.operands[0].unit || "minutes");
+                            duration2.typedInput("type", data.operands[1].type);
+                            duration2.typedInput("value", data.operands[1].value);
+                            duration2Unit.val(data.operands[1].unit || "minutes");
+                        }
+                        else if (data.operator == "expression")
+                        {
+                            expression.typedInput("value", data.expression);
+                            expression.typedInput("type", "jsonata");
+                        }
+                        else if (data.operator == "context")
+                        {
+                            context.typedInput("value", data.context.value);
+                            context.typedInput("type", data.context.type);
+                        }
+
+                        operator.change();
+                        item[0].appendChild(fragment);
+                    }
                 });
+
+                // backward compatibility to v1.28.1 and earlier
+                if (!node.referenceType)
+                {
+                    node.referenceType = "absTime";
+                }
+
+                reference[0]._prevType = node.referenceType;
+
+                let conditions = undefined;
+                if (node.referenceType == "absTime")
+                {
+                    conditions = momentConditions;
+                    durationConditions.editableList("addItem", {});
+                }
+                else
+                {
+                    conditions = durationConditions;
+                    momentConditions.editableList("addItem", {});
+                }
+
+                for (data of node.conditions)
+                {
+                    conditions.editableList("addItem", data);
+                }
             },
             oneditsave: function()
             {
-                let node = this;
+                const node = this;
 
-                let conditionList = $("#node-input-conditionList").editableList("items");
                 node.conditions = [];
 
-                conditionList.each(function(index)
+                if ($("#node-input-reference").typedInput("type") == "absTime")
                 {
-                    const  data = {};
+                    const conditions = $("#node-input-momentConditions").editableList("items");
 
-                    const  time1 = $(this).find(".node-input-time1");
-                    const  time2 = $(this).find(".node-input-time2");
-                    const  offset1 = $(this).find(".node-input-offset1");
-                    const  offset2 = $(this).find(".node-input-offset2");
-                    const  random1 = $(this).find(".node-input-random1");
-                    const  random2 = $(this).find(".node-input-random2");
-                    const precision1 = $(this).find(".node-input-precision1");
-                    const precision2 = $(this).find(".node-input-precision2");
-
-                    data.operator = $(this).find(".node-input-operator").val();
-
-                    if ((data.operator == "equal") ||
-                        (data.operator == "notEqual") ||
-                        (data.operator == "before") ||
-                        (data.operator == "until") ||
-                        (data.operator == "since") ||
-                        (data.operator == "after"))
+                    conditions.each(function(index)
                     {
-                        data.operands = {};
-                        data.operands.type = time1.typedInput("type");
-                        data.operands.value = time1.typedInput("value");
-                        data.operands.offset = offset1.spinner("value");
-                        data.operands.random = random1.spinner("value");
-                        data.operands.precision = precision1.val();
-                    }
-                    else if ((data.operator == "between") || (data.operator == "outside"))
-                    {
-                        data.operands = [{}, {}];
-                        data.operands[0].type = time1.typedInput("type");
-                        data.operands[0].value = time1.typedInput("value");
-                        data.operands[0].offset = offset1.spinner("value");
-                        data.operands[0].random = random1.spinner("value");
-                        data.operands[0].precision = precision1.val();
-                        data.operands[1].type = time2.typedInput("type");
-                        data.operands[1].value = time2.typedInput("value");
-                        data.operands[1].offset = offset2.spinner("value");
-                        data.operands[1].random = random2.spinner("value");
-                        data.operands[1].precision = precision2.val();
-                    }
-                    else if (data.operator == "days")
-                    {
-                        data.operands = {};
-                        data.operands.type = $(this).find(".node-input-dayType").val();
+                        const data = {};
 
-                        if (data.operands.type == "specific")
+                        const time1 = $(this).find(".node-input-time1");
+                        const time2 = $(this).find(".node-input-time2");
+                        const offset1 = $(this).find(".node-input-offset1");
+                        const offset2 = $(this).find(".node-input-offset2");
+                        const random1 = $(this).find(".node-input-random1");
+                        const random2 = $(this).find(".node-input-random2");
+                        const precision1 = $(this).find(".node-input-precision1");
+                        const precision2 = $(this).find(".node-input-precision2");
+
+                        data.operator = $(this).find(".node-input-operator").val();
+
+                        if ((data.operator == "equal") ||
+                            (data.operator == "notEqual") ||
+                            (data.operator == "before") ||
+                            (data.operator == "until") ||
+                            (data.operator == "since") ||
+                            (data.operator == "after"))
                         {
-                            data.operands.day = $(this).find(".node-input-fixedDay").spinner("value");
-                            data.operands.month = $(this).find(".node-input-fixedMonth").val();
+                            data.operands = {};
+                            data.operands.type = time1.typedInput("type");
+                            data.operands.value = time1.typedInput("value");
+                            data.operands.offset = offset1.spinner("value");
+                            data.operands.random = random1.spinner("value");
+                            data.operands.precision = precision1.val();
                         }
-                        else if (data.operands.type != "even")
+                        else if ((data.operator == "between") || (data.operator == "outside"))
                         {
-                            data.operands.day = $(this).find(".node-input-day").val();
+                            data.operands = [{}, {}];
+                            data.operands[0].type = time1.typedInput("type");
+                            data.operands[0].value = time1.typedInput("value");
+                            data.operands[0].offset = offset1.spinner("value");
+                            data.operands[0].random = random1.spinner("value");
+                            data.operands[0].precision = precision1.val();
+                            data.operands[1].type = time2.typedInput("type");
+                            data.operands[1].value = time2.typedInput("value");
+                            data.operands[1].offset = offset2.spinner("value");
+                            data.operands[1].random = random2.spinner("value");
+                            data.operands[1].precision = precision2.val();
                         }
-
-                        data.operands.exclude = $(this).find(".node-input-exclude").prop("checked");
-                    }
-                    else if (data.operator == "weekdays")
-                    {
-                        data.operands = Array(7).fill(false);
-
-                        for (let i=0; i<7; ++i)
+                        else if (data.operator == "days")
                         {
-                            data.operands[i] = $(this).find(".node-input-" + weekdays[i]).prop("checked");
-                        }
-                    }
-                    else if (data.operator == "months")
-                    {
-                        data.operands = Array(12).fill(false);
+                            data.operands = {};
+                            data.operands.type = $(this).find(".node-input-dayType").val();
 
-                        for (let i=0; i<12; ++i)
+                            if (data.operands.type == "specific")
+                            {
+                                data.operands.day = $(this).find(".node-input-fixedDay").spinner("value");
+                                data.operands.month = $(this).find(".node-input-fixedMonth").val();
+                            }
+                            else if (data.operands.type != "even")
+                            {
+                                data.operands.day = $(this).find(".node-input-day").val();
+                            }
+
+                            data.operands.exclude = $(this).find(".node-input-exclude").prop("checked");
+                        }
+                        else if (data.operator == "weekdays")
                         {
-                            data.operands[i] = $(this).find(".node-input-" + months[i]).prop("checked");
+                            data.operands = Array(7).fill(false);
+
+                            for (let i=0; i<7; ++i)
+                            {
+                                data.operands[i] = $(this).find(".node-input-" + weekdays[i]).prop("checked");
+                            }
                         }
-                    }
-                    else if (data.operator == "expression")
-                    {
-                        data.expression = $(this).find(".node-input-expression").typedInput("value");
-                    }
-                    else if (data.operator == "context")
-                    {
-                        const context = $(this).find(".node-input-context");
+                        else if (data.operator == "months")
+                        {
+                            data.operands = Array(12).fill(false);
 
-                        data.context = {};
-                        data.context.value = context.typedInput("value");
-                        data.context.type = context.typedInput("type");
-                    }
+                            for (let i=0; i<12; ++i)
+                            {
+                                data.operands[i] = $(this).find(".node-input-" + months[i]).prop("checked");
+                            }
+                        }
+                        else if (data.operator == "expression")
+                        {
+                            data.expression = $(this).find(".node-input-expression").typedInput("value");
+                        }
+                        else if (data.operator == "context")
+                        {
+                            const context = $(this).find(".node-input-context");
 
-                    node.conditions.push(data);
-                });
+                            data.context = {};
+                            data.context.value = context.typedInput("value");
+                            data.context.type = context.typedInput("type");
+                        }
+
+                        node.conditions.push(data);
+                    });
+                }
+                else
+                {
+                    const conditions = $("#node-input-durationConditions").editableList("items");
+
+                    conditions.each(function(index)
+                    {
+                        const data = {};
+
+                        const duration1 = $(this).find(".node-input-duration1");
+                        const duration2 = $(this).find(".node-input-duration2");
+                        const duration1Unit = $(this).find(".node-input-duration1Unit");
+                        const duration2Unit = $(this).find(".node-input-duration2Unit");
+
+                        data.operator = $(this).find(".node-input-operator").val();
+                        data.label = node._("node-red-contrib-chronos/chronos-config:common.list.condition.operator." + data.operator);
+
+                        if ((data.operator == "equal") ||
+                            (data.operator == "notEqual") ||
+                            (data.operator == "less") ||
+                            (data.operator == "lessOrEqual") ||
+                            (data.operator == "greaterOrEqual") ||
+                            (data.operator == "greater"))
+                        {
+                            data.operands = {};
+                            data.operands.type = duration1.typedInput("type");
+                            data.operands.value = duration1.typedInput("value");
+
+                            if (data.operands.type == "num")
+                            {
+                                data.operands.unit = duration1Unit.val();
+                            }
+                        }
+                        else if ((data.operator == "between") || (data.operator == "outside"))
+                        {
+                            data.operands = [{}, {}];
+                            data.operands[0].type = duration1.typedInput("type");
+                            data.operands[0].value = duration1.typedInput("value");
+
+                            if (data.operands[0].type == "num")
+                            {
+                                data.operands[0].unit = duration1Unit.val();
+                            }
+
+                            data.operands[1].type = duration2.typedInput("type");
+                            data.operands[1].value = duration2.typedInput("value");
+
+                            if (data.operands[1].type == "num")
+                            {
+                                data.operands[1].unit = duration2Unit.val();
+                            }
+                        }
+                        else if (data.operator == "expression")
+                        {
+                            data.expression = $(this).find(".node-input-expression").typedInput("value");
+                        }
+                        else if (data.operator == "context")
+                        {
+                            const context = $(this).find(".node-input-context");
+
+                            data.context = {};
+                            data.context.value = context.typedInput("value");
+                            data.context.type = context.typedInput("type");
+                        }
+
+                        node.conditions.push(data);
+                    });
+                }
             },
             oneditresize: function(size)
             {
-                const conditionListRow = $("#dialog-form>div.node-input-conditionList-row");
-                const otherRows = $("#dialog-form>div:not(.node-input-conditionList-row)");
+                const otherRows = $("#dialog-form>div:not(.node-input-list-row)");
                 let height = size.height;
 
                 for (let i=0; i<otherRows.length; ++i)
@@ -1133,10 +1517,16 @@ SOFTWARE.
                     height -= $(otherRows[i]).outerHeight(true);
                 }
 
-                height -= (parseInt(conditionListRow.css("marginTop")) + parseInt(conditionListRow.css("marginBottom")));
-                height -= $("#dialog-form>div.node-input-conditionList-row>label").outerHeight(true);
-
-                $("#node-input-conditionList").editableList("height", height);
+                if ($("#node-input-reference").typedInput("type") == "absTime")
+                {
+                    height -= (parseInt($("#node-input-momentConditions-row").css("marginTop")) + parseInt($("#node-input-momentConditions-row").css("marginBottom")));
+                    $("#node-input-momentConditions").editableList("height", height);
+                }
+                else
+                {
+                    height -= (parseInt($("#node-input-durationConditions-row").css("marginTop")) + parseInt($("#node-input-durationConditions-row").css("marginBottom")));
+                    $("#node-input-durationConditions").editableList("height", height);
+                }
             }
         });
     })();
