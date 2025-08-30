@@ -211,9 +211,7 @@ module.exports = function(RED)
                         }
                         else
                         {
-                            node.error(e.message);
-                            node.debug(e.stack);
-                            done();
+                            throw e;
                         }
                     }
 

@@ -24,9 +24,9 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-filter">
     <p>
-        Filters messages based on specific times.
+        Filters messages based on specific times or time spans.
     </p>
-   <h3>Details</h3>
+    <h3>Details</h3>
     <p>
         This node is similar to the time switch node but instead of routing
         messages to different output ports, it hands over or discards messages
@@ -43,6 +43,61 @@ SOFTWARE.
         <dt>Configuration</dt>
         <dd>
             A reference to the configuration node to be used.
+        </dd>
+        <dt>Reference</dt>
+        <dd>
+            The time reference for the base time (see below). If set to <i>absolute
+            time</i>, the node is in moment mode and all conditions are compared with
+            the absolute base time. Otherwise, the node is in duration mode and all
+            conditions are compared with the time span between reference time and base
+            time (base duration). The reference time for duration mode can be one of:
+            <ul>
+                <li>
+                    <i>time of day</i>: A specific time can be entered directly
+                    in 12 or 24 hour format. Optionally it is possible to specify
+                    a date and a time using regional or ISO 8601 format.
+                </li>
+                <li>
+                    <i>sun position</i>: The sun position can be selected from
+                    a list of predefined values.
+                </li>
+                <li>
+                    <i>moon position</i>: The moon position can be selected from
+                    a list of predefined values.
+                </li>
+                <li>
+                    <i>custom sun position</i>: One of the user-defined sun position names
+                    can be entered.
+                </li>
+                <li>
+                    <i>env variable</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: Time from a
+                    context variable or message property. The variables/properties
+                    can have the following format:
+                    <ul>
+                        <li>
+                            Number (timestamp)
+                            <ul>
+                                <li>
+                                    Number of milliseconds elapsed since the UNIX
+                                    epoch (universal time)
+                                </li>
+                                <li>
+                                    Number of milliseconds elapsed since midnight
+                                    (local time) if value is smaller than 86.400.000
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            String
+                            <ul>
+                                <li>Time in 12 or 24 hour format</li>
+                                <li>Date and time in region-specific format</li>
+                                <li>Date and time in ISO 8601 format</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </dd>
         <dt>Base Time</dt>
         <dd>
@@ -110,17 +165,22 @@ SOFTWARE.
         </dd>
         <dt>Conditions</dt>
         <dd>
-            The list containing the conditions for filtering messages. New entries
-            can be added using the button below the list. Existing entries can be
-            reordered or deleted. Depending on the selected operator or source on
-            the left side, the following possibilities are available:
+            <p>
+                The list containing the conditions for filtering messages. New entries
+                can be added using the button below the list. Existing entries can be
+                reordered or deleted.
+            </p>
+            <p>
+                In moment mode, the following possibilities are available depending
+                on the selected operator or source on the left side:
+            </p>
             <ul>
                 <li>
-                    Operator <i>==</i>: Checks if the base time is the same as the
+                    Operator <i>&equals;</i>: Checks if the base time is the same as the
                     specified time.
                 </li>
                 <li>
-                    Operator <i>!=</i>: Checks if the base time is not the same as the
+                    Operator <i>&ne;</i>: Checks if the base time is not the same as the
                     specified time.
                 </li>
                 <li>
@@ -174,8 +234,10 @@ SOFTWARE.
                     for a description of the required structure for the variable.
                 </li>
             </ul>
-            For the time input, depending on the selection on the left side, the
-            following possibilities are available:
+            <p>
+                For the time input, depending on the selection on the left side, the
+                following possibilities are available:
+            </p>
             <ul>
                 <li>
                     <i>time of day</i>: A specific time can be entered directly
@@ -195,7 +257,7 @@ SOFTWARE.
                     can be entered.
                 </li>
                 <li>
-                    <i>env</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: The time is
+                    <i>env variable</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: The time is
                     retrieved from an environment variable, a context variable or a
                     message property. The variables/properties can have the following
                     format:
@@ -230,10 +292,95 @@ SOFTWARE.
                     </ul>
                 </li>
             </ul>
-            The specified times can additionally be shifted by an (optionally
-            randomized) offset and set to a certain precision for the comparison.
-            These settings are accessible through the expand/collapse arrow on
-            the right side.
+            <p>
+                The specified times can additionally be shifted by an (optionally
+                randomized) offset and set to a certain precision for the comparison.
+                These settings are accessible through the expand/collapse arrow on
+                the right side.
+            </p>
+            <p>
+                In duration mode, the following possibilities are available depending
+                on the selected operator or source on the left side:
+            </p>
+            <ul>
+                <li>
+                    Operator <i>&equals;</i>: Checks if the base duration is the same as the
+                    specified duration.
+                </li>
+                <li>
+                    Operator <i>&ne;</i>: Checks if the base duration is not the same as the
+                    specified duration.
+                </li>
+                <li>
+                    Operator <i>&lt;</i>: Checks if the base duration is less than the
+                    specified duration.
+                </li>
+                <li>
+                    Operator <i>&le;</i>: Checks if the base duration is less than or
+                    equal to the specified duration.
+                </li>
+                <li>
+                    Operator <i>&ge;</i>: Checks if the base duration is equal to or greater
+                    than the specified duration.
+                </li>
+                <li>
+                    Operator <i>&gt;</i>: Checks if the base duration is greater than the
+                    specified duration.
+                </li>
+                <li>
+                    Operator <i>between</i>: Checks if the base duration is equal to or greater
+                    than the first and less than or equal to the second specified duration.
+                </li>
+                <li>
+                    Operator <i>outside</i>: Checks if the base duration is less than the
+                    first or greater than the second specified duration.
+                </li>
+                <li>
+                    Source <i>expression</i>: The condition result is taken from the
+                    provided JSONata expression. The reference time can be accessd through
+                    variable <code>$refTime</code> and the base time can be accessed through
+                    variable <code>$baseTime</code>. Additionally, the time span between
+                    reference time and base time  can be accessed through variable
+                    <code>$duration</code>.
+                </li>
+                <li>
+                    Source <i>context</i>: Loads the condition from the specified
+                    environment or context variable. See section <i>Input</i> below
+                    for a description of the required structure for the variable.
+                </li>
+            </ul>
+            <p>
+                For the duration input, depending on the selection on the left side, the
+                following possibilities are available:
+            </p>
+            <ul>
+                <li>
+                    <i>number</i>: The duration can be entered as a number. The unit
+                    has to be chosen from the dropdown box on the right side.
+                </li>
+                <li>
+                    <i>string</i>: The duration can be entered as ASP.NET style time
+                    span or in ISO 8601 format.
+                </li>
+                <li>
+                    <i>env variable</i>, <i>global</i>, <i>flow</i>, <i>msg</i>: The duration is
+                    retrieved from an environment variable, a context variable or a
+                    message property. The variables/properties can have the following
+                    format:
+                    <ul>
+                        <li>
+                            Number (duration in milliseconds)
+                        </li>
+                        <li>
+                            String
+                            <ul>
+                                <li>Duration as ASP.NET style time span</li>
+                                <li>Duration in ISO 8601 format</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </dd>
     </dl>
     <h3>Input</h3>
@@ -243,8 +390,11 @@ SOFTWARE.
     <p>
         Conditions can be dynamically programmed by configuring the corresponding
         condition to be loaded from a context variable (see section <i>Configuration</i>
-        above). The appropriate variables must be objects containing the following
-        properties:
+        above).
+    </p>
+    <p>
+        In moment mode, the appropriate variables must be objects containing the
+        following properties:
     </p>
     <dl class="message-properties">
         <dt>operator<span class="property-type">string</span></dt>
@@ -312,10 +462,33 @@ SOFTWARE.
         for base times in that month or not fulfilled if the property is
         <code>false</code> or not present.
     </p>
+    <p>
+        In duration mode, the appropriate variables must be objects containing the
+        following properties:
+    </p>
+    <dl class="message-properties">
+        <dt>operator<span class="property-type">string</span></dt>
+        <dd>
+            Operator for comparison; one of "equal", "notEqual", "less", "lessOrEqual",
+            "greater", "greaterOrEqual", "between", or "outside"
+        </dd>
+        <dt class="optional">operands<span class="property-type">number | string | array</span></dt>
+        <dd>Operands for comparison; content is depending on operator</dd>
+    </dl>
+    <p>
+        If <code>operator</code> is:
+        <ul>
+            <li>"equal", "notEqual", "less", "lessOrEqual", "greater" or "greaterOrEqual", <code>operands</code> must be a number or a string</li>
+            <li>"between" or "outside", <code>operands</code> must be an array containing two elements being either a number or a string</li>
+        </ul>
+        If the operand is a number, it represents the duration in milliseconds. If
+        it is a string, it can be specified either as ASP.NET style time span or in
+        ISO 8601 format.
+    </p>
     <h3>Outputs</h3>
     <p>
-        If one or multiple conditions match the configured base time according
-        to the specified evaluation method, the message is sent out.
+        If one or multiple conditions match the configured base time or base duration
+        according to the specified evaluation method, the message is sent out.
     </p>
     <p>
         Only if evaluation method <i>annotation</i> is activated:
