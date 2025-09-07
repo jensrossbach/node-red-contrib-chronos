@@ -38,7 +38,6 @@ module.exports = function(RED)
         node.RED = RED;
         node.name = settings.name;
         node.config = RED.nodes.getNode(settings.config);
-        node.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
 
         // backward compatibility to v1.14.x and earlier
         if (typeof settings.mode == "undefined")

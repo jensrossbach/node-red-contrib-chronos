@@ -28,8 +28,44 @@ module.exports = function(RED)
     {
         if (req.query.command === "getenv")
         {
-            let value = process.env[req.query.varname];
+            const value = process.env[req.query.varname];
             res.json((typeof value == "undefined") ? "not found" : value);
+        }
+        else if (req.query.command === "gettime")
+        {
+            const context = {};
+            context.RED = RED;
+            context.chronos = require("./common/chronos.js");
+            context.config = RED.nodes.getNode(req.query.config);
+            context.debug = context.config.debug;
+
+            if (context.config)
+            {
+                try
+                {
+                    const now = context.chronos.getCurrentTime(context);
+                    let time = context.chronos.getTime(
+                                                context,
+                                                now.clone(),
+                                                req.query.timeType,
+                                                req.query.timeName);
+
+                    if (now.isAfter(time))
+                    {
+                        time = context.chronos.getTime(
+                                                context,
+                                                now.add(1, "day"),
+                                                req.query.timeType,
+                                                req.query.timeName);
+                    }
+
+                    res.json(time.format("YYYY-MM-DD HH:mm:ss"));
+                }
+                catch (e)
+                {
+                    context.error(e.message);
+                }
+            }
         }
     });
 
@@ -41,6 +77,7 @@ module.exports = function(RED)
 
         this.RED = RED;
         this.name = config.name;
+        this.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
 
         if (config.timezoneType == "env")
         {

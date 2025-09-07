@@ -308,6 +308,52 @@ SOFTWARE.
             {
                 const node = this;
 
+                let tokenCounter = 0;
+
+                $("body").on("mouseenter.chronos_repeat", ".red-ui-typedInput-option-trigger", function()
+                {
+                    const _this = this;
+
+                    const input = $(_this).parent().parent().find("input");
+                    if (input.length >= 3)
+                    {
+                        const type = input.eq(2).val();
+                        if ((type == "sun") || (type == "moon"))
+                        {
+                            const token = tokenCounter++;
+                            _this._chronos_lastToken = token;
+
+                            $.getJSON(
+                                "chronos_config", {
+                                    command: "gettime",
+                                    timeType: type,
+                                    timeName: input.eq(0).val(),
+                                    config: $("#node-input-config").val()})
+                                    .done(result =>
+                            {
+                                if (_this._chronos_lastToken === token)
+                                {
+                                    const label = $(_this).find("span.red-ui-typedInput-option-label");
+
+                                    _this._chronos_lastOptionLabel = label.html();
+                                    label.html(result);
+                                }
+                            });
+                        }
+                    }
+                }).on("mouseleave.chronos_repeat", ".red-ui-typedInput-option-trigger", function()
+                {
+                    delete this._chronos_lastToken;
+
+                    if (this._chronos_lastOptionLabel)
+                    {
+                        const label = $(this).find("span.red-ui-typedInput-option-label");
+                        label.html(this._chronos_lastOptionLabel);
+
+                        delete this._chronos_lastOptionLabel;
+                    }
+                });
+
                 const sunTimes =
                 [
                     {
@@ -641,8 +687,14 @@ SOFTWARE.
             },
             oneditsave: function()
             {
+                $("body").off(".chronos_repeat");
+
                 $("#node-input-customRepetitionValue").val($("#node-input-customRepetition").typedInput("value"));
                 $("#node-input-untilValue").val($("#node-input-until").typedInput("value"));
+            },
+            oneditcancel: function()
+            {
+                $("body").off(".chronos_repeat");
             }
         });
     })();
