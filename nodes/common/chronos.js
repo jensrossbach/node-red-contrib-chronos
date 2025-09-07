@@ -129,7 +129,7 @@ function printNodeInfo(node)
 function getCurrentTime(node)
 {
     const ret = getMoment(node);
-    ret.locale(node.locale);
+    ret.locale(node.config.locale);
 
     return ret;
 }
@@ -150,7 +150,7 @@ function getTimeFrom(node, source)
                     "L LT",                     // locale-specific date and time
                     "L LTS",                    // locale-specific date and time (incl. seconds)
                     moment.ISO_8601],           // ISO 8601 datetime
-                node.locale,
+                node.config.locale,
                 true);
     }
     else if ((typeof source == "number") && (source >= 0))
@@ -176,7 +176,7 @@ function getTimeFrom(node, source)
         ret = moment.invalid();
     }
 
-    ret.locale(node.locale);
+    ret.locale(node.config.locale);
     return ret;
 }
 
@@ -213,7 +213,7 @@ function getUserTime(node, day, value, timeOnly = false)
                         "L LT",            // locale-specific date and time
                         "L LTS",           // locale-specific date and time (incl. seconds)
                         moment.ISO_8601],  // ISO 8601 datetime
-                    node.locale,
+                    node.config.locale,
                     true);
             ret.hasUserDate(true);
         }
@@ -237,7 +237,7 @@ function getUserTime(node, day, value, timeOnly = false)
         throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
     }
 
-    ret.locale(node.locale);
+    ret.locale(node.config.locale);
     return ret;
 }
 
@@ -248,7 +248,7 @@ function getUserDate(node, value)
     if (PATTERN_DATE.test(value))
     {
         ret = getMoment(node, value, "YYYY-MM-DD");
-        ret.locale(node.locale);
+        ret.locale(node.config.locale);
     }
 
     if (!ret || !ret.isValid())
@@ -295,7 +295,7 @@ function getSunTime(node, day, type)
                 ret.tz(tz);
             }
 
-            ret.locale(node.locale);
+            ret.locale(node.config.locale);
         }
     }
 
@@ -327,7 +327,7 @@ function getMoonTime(node, day, type)
                 ret.tz(tz);
             }
 
-            ret.locale(node.locale);
+            ret.locale(node.config.locale);
         }
     }
 
@@ -372,7 +372,7 @@ function getTime(node, day, type, value)
                             matches[1], [
                                 "L",            // locale-specific date
                                 "YYYY-MM-DD"],  // ISO 8601 date
-                            node.locale,
+                            node.config.locale,
                             true);
                 }
 
@@ -509,7 +509,7 @@ function retrieveTime(node, msg, baseTime, type, value)
 function getDuration(node, input, unit)
 {
     const ret = moment.duration(input, unit);
-    ret.locale(node.locale);
+    ret.locale(node.config.locale);
 
     return ret;
 }
@@ -611,7 +611,7 @@ function getJSONataExpression(node, expr)
             latitude: (typeof node.config.latitude == "number") ? node.config.latitude : null,
             longitude: (typeof node.config.longitude == "number") ? node.config.longitude : null,
             timezone: node.config.tzFromContext ? null : node.config.timezone,
-            locale: node.locale});
+            locale: node.config.locale});
 
     expression.registerFunction("getLatitude", () => { return getLatitude(node); }, "<:n>");
     expression.registerFunction("getLongitude", () => { return getLongitude(node); }, "<:n>");
