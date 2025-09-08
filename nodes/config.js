@@ -37,7 +37,8 @@ module.exports = function(RED)
             context.RED = RED;
             context.chronos = require("./common/chronos.js");
             context.config = RED.nodes.getNode(req.query.config);
-            context.debug = context.config.debug;
+            context.debug = context.config.debug.bind(context.config);
+            context.error = context.config.error.bind(context.config);
 
             if (context.config)
             {
@@ -63,7 +64,14 @@ module.exports = function(RED)
                 }
                 catch (e)
                 {
-                    context.error(e.message);
+                    if (e instanceof context.chronos.TimeError)
+                    {
+                        context.error(e.message, {errorDetails: e.details});
+                    }
+                    else
+                    {
+                        throw e;
+                    }
                 }
             }
         }
