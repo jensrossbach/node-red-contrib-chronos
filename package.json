@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-chronos",
-    "version": "1.28.1",
+    "version": "1.29.0",
     "description": "Time-based Node-RED scheduling, repeating, queueing, routing, filtering and manipulating nodes",
     "author": {
         "name": "Jens-Uwe Rossbach",
@@ -49,9 +49,9 @@
         "suncalc": "^1.9.0"
     },
     "devDependencies": {
-        "eslint": "^9.33.0",
+        "eslint": "^9.35.0",
         "jsonata": "^2.1.0",
-        "mocha": "^11.7.1",
+        "mocha": "^11.7.2",
         "node-red": "^4.1.0",
         "node-red-node-test-helper": "^0.3.5",
         "nyc": "^17.1.0",
