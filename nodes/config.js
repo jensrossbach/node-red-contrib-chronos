@@ -51,7 +51,7 @@ module.exports = function(RED)
                                                 req.query.timeType,
                                                 req.query.timeName);
 
-                    if (now.isAfter(time))
+                    if ((req.query.currentDay !== "true") && now.isAfter(time))
                     {
                         time = context.chronos.getTime(
                                                 context,
