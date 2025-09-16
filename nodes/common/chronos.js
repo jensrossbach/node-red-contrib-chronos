@@ -66,24 +66,26 @@ function getMoment()
         {
             ret = moment.apply(null, args);
         }
-
-        ret._hasUserDate = false;
-        ret.hasUserDate = function(flag)
-        {
-            if (flag === undefined)
-            {
-                return this._hasUserDate;
-            }
-            else
-            {
-                this._hasUserDate = flag;
-            }
-        };
     }
     catch
     {
         ret = moment.invalid();
     }
+
+    ret._hasUserDate = false;
+    ret.hasUserDate = function(flag)
+    {
+        if (flag === undefined)
+        {
+            return this._hasUserDate;
+        }
+        else
+        {
+            this._hasUserDate = flag;
+        }
+    };
+
+    ret.locale(node.config.locale);
 
     return ret;
 }
@@ -129,8 +131,6 @@ function printNodeInfo(node)
 function getCurrentTime(node)
 {
     const ret = getMoment(node);
-    ret.locale(node.config.locale);
-
     return ret;
 }
 
@@ -176,7 +176,6 @@ function getTimeFrom(node, source)
         ret = moment.invalid();
     }
 
-    ret.locale(node.config.locale);
     return ret;
 }
 
@@ -237,7 +236,6 @@ function getUserTime(node, day, value, timeOnly = false)
         throw new TimeError(node.RED._("node-red-contrib-chronos/chronos-config:common.error.invalidTime"), {type: "time", value: value});
     }
 
-    ret.locale(node.config.locale);
     return ret;
 }
 
@@ -248,7 +246,6 @@ function getUserDate(node, value)
     if (PATTERN_DATE.test(value))
     {
         ret = getMoment(node, value, "YYYY-MM-DD");
-        ret.locale(node.config.locale);
     }
 
     if (!ret || !ret.isValid())
@@ -282,20 +279,10 @@ function getSunTime(node, day, type)
     let ret = null;
     if (sunTimes[type])
     {
-        ret = moment(sunTimes[type]);
+        ret = getMoment(node, sunTimes[type]);
         if (!ret.isValid())
         {
             ret = null;
-        }
-        else
-        {
-            const tz = getTimeZone(node);
-            if (tz)
-            {
-                ret.tz(tz);
-            }
-
-            ret.locale(node.config.locale);
         }
     }
 
@@ -314,20 +301,10 @@ function getMoonTime(node, day, type)
     let ret = null;
     if (moonTimes[type])
     {
-        ret = moment(moonTimes[type]);
+        ret = getMoment(node, moonTimes[type]);
         if (!ret.isValid())
         {
             ret = null;
-        }
-        else
-        {
-            const tz = getTimeZone(node);
-            if (tz)
-            {
-                ret.tz(tz);
-            }
-
-            ret.locale(node.config.locale);
         }
     }
 
