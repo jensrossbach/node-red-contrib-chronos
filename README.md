@@ -30,17 +30,17 @@ Delays each message passing through the node for a configurable amount of time o
 ![Delay](images/delay.png)
 
 #### Time Switch
-Routes messages based on a specific time.
+Routes messages based on a specific time or duration.
 
 ![Time Switch](images/switch.png)
 
 #### Time Filter
-Filters messages based on a specific time.
+Filters messages based on a specific time or duration.
 
 ![Timer Filter](images/filter.png)
 
 #### Time Change
-Modifies time values in messages or context stores.
+Modifies time and duration values in messages or context stores.
 
 ![Timer Change](images/change.png)
 
