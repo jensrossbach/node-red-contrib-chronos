@@ -755,7 +755,10 @@ async function evaluateCondition(node, msg, reference, baseTime, cond, id)
             // time switch/filter node specific JSONata extensions
             expression.assign("baseTime", baseTime.valueOf());
             expression.assign("refTime", reference.valueOf());
-            expression.assign("duration", node.chronos.getDuration(node, baseTime.diff(reference)).asMilliseconds());
+
+            const baseDuration = node.chronos.getDuration(node, baseTime.diff(reference)).asMilliseconds();
+            expression.assign("duration", baseDuration);  // backward compatibility to version 1.29.1 and below
+            expression.assign("baseDuration", baseDuration);
 
             result = await node.chronos.evaluateJSONataExpression(node.RED, expression, msg);
         }
