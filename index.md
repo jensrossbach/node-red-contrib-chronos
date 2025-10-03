@@ -1,7 +1,7 @@
 # node-red-contrib-chronos
 
 <a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm version" src="https://badgen.net/npm/v/node-red-contrib-chronos"></a>
-<a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm downloads" src="https://badgen.net/npm/dt/node-red-contrib-chronos"></a>
+<a href="https://www.npmjs.com/package/node-red-contrib-chronos"><img title="npm downloads" src="https://badgen.net/npm/dw/node-red-contrib-chronos"></a>
 
 A collection of Node-RED nodes for date and time based scheduling, repeating, queueing, routing, filtering and manipulating. Automatically calculated times from sun events (sunrise, sunset, dusk, dawn, ...) or moon events (moonrise, moonset) are supported as well.
 
@@ -30,22 +30,22 @@ Delays each message passing through the node for a configurable amount of time o
 ![Delay](images/delay.png)
 
 #### Time Switch
-Routes messages based on a specific time.
+Routes messages based on a specific time or duration.
 
 ![Time Switch](images/switch.png)
 
 #### Time Filter
-Filters messages based on a specific time.
+Filters messages based on a specific time or duration.
 
 ![Timer Filter](images/filter.png)
 
 #### Time Change
-Modifies time values in messages or context stores.
+Modifies time and duration values in messages or context stores.
 
 ![Timer Change](images/change.png)
 
 ## Documentation
-The detailed documentation of each node is available in the wiki of the GitHub repository.
+Each node has a built-in help that is displayed in the help tab of the Node-RED sidebar providing essential information about how to use the node. There is also a comprehensive and detailed (English-only) documentation available in the wiki of the GitHub repository.
 
 **&rarr; [Documentation](https://github.com/jensrossbach/node-red-contrib-chronos/wiki)**
 
