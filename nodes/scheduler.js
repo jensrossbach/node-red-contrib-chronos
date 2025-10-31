@@ -676,30 +676,37 @@ module.exports = function(RED)
                     const sched = chronos.getCurrentTime(node);
                     const delay = next.diff(sched);
 
-                    node.timer = setTimeout(async() =>
+                    if (delay >= 0)
                     {
-                        node.debug("Timer with ID " + node.timer + " expired");
+                        node.timer = setTimeout(async() =>
+                        {
+                            node.debug("Timer with ID " + node.timer + " expired");
 
-                        const now = chronos.getCurrentTime(node);
-                        if (now.isBefore(next))
-                        {
-                            // when running is a docker environment, it can happen that timers
-                            // run too fast and therefore expire too early
-                            node.debug("Timer expired too early, ignoring");
-                        }
-                        else
-                        {
-                            for (let data of events)
+                            const now = chronos.getCurrentTime(node);
+                            if (now.isBefore(next))
                             {
-                                await produceOutput(data);
-                                setUpEvent(data, next);
+                                // when running is a docker environment, it can happen that timers
+                                // run too fast and therefore expire too early
+                                node.debug("Timer expired too early, ignoring");
                             }
-                        }
+                            else
+                            {
+                                for (let data of events)
+                                {
+                                    await produceOutput(data);
+                                    setUpEvent(data, next);
+                                }
+                            }
 
-                        startTimer();
-                    }, (delay > 0) ? delay : 0);
+                            startTimer();
+                        }, delay);
 
-                    node.debug("Successfully started timer with ID " + node.timer + " at " + sched.format("YYYY-MM-DD HH:mm:ss.SSS (Z)") + " waiting " + delay + " milliseconds");
+                        node.debug("Successfully started timer with ID " + node.timer + " at " + sched.format("YYYY-MM-DD HH:mm:ss.SSS (Z)") + " waiting " + delay + " milliseconds");
+                    }
+                    else
+                    {
+                        node.error("Unexpected negative timeout of " + delay + " milliseconds");
+                    }
                 }
             }
         }

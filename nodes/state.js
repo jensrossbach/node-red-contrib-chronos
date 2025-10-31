@@ -795,29 +795,36 @@ module.exports = function(RED)
                     const now = chronos.getCurrentTime(node);
                     const delay = state.triggerTime.diff(now);
 
-                    node.currentState.timer = setTimeout(async() =>
+                    if (delay >= 0)
                     {
-                        node.debug("[State:" + state.data.id + "] Timer with ID " + node.currentState.timer + " expired");
-                        delete node.currentState.timer;
-
-                        if (await evalConditions(state.triggerTime))
+                        node.currentState.timer = setTimeout(async() =>
                         {
-                            await switchState(state);
+                            node.debug("[State:" + state.data.id + "] Timer with ID " + node.currentState.timer + " expired");
+                            delete node.currentState.timer;
 
-                            if (node.currentState.timer)
+                            if (await evalConditions(state.triggerTime))
                             {
-                                clearTimeout(node.currentState.timer);
-                                delete node.currentState.timer;
+                                await switchState(state);
+
+                                if (node.currentState.timer)
+                                {
+                                    clearTimeout(node.currentState.timer);
+                                    delete node.currentState.timer;
+                                }
+
+                                outputState();
                             }
 
-                            outputState();
-                        }
+                            setUpTimer();
+                            updateStatus();
+                        }, delay);
 
-                        setUpTimer();
-                        updateStatus();
-                    }, delay);
-
-                    node.debug("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer + " at " + now.format("YYYY-MM-DD HH:mm:ss.SSS (Z)") + " waiting " + delay + " milliseconds");
+                        node.debug("[State:" + state.data.id + "] Successfully started timer with ID " + node.currentState.timer + " at " + now.format("YYYY-MM-DD HH:mm:ss.SSS (Z)") + " waiting " + delay + " milliseconds");
+                    }
+                    else
+                    {
+                        node.error("Unexpected negative timeout of " + delay + " milliseconds");
+                    }
                 }
             }
         }
