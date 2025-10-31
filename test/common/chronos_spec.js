@@ -26,7 +26,7 @@
 const sinon = require("sinon");
 const chronos = require("../../nodes/common/chronos.js");
 const moment = require("moment");
-const sunCalc = require("suncalc");
+const sunCalc = require("suncalc2");
 const jsonata = require("jsonata");
 
 require("should-sinon");

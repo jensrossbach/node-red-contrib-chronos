@@ -44,7 +44,7 @@ class TimeError extends Error
 
 
 const moment = require("moment-timezone");
-const sunCalc = require("suncalc");
+const sunCalc = require("suncalc2");
 
 require("./moment_locales.js");
 
