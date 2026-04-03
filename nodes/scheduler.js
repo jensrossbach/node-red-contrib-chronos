@@ -338,7 +338,7 @@ module.exports = function(RED)
 
                 if (node.startQueue)
                 {
-                    for (let entry of node.startQueue)
+                    for (const entry of node.startQueue)
                     {
                         sendMessage(entry);
                     }
@@ -358,7 +358,7 @@ module.exports = function(RED)
         {
             node.debug("Starting events");
 
-            for (let data of node.schedule)
+            for (const data of node.schedule)
             {
                 startEvent(data);
             }
@@ -370,7 +370,7 @@ module.exports = function(RED)
         {
             node.debug("Stopping events");
 
-            for (let data of node.schedule)
+            for (const data of node.schedule)
             {
                 stopEvent(data);
             }
@@ -383,7 +383,7 @@ module.exports = function(RED)
             node.debug("Toggling events");
 
             let enabled = true;
-            for (let data of node.schedule)
+            for (const data of node.schedule)
             {
                 toggleEvent(data);
 
@@ -401,7 +401,7 @@ module.exports = function(RED)
         {
             node.debug("Rescheduling events");
 
-            for (let data of node.schedule)
+            for (const data of node.schedule)
             {
                 reloadEvent(data);
             }
@@ -413,7 +413,7 @@ module.exports = function(RED)
         {
             node.debug("Triggering events" + (forced ? " (forced)" : ""));
 
-            for (let data of node.schedule)
+            for (const data of node.schedule)
             {
                 await triggerEvent(data, forced);
             }
@@ -642,7 +642,7 @@ module.exports = function(RED)
 
             if (!node.disabledSchedule)
             {
-                for (let data of node.schedule)
+                for (const data of node.schedule)
                 {
                     if ((data.config.trigger.type != "crontab") && data.triggerTime)
                     {
@@ -695,7 +695,7 @@ module.exports = function(RED)
                             }
                             else
                             {
-                                for (let data of events)
+                                for (const data of events)
                                 {
                                     await produceOutput(data);
                                     setUpEvent(data, next);

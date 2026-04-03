@@ -571,7 +571,7 @@ SOFTWARE.
                     {
                         case "milliseconds":
                         {
-                            for (elem of elements)
+                            for (const elem of elements)
                             {
                                 elem.spinner("option", "max", 60000);
                             }
@@ -580,7 +580,7 @@ SOFTWARE.
                         }
                         case "seconds":
                         {
-                            for (elem of elements)
+                            for (const elem of elements)
                             {
                                 elem.spinner("option", "max", 3600);
                             }
@@ -589,7 +589,7 @@ SOFTWARE.
                         }
                         case "minutes":
                         {
-                            for (elem of elements)
+                            for (const elem of elements)
                             {
                                 elem.spinner("option", "max", 1440);
                             }
@@ -598,7 +598,7 @@ SOFTWARE.
                         }
                         case "hours":
                         {
-                            for (elem of elements)
+                            for (const elem of elements)
                             {
                                 elem.spinner("option", "max", 168);
                             }
@@ -607,7 +607,7 @@ SOFTWARE.
                         }
                         case "days":
                         {
-                            for (elem of elements)
+                            for (const elem of elements)
                             {
                                 elem.spinner("option", "max", 7);
                             }
@@ -616,7 +616,7 @@ SOFTWARE.
                         }
                     }
 
-                    for (elem of elements)
+                    for (const elem of elements)
                     {
                         validateNumericInput.call(elem);
                     }
