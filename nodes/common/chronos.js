@@ -52,7 +52,7 @@ function getMoment()
 {
     const node = arguments[0];
     const args = Array.prototype.slice.call(arguments, 1);
-    let ret = undefined;
+    let ret;
 
     try
     {
@@ -427,11 +427,11 @@ function getTime(node, day, type, value)
 
 function retrieveTime(node, msg, baseTime, type, value)
 {
-    let ret = undefined;
+    let ret;
 
     if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
     {
-        let ctxValue = undefined;
+        let ctxValue;
 
         if (type == "env")
         {
@@ -493,7 +493,7 @@ function getDuration(node, input, unit)
 
 function getLatitude(node)
 {
-    let ret = undefined;
+    let ret;
 
     if (typeof node.config.latitude == "number")
     {
@@ -509,7 +509,7 @@ function getLatitude(node)
 
 function getLongitude(node)
 {
-    let ret = undefined;
+    let ret;
 
     if (typeof node.config.longitude == "number")
     {
@@ -550,7 +550,7 @@ function getCoordinateFromContext(node, variable, min, max)
 
 function getTimeZone(node)
 {
-    let ret = undefined;
+    let ret;
 
     if (node.config.tzFromContext)
     {

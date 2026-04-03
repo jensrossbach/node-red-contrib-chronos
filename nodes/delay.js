@@ -349,7 +349,7 @@ module.exports = function(RED)
             {
                 if ((delayType == "custom") && (node.customDelayType != "jsonata"))
                 {
-                    let ctxData = undefined;
+                    let ctxData;
 
                     if (node.customDelayType == "env")
                     {
@@ -564,7 +564,7 @@ module.exports = function(RED)
             node.debug("Set up custom timer for delayed message with expression " + node.customDelayValue);
 
             const now = chronos.getCurrentTime(node);
-            let result = null;
+            let result;
 
             try
             {

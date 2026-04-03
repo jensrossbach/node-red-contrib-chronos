@@ -76,7 +76,7 @@ module.exports = function(RED)
 
         for (let i=0; i<settings.states.length; ++i)
         {
-            let data = undefined;
+            let data;
 
             const trigger = loadTrigger(settings.states[i].trigger);
             if (trigger)
@@ -413,7 +413,7 @@ module.exports = function(RED)
                 (source.type == "global") ||
                 (source.type == "flow"))
             {
-                let ctxData = undefined;
+                let ctxData;
 
                 if (source.type == "env")
                 {
@@ -1009,7 +1009,7 @@ module.exports = function(RED)
         {
             if (node.currentState.data)
             {
-                let stateValue = undefined;
+                let stateValue;
 
                 if ((node.currentState.data.state.type == "date") ||
                     (typeof node.currentState.data.state.value == "object"))

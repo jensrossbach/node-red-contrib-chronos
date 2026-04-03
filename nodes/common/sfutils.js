@@ -415,13 +415,13 @@ function validateDurationOperand(node, operand, num)
 
 async function evaluateCondition(node, msg, reference, baseTime, cond, id)
 {
-    let result = false;
+    let result;
 
     if (reference == "absTime")
     {
         if (cond.operator == "expression")
         {
-            let expression = null;
+            let expression;
 
             try
             {
@@ -746,7 +746,7 @@ async function evaluateCondition(node, msg, reference, baseTime, cond, id)
     }
     else if (cond.operator == "expression")
     {
-        let expression = null;
+        let expression;
 
         try
         {
@@ -797,7 +797,7 @@ async function evaluateCondition(node, msg, reference, baseTime, cond, id)
 
 function getContext(node, cond)
 {
-    let ctxData = undefined;
+    let ctxData;
 
     if (cond.context.type == "env")
     {
@@ -1179,11 +1179,11 @@ function evaluateDateCondition(baseTime, cond)
 
 function retrieveDuration(node, msg, type, value, unit)
 {
-    let durationVal = undefined;
+    let durationVal;
 
     if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
     {
-        let ctxValue = undefined;
+        let ctxValue;
 
         if (type == "env")
         {

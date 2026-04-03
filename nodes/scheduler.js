@@ -427,7 +427,7 @@ module.exports = function(RED)
                 (data.config.trigger.type == "global") ||
                 (data.config.trigger.type == "flow"))
             {
-                let ctxData = undefined;
+                let ctxData;
 
                 if (data.config.trigger.type == "env")
                 {
@@ -797,7 +797,7 @@ module.exports = function(RED)
 
         async function getOutputValue(value, type)
         {
-            let ret = undefined;
+            let ret;
 
             if (type)
             {
