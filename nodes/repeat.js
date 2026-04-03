@@ -310,7 +310,7 @@ module.exports = function(RED)
 
             if ((mode == "custom") && (node.customRepetitionType != "jsonata"))
             {
-                let ctxData = undefined;
+                let ctxData;
 
                 if (node.customRepetitionType == "env")
                 {
@@ -390,7 +390,7 @@ module.exports = function(RED)
 
             if ((type == "env") || (type == "global") || (type == "flow") || (type == "msg"))
             {
-                let ctxData = undefined;
+                let ctxData;
 
                 if (type == "env")
                 {
@@ -462,7 +462,7 @@ module.exports = function(RED)
 
                 ret.isExceededAt = async function(next)
                 {
-                    let result = false;
+                    let result;
 
                     try
                     {
@@ -634,7 +634,7 @@ module.exports = function(RED)
         {
             node.debug("Set up timer for trigger expression until " + untilTime.print());
 
-            let result = null;
+            let result;
 
             try
             {
