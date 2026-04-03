@@ -235,9 +235,9 @@
         {
             "missingHour":
             {
-                "skip":    "Fehlende Stunde überspringen",
-                "offset":  "Fehlende Stunde verschieben",
-                "insert":  "Fehlende Stunde einfügen"
+                "skip":    "Auslöser überspringen",
+                "offset":  "Auslöser verschieben",
+                "insert":  "Auslöser einfügen"
             }
         }
     }

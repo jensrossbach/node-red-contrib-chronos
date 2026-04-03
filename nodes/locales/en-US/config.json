@@ -235,9 +235,9 @@
         {
             "missingHour":
             {
-                "skip":    "skip missing hour",
-                "offset":  "shift missing hour",
-                "insert":  "insert missing hour"
+                "skip":    "skip trigger(s)",
+                "offset":  "shift trigger(s)",
+                "insert":  "insert trigger"
             }
         }
     }
