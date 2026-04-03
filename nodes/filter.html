@@ -188,7 +188,7 @@ SOFTWARE.
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands.type))
                                 {
-                                    const res = RED.utils.validateTypedProperty(item.operands.value, item.operands.type, opt)
+                                    const res = RED.utils.validateTypedProperty(item.operands.value, item.operands.type, opt);
                                     if (res !== true)
                                     {
                                         errors.push(res);
@@ -207,7 +207,7 @@ SOFTWARE.
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands[0].type))
                                 {
-                                    const res = RED.utils.validateTypedProperty(item.operands[0].value, item.operands[0].type, opt)
+                                    const res = RED.utils.validateTypedProperty(item.operands[0].value, item.operands[0].type, opt);
                                     if (res !== true)
                                     {
                                         errors.push(res);
@@ -224,7 +224,7 @@ SOFTWARE.
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands[1].type))
                                 {
-                                    const res = RED.utils.validateTypedProperty(item.operands[1].value, item.operands[1].type, opt)
+                                    const res = RED.utils.validateTypedProperty(item.operands[1].value, item.operands[1].type, opt);
                                     if (res !== true)
                                     {
                                         errors.push(res);
@@ -243,7 +243,7 @@ SOFTWARE.
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands.type))
                                 {
-                                    const res = RED.utils.validateTypedProperty(item.operands.value, item.operands.type, opt)
+                                    const res = RED.utils.validateTypedProperty(item.operands.value, item.operands.type, opt);
                                     if (res !== true)
                                     {
                                         errors.push(res);
@@ -262,7 +262,7 @@ SOFTWARE.
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands[0].type))
                                 {
-                                    const res = RED.utils.validateTypedProperty(item.operands[0].value, item.operands[0].type, opt)
+                                    const res = RED.utils.validateTypedProperty(item.operands[0].value, item.operands[0].type, opt);
                                     if (res !== true)
                                     {
                                         errors.push(res);
@@ -279,7 +279,7 @@ SOFTWARE.
                                 }
                                 else if (/^env|global|flow|msg$/.test(item.operands[1].type))
                                 {
-                                    const res = RED.utils.validateTypedProperty(item.operands[1].value, item.operands[1].type, opt)
+                                    const res = RED.utils.validateTypedProperty(item.operands[1].value, item.operands[1].type, opt);
                                     if (res !== true)
                                     {
                                         errors.push(res);
@@ -288,7 +288,7 @@ SOFTWARE.
                             }
                             else if (item.operator == "expression")
                             {
-                                const res = RED.utils.validateTypedProperty(item.expression, "jsonata", opt)
+                                const res = RED.utils.validateTypedProperty(item.expression, "jsonata", opt);
                                 if (res !== true)
                                 {
                                     errors.push(res);
@@ -296,7 +296,7 @@ SOFTWARE.
                             }
                             else if (item.operator == "context")
                             {
-                                const res = RED.utils.validateTypedProperty(item.context.value, item.context.type, opt)
+                                const res = RED.utils.validateTypedProperty(item.context.value, item.context.type, opt);
                                 if (res !== true)
                                 {
                                     errors.push(res);
@@ -1377,7 +1377,7 @@ SOFTWARE.
                     momentConditions.editableList("addItem", {});
                 }
 
-                for (data of node.conditions)
+                for (const data of node.conditions)
                 {
                     conditions.editableList("addItem", data);
                 }
