@@ -27,35 +27,59 @@ SOFTWARE.
         <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red-contrib-chronos/chronos-config:common.label.name"></span></label>
         <input type="text" id="node-config-input-name" data-i18n="[placeholder]node-red-contrib-chronos/chronos-config:common.label.name">
     </div>
-    <div class="form-row">
-        <div style="display: inline-block; width: auto; vertical-align: middle;">
-            <div>
-                <label for="node-config-input-latitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.latitude"></span></label>
-                <input type="text" id="node-config-input-latitude" style="width: 60%;">
-                <input id="node-config-input-latitudeType" type="hidden">
+    <div class="form-row" style="margin-bottom: 0px;">
+        <ul style="min-width: 520px; margin-bottom: 20px;" id="tab-row"></ul>
+    </div>
+    <div id="tabs-content">
+        <div id="tab-location" style="display: none;">
+            <div class="form-row">
+                <div style="display: inline-block; width: auto; vertical-align: middle;">
+                    <div>
+                        <label for="node-config-input-latitude"><i class="fa fa-arrows-v" style="width: 14px; text-align: center;"></i> <span data-i18n="config.label.latitude"></span></label>
+                        <input type="text" id="node-config-input-latitude" style="width: 60%;">
+                        <input id="node-config-input-latitudeType" type="hidden">
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <label for="node-config-input-longitude"><i class="fa fa-arrows-h"></i> <span data-i18n="config.label.longitude"></span></label>
+                        <input type="text" id="node-config-input-longitude" style="width: 60%;">
+                        <input id="node-config-input-longitudeType" type="hidden">
+                    </div>
+                </div>
+                <div style="display: inline-block; width: auto; margin-left: 10px;">
+                    <button type="button" id="node-config-input-locationDetection" class="red-ui-button" style="border-radius: 50%;"  data-i18n="[title]config.label.locationDetection"><i class='fa fa-location-arrow'></i></button>
+                </div>
             </div>
-            <div style="margin-top: 12px;">
-                <label for="node-config-input-longitude"><i class="fa fa-map-marker"></i> <span data-i18n="config.label.longitude"></span></label>
-                <input type="text" id="node-config-input-longitude" style="width: 60%;">
-                <input id="node-config-input-longitudeType" type="hidden">
+            <div class="form-row">
+                <iframe id="node-config-input-map" width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style="border: 1px solid #CCCCCC; border-radius: 4px;"></iframe>
             </div>
         </div>
-        <div style="display: inline-block; width: auto; margin-left: 10px;">
-            <button type="button" id="node-config-input-locationDetection" class="red-ui-button" style="border-radius: 50%;"  data-i18n="[title]config.label.locationDetection"><i class='fa fa-location-arrow'></i></button>
+        <div id="tab-time" style="display: none;">
+            <div class="form-row">
+                <label for="node-config-input-timezone"><i class="fa fa-globe"></i> <span data-i18n="config.label.timezone"></span></label>
+                <input type="text" id="node-config-input-timezone" style="width: 70%;">
+                <input id="node-config-input-timezoneType" type="hidden">
+            </div>
+            <div class="form-row" style="margin-bottom: 4px;">
+                <label for="node-config-input-missingHour" style="width: auto;"><i class="fa fa-clock-o"></i> <span data-i18n="config.label.missingHour"></span></label>
+            </div>
+            <div class="form-row">
+                <select id="node-config-input-missingHour" style="margin-left: 104px; width: auto;">
+                    <option value="skip" data-i18n="config.list.missingHour.skip"></option>
+                    <option value="offset" data-i18n="config.list.missingHour.offset"></option>
+                    <option value="insert" data-i18n="config.list.missingHour.insert"></option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input id="node-config-input-skipRepeatedHour" type="checkbox" style="margin-top: 0px; margin-bottom: 1px; width: auto;">
+                <label for="node-config-input-skipRepeatedHour" style="margin-bottom: 0px; width: auto;" data-i18n="config.label.skipRepeatedHour"></label>
+            </div>
         </div>
-    </div>
-    <div class="form-row">
-        <iframe id="node-config-input-map" width="100%" height="200" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style="border: 1px solid #CCCCCC; border-radius: 4px;"></iframe>
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-timezone"><i class="fa fa-globe"></i> <span data-i18n="config.label.timezone"></span></label>
-        <input type="text" id="node-config-input-timezone" style="width: 70%;">
-        <input id="node-config-input-timezoneType" type="hidden">
-    </div>
-    <div class="form-row node-input-sunPositionList-row" style="padding-top: 10px">
-        <label for="node-input-sunPositionList" style="width: auto;"><i class="fa fa-calendar-o"></i> <span data-i18n="config.label.sunPositions"></span></label>
-        <div class="form-row">
-            <ol id="node-input-sunPositionList"></ol>
+        <div id="tab-sunPositions" style="display: none;">
+            <div class="form-row list-row" style="margin-bottom: 20px;">
+                <div class="form-row">
+                    <ol id="node-input-sunPositionList"></ol>
+                </div>
+            </div>
         </div>
     </div>
 </script>
@@ -99,6 +123,14 @@ SOFTWARE.
 
                         return res;
                     }
+                },
+                missingHour:
+                {
+                    value: "insert"
+                },
+                skipRepeatedHour:
+                {
+                    value: false
                 },
                 timezoneType:
                 {
@@ -178,6 +210,22 @@ SOFTWARE.
 
                 const timezoneInput = $("#node-config-input-timezone")
                                         .typedInput({types: ["str", "env", "global"], typeField: "#node-config-input-timezoneType"});
+
+                const tabs = RED.tabs.create(
+                {
+                    id: "tab-row",
+                    onchange: function(tab)
+                    {
+                        $("#tabs-content").children().hide();
+                        $("#" + tab.id).show();
+                        RED.tray.resize();
+                    }
+                });
+
+                tabs.addTab({id: "tab-location", iconClass: "fa fa-map-marker", label: node._("config.label.location")});
+                tabs.addTab({id: "tab-time", iconClass: "fa fa-clock-o", label: node._("config.label.time")});
+                tabs.addTab({id: "tab-sunPositions", iconClass: "fa fa-sun-o", label: node._("config.label.sunPositions")});
+                tabs.activateTab("tab-locaton");
 
                 const updateMap = function(force = false)
                 {
@@ -330,18 +378,18 @@ SOFTWARE.
                         const angleLabel = $("<label/>", {style: "width: auto; margin-left: 5px; margin-bottom: 0px;"})
                                             .text(node._("config.label.angle") + " ")
                                             .appendTo(fragment);
-                        const angle = $("<input/>", {class: "node-input-angle", style: "width: 60px !important; margin-left: 4px;"})
+                        const angle = $("<input/>", {class: "node-input-angle", style: "width: 40px !important; margin-left: 6px;"})
                                             .appendTo(angleLabel)
                                             .spinner(sunAngleInput);
                         const riseLabel = $("<label/>", {title: node._("config.label.riseName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-arrow-up' aria-hidden='true'></i>")
                                             .appendTo(fragment);
-                        const riseName = $("<input/>", {type: "text", class: "node-input-riseName", placeholder: node._("config.label.riseName"), style: "width: 110px; margin-left: 4px;"})
+                        const riseName = $("<input/>", {type: "text", class: "node-input-riseName", placeholder: node._("config.label.riseName"), style: "width: 110px; margin-left: 6px;"})
                                             .appendTo(riseLabel);
                         const setLabel = $("<label/>", {title: node._("config.label.setName"), style: "width: auto; margin-left: 12px; margin-bottom: 0px;"})
                                             .html("<i class='fa fa-arrow-down' aria-hidden='true'></i>")
                                             .appendTo(fragment);
-                        const setName = $("<input/>", {type: "text", class: "node-input-setName", placeholder: node._("config.label.setName"), style: "width: 110px; margin-left: 4px;"})
+                        const setName = $("<input/>", {type: "text", class: "node-input-setName", placeholder: node._("config.label.setName"), style: "width: 110px; margin-left: 6px;"})
                                             .appendTo(setLabel);
 
                         if (!("angle" in data))
@@ -378,6 +426,18 @@ SOFTWARE.
                     node.sunPositions = [];
                 }
 
+                // backward compatibility to v1.29.3 and below
+                if (typeof node.missingHour == "undefined")
+                {
+                    node.missingHour = "insert";
+                    $("#node-config-input-missingHour").val(node.missingHour);
+                }
+                if (typeof node.skipRepeatedHour == "undefined")
+                {
+                    node.skipRepeatedHour = false;
+                    $("#node-config-input-skipRepeatedHour").prop(node.skipRepeatedHour);
+                }
+
                 node.sunPositions.forEach(data =>
                 {
                     sunPositionList.editableList("addItem", data);
@@ -406,19 +466,26 @@ SOFTWARE.
             },
             oneditresize: function(size)
             {
-                let height = size.height;
-                const sunPositionListRow = $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row");
-                const otherRows = $("#node-config-dialog-edit-form>div:not(.node-input-sunPositionList-row)");
-
-                for (let i=0; i<otherRows.length; ++i)
+                if ($("#tab-sunPositions").is(":visible"))
                 {
-                    height -= $(otherRows[i]).outerHeight(true);
+                    const listRow = $("#node-config-dialog-edit-form div.list-row");
+                    const otherRows = $("#node-config-dialog-edit-form > div");
+                    let height = size.height;
+
+                    for (let i=0; i<otherRows.length; ++i)
+                    {
+                        let row = $(otherRows[i]);
+
+                        if (row.is(":visible") && (row.attr("id") != "tabs-content"))
+                        {
+                            height -= row.outerHeight(true);
+                        }
+                    }
+
+                    height -= (parseInt(listRow.css("margin-top")) + parseInt(listRow.css("margin-bottom")));
+
+                    $("#node-input-sunPositionList").editableList("height", height);
                 }
-
-                height -= (parseInt(sunPositionListRow.css("marginTop")) + parseInt(sunPositionListRow.css("marginBottom")));
-                height -= $("#node-config-dialog-edit-form>div.node-input-sunPositionList-row>label").outerHeight(true);
-
-                $("#node-input-sunPositionList").editableList("height", height);
             }
         });
     })();

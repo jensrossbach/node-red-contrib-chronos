@@ -217,15 +217,28 @@
         "label":
         {
             "node":               "configuration",
+            "location":           "Location",
+            "time":               "Time",
+            "sunPositions":       "Sun Positions",
             "latitude":           "Latitude",
             "longitude":          "Longitude",
             "locationDetection":  "Auto detect location",
             "timezone":           "Time Zone",
+            "missingHour":        "Behavior when daylight saving time starts",
+            "skipRepeatedHour":   "Skip repeated hour at end of daylight saving time",
             "hostTZ":             "from system settings",
-            "sunPositions":       "Custom Sun Positions",
             "angle":              "Angle",
             "riseName":           "Rise Name",
             "setName":            "Set Name"
+        },
+        "list":
+        {
+            "missingHour":
+            {
+                "skip":    "skip missing hour",
+                "offset":  "shift missing hour",
+                "insert":  "insert missing hour"
+            }
         }
     }
 }

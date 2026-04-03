@@ -24,20 +24,14 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-config">
     <p>
-        Configuration of the geographical location and custom sun positions.
+        Common configuration for all flow nodes.
     </p>
     <h3>Details</h3>
     <p>
-        This configuration holds the geographical location in form of latitude
-        and longitude. That is required for the calculation of times based on
-        sun and moon position. For privacy protection reasons, the coordinates
-        are stored as credentials and therefore are not exported with the flows.
-        The map can be used to validate the entered coordinates. If a time zone
-        that differs from the time zone of the Node-RED host is required, this
-        can also be specified.
-        Additionally custom sun positions can be defined in this node. They can
-        be used in the other nodes in a similar way as the predefined sun
-        positions.
+        This configuration holds common configuration for all fllow nodes like
+        e.g. the geographical location in form of latitude and longitude, the
+        time zone if required to be different from the host running Node-RED,
+        the behavior on daylight saving change and custom sun positions.
     </p>
     <p>
         For more information, please refer to the detailed documentation in the
@@ -78,7 +72,19 @@ SOFTWARE.
             geographical coordinates is not performed!
         </p>
     </dd>
-    <dt>Custom Sun Positions</dt>
+    <dt>Behavior when daylight saving time starts</dt>
+    <dd>
+        The behavior when daylight saving time starts, like skipping, shifting or
+        inserting the missing hour in the appropriate night. Currently, this affects
+        only cron table mode of scheduler node and advanced mode of repeat node.
+    </dd>
+    <dt>Skip repeated hour at end of daylight saving time</dt>
+    <dd>
+        If selected, the repeated hour in the night when daylight saving time ends
+        is skipped. Currently, this affects only cron table mode of scheduler node
+        and advanced mode of repeat node.
+    </dd>
+    <dt>Sun Positions</dt>
     <dd>
         List of user-defined sun positions. New entries can be added using the
         button below the list. Existing entries can be reordered or deleted.

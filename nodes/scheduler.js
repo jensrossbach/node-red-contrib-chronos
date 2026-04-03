@@ -544,7 +544,11 @@ module.exports = function(RED)
 
                 if (data.config.trigger.type == "crontab")
                 {
-                    const expression = cronosjs.CronosExpression.parse(data.config.trigger.value);
+                    const expression = cronosjs.CronosExpression.parse(
+                                                    data.config.trigger.value, {
+                                                        timezone: chronos.getTimeZone(node),
+                                                        skipRepeatedHour: node.config.skipRepeatedHour,
+                                                        missingHour: node.config.missingHour});
                     let firstTrigger = expression.nextDate();
 
                     if (firstTrigger)

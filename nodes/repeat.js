@@ -579,7 +579,11 @@ module.exports = function(RED)
         {
             node.debug("Set up timer for cron table '" + crontab + "' until " + untilTime.print());
 
-            const expression = cronosjs.CronosExpression.parse(crontab);
+            const expression = cronosjs.CronosExpression.parse(
+                                            crontab, {
+                                                timezone: chronos.getTimeZone(node),
+                                                skipRepeatedHour: node.config.skipRepeatedHour,
+                                                missingHour: node.config.missingHour});
             let firstTrigger = expression.nextDate();
 
             if (firstTrigger)
@@ -843,7 +847,7 @@ module.exports = function(RED)
         {
             if (node.sendTime)
             {
-                let when = node.sendTime.calendar(
+                const when = node.sendTime.calendar(
                 {
                     sameDay: function()
                     {

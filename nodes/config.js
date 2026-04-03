@@ -87,6 +87,9 @@ module.exports = function(RED)
         this.name = config.name;
         this.locale = ("lang" in RED.settings) ? RED.settings.lang : require("os-locale").sync();
 
+        this.missingHour = config.missingHour;
+        this.skipRepeatedHour = config.skipRepeatedHour;
+
         if (config.timezoneType == "env")
         {
             this.timezone = RED.util.evaluateNodeProperty(

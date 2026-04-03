@@ -24,21 +24,14 @@ SOFTWARE.
 
 <script type="text/html" data-help-name="chronos-config">
     <p>
-        Konfiguration der geografischen Lage und benutzerdefinierter Sonnenstände.
+        Gemeinsame Konfiguration aller Flow-Knoten.
     </p>
     <h3>Details</h3>
     <p>
-        Diese Konfiguration speichert die geografische Lage in Form von Breiten-
-        und Längengrad. Das wird zur Berechnung der von Sonnen- und Mondstand
-        abhängigen Zeitpunkte benötigt. Aus Datenschutzgründen werden die
-        Koordinaten als geschützte Zugangsdaten gespeichert und damit nicht
-        zusammen mit Flows exportiert. Die Karte kann verwendet werden, um die
-        eingegebenen Koordinaten zu überprüfen. Falls eine Zeitzone verwendet
-        werden soll, die von der Zeitzone des Node-RED Hosts abweicht, kann
-        diese auch angegeben werden.
-        Zusätzlich bietet der Knoten die Möglichkeit, benutzerdefinierte
-        Sonnenständig anzulegen, die ähnlich wie die vorgegebenen Sonnenstände
-        in den anderen Nodes verwendet werden können.
+        Diese Konfiguration speichert die gemeinsame Konfiguration aller Flow-Knoten
+        wie beispielsweise die geografische Lage in Form von Breiten- und Längengrad,
+        eine ggf. abweichende Zeitzone, das Verhalten beim Umstellen zwischen Winter-
+        und Sommerzeit sowie benutzdefinierte Sonnenstände.
     </p>
     <p>
         Für weitere Informationen bitte die ausführliche Dokumentation im
@@ -84,7 +77,22 @@ SOFTWARE.
             aus den geografischen Koordinaten statt!
         </p>
     </dd>
-    <dt>Benutzerdefinierte Sonnenstände</dt>
+    <dt>Verhalten zum Beginn der Sommerzeit</dt>
+    <dd>
+        Das Verhalten zum Beginn der Sommerzeit, d.h. die fehlende Stunde in der
+        Nacht der Umstellung zu überspringen, zu verschieben oder einzufügen.
+        Momentan hat diese Einstellung nur Auswirkungen auf den Cron-Tabellen
+        Modus des Zeitplanerknotens und den erweiterten Modus des
+        Wiederholungsknotens.
+    </dd>
+    <dt>Wiederholte Stunde am Ende der Sommerzeit überspringen</dt>
+    <dd>
+        Wenn aktiviert, wird die wiederholte Stunde in der Nacht der Umstellung
+        auf Winterzeit übersprungen. Momentan hat diese Einstellung nur
+        Auswirkungen auf den Cron-Tabellen Modus des Zeitplanerknotens und den
+        erweiterten Modus des Wiederholungsknotens.
+    </dd>
+    <dt>Sonnenstände</dt>
     <dd>
         Liste der benutzerdefinierten Sonnenstände. Neue Einträge können über
         den Button unterhalb der Liste hinzugefügt werden. Vorhandene Einträge
