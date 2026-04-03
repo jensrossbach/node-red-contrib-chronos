@@ -216,16 +216,29 @@
     {
         "label":
         {
-            "node":              "Konfiguration",
-            "latitude":          "Breitengrad",
-            "longitude":         "Längengrad",
-            "locationDetection": "Position automatisch ermitteln",
-            "timezone":          "Zeitzone",
-            "hostTZ":            "aus System-Einstellungen",
-            "sunPositions":      "Benutzerdefinierte Sonnenstände",
-            "angle":             "Winkel",
-            "riseName":          "Name (aufgehend)",
-            "setName":           "Name (untergehend)"
+            "node":               "Konfiguration",
+            "location":           "Position",
+            "time":               "Zeit",
+            "sunPositions":       "Sonnenstände",
+            "latitude":           "Breitengrad",
+            "longitude":          "Längengrad",
+            "locationDetection":  "Position automatisch ermitteln",
+            "timezone":           "Zeitzone",
+            "missingHour":        "Verhalten zum Beginn der Sommerzeit",
+            "skipRepeatedHour":   "Wiederholte Stunde am Ende der Sommerzeit überspringen",
+            "hostTZ":             "aus System-Einstellungen",
+            "angle":              "Winkel",
+            "riseName":           "Name (aufgehend)",
+            "setName":            "Name (untergehend)"
+        },
+        "list":
+        {
+            "missingHour":
+            {
+                "skip":    "Fehlende Stunde überspringen",
+                "offset":  "Fehlende Stunde verschieben",
+                "insert":  "Fehlende Stunde einfügen"
+            }
         }
     }
 }

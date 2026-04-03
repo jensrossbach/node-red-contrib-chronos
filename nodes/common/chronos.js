@@ -566,7 +566,7 @@ function getTimeZone(node)
     }
     else
     {
-        ret = node.config.timezone;
+        ret = node.config.timezone || undefined;
     }
 
     return ret;
@@ -730,6 +730,7 @@ module.exports =
     getSunTime:                getSunTime,
     getTime:                   getTime,
     getTimeFrom:               getTimeFrom,
+    getTimeZone:               getTimeZone,
     getUserDate:               getUserDate,
     getUserTime:               getUserTime,
     printNodeInfo:             printNodeInfo,
