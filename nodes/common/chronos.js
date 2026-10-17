@@ -368,7 +368,7 @@ function getTime(node, day, type, value)
                 }
                 else if (matches[3])  // time part (moon time)
                 {
-                    ret = getMoonTime(node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                    ret = getMoonTime(node, date.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[3]);
                 }
                 else if (matches[4])  // time part (custom sun time)
                 {
@@ -404,7 +404,7 @@ function getTime(node, day, type, value)
                 }
                 else if (matches[3])  // moon time
                 {
-                    ret = getMoonTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[2]);
+                    ret = getMoonTime(node, day.set({"hour": 12, "minute": 0, "second": 0, "millisecond": 0}), matches[3]);
                 }
                 else if (matches[4])  // custom sun time
                 {
